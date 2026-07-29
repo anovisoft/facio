@@ -3,10 +3,10 @@ from uuid import UUID
 from fastapi import APIRouter
 
 from app.deps import CurrentUser, DbSession, LLM
+from app.errors import AppError
 from app.schemas.path import (
     ActionResponse,
     CommitProjectRequest,
-    ConversationTurnResponse,
     CreateProjectRequest,
     NextActionResponse,
     ProjectDetail,
@@ -15,6 +15,7 @@ from app.schemas.path import (
     RepairProjectRequest,
     RestoreStateRequest,
     StateVersionSummary,
+    TimelineResponse,
     TranscriptResponse,
 )
 from app.services.action import ActionService
@@ -23,6 +24,12 @@ from app.services.project import ProjectService
 from app.services.serializers import serialize_action
 
 router = APIRouter(prefix="/projects", tags=["projects"])
+
+
+async def _commit_on_app_error(db: DbSession, exc: AppError) -> None:
+    """Persist audit rows written before a domain failure, then re-raise."""
+    await db.commit()
+    raise exc
 
 
 @router.get("", response_model=list[ProjectSummary])
@@ -42,7 +49,10 @@ async def create_project(
     llm: LLM,
 ) -> ProjectDetail:
     service = PathService(db, llm=llm)
-    project = await service.create_from_intent(user, body.intent)
+    try:
+        project = await service.create_from_intent(user, body.intent)
+    except AppError as exc:
+        await _commit_on_app_error(db, exc)
     return await ProjectService(db).to_detail(project)
 
 
@@ -63,8 +73,7 @@ async def list_actions(
     user: CurrentUser,
     db: DbSession,
 ) -> list[ActionResponse]:
-    actions = await ActionService(db).list_actions(user, project_id)
-    return [serialize_action(a) for a in actions]
+    return await ProjectService(db).list_action_responses(user, project_id)
 
 
 @router.get("/{project_id}/next-action", response_model=NextActionResponse)
@@ -89,12 +98,15 @@ async def refine_project(
     llm: LLM,
 ) -> ProjectDetail:
     service = PathService(db, llm=llm)
-    project = await service.refine(
-        user,
-        project_id,
-        answer=body.answer,
-        question_id=body.question_id,
-    )
+    try:
+        project = await service.refine(
+            user,
+            project_id,
+            answer=body.answer,
+            question_id=body.question_id,
+        )
+    except AppError as exc:
+        await _commit_on_app_error(db, exc)
     return await ProjectService(db).to_detail(project)
 
 
@@ -148,7 +160,10 @@ async def repair_project(
     llm: LLM,
 ) -> ProjectDetail:
     service = PathService(db, llm=llm)
-    project = await service.repair(user, project_id, reason=body.reason)
+    try:
+        project = await service.repair(user, project_id, reason=body.reason)
+    except AppError as exc:
+        await _commit_on_app_error(db, exc)
     return await ProjectService(db).to_detail(project)
 
 
@@ -159,10 +174,13 @@ async def get_transcript(
     db: DbSession,
 ) -> TranscriptResponse:
     turns = await PathService(db).get_transcript(user, project_id)
-    return TranscriptResponse(
-        project_id=project_id,
-        turns=[
-            ConversationTurnResponse.model_validate(t, from_attributes=True)
-            for t in turns
-        ],
-    )
+    return TranscriptResponse(project_id=project_id, turns=turns)
+
+
+@router.get("/{project_id}/timeline", response_model=TimelineResponse)
+async def get_timeline(
+    project_id: UUID,
+    user: CurrentUser,
+    db: DbSession,
+) -> TimelineResponse:
+    return await PathService(db).get_timeline(user, project_id)

@@ -1,4 +1,4 @@
-from app.schemas.path import (
+from app.schemas.api import (
     ActionResponse,
     ChecklistItemResponse,
     CommitProjectRequest,
@@ -8,17 +8,18 @@ from app.schemas.path import (
     EventResponse,
     GroupResponse,
     NextActionResponse,
-    PATH_RESPONSE_SCHEMA,
-    PathState,
     ProjectDetail,
     ProjectSummary,
     RefineProjectRequest,
     RepairProjectRequest,
     RestoreStateRequest,
     StateVersionSummary,
+    TimelineEntry,
+    TimelineResponse,
     ToggleChecklistItemRequest,
     TranscriptResponse,
 )
+from app.schemas.path_state import PATH_RESPONSE_SCHEMA, PathState
 
 __all__ = [
     "ActionResponse",
@@ -38,6 +39,8 @@ __all__ = [
     "RepairProjectRequest",
     "RestoreStateRequest",
     "StateVersionSummary",
+    "TimelineEntry",
+    "TimelineResponse",
     "ToggleChecklistItemRequest",
     "TranscriptResponse",
 ]

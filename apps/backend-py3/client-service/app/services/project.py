@@ -1,24 +1,29 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from typing import Literal
 from uuid import UUID
 
-from fastapi import HTTPException, status
+from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.errors import ConflictError, NotFoundError, ValidationAppError
 from app.models import Action, Project, ProjectStatus, StateVersion, User
-from app.schemas.path import (
-    ClarifyQuestion,
+from app.schemas.api import (
+    ActionResponse,
     ProjectDetail,
     StateVersionSummary,
 )
-from app.services.audit import AuditService
+from app.schemas.path_state import PathState
+from app.services.audit import AuditService, EventType
+from app.services.path_materialize import ensure_action_keys, materialize_path
 from app.services.serializers import (
     action_queue_key,
     serialize_action,
     serialize_groups,
+    serialize_path_state,
 )
 
 
@@ -59,13 +64,12 @@ class ProjectService:
         result = await self.db.execute(stmt)
         project = result.scalar_one_or_none()
         if project is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Project not found",
-            )
+            raise NotFoundError("Project not found")
         return project
 
-    async def get_latest_state(self, project_id: UUID) -> tuple[int | None, dict]:
+    async def get_latest_state(
+        self, project_id: UUID
+    ) -> tuple[int | None, PathState | None]:
         result = await self.db.execute(
             select(StateVersion)
             .where(StateVersion.project_id == project_id)
@@ -74,8 +78,13 @@ class ProjectService:
         )
         row = result.scalar_one_or_none()
         if row is None:
-            return None, {}
-        return row.version, row.state_json
+            return None, None
+        try:
+            return row.version, PathState.model_validate(row.state_json)
+        except ValidationError as exc:
+            raise ValidationAppError(
+                f"Latest state version is invalid: {exc}"
+            ) from exc
 
     async def list_state_versions(
         self, user: User, project_id: UUID
@@ -90,22 +99,38 @@ class ProjectService:
         return [
             StateVersionSummary(
                 version=row.version,
-                source=row.source.value
-                if hasattr(row.source, "value")
-                else str(row.source),
+                source=row.source.value,
                 created_at=row.created_at,
             )
             for row in rows
         ]
 
+    async def list_action_responses(
+        self, user: User, project_id: UUID
+    ) -> list[ActionResponse]:
+        project = await self.get_project(user, project_id)
+        if project.status == ProjectStatus.draft:
+            _, state = await self.get_latest_state(project.id)
+            if state is None:
+                return []
+            _, actions = serialize_path_state(project, state)
+            return actions
+        ordered = sorted(project.actions, key=action_queue_key)
+        return [serialize_action(a) for a in ordered]
+
     async def to_detail(self, project: Project) -> ProjectDetail:
         version, state = await self.get_latest_state(project.id)
-        questions = [
-            ClarifyQuestion.model_validate(q)
-            for q in state.get("questions", [])
-        ]
-        resources = list(state.get("resources", []) or [])
-        ordered_actions = sorted(project.actions, key=action_queue_key)
+        questions = list(state.questions) if state else []
+        resources = list(state.resources) if state else []
+        milestones = list(state.milestones) if state else []
+
+        if project.status == ProjectStatus.draft and state is not None:
+            groups, actions = serialize_path_state(project, state)
+        else:
+            ordered_actions = sorted(project.actions, key=action_queue_key)
+            groups = serialize_groups(project.groups)
+            actions = [serialize_action(a) for a in ordered_actions]
+
         return ProjectDetail(
             id=project.id,
             status=project.status.value,
@@ -117,10 +142,11 @@ class ProjectService:
             committed_at=project.committed_at,
             created_at=project.created_at,
             updated_at=project.updated_at,
-            groups=serialize_groups(project.groups),
-            actions=[serialize_action(a) for a in ordered_actions],
+            groups=groups,
+            actions=actions,
             questions=questions,
             resources=resources,
+            milestones=milestones,
             current_version=version,
         )
 
@@ -129,30 +155,24 @@ class ProjectService:
         user: User,
         project_id: UUID,
         *,
-        first_step_when: str | None = "today",
+        first_step_when: Literal["today", "tomorrow"] = "today",
     ) -> Project:
-        """Activate a draft project and stamp due_at on actions.
-
-        next-action / execution queue uses group.sort then action.sort,
-        not due_at. due_at is scheduling metadata from first_step_when +
-        each action's day_offset (relative to the first queued action).
-        """
+        """Materialize PathState into ORM and activate the project."""
         project = await self.get_project(user, project_id, for_update=True)
         if project.status != ProjectStatus.draft:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Only draft projects can be committed",
-            )
+            raise ConflictError("Only draft projects can be committed")
+
+        version, state = await self.get_latest_state(project.id)
+        if state is None:
+            raise ValidationAppError("Project has no Path state to commit")
+        if not state.outcome or not state.success_criteria:
+            raise ValidationAppError("Project contract incomplete")
+
+        state = ensure_action_keys(state)
+        await materialize_path(self.db, project, state, merge_progress=False)
+
         if not project.actions:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Project has no actions to commit",
-            )
-        if not project.outcome or not project.success_criteria:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Project contract incomplete",
-            )
+            raise ValidationAppError("Project has no actions to commit")
 
         now = datetime.now(UTC)
         project.status = ProjectStatus.active
@@ -176,20 +196,21 @@ class ProjectService:
             )
 
         await self.audit.add_event(
-            event_type="project_committed",
+            event_type=EventType.committed,
             user_id=user.id,
             project_id=project.id,
-            payload={"first_step_when": first_step_when},
+            payload={
+                "first_step_when": first_step_when,
+                "version": version,
+            },
         )
         await self.db.commit()
-        await self.db.refresh(project)
         return await self.get_project(user, project.id)
 
     @staticmethod
     def _resolve_first_due(
-        first_step_when: str | None, now: datetime
+        first_step_when: Literal["today", "tomorrow"], now: datetime
     ) -> datetime:
-        value = (first_step_when or "today").strip().lower()
-        if value == "tomorrow":
+        if first_step_when == "tomorrow":
             return now + timedelta(days=1)
         return now

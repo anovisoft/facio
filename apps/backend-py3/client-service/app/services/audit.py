@@ -1,31 +1,12 @@
-"""
-Audit / product events.
+"""Audit trail: conversation turns, LLM calls, state versions, product events.
 
-Stored ``events.type`` values ↔ docs/mvp/04-metrics.md funnel names:
-
-| Stored (server)           | Metrics doc          |
-|---------------------------|----------------------|
-| intent_submitted          | intent_submitted     |
-| draft_created             | draft_shown          |
-| plan_failed               | plan_failed          |
-| refine_submitted          | refine_answered      |
-| state_restored            | back_navigated       |
-| project_committed         | committed            |
-| action_completed          | action_done          |
-| action_skipped            | action_skipped       |
-| first_completion          | first_completion     |
-| repair_requested          | repair_applied*      |
-| checklist_item_toggled    | (not in funnel list) |
-| project_completed         | (derived)            |
-
-Client beacons via POST /events use metric names directly
-(app_opened, path_opened, accept_viewed, action_shown, …).
-
-*repair_requested is emitted on request; repair_applied once LLM succeeds.
+Event type names match docs/mvp/04-metrics.md (single vocabulary for
+server emitters and client beacons).
 """
 
 from __future__ import annotations
 
+import enum
 from typing import Any
 from uuid import UUID
 
@@ -40,25 +21,49 @@ from app.models import (
     StateVersion,
 )
 
-# Soft allowlist for client POST /events (04-metrics + a few UI beacons).
+
+class EventType(str, enum.Enum):
+    # Shared / funnel
+    app_opened = "app_opened"
+    soft_start_shown = "soft_start_shown"
+    intent_submitted = "intent_submitted"
+    draft_shown = "draft_shown"
+    accept_viewed = "accept_viewed"
+    action_shown = "action_shown"
+    path_opened = "path_opened"
+    project_switched = "project_switched"
+    back_navigated = "back_navigated"
+    refine_answered = "refine_answered"
+    plan_failed = "plan_failed"
+    committed = "committed"
+    action_done = "action_done"
+    action_skipped = "action_skipped"
+    first_completion = "first_completion"
+    repair_requested = "repair_requested"
+    repair_applied = "repair_applied"
+    # Extra server-side (not all are client beacons)
+    checklist_item_toggled = "checklist_item_toggled"
+    project_completed = "project_completed"
+
+
 CLIENT_EVENT_TYPES: frozenset[str] = frozenset(
     {
-        "app_opened",
-        "soft_start_shown",
-        "draft_shown",
-        "accept_viewed",
-        "action_shown",
-        "path_opened",
-        "project_switched",
-        "back_navigated",
-        "intent_submitted",
-        "committed",
-        "action_done",
-        "action_skipped",
-        "first_completion",
-        "refine_answered",
-        "plan_failed",
-        "repair_applied",
+        EventType.app_opened.value,
+        EventType.soft_start_shown.value,
+        EventType.draft_shown.value,
+        EventType.accept_viewed.value,
+        EventType.action_shown.value,
+        EventType.path_opened.value,
+        EventType.project_switched.value,
+        EventType.back_navigated.value,
+        EventType.intent_submitted.value,
+        EventType.committed.value,
+        EventType.action_done.value,
+        EventType.action_skipped.value,
+        EventType.first_completion.value,
+        EventType.refine_answered.value,
+        EventType.plan_failed.value,
+        EventType.repair_applied.value,
     }
 )
 
@@ -136,13 +141,16 @@ class AuditService:
     async def add_event(
         self,
         *,
-        event_type: str,
+        event_type: EventType | str,
         user_id: UUID | None = None,
         project_id: UUID | None = None,
         payload: dict[str, Any] | None = None,
     ) -> Event:
+        type_value = (
+            event_type.value if isinstance(event_type, EventType) else event_type
+        )
         event = Event(
-            type=event_type,
+            type=type_value,
             user_id=user_id,
             project_id=project_id,
             payload=payload,

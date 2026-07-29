@@ -12,6 +12,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    UniqueConstraint,
     func,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -43,9 +44,7 @@ class StateSource(str, enum.Enum):
     llm_create = "llm_create"
     llm_refine = "llm_refine"
     llm_repair = "llm_repair"
-    user_edit = "user_edit"
     user_restore = "user_restore"
-    shift = "shift"
 
 
 class User(Base):
@@ -147,6 +146,9 @@ class ActionGroup(Base):
 
 class Action(Base):
     __tablename__ = "actions"
+    __table_args__ = (
+        UniqueConstraint("project_id", "key", name="uq_actions_project_key"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
@@ -163,6 +165,7 @@ class Action(Base):
         index=True,
         nullable=True,
     )
+    key: Mapped[str] = mapped_column(String(100), nullable=False)
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     why: Mapped[str] = mapped_column(Text, nullable=False)
     detail: Mapped[str | None] = mapped_column(Text, nullable=True)

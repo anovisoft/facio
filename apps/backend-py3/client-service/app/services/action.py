@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.errors import ConflictError, NotFoundError
 from app.models import (
     Action,
     ActionStatus,
@@ -15,7 +15,8 @@ from app.models import (
     ProjectStatus,
     User,
 )
-from app.services.audit import AuditService
+from app.services.audit import AuditService, EventType
+from app.services.project import ProjectService
 from app.services.serializers import action_queue_key
 
 _COMMIT_REQUIRED = "Commit the project before executing steps"
@@ -25,14 +26,12 @@ class ActionService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
         self.audit = AuditService(db)
+        self.projects = ProjectService(db)
 
     @staticmethod
     def _require_active(project: Project) -> None:
         if project.status != ProjectStatus.active:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=_COMMIT_REQUIRED,
-            )
+            raise ConflictError(_COMMIT_REQUIRED)
 
     async def _get_owned_action(
         self, user: User, action_id: UUID
@@ -49,27 +48,13 @@ class ActionService:
         )
         action = result.scalar_one_or_none()
         if action is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Action not found",
-            )
+            raise NotFoundError("Action not found")
         return action, action.project
 
     async def get_next_action(
         self, user: User, project_id: UUID
     ) -> Action | None:
-        result = await self.db.execute(
-            select(Project).where(
-                Project.id == project_id, Project.user_id == user.id
-            )
-        )
-        project = result.scalar_one_or_none()
-        if project is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Project not found",
-            )
-
+        await self.projects.get_project(user, project_id)
         result = await self.db.execute(
             select(Action)
             .where(
@@ -87,20 +72,10 @@ class ActionService:
         return sorted(actions, key=action_queue_key)[0]
 
     async def list_actions(self, user: User, project_id: UUID) -> list[Action]:
-        result = await self.db.execute(
-            select(Project).where(
-                Project.id == project_id, Project.user_id == user.id
-            )
-        )
-        if result.scalar_one_or_none() is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Project not found",
-            )
-
+        project = await self.projects.get_project(user, project_id)
         result = await self.db.execute(
             select(Action)
-            .where(Action.project_id == project_id)
+            .where(Action.project_id == project.id)
             .options(
                 selectinload(Action.group),
                 selectinload(Action.checklist_items),
@@ -121,7 +96,7 @@ class ActionService:
             return
         project.status = ProjectStatus.completed
         await self.audit.add_event(
-            event_type="project_completed",
+            event_type=EventType.project_completed,
             user_id=user.id,
             project_id=project.id,
             payload={},
@@ -131,19 +106,13 @@ class ActionService:
         action, project = await self._get_owned_action(user, action_id)
         self._require_active(project)
         if action.status != ActionStatus.pending:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"Action is already {action.status.value}",
-            )
+            raise ConflictError(f"Action is already {action.status.value}")
 
         incomplete = [i for i in action.checklist_items if not i.done]
         if incomplete:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=(
-                    "Mark all checklist items before completing this action "
-                    f"({len(incomplete)} remaining)"
-                ),
+            raise ConflictError(
+                "Mark all checklist items before completing this action "
+                f"({len(incomplete)} remaining)"
             )
 
         previous = action.status.value
@@ -151,7 +120,7 @@ class ActionService:
         await self.db.flush()
 
         await self.audit.add_event(
-            event_type="action_completed",
+            event_type=EventType.action_done,
             user_id=user.id,
             project_id=project.id,
             payload={
@@ -173,7 +142,7 @@ class ActionService:
         )
         if done_count_result.scalar_one() == 1:
             await self.audit.add_event(
-                event_type="first_completion",
+                event_type=EventType.first_completion,
                 user_id=user.id,
                 project_id=project.id,
                 payload={"action_id": str(action.id)},
@@ -186,17 +155,14 @@ class ActionService:
         action, project = await self._get_owned_action(user, action_id)
         self._require_active(project)
         if action.status != ActionStatus.pending:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"Action is already {action.status.value}",
-            )
+            raise ConflictError(f"Action is already {action.status.value}")
 
         previous = action.status.value
         action.status = ActionStatus.skipped
         await self.db.flush()
 
         await self.audit.add_event(
-            event_type="action_skipped",
+            event_type=EventType.action_skipped,
             user_id=user.id,
             project_id=project.id,
             payload={
@@ -227,25 +193,19 @@ class ActionService:
         )
         item = result.scalar_one_or_none()
         if item is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Checklist item not found",
-            )
+            raise NotFoundError("Checklist item not found")
 
         action = item.action
         self._require_active(action.project)
         if action.status != ActionStatus.pending:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Cannot toggle checklist on a closed action",
-            )
+            raise ConflictError("Cannot toggle checklist on a closed action")
 
         previous = item.done
         item.done = (not item.done) if done is None else done
         await self.db.flush()
 
         await self.audit.add_event(
-            event_type="checklist_item_toggled",
+            event_type=EventType.checklist_item_toggled,
             user_id=user.id,
             project_id=action.project_id,
             payload={

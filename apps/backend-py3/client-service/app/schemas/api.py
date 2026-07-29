@@ -1,0 +1,160 @@
+from datetime import datetime
+from typing import Any, Literal
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from app.schemas.path_state import ClarifyQuestion, PathState
+
+
+class CreateProjectRequest(BaseModel):
+    intent: str = Field(min_length=1, max_length=4000)
+
+
+class RefineProjectRequest(BaseModel):
+    answer: str = Field(min_length=1, max_length=4000)
+    question_id: str | None = None
+
+
+class RepairProjectRequest(BaseModel):
+    reason: str = Field(min_length=1, max_length=4000)
+
+
+class CommitProjectRequest(BaseModel):
+    first_step_when: Literal["today", "tomorrow"] = "today"
+
+
+class RestoreStateRequest(BaseModel):
+    version: int = Field(ge=1)
+
+
+class CreateEventRequest(BaseModel):
+    type: str = Field(min_length=1, max_length=100)
+    project_id: UUID | None = None
+    payload: dict = Field(default_factory=dict)
+
+
+class EventResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    type: str
+    user_id: UUID | None
+    project_id: UUID | None
+    payload: dict | None
+    created_at: datetime
+
+
+class StateVersionSummary(BaseModel):
+    version: int
+    source: str
+    created_at: datetime
+
+
+class ToggleChecklistItemRequest(BaseModel):
+    done: bool | None = Field(
+        default=None,
+        description="If omitted, flips current done state",
+    )
+
+
+class ChecklistItemResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    action_id: UUID
+    key: str | None = None
+    title: str
+    done: bool
+    sort: int
+
+
+class GroupResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    key: str
+    title: str
+    sort: int
+
+
+class ActionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    project_id: UUID
+    key: str | None = None
+    title: str
+    why: str
+    detail: str | None
+    estimate_min: int | None
+    due_at: datetime | None
+    sort: int
+    status: str
+    day_offset: int | None = None
+    group_id: UUID | None = None
+    group_key: str | None = None
+    group_title: str | None = None
+    checklist_items: list[ChecklistItemResponse] = Field(default_factory=list)
+
+
+class ProjectSummary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    status: str
+    raw_intent: str
+    outcome: str | None
+    paraphrase: str | None
+    success_criteria: str | None
+    horizon: str | None
+    committed_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class ProjectDetail(ProjectSummary):
+    groups: list[GroupResponse] = Field(default_factory=list)
+    actions: list[ActionResponse] = Field(default_factory=list)
+    questions: list[ClarifyQuestion] = Field(default_factory=list)
+    resources: list[str] = Field(default_factory=list)
+    milestones: list[str] = Field(default_factory=list)
+    current_version: int | None = None
+
+
+class NextActionResponse(BaseModel):
+    project_id: UUID
+    action: ActionResponse | None
+
+
+class ConversationTurnResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    project_id: UUID | None
+    role: str
+    content: str
+    meta: dict | None
+    created_at: datetime
+    state: PathState | None = None
+
+
+class TranscriptResponse(BaseModel):
+    project_id: UUID
+    turns: list[ConversationTurnResponse]
+
+
+class TimelineEntry(BaseModel):
+    at: datetime
+    kind: str
+    turn: ConversationTurnResponse | None = None
+    state_version: int | None = None
+    state: PathState | None = None
+    llm_call_id: UUID | None = None
+    event_type: str | None = None
+    event_payload: dict[str, Any] | None = None
+
+
+class TimelineResponse(BaseModel):
+    project_id: UUID
+    entries: list[TimelineEntry]

@@ -1,9 +1,11 @@
-"""Initial MVP schema
+"""Initial MVP schema (squashed).
 
 Revision ID: 001
 Revises:
 Create Date: 2026-07-29
 
+Includes groups, checklist, day_offset, action.key, user_restore.
+Recreate the DB volume after this squash: `docker compose down -v`.
 """
 
 from typing import Sequence, Union
@@ -45,8 +47,7 @@ def upgrade() -> None:
         "llm_create",
         "llm_refine",
         "llm_repair",
-        "user_edit",
-        "shift",
+        "user_restore",
         name="state_source",
         create_type=False,
     )
@@ -75,8 +76,7 @@ def upgrade() -> None:
         "llm_create",
         "llm_refine",
         "llm_repair",
-        "user_edit",
-        "shift",
+        "user_restore",
         name="state_source",
     ).create(bind, checkfirst=True)
 
@@ -161,10 +161,12 @@ def upgrade() -> None:
             sa.ForeignKey("action_groups.id", ondelete="SET NULL"),
             nullable=True,
         ),
+        sa.Column("key", sa.String(100), nullable=False),
         sa.Column("title", sa.String(500), nullable=False),
         sa.Column("why", sa.Text(), nullable=False),
         sa.Column("detail", sa.Text(), nullable=True),
         sa.Column("estimate_min", sa.Integer(), nullable=True),
+        sa.Column("day_offset", sa.Integer(), nullable=True),
         sa.Column("due_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("sort", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("status", action_status, nullable=False),
@@ -180,6 +182,7 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
+        sa.UniqueConstraint("project_id", "key", name="uq_actions_project_key"),
     )
     op.create_index("ix_actions_project_id", "actions", ["project_id"])
     op.create_index("ix_actions_group_id", "actions", ["group_id"])
