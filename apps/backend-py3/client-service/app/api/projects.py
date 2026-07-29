@@ -13,6 +13,8 @@ from app.schemas.path import (
     ProjectSummary,
     RefineProjectRequest,
     RepairProjectRequest,
+    RestoreStateRequest,
+    StateVersionSummary,
     TranscriptResponse,
 )
 from app.services.action import ActionService
@@ -99,18 +101,42 @@ async def refine_project(
 @router.post("/{project_id}/commit", response_model=ProjectDetail)
 async def commit_project(
     project_id: UUID,
+    body: CommitProjectRequest,
     user: CurrentUser,
     db: DbSession,
-    body: CommitProjectRequest | None = None,
 ) -> ProjectDetail:
-    payload = body or CommitProjectRequest()
     service = ProjectService(db)
     project = await service.commit(
         user,
         project_id,
-        first_step_when=payload.first_step_when,
+        first_step_when=body.first_step_when,
     )
     return await service.to_detail(project)
+
+
+@router.get(
+    "/{project_id}/state-versions",
+    response_model=list[StateVersionSummary],
+)
+async def list_state_versions(
+    project_id: UUID,
+    user: CurrentUser,
+    db: DbSession,
+) -> list[StateVersionSummary]:
+    return await ProjectService(db).list_state_versions(user, project_id)
+
+
+@router.post("/{project_id}/restore-state", response_model=ProjectDetail)
+async def restore_state(
+    project_id: UUID,
+    body: RestoreStateRequest,
+    user: CurrentUser,
+    db: DbSession,
+) -> ProjectDetail:
+    project = await PathService(db).restore_state(
+        user, project_id, version=body.version
+    )
+    return await ProjectService(db).to_detail(project)
 
 
 @router.post("/{project_id}/repair", response_model=ProjectDetail)

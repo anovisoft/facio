@@ -40,12 +40,11 @@ async def skip_action(
 )
 async def toggle_checklist_item(
     item_id: UUID,
+    body: ToggleChecklistItemRequest,
     user: CurrentUser,
     db: DbSession,
-    body: ToggleChecklistItemRequest | None = None,
 ) -> ChecklistItemResponse:
-    payload = body or ToggleChecklistItemRequest()
     item = await ActionService(db).toggle_checklist_item(
-        user, item_id, done=payload.done
+        user, item_id, done=body.done
     )
     return ChecklistItemResponse.model_validate(item, from_attributes=True)

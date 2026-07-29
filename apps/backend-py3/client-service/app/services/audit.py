@@ -1,3 +1,29 @@
+"""
+Audit / product events.
+
+Stored ``events.type`` values ↔ docs/mvp/04-metrics.md funnel names:
+
+| Stored (server)           | Metrics doc          |
+|---------------------------|----------------------|
+| intent_submitted          | intent_submitted     |
+| draft_created             | draft_shown          |
+| plan_failed               | plan_failed          |
+| refine_submitted          | refine_answered      |
+| state_restored            | back_navigated       |
+| project_committed         | committed            |
+| action_completed          | action_done          |
+| action_skipped            | action_skipped       |
+| first_completion          | first_completion     |
+| repair_requested          | repair_applied*      |
+| checklist_item_toggled    | (not in funnel list) |
+| project_completed         | (derived)            |
+
+Client beacons via POST /events use metric names directly
+(app_opened, path_opened, accept_viewed, action_shown, …).
+
+*repair_requested is emitted on request; repair_applied once LLM succeeds.
+"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,6 +38,28 @@ from app.models import (
     LlmCall,
     StateSource,
     StateVersion,
+)
+
+# Soft allowlist for client POST /events (04-metrics + a few UI beacons).
+CLIENT_EVENT_TYPES: frozenset[str] = frozenset(
+    {
+        "app_opened",
+        "soft_start_shown",
+        "draft_shown",
+        "accept_viewed",
+        "action_shown",
+        "path_opened",
+        "project_switched",
+        "back_navigated",
+        "intent_submitted",
+        "committed",
+        "action_done",
+        "action_skipped",
+        "first_completion",
+        "refine_answered",
+        "plan_failed",
+        "repair_applied",
+    }
 )
 
 

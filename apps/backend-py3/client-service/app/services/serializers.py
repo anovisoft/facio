@@ -22,6 +22,7 @@ def serialize_action(action: Action) -> ActionResponse:
         status=action.status.value
         if hasattr(action.status, "value")
         else str(action.status),
+        day_offset=action.day_offset,
         group_id=action.group_id,
         group_key=group.key if group else None,
         group_title=group.title if group else None,

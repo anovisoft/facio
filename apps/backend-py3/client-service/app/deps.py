@@ -1,5 +1,4 @@
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy import select
@@ -37,6 +36,3 @@ def provide_llm() -> LLMProvider:
 CurrentUser = Annotated[User, Depends(get_current_user)]
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 LLM = Annotated[LLMProvider, Depends(provide_llm)]
-
-# Re-export UUID for route type hints convenience
-ProjectId = UUID

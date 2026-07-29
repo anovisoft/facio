@@ -9,7 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models import Action, Project, ProjectStatus, StateVersion, User
-from app.schemas.path import ClarifyQuestion, ProjectDetail
+from app.schemas.path import (
+    ClarifyQuestion,
+    ProjectDetail,
+    StateVersionSummary,
+)
 from app.services.audit import AuditService
 from app.services.serializers import (
     action_queue_key,
@@ -73,6 +77,27 @@ class ProjectService:
             return None, {}
         return row.version, row.state_json
 
+    async def list_state_versions(
+        self, user: User, project_id: UUID
+    ) -> list[StateVersionSummary]:
+        await self.get_project(user, project_id)
+        result = await self.db.execute(
+            select(StateVersion)
+            .where(StateVersion.project_id == project_id)
+            .order_by(StateVersion.version.asc())
+        )
+        rows = list(result.scalars().all())
+        return [
+            StateVersionSummary(
+                version=row.version,
+                source=row.source.value
+                if hasattr(row.source, "value")
+                else str(row.source),
+                created_at=row.created_at,
+            )
+            for row in rows
+        ]
+
     async def to_detail(self, project: Project) -> ProjectDetail:
         version, state = await self.get_latest_state(project.id)
         questions = [
@@ -106,6 +131,12 @@ class ProjectService:
         *,
         first_step_when: str | None = "today",
     ) -> Project:
+        """Activate a draft project and stamp due_at on actions.
+
+        next-action / execution queue uses group.sort then action.sort,
+        not due_at. due_at is scheduling metadata from first_step_when +
+        each action's day_offset (relative to the first queued action).
+        """
         project = await self.get_project(user, project_id, for_update=True)
         if project.status != ProjectStatus.draft:
             raise HTTPException(
@@ -127,8 +158,22 @@ class ProjectService:
         project.status = ProjectStatus.active
         project.committed_at = now
 
-        first = sorted(project.actions, key=action_queue_key)[0]
-        first.due_at = self._resolve_first_due(first_step_when, now)
+        ordered = sorted(project.actions, key=action_queue_key)
+        base = self._resolve_first_due(first_step_when, now)
+        first_offset = (
+            ordered[0].day_offset
+            if ordered[0].day_offset is not None
+            else 0
+        )
+        for action in ordered:
+            offset = (
+                action.day_offset
+                if action.day_offset is not None
+                else action.sort
+            )
+            action.due_at = base + timedelta(
+                days=max(0, offset - first_offset)
+            )
 
         await self.audit.add_event(
             event_type="project_committed",

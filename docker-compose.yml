@@ -29,6 +29,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://${FASIO_POSTGRES_USER:-fasio}:${FASIO_POSTGRES_PASSWORD:-fasio}@fasio-postgres:5432/${FASIO_POSTGRES_DB:-fasio}
       APP_NAME: ${FASIO_APP_NAME:-Facio API}
       DEBUG: ${FASIO_DEBUG:-false}
+      CORS_ORIGINS: ${FASIO_CORS_ORIGINS:-*}
     ports:
       - "8000:8000"
     depends_on:

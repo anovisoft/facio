@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     )
     app_name: str = "Facio API"
     debug: bool = False
+    # Comma-separated. Use "*" for any origin (credentials disabled).
+    cors_origins: str = "*"
 
 
 @lru_cache

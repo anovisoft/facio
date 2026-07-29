@@ -84,10 +84,37 @@ class RepairProjectRequest(BaseModel):
 
 
 class CommitProjectRequest(BaseModel):
-    first_step_when: str | None = Field(
+    first_step_when: str = Field(
         default="today",
         description="today | tomorrow | ISO date hint",
     )
+
+
+class RestoreStateRequest(BaseModel):
+    version: int = Field(ge=1)
+
+
+class CreateEventRequest(BaseModel):
+    type: str = Field(min_length=1, max_length=100)
+    project_id: UUID | None = None
+    payload: dict = Field(default_factory=dict)
+
+
+class EventResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    type: str
+    user_id: UUID | None
+    project_id: UUID | None
+    payload: dict | None
+    created_at: datetime
+
+
+class StateVersionSummary(BaseModel):
+    version: int
+    source: str
+    created_at: datetime
 
 
 class ToggleChecklistItemRequest(BaseModel):
@@ -129,6 +156,7 @@ class ActionResponse(BaseModel):
     due_at: datetime | None
     sort: int
     status: str
+    day_offset: int | None = None
     group_id: UUID | None = None
     group_key: str | None = None
     group_title: str | None = None

@@ -245,6 +245,66 @@ class PathService:
         )
         return list(result.scalars().all())
 
+    async def restore_state(
+        self,
+        user: User,
+        project_id: UUID,
+        *,
+        version: int,
+    ) -> Project:
+        """Rebuild draft Path from a prior state_versions snapshot."""
+        project = await self.projects.get_project(
+            user, project_id, for_update=True
+        )
+        if project.status != ProjectStatus.draft:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Only draft projects can restore a prior state",
+            )
+
+        result = await self.db.execute(
+            select(StateVersion).where(
+                StateVersion.project_id == project.id,
+                StateVersion.version == version,
+            )
+        )
+        snapshot = result.scalar_one_or_none()
+        if snapshot is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"State version {version} not found",
+            )
+
+        try:
+            state = PathState.model_validate(snapshot.state_json)
+        except ValidationError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Stored state version {version} is invalid: {exc}",
+            ) from exc
+
+        await self._materialize_actions(
+            project, state, preserve_done=False
+        )
+        new_version = await self._next_version(project.id)
+        await self.audit.add_state_version(
+            project_id=project.id,
+            version=new_version,
+            state_json=state.model_dump(mode="json"),
+            source=StateSource.user_restore,
+        )
+        await self.audit.add_event(
+            event_type="state_restored",
+            user_id=user.id,
+            project_id=project.id,
+            payload={
+                "restored_from_version": version,
+                "new_version": new_version,
+            },
+        )
+        await self.db.commit()
+        return await self.projects.get_project(user, project.id)
+
     async def _call_and_apply(
         self,
         *,
@@ -436,6 +496,7 @@ class PathService:
                 why=item.why,
                 detail=item.detail,
                 estimate_min=item.estimate_min,
+                day_offset=item.day_offset,
                 sort=sort,
                 status=ActionStatus.pending,
             )

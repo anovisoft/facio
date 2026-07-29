@@ -44,6 +44,7 @@ class StateSource(str, enum.Enum):
     llm_refine = "llm_refine"
     llm_repair = "llm_repair"
     user_edit = "user_edit"
+    user_restore = "user_restore"
     shift = "shift"
 
 
@@ -166,6 +167,7 @@ class Action(Base):
     why: Mapped[str] = mapped_column(Text, nullable=False)
     detail: Mapped[str | None] = mapped_column(Text, nullable=True)
     estimate_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    day_offset: Mapped[int | None] = mapped_column(Integer, nullable=True)
     due_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

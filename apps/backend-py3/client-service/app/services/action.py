@@ -18,11 +18,21 @@ from app.models import (
 from app.services.audit import AuditService
 from app.services.serializers import action_queue_key
 
+_COMMIT_REQUIRED = "Commit the project before executing steps"
+
 
 class ActionService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
         self.audit = AuditService(db)
+
+    @staticmethod
+    def _require_active(project: Project) -> None:
+        if project.status != ProjectStatus.active:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=_COMMIT_REQUIRED,
+            )
 
     async def _get_owned_action(
         self, user: User, action_id: UUID
@@ -100,11 +110,7 @@ class ActionService:
 
     async def complete(self, user: User, action_id: UUID) -> Action:
         action, project = await self._get_owned_action(user, action_id)
-        if project.status not in {ProjectStatus.active, ProjectStatus.draft}:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Project is not executable",
-            )
+        self._require_active(project)
         if action.status != ActionStatus.pending:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -143,7 +149,7 @@ class ActionService:
             )
         )
         remaining = list(pending.scalars().all())
-        if not remaining and project.status == ProjectStatus.active:
+        if not remaining:
             project.status = ProjectStatus.completed
             await self.audit.add_event(
                 event_type="project_completed",
@@ -173,11 +179,7 @@ class ActionService:
 
     async def skip(self, user: User, action_id: UUID) -> Action:
         action, project = await self._get_owned_action(user, action_id)
-        if project.status not in {ProjectStatus.active, ProjectStatus.draft}:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Project is not executable",
-            )
+        self._require_active(project)
         if action.status != ActionStatus.pending:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -211,7 +213,9 @@ class ActionService:
             .join(Action)
             .join(Project)
             .where(ChecklistItem.id == item_id, Project.user_id == user.id)
-            .options(selectinload(ChecklistItem.action))
+            .options(
+                selectinload(ChecklistItem.action).selectinload(Action.project),
+            )
         )
         item = result.scalar_one_or_none()
         if item is None:
@@ -221,6 +225,7 @@ class ActionService:
             )
 
         action = item.action
+        self._require_active(action.project)
         if action.status != ActionStatus.pending:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
