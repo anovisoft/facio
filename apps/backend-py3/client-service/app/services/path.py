@@ -10,7 +10,9 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import (
     Action,
+    ActionGroup,
     ActionStatus,
+    ChecklistItem,
     ConversationRole,
     ConversationTurn,
     Project,
@@ -385,27 +387,74 @@ class PathService:
                 await self.db.delete(action)
             await self.db.flush()
 
+        for group in list(project.groups):
+            # Keep groups still referenced by preserved done actions
+            if preserve_done and any(
+                a.group_id == group.id and a.status == ActionStatus.done
+                for a in project.actions
+            ):
+                continue
+            await self.db.delete(group)
+        await self.db.flush()
+
         project.outcome = state.outcome
         project.paraphrase = state.paraphrase
         project.success_criteria = state.success_criteria
         project.horizon = state.horizon
 
-        sort = 0
-        for item in state.actions:
+        key_to_group: dict[str, ActionGroup] = {
+            g.key: g for g in project.groups
+        }
+        for group_spec in sorted(state.groups, key=lambda g: g.sort):
+            existing = key_to_group.get(group_spec.id)
+            if existing is not None:
+                existing.title = group_spec.title
+                existing.sort = group_spec.sort
+                key_to_group[group_spec.id] = existing
+                continue
+            group = ActionGroup(
+                project_id=project.id,
+                key=group_spec.id,
+                title=group_spec.title,
+                sort=group_spec.sort,
+            )
+            self.db.add(group)
+            await self.db.flush()
+            key_to_group[group_spec.id] = group
+
+        for index, item in enumerate(state.actions):
             if preserve_done and item.title in done_titles:
                 continue
-            self.db.add(
-                Action(
-                    project_id=project.id,
-                    title=item.title,
-                    why=item.why,
-                    detail=item.detail,
-                    estimate_min=item.estimate_min,
-                    sort=sort,
-                    status=ActionStatus.pending,
-                )
+            sort = item.sort if item.sort is not None else index
+            group_uuid = None
+            if item.group_id is not None:
+                group_uuid = key_to_group[item.group_id].id
+            action = Action(
+                project_id=project.id,
+                group_id=group_uuid,
+                title=item.title,
+                why=item.why,
+                detail=item.detail,
+                estimate_min=item.estimate_min,
+                sort=sort,
+                status=ActionStatus.pending,
             )
-            sort += 1
+            self.db.add(action)
+            await self.db.flush()
+            for c_index, checklist in enumerate(item.checklist_items):
+                self.db.add(
+                    ChecklistItem(
+                        action_id=action.id,
+                        key=checklist.id,
+                        title=checklist.title,
+                        done=checklist.done,
+                        sort=checklist.sort
+                        if checklist.sort is not None
+                        else c_index,
+                    )
+                )
 
         await self.db.flush()
-        await self.db.refresh(project, attribute_names=["actions"])
+        await self.db.refresh(
+            project, attribute_names=["actions", "groups"]
+        )

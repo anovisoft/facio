@@ -1,8 +1,10 @@
 from app.schemas.path import (
     ActionResponse,
+    ChecklistItemResponse,
     CommitProjectRequest,
     ConversationTurnResponse,
     CreateProjectRequest,
+    GroupResponse,
     NextActionResponse,
     PATH_RESPONSE_SCHEMA,
     PathState,
@@ -10,14 +12,17 @@ from app.schemas.path import (
     ProjectSummary,
     RefineProjectRequest,
     RepairProjectRequest,
+    ToggleChecklistItemRequest,
     TranscriptResponse,
 )
 
 __all__ = [
     "ActionResponse",
+    "ChecklistItemResponse",
     "CommitProjectRequest",
     "ConversationTurnResponse",
     "CreateProjectRequest",
+    "GroupResponse",
     "NextActionResponse",
     "PATH_RESPONSE_SCHEMA",
     "PathState",
@@ -25,5 +30,6 @@ __all__ = [
     "ProjectSummary",
     "RefineProjectRequest",
     "RepairProjectRequest",
+    "ToggleChecklistItemRequest",
     "TranscriptResponse",
 ]

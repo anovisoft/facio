@@ -125,6 +125,28 @@ def upgrade() -> None:
     op.create_index("ix_projects_user_id", "projects", ["user_id"])
 
     op.create_table(
+        "action_groups",
+        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column(
+            "project_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("projects.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column("key", sa.String(100), nullable=False),
+        sa.Column("title", sa.String(255), nullable=False),
+        sa.Column("sort", sa.Integer(), nullable=False, server_default="0"),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.UniqueConstraint("project_id", "key", name="uq_action_groups_project_key"),
+    )
+    op.create_index("ix_action_groups_project_id", "action_groups", ["project_id"])
+
+    op.create_table(
         "actions",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column(
@@ -132,6 +154,12 @@ def upgrade() -> None:
             postgresql.UUID(as_uuid=True),
             sa.ForeignKey("projects.id", ondelete="CASCADE"),
             nullable=False,
+        ),
+        sa.Column(
+            "group_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("action_groups.id", ondelete="SET NULL"),
+            nullable=True,
         ),
         sa.Column("title", sa.String(500), nullable=False),
         sa.Column("why", sa.Text(), nullable=False),
@@ -154,6 +182,37 @@ def upgrade() -> None:
         ),
     )
     op.create_index("ix_actions_project_id", "actions", ["project_id"])
+    op.create_index("ix_actions_group_id", "actions", ["group_id"])
+
+    op.create_table(
+        "checklist_items",
+        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column(
+            "action_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("actions.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column("key", sa.String(100), nullable=True),
+        sa.Column("title", sa.String(500), nullable=False),
+        sa.Column(
+            "done", sa.Boolean(), nullable=False, server_default=sa.text("false")
+        ),
+        sa.Column("sort", sa.Integer(), nullable=False, server_default="0"),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+    )
+    op.create_index("ix_checklist_items_action_id", "checklist_items", ["action_id"])
 
     op.create_table(
         "conversation_turns",
@@ -267,7 +326,9 @@ def downgrade() -> None:
     op.drop_table("state_versions")
     op.drop_table("llm_calls")
     op.drop_table("conversation_turns")
+    op.drop_table("checklist_items")
     op.drop_table("actions")
+    op.drop_table("action_groups")
     op.drop_table("projects")
     op.drop_table("users")
 

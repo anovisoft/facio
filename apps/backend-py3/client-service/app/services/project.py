@@ -8,15 +8,27 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models import Project, ProjectStatus, StateVersion, User
-from app.schemas.path import ActionResponse, ClarifyQuestion, ProjectDetail
+from app.models import Action, Project, ProjectStatus, StateVersion, User
+from app.schemas.path import ClarifyQuestion, ProjectDetail
 from app.services.audit import AuditService
+from app.services.serializers import (
+    action_queue_key,
+    serialize_action,
+    serialize_groups,
+)
 
 
 class ProjectService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
         self.audit = AuditService(db)
+
+    def _project_options(self):
+        return (
+            selectinload(Project.groups),
+            selectinload(Project.actions).selectinload(Action.group),
+            selectinload(Project.actions).selectinload(Action.checklist_items),
+        )
 
     async def list_projects(self, user: User) -> list[Project]:
         result = await self.db.execute(
@@ -26,7 +38,7 @@ class ProjectService:
                 Project.status != ProjectStatus.abandoned,
             )
             .order_by(Project.updated_at.desc())
-            .options(selectinload(Project.actions))
+            .options(*self._project_options())
         )
         return list(result.scalars().all())
 
@@ -36,7 +48,7 @@ class ProjectService:
         stmt = (
             select(Project)
             .where(Project.id == project_id, Project.user_id == user.id)
-            .options(selectinload(Project.actions))
+            .options(*self._project_options())
         )
         if for_update:
             stmt = stmt.with_for_update()
@@ -68,6 +80,7 @@ class ProjectService:
             for q in state.get("questions", [])
         ]
         resources = list(state.get("resources", []) or [])
+        ordered_actions = sorted(project.actions, key=action_queue_key)
         return ProjectDetail(
             id=project.id,
             status=project.status.value,
@@ -79,10 +92,8 @@ class ProjectService:
             committed_at=project.committed_at,
             created_at=project.created_at,
             updated_at=project.updated_at,
-            actions=[
-                ActionResponse.model_validate(a, from_attributes=True)
-                for a in project.actions
-            ],
+            groups=serialize_groups(project.groups),
+            actions=[serialize_action(a) for a in ordered_actions],
             questions=questions,
             resources=resources,
             current_version=version,
@@ -116,7 +127,7 @@ class ProjectService:
         project.status = ProjectStatus.active
         project.committed_at = now
 
-        first = min(project.actions, key=lambda a: a.sort)
+        first = sorted(project.actions, key=action_queue_key)[0]
         first.due_at = self._resolve_first_due(first_step_when, now)
 
         await self.audit.add_event(

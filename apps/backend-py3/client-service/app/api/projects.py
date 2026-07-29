@@ -18,6 +18,7 @@ from app.schemas.path import (
 from app.services.action import ActionService
 from app.services.path import PathService
 from app.services.project import ProjectService
+from app.services.serializers import serialize_action
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -61,9 +62,7 @@ async def list_actions(
     db: DbSession,
 ) -> list[ActionResponse]:
     actions = await ActionService(db).list_actions(user, project_id)
-    return [
-        ActionResponse.model_validate(a, from_attributes=True) for a in actions
-    ]
+    return [serialize_action(a) for a in actions]
 
 
 @router.get("/{project_id}/next-action", response_model=NextActionResponse)
@@ -75,11 +74,7 @@ async def next_action(
     action = await ActionService(db).get_next_action(user, project_id)
     return NextActionResponse(
         project_id=project_id,
-        action=(
-            ActionResponse.model_validate(action, from_attributes=True)
-            if action
-            else None
-        ),
+        action=serialize_action(action) if action else None,
     )
 
 

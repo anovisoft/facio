@@ -105,12 +105,43 @@ class Project(Base):
     )
 
     user: Mapped[User] = relationship(back_populates="projects")
+    groups: Mapped[list[ActionGroup]] = relationship(
+        back_populates="project",
+        lazy="selectin",
+        order_by="ActionGroup.sort",
+        cascade="all, delete-orphan",
+    )
     actions: Mapped[list[Action]] = relationship(
         back_populates="project",
         lazy="selectin",
         order_by="Action.sort",
         cascade="all, delete-orphan",
     )
+
+
+class ActionGroup(Base):
+    """Path section (Покупки, Готовка, …). `key` is the LLM-facing id."""
+
+    __tablename__ = "action_groups"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+    key: Mapped[str] = mapped_column(String(100), nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    sort: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    project: Mapped[Project] = relationship(back_populates="groups")
+    actions: Mapped[list[Action]] = relationship(back_populates="group")
 
 
 class Action(Base):
@@ -124,6 +155,12 @@ class Action(Base):
         ForeignKey("projects.id", ondelete="CASCADE"),
         index=True,
         nullable=False,
+    )
+    group_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("action_groups.id", ondelete="SET NULL"),
+        index=True,
+        nullable=True,
     )
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     why: Mapped[str] = mapped_column(Text, nullable=False)
@@ -153,6 +190,44 @@ class Action(Base):
     )
 
     project: Mapped[Project] = relationship(back_populates="actions")
+    group: Mapped[ActionGroup | None] = relationship(
+        back_populates="actions", lazy="selectin"
+    )
+    checklist_items: Mapped[list[ChecklistItem]] = relationship(
+        back_populates="action",
+        lazy="selectin",
+        order_by="ChecklistItem.sort",
+        cascade="all, delete-orphan",
+    )
+
+
+class ChecklistItem(Base):
+    __tablename__ = "checklist_items"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    action_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("actions.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
+    key: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    done: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    sort: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    action: Mapped[Action] = relationship(back_populates="checklist_items")
 
 
 class ConversationTurn(Base):

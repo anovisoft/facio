@@ -7,8 +7,16 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models import Action, ActionStatus, Project, ProjectStatus, User
+from app.models import (
+    Action,
+    ActionStatus,
+    ChecklistItem,
+    Project,
+    ProjectStatus,
+    User,
+)
 from app.services.audit import AuditService
+from app.services.serializers import action_queue_key
 
 
 class ActionService:
@@ -23,7 +31,11 @@ class ActionService:
             select(Action)
             .join(Project)
             .where(Action.id == action_id, Project.user_id == user.id)
-            .options(selectinload(Action.project))
+            .options(
+                selectinload(Action.project),
+                selectinload(Action.group),
+                selectinload(Action.checklist_items),
+            )
         )
         action = result.scalar_one_or_none()
         if action is None:
@@ -54,10 +66,15 @@ class ActionService:
                 Action.project_id == project_id,
                 Action.status == ActionStatus.pending,
             )
-            .order_by(Action.sort.asc())
-            .limit(1)
+            .options(
+                selectinload(Action.group),
+                selectinload(Action.checklist_items),
+            )
         )
-        return result.scalar_one_or_none()
+        actions = list(result.scalars().all())
+        if not actions:
+            return None
+        return sorted(actions, key=action_queue_key)[0]
 
     async def list_actions(self, user: User, project_id: UUID) -> list[Action]:
         result = await self.db.execute(
@@ -74,9 +91,12 @@ class ActionService:
         result = await self.db.execute(
             select(Action)
             .where(Action.project_id == project_id)
-            .order_by(Action.sort.asc())
+            .options(
+                selectinload(Action.group),
+                selectinload(Action.checklist_items),
+            )
         )
-        return list(result.scalars().all())
+        return sorted(list(result.scalars().all()), key=action_queue_key)
 
     async def complete(self, user: User, action_id: UUID) -> Action:
         action, project = await self._get_owned_action(user, action_id)
@@ -89,6 +109,16 @@ class ActionService:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Action is already {action.status.value}",
+            )
+
+        incomplete = [i for i in action.checklist_items if not i.done]
+        if incomplete:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "Mark all checklist items before completing this action "
+                    f"({len(incomplete)} remaining)"
+                ),
             )
 
         previous = action.status.value
@@ -139,8 +169,7 @@ class ActionService:
             )
 
         await self.db.commit()
-        await self.db.refresh(action)
-        return action
+        return (await self._get_owned_action(user, action_id))[0]
 
     async def skip(self, user: User, action_id: UUID) -> Action:
         action, project = await self._get_owned_action(user, action_id)
@@ -168,5 +197,52 @@ class ActionService:
             },
         )
         await self.db.commit()
-        await self.db.refresh(action)
-        return action
+        return (await self._get_owned_action(user, action_id))[0]
+
+    async def toggle_checklist_item(
+        self,
+        user: User,
+        item_id: UUID,
+        *,
+        done: bool | None = None,
+    ) -> ChecklistItem:
+        result = await self.db.execute(
+            select(ChecklistItem)
+            .join(Action)
+            .join(Project)
+            .where(ChecklistItem.id == item_id, Project.user_id == user.id)
+            .options(selectinload(ChecklistItem.action))
+        )
+        item = result.scalar_one_or_none()
+        if item is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Checklist item not found",
+            )
+
+        action = item.action
+        if action.status != ActionStatus.pending:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Cannot toggle checklist on a closed action",
+            )
+
+        previous = item.done
+        item.done = (not item.done) if done is None else done
+        await self.db.flush()
+
+        await self.audit.add_event(
+            event_type="checklist_item_toggled",
+            user_id=user.id,
+            project_id=action.project_id,
+            payload={
+                "checklist_item_id": str(item.id),
+                "action_id": str(action.id),
+                "previous_done": previous,
+                "done": item.done,
+                "title": item.title,
+            },
+        )
+        await self.db.commit()
+        await self.db.refresh(item)
+        return item
