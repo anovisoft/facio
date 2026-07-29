@@ -1,0 +1,41 @@
+services:
+  fasio-postgres:
+    image: postgres:16-alpine
+    container_name: fasio-postgres
+    environment:
+      POSTGRES_USER: ${FASIO_POSTGRES_USER:-fasio}
+      POSTGRES_PASSWORD: ${FASIO_POSTGRES_PASSWORD:-fasio}
+      POSTGRES_DB: ${FASIO_POSTGRES_DB:-fasio}
+    ports:
+      - "5435:5432"
+    volumes:
+      - fasio_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${FASIO_POSTGRES_USER:-fasio} -d ${FASIO_POSTGRES_DB:-fasio}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  fasio-backend:
+    build:
+      context: ./apps/backend-py3/client-service
+      dockerfile: Dockerfile
+    container_name: fasio-backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${FASIO_POSTGRES_USER:-fasio}:${FASIO_POSTGRES_PASSWORD:-fasio}@fasio-postgres:5432/${FASIO_POSTGRES_DB:-fasio}
+      APP_NAME: ${FASIO_APP_NAME:-Facio API}
+      DEBUG: ${FASIO_DEBUG:-false}
+    ports:
+      - "8000:8000"
+    depends_on:
+      fasio-postgres:
+        condition: service_healthy
+    volumes:
+      - ./apps/backend-py3/client-service/app:/app/app:ro
+
+volumes:
+  fasio_postgres_data:
