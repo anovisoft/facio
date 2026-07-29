@@ -2,6 +2,18 @@
 
 FastAPI backend for the Facio MVP.
 
+## Tests
+
+From the repo root:
+
+```bash
+./scripts/test-client-service.sh
+```
+
+Needs Postgres (`fasio_test` on the compose instance). The script starts `fasio-postgres`, creates `fasio_test` if missing, syncs deps, and runs pytest. Extra args are passed through (`./scripts/test-client-service.sh -k create -q`).
+
+LLM is scripted in tests (no `ANTHROPIC_API_KEY`). Coverage: schema validation, create gate (path | instant_answer), refine / restore / commit / abandon, multi-active, actions + checklist, client beacons.
+
 ## Local (Docker)
 
 From the `fasio/` repo root:
