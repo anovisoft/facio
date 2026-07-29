@@ -48,9 +48,27 @@
 
 В UI-аналитике и отчётах говорить «Сделано» / «Сегодня»; в коде событий допустимы `action_*`.
 
+**Ownership:** факты мутаций пишет **сервер**; клиент через `POST /events` шлёт только UI-beacons (`app_opened`, `accept_viewed`, `action_shown`, `path_opened`, `project_switched`). Не дублировать серверные типы.
+
 Хранить: raw intent, clarify turns, **llm_calls**, **state_versions**, outcome, domain, device_id.
 
 Метрики **per project** и **per user**.
+
+### SQL views (Postgres)
+
+После миграции `003_mvp_metric_views`:
+
+| View | Зачем |
+|------|--------|
+| `mvp_event_counts` | сырые counts по `events.type` |
+| `mvp_project_milestones` | timestamps intent / soft-start / draft / commit / first_completion + refine count |
+| `mvp_fct` | FCT hours (intent→Сделано, commit→Сделано) + same-day flag |
+| `mvp_activation_kpis` | commit / draft / instant / refine / same-day rates одной строкой |
+| `mvp_user_project_stats` | active/draft/completed на user (multi-active share) |
+| `mvp_audit_gaps` | create/refine/repair без raw или без близкого state_version |
+| `mvp_domain_counts` | projects по `domain` (wedge / demand) |
+
+Пример: `SELECT * FROM mvp_activation_kpis;` / `SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY fct_commit_hours) FROM mvp_fct;`
 
 ---
 
@@ -123,4 +141,4 @@
 ## Как собираем
 
 Postgres: `events` + `conversation_turns` + `llm_calls` + `state_versions` с первой сборки.  
-Nightly SQL / Metabase. Amplitude не обязателен.
+Views `mvp_*` — стартер для Metabase / nightly SQL. Amplitude не обязателен.

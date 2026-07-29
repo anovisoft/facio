@@ -54,7 +54,9 @@ class ActionService:
     async def get_next_action(
         self, user: User, project_id: UUID
     ) -> Action | None:
-        await self.projects.get_project(user, project_id)
+        project = await self.projects.get_project(user, project_id)
+        if project.status != ProjectStatus.active:
+            return None
         result = await self.db.execute(
             select(Action)
             .where(

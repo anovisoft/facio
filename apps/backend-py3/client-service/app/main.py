@@ -1,5 +1,5 @@
-import logging
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,16 +9,18 @@ from app.api import api_router
 from app.config import get_settings
 from app.database import engine
 from app.errors import AppError
+from app.logging_setup import setup_logging
 from app.providers.anthropic_llm import AnthropicLLMProvider
 from app.providers.llm import set_llm_provider
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-logging.getLogger("app").setLevel(logging.INFO)
-
 settings = get_settings()
+setup_logging(
+    level=settings.log_level,
+    log_dir=settings.log_dir or None,
+    backup_count=settings.log_backup_count,
+)
+
+logger = logging.getLogger("app")
 API_V1_STR = "/api/v1"
 
 
@@ -34,15 +36,21 @@ async def lifespan(_app: FastAPI):
                 prompt_cache_ttl=settings.llm_prompt_cache_ttl,
             )
         )
-        logging.getLogger("app").info(
+        logger.info(
             "LLM provider configured: Anthropic model=%s cache=%s ttl=%s",
             settings.llm_model,
             settings.llm_prompt_cache,
             settings.llm_prompt_cache_ttl,
         )
     else:
-        logging.getLogger("app").warning(
+        logger.warning(
             "ANTHROPIC_API_KEY not set; LLM endpoints return 501"
+        )
+    if settings.log_dir:
+        logger.info(
+            "File logging enabled: dir=%s backup_days=%s",
+            settings.log_dir,
+            settings.log_backup_count,
         )
     yield
     await engine.dispose()
@@ -83,6 +91,19 @@ async def app_error_handler(_request: Request, exc: AppError) -> JSONResponse:
         status_code=exc.status_code,
         content={"detail": exc.detail},
     )
+
+
+@app.middleware("http")
+async def request_log_middleware(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path != "/health":
+        logger.info(
+            "%s %s → %s",
+            request.method,
+            request.url.path,
+            response.status_code,
+        )
+    return response
 
 
 @app.get("/health")

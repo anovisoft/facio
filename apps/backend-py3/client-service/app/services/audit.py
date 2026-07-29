@@ -45,27 +45,18 @@ class EventType(str, enum.Enum):
     # Extra server-side (not all are client beacons)
     checklist_item_toggled = "checklist_item_toggled"
     project_completed = "project_completed"
+    project_abandoned = "project_abandoned"
 
 
+# UI beacons only — mutation facts (intent/commit/done/…) are server-emitted
+# elsewhere. Overlap here double-counts funnel KPIs in docs/mvp/04-metrics.md.
 CLIENT_EVENT_TYPES: frozenset[str] = frozenset(
     {
         EventType.app_opened.value,
-        EventType.soft_start_shown.value,
-        EventType.draft_shown.value,
-        EventType.instant_answer_shown.value,
         EventType.accept_viewed.value,
         EventType.action_shown.value,
         EventType.path_opened.value,
         EventType.project_switched.value,
-        EventType.back_navigated.value,
-        EventType.intent_submitted.value,
-        EventType.committed.value,
-        EventType.action_done.value,
-        EventType.action_skipped.value,
-        EventType.first_completion.value,
-        EventType.refine_answered.value,
-        EventType.plan_failed.value,
-        EventType.repair_applied.value,
     }
 )
 

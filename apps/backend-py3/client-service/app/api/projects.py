@@ -1,11 +1,12 @@
 from uuid import UUID
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Body, Query
 
 from app.deps import CurrentUser, DbSession, LLM
 from app.errors import AppError
 from app.schemas.api import CreateIntentResponse
 from app.schemas.path import (
+    AbandonProjectRequest,
     ActionResponse,
     CommitProjectRequest,
     CreateProjectRequest,
@@ -15,13 +16,10 @@ from app.schemas.path import (
     RefineProjectRequest,
     RepairProjectRequest,
     RestoreStateRequest,
-    StateVersionSummary,
-    TimelineResponse,
-    TranscriptResponse,
 )
 from app.services.action import ActionService
 from app.services.path import PathService
-from app.services.project import ProjectService
+from app.services.project import ListStatusFilter, ProjectService
 from app.services.serializers import serialize_action
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -34,9 +32,20 @@ async def _commit_on_app_error(db: DbSession, exc: AppError) -> None:
 
 
 @router.get("", response_model=list[ProjectSummary])
-async def list_projects(user: CurrentUser, db: DbSession) -> list[ProjectSummary]:
+async def list_projects(
+    user: CurrentUser,
+    db: DbSession,
+    status: ListStatusFilter = Query(
+        "open",
+        description=(
+            "open = non-abandoned (default Home); "
+            "abandoned = archive only; "
+            "or draft|active|completed"
+        ),
+    ),
+) -> list[ProjectSummary]:
     service = ProjectService(db)
-    projects = await service.list_projects(user)
+    projects = await service.list_projects(user, status=status)
     return [
         ProjectSummary.model_validate(p, from_attributes=True) for p in projects
     ]
@@ -126,16 +135,20 @@ async def commit_project(
     return await service.to_detail(project)
 
 
-@router.get(
-    "/{project_id}/state-versions",
-    response_model=list[StateVersionSummary],
-)
-async def list_state_versions(
+@router.post("/{project_id}/abandon", response_model=ProjectDetail)
+async def abandon_project(
     project_id: UUID,
     user: CurrentUser,
     db: DbSession,
-) -> list[StateVersionSummary]:
-    return await ProjectService(db).list_state_versions(user, project_id)
+    body: AbandonProjectRequest = Body(default_factory=AbandonProjectRequest),
+) -> ProjectDetail:
+    service = ProjectService(db)
+    project = await service.abandon(
+        user,
+        project_id,
+        reason=body.reason,
+    )
+    return await service.to_detail(project)
 
 
 @router.post("/{project_id}/restore-state", response_model=ProjectDetail)
@@ -165,22 +178,3 @@ async def repair_project(
     except AppError as exc:
         await _commit_on_app_error(db, exc)
     return await ProjectService(db).to_detail(project)
-
-
-@router.get("/{project_id}/transcript", response_model=TranscriptResponse)
-async def get_transcript(
-    project_id: UUID,
-    user: CurrentUser,
-    db: DbSession,
-) -> TranscriptResponse:
-    turns = await PathService(db).get_transcript(user, project_id)
-    return TranscriptResponse(project_id=project_id, turns=turns)
-
-
-@router.get("/{project_id}/timeline", response_model=TimelineResponse)
-async def get_timeline(
-    project_id: UUID,
-    user: CurrentUser,
-    db: DbSession,
-) -> TimelineResponse:
-    return await PathService(db).get_timeline(user, project_id)

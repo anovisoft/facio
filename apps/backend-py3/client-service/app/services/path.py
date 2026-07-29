@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import logging
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal, TypeVar
 from uuid import UUID
 
 from pydantic import ValidationError
@@ -61,7 +63,11 @@ from app.services.path_materialize import (
 )
 from app.services.project import ProjectService
 
-_CREATE_MAX_ATTEMPTS = 2
+logger = logging.getLogger("app.path")
+
+_LLM_MAX_ATTEMPTS = 2
+_T = TypeVar("_T")
+MaterializeMode = Literal["none", "merge"]
 
 
 @dataclass
@@ -69,6 +75,23 @@ class ApplyResult:
     state: PathState
     version: int
     llm_call_id: UUID
+
+
+def _assistant_content(raw_response: Any) -> str:
+    if isinstance(raw_response, str):
+        return raw_response
+    return json.dumps(raw_response, ensure_ascii=False)
+
+
+def _parse_create_payload(raw_response: Any) -> CreateLlmResponse:
+    parsed = parse_create_response(raw_response)
+    if parsed.kind == "path" and parsed.path is not None:
+        PathState.model_validate(parsed.path.model_dump(mode="json"))
+    return parsed
+
+
+def _parse_path_payload(raw_response: Any) -> PathState:
+    return ensure_action_keys(parse_path_state(raw_response))
 
 
 class PathService:
@@ -85,7 +108,7 @@ class PathService:
     async def create_from_intent(
         self, user: User, intent: str
     ) -> CreateIntentResponse:
-        await self.audit.add_event(
+        intent_event = await self.audit.add_event(
             event_type=EventType.intent_submitted,
             user_id=user.id,
             payload={"intent": intent},
@@ -124,6 +147,7 @@ class PathService:
         self.db.add(project)
         await self.db.flush()
 
+        intent_event.project_id = project.id
         user_turn.project_id = project.id
         llm_row = await self.db.get(LlmCall, llm_call_id)
         if llm_row is not None:
@@ -152,6 +176,18 @@ class PathService:
                 "source": StateSource.llm_create.value,
             },
         )
+        # Soft-start and draft share one create composition in MVP UI; both
+        # funnel events are written here so KPIs do not depend on client beacons.
+        await self.audit.add_event(
+            event_type=EventType.soft_start_shown,
+            user_id=user.id,
+            project_id=project.id,
+            payload={
+                "paraphrase": state.paraphrase,
+                "outcome": state.outcome,
+                "version": version,
+            },
+        )
         await self.audit.add_event(
             event_type=EventType.draft_shown,
             user_id=user.id,
@@ -161,6 +197,13 @@ class PathService:
         await self.db.commit()
         project = await self.projects.get_project(user, project.id)
         detail = await self.projects.to_detail(project)
+        logger.info(
+            "create path user=%s project=%s version=%s outcome=%r",
+            user.id,
+            project.id,
+            version,
+            state.outcome,
+        )
         return PathCreatedResponse(kind="path", project=detail)
 
     async def _finish_instant_answer(
@@ -193,12 +236,20 @@ class PathService:
                 "label": payload.label,
                 "answer": payload.answer,
                 "goal_suggestions": payload.goal_suggestions,
+                "domain": payload.domain,
                 "llm_call_id": str(llm_call_id),
                 "user_turn_id": str(user_turn_id),
                 "assistant_turn_id": str(assistant_turn.id),
             },
         )
         await self.db.commit()
+        logger.info(
+            "create instant_answer user=%s llm_call=%s label=%r domain=%s",
+            user.id,
+            llm_call_id,
+            payload.label,
+            payload.domain,
+        )
         return InstantAnswerResponse(
             kind="instant_answer",
             label=payload.label,
@@ -207,6 +258,7 @@ class PathService:
             raw_intent=intent,
             llm_call_id=llm_call_id,
             event_id=event.id,
+            domain=payload.domain,
         )
 
     async def _generate_create_response(
@@ -215,120 +267,15 @@ class PathService:
         user: User,
         messages: list[dict[str, Any]],
     ) -> tuple[CreateLlmResponse, LLMRawResult, UUID]:
-        last_error: Exception | None = None
-        for attempt in range(_CREATE_MAX_ATTEMPTS):
-            try:
-                raw = await self.llm.generate(
-                    purpose="create",
-                    messages=messages,
-                    response_schema=CREATE_RESPONSE_SCHEMA,
-                )
-            except LLMNotConfiguredError as exc:
-                await self.audit.add_llm_call(
-                    user_id=user.id,
-                    project_id=None,
-                    purpose="create",
-                    prompt_messages=messages,
-                    parsed_ok=False,
-                    error=str(exc),
-                )
-                await self.audit.add_event(
-                    event_type=EventType.plan_failed,
-                    user_id=user.id,
-                    payload={"purpose": "create", "error": str(exc)},
-                )
-                raise NotConfiguredError(str(exc)) from exc
-            except Exception as exc:  # noqa: BLE001
-                await self.audit.add_llm_call(
-                    user_id=user.id,
-                    project_id=None,
-                    purpose="create",
-                    prompt_messages=messages,
-                    parsed_ok=False,
-                    error=str(exc),
-                )
-                await self.audit.add_event(
-                    event_type=EventType.plan_failed,
-                    user_id=user.id,
-                    payload={"purpose": "create", "error": str(exc)},
-                )
-                raise UpstreamError(f"LLM call failed: {exc}") from exc
-
-            try:
-                parsed = parse_create_response(raw.raw_response)
-                if parsed.kind == "path" and parsed.path is not None:
-                    # Validate path fully (keys etc. applied later)
-                    PathState.model_validate(
-                        parsed.path.model_dump(mode="json")
-                    )
-            except (
-                ValidationError,
-                ValueError,
-                TypeError,
-                json.JSONDecodeError,
-            ) as exc:
-                last_error = exc
-                await self.audit.add_llm_call(
-                    user_id=user.id,
-                    project_id=None,
-                    purpose="create",
-                    prompt_messages=messages,
-                    model=raw.model,
-                    raw_response=raw.raw_response,
-                    parsed_ok=False,
-                    tokens_in=raw.tokens_in,
-                    tokens_out=raw.tokens_out,
-                    latency_ms=raw.latency_ms,
-                    error=str(exc),
-                )
-                if attempt + 1 < _CREATE_MAX_ATTEMPTS:
-                    messages = [
-                        *messages,
-                        {
-                            "role": "assistant",
-                            "content": json.dumps(
-                                raw.raw_response, ensure_ascii=False
-                            )
-                            if not isinstance(raw.raw_response, str)
-                            else raw.raw_response,
-                        },
-                        {
-                            "role": "user",
-                            "content": (
-                                "Previous response failed validation: "
-                                f"{exc}. Return corrected JSON matching "
-                                "the schema."
-                            ),
-                        },
-                    ]
-                    continue
-                await self.audit.add_event(
-                    event_type=EventType.plan_failed,
-                    user_id=user.id,
-                    payload={"purpose": "create", "error": str(exc)},
-                )
-                raise ValidationAppError(
-                    f"Invalid create response from LLM: {exc}"
-                ) from exc
-
-            llm_call = await self.audit.add_llm_call(
-                user_id=user.id,
-                project_id=None,
-                purpose="create",
-                prompt_messages=messages,
-                model=raw.model,
-                raw_response=raw.raw_response,
-                parsed_ok=True,
-                tokens_in=raw.tokens_in,
-                tokens_out=raw.tokens_out,
-                latency_ms=raw.latency_ms,
-            )
-            return parsed, raw, llm_call.id
-
-        assert last_error is not None
-        raise ValidationAppError(
-            f"Invalid create response from LLM: {last_error}"
-        ) from last_error
+        return await self._llm_generate_validated(
+            user=user,
+            project_id=None,
+            purpose="create",
+            messages=messages,
+            response_schema=CREATE_RESPONSE_SCHEMA,
+            parse=_parse_create_payload,
+            invalid_message="Invalid create response from LLM",
+        )
 
     async def refine(
         self,
@@ -388,6 +335,12 @@ class PathService:
             },
         )
         await self.db.commit()
+        logger.info(
+            "refine project=%s version=%s question_id=%s",
+            project.id,
+            result.version,
+            question_id,
+        )
         return await self.projects.get_project(user, project.id)
 
     async def repair(
@@ -421,7 +374,7 @@ class PathService:
         if current is None:
             raise ConflictError("Project has no Path state to repair")
 
-        materialize = (
+        materialize: MaterializeMode = (
             "merge" if project.status == ProjectStatus.active else "none"
         )
         result = await self._run_llm_mutation(
@@ -455,6 +408,12 @@ class PathService:
             payload={"version": result.version},
         )
         await self.db.commit()
+        logger.info(
+            "repair project=%s version=%s status=%s",
+            project.id,
+            result.version,
+            project.status.value,
+        )
         return await self.projects.get_project(user, project.id)
 
     async def get_transcript(
@@ -580,6 +539,129 @@ class PathService:
         await self.db.commit()
         return await self.projects.get_project(user, project.id)
 
+    async def _llm_generate_validated(
+        self,
+        *,
+        user: User,
+        project_id: UUID | None,
+        purpose: LLMPurpose,
+        messages: list[dict[str, Any]],
+        response_schema: dict[str, Any],
+        parse: Callable[[Any], _T],
+        invalid_message: str,
+    ) -> tuple[_T, LLMRawResult, UUID]:
+        """Generate structured LLM output with validate + retry (×2)."""
+        working_messages = list(messages)
+        last_error: Exception | None = None
+
+        for attempt in range(_LLM_MAX_ATTEMPTS):
+            try:
+                raw = await self.llm.generate(
+                    purpose=purpose,
+                    messages=working_messages,
+                    response_schema=response_schema,
+                )
+            except LLMNotConfiguredError as exc:
+                await self.audit.add_llm_call(
+                    user_id=user.id,
+                    project_id=project_id,
+                    purpose=purpose,
+                    prompt_messages=working_messages,
+                    parsed_ok=False,
+                    error=str(exc),
+                )
+                await self.audit.add_event(
+                    event_type=EventType.plan_failed,
+                    user_id=user.id,
+                    project_id=project_id,
+                    payload={"purpose": purpose, "error": str(exc)},
+                )
+                raise NotConfiguredError(str(exc)) from exc
+            except Exception as exc:  # noqa: BLE001
+                await self.audit.add_llm_call(
+                    user_id=user.id,
+                    project_id=project_id,
+                    purpose=purpose,
+                    prompt_messages=working_messages,
+                    parsed_ok=False,
+                    error=str(exc),
+                )
+                await self.audit.add_event(
+                    event_type=EventType.plan_failed,
+                    user_id=user.id,
+                    project_id=project_id,
+                    payload={"purpose": purpose, "error": str(exc)},
+                )
+                raise UpstreamError(f"LLM call failed: {exc}") from exc
+
+            try:
+                parsed = parse(raw.raw_response)
+            except (
+                ValidationError,
+                ValueError,
+                TypeError,
+                json.JSONDecodeError,
+            ) as exc:
+                last_error = exc
+                await self.audit.add_llm_call(
+                    user_id=user.id,
+                    project_id=project_id,
+                    purpose=purpose,
+                    prompt_messages=working_messages,
+                    model=raw.model,
+                    raw_response=raw.raw_response,
+                    parsed_ok=False,
+                    tokens_in=raw.tokens_in,
+                    tokens_out=raw.tokens_out,
+                    latency_ms=raw.latency_ms,
+                    error=str(exc),
+                )
+                if attempt + 1 < _LLM_MAX_ATTEMPTS:
+                    working_messages = [
+                        *working_messages,
+                        {
+                            "role": "assistant",
+                            "content": _assistant_content(raw.raw_response),
+                        },
+                        {
+                            "role": "user",
+                            "content": (
+                                "Previous response failed validation: "
+                                f"{exc}. Return corrected JSON matching "
+                                "the schema."
+                            ),
+                        },
+                    ]
+                    continue
+                await self.audit.add_event(
+                    event_type=EventType.plan_failed,
+                    user_id=user.id,
+                    project_id=project_id,
+                    payload={"purpose": purpose, "error": str(exc)},
+                )
+                raise ValidationAppError(
+                    f"{invalid_message}: {exc}"
+                ) from exc
+
+            llm_call = await self.audit.add_llm_call(
+                user_id=user.id,
+                project_id=project_id,
+                purpose=purpose,
+                prompt_messages=working_messages,
+                model=raw.model,
+                raw_response=raw.raw_response,
+                parsed_ok=True,
+                tokens_in=raw.tokens_in,
+                tokens_out=raw.tokens_out,
+                latency_ms=raw.latency_ms,
+            )
+            return parsed, raw, llm_call.id
+
+        assert last_error is not None
+        raise ValidationAppError(
+            f"{invalid_message}: {last_error}"
+        ) from last_error
+
     async def _run_llm_mutation(
         self,
         *,
@@ -588,83 +670,17 @@ class PathService:
         purpose: LLMPurpose,
         messages: list[dict[str, Any]],
         source: StateSource,
-        materialize: str,
+        materialize: MaterializeMode,
     ) -> ApplyResult:
-        """Shared refine/repair LLM pipeline. Does not commit."""
-        try:
-            raw = await self.llm.generate(
-                purpose=purpose,
-                messages=messages,
-                response_schema=PATH_RESPONSE_SCHEMA,
-            )
-        except LLMNotConfiguredError as exc:
-            await self.audit.add_llm_call(
-                user_id=user.id,
-                project_id=project.id,
-                purpose=purpose,
-                prompt_messages=messages,
-                parsed_ok=False,
-                error=str(exc),
-            )
-            await self.audit.add_event(
-                event_type=EventType.plan_failed,
-                user_id=user.id,
-                project_id=project.id,
-                payload={"purpose": purpose, "error": str(exc)},
-            )
-            raise NotConfiguredError(str(exc)) from exc
-        except Exception as exc:  # noqa: BLE001
-            await self.audit.add_llm_call(
-                user_id=user.id,
-                project_id=project.id,
-                purpose=purpose,
-                prompt_messages=messages,
-                parsed_ok=False,
-                error=str(exc),
-            )
-            await self.audit.add_event(
-                event_type=EventType.plan_failed,
-                user_id=user.id,
-                project_id=project.id,
-                payload={"purpose": purpose, "error": str(exc)},
-            )
-            raise UpstreamError(f"LLM call failed: {exc}") from exc
-
-        try:
-            state = ensure_action_keys(parse_path_state(raw.raw_response))
-        except (ValidationError, ValueError, TypeError, json.JSONDecodeError) as exc:
-            await self.audit.add_llm_call(
-                user_id=user.id,
-                project_id=project.id,
-                purpose=purpose,
-                prompt_messages=messages,
-                model=raw.model,
-                raw_response=raw.raw_response,
-                parsed_ok=False,
-                tokens_in=raw.tokens_in,
-                tokens_out=raw.tokens_out,
-                latency_ms=raw.latency_ms,
-                error=str(exc),
-            )
-            await self.audit.add_event(
-                event_type=EventType.plan_failed,
-                user_id=user.id,
-                project_id=project.id,
-                payload={"purpose": purpose, "error": str(exc)},
-            )
-            raise ValidationAppError(f"Invalid Path from LLM: {exc}") from exc
-
-        llm_call = await self.audit.add_llm_call(
-            user_id=user.id,
+        """Refine/repair: validated Path → state version (+ optional merge)."""
+        state, _raw, llm_call_id = await self._llm_generate_validated(
+            user=user,
             project_id=project.id,
             purpose=purpose,
-            prompt_messages=messages,
-            model=raw.model,
-            raw_response=raw.raw_response,
-            parsed_ok=True,
-            tokens_in=raw.tokens_in,
-            tokens_out=raw.tokens_out,
-            latency_ms=raw.latency_ms,
+            messages=messages,
+            response_schema=PATH_RESPONSE_SCHEMA,
+            parse=_parse_path_payload,
+            invalid_message="Invalid Path from LLM",
         )
 
         version = await self._next_version(project.id)
@@ -676,15 +692,13 @@ class PathService:
         )
         apply_contract(project, state)
 
-        if materialize == "full":
-            await materialize_path(self.db, project, state, merge_progress=False)
-        elif materialize == "merge":
-            await materialize_path(self.db, project, state, merge_progress=True)
-        elif materialize != "none":
-            raise ValueError(f"Unknown materialize mode: {materialize}")
+        if materialize == "merge":
+            await materialize_path(
+                self.db, project, state, merge_progress=True
+            )
 
         return ApplyResult(
-            state=state, version=version, llm_call_id=llm_call.id
+            state=state, version=version, llm_call_id=llm_call_id
         )
 
     async def _next_version(self, project_id: UUID) -> int:

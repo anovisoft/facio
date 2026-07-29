@@ -48,6 +48,8 @@ def apply_contract(project: Project, state: PathState) -> None:
     project.paraphrase = state.paraphrase
     project.success_criteria = state.success_criteria
     project.horizon = state.horizon
+    project.domain = state.domain
+    project.tags = list(state.tags)
 
 
 async def materialize_path(

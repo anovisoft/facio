@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     llm_prompt_cache: bool = True
     llm_prompt_cache_ttl: Literal["5m", "1h"] = "5m"
 
+    # File logs: daily rotate, keep ~30 days. Empty LOG_DIR disables file sink.
+    log_level: str = "INFO"
+    log_dir: str = "logs"
+    log_backup_count: int = 30
+
 
 @lru_cache
 def get_settings() -> Settings:

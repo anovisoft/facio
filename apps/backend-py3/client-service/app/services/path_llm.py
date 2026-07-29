@@ -42,6 +42,9 @@ _PATH_FIELDS = """\
   (e.g. "Ок — ведём к: …"); warmer than outcome; match user language.
 - success_criteria: verifiable done condition (no guaranteed health/finance claims).
 - horizon: rough span/load (e.g. "1 evening", "2 weeks, ~20 min/day").
+- domain: ONE of cooking|fitness|learning|home|errands|work|health|finance|\
+  social|other (primary demand cluster). Unsure / safety grey → other.
+- tags: 0–5 short slugs (e.g. pasta, dinner); optional finer clustering.
 - groups[]: optional sections (Покупки, Готовка). Stable `id`, `title`, `sort`.
 - actions[]: ordered steps, soft cap ≤ 8–12 (never a 40-step dump). Each:
   - id: stable key; reuse on refine/repair when the step is the same
@@ -96,6 +99,7 @@ kind + path|null + instant_answer|null. Match user language (RU/EN/…).
 - label: short "question, not a goal" UI line (user language)
 - answer: useful direct answer — or short safe refusal/redirect under Safety
 - goal_suggestions: exactly 2–4 related Facio projects (sequences over time)
+- domain: same controlled vocab as path (cooking|…|other) for Q&A demand
 
 ### kind=path
 
@@ -162,6 +166,8 @@ _FEWSHOT_PATH: dict[str, Any] = {
         "paraphrase": "Ок — ведём к: карбонара на ужин",
         "success_criteria": "Тарелка карбонары съедена сегодня вечером",
         "horizon": "1 вечер, ~60–90 мин с покупками",
+        "domain": "cooking",
+        "tags": ["pasta", "dinner", "carbonara"],
         "groups": [
             {"id": "shop", "title": "Покупки", "sort": 0},
             {"id": "cook", "title": "Готовка", "sort": 1},
@@ -246,6 +252,7 @@ _FEWSHOT_INSTANT: dict[str, Any] = {
             "Изучить бинарную арифметику",
             "Разобрать большие числа в Python",
         ],
+        "domain": "learning",
     },
 }
 

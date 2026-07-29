@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.schemas.path_state import PathState
+from app.schemas.path_state import PathDomain, PathState
 
 
 class InstantAnswerPayload(BaseModel):
@@ -27,6 +27,10 @@ class InstantAnswerPayload(BaseModel):
             "Exactly 2–4 related goals that ARE sequences over time "
             "(Facio projects), not more questions."
         ),
+    )
+    domain: PathDomain = Field(
+        default="other",
+        description="Same controlled domain vocab as path (for Q&A demand).",
     )
 
 

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag
+from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag, field_validator
 
 from app.schemas.path_state import ClarifyQuestion, PathState
 
@@ -108,9 +108,16 @@ class ProjectSummary(BaseModel):
     paraphrase: str | None
     success_criteria: str | None
     horizon: str | None
+    domain: str | None = None
+    tags: list[str] = Field(default_factory=list)
     committed_at: datetime | None
     created_at: datetime
     updated_at: datetime
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def empty_tags(cls, value: list[str] | None) -> list[str]:
+        return list(value or [])
 
 
 class ProjectDetail(ProjectSummary):
@@ -122,6 +129,14 @@ class ProjectDetail(ProjectSummary):
     current_version: int | None = None
 
 
+class AbandonProjectRequest(BaseModel):
+    reason: str | None = Field(
+        default=None,
+        max_length=2000,
+        description="Optional note for audit (why the path was abandoned).",
+    )
+
+
 class InstantAnswerResponse(BaseModel):
     kind: Literal["instant_answer"] = "instant_answer"
     label: str
@@ -130,6 +145,7 @@ class InstantAnswerResponse(BaseModel):
     raw_intent: str
     llm_call_id: UUID
     event_id: UUID | None = None
+    domain: str | None = None
 
 
 class PathCreatedResponse(BaseModel):

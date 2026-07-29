@@ -91,6 +91,8 @@ class Project(Base):
     paraphrase: Mapped[str | None] = mapped_column(Text, nullable=True)
     success_criteria: Mapped[str | None] = mapped_column(Text, nullable=True)
     horizon: Mapped[str | None] = mapped_column(Text, nullable=True)
+    domain: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    tags: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
     committed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

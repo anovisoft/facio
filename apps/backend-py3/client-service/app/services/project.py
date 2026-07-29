@@ -26,6 +26,10 @@ from app.services.serializers import (
     serialize_path_state,
 )
 
+ListStatusFilter = Literal[
+    "open", "abandoned", "draft", "active", "completed"
+]
+
 
 class ProjectService:
     def __init__(self, db: AsyncSession) -> None:
@@ -39,15 +43,23 @@ class ProjectService:
             selectinload(Project.actions).selectinload(Action.checklist_items),
         )
 
-    async def list_projects(self, user: User) -> list[Project]:
+    async def list_projects(
+        self,
+        user: User,
+        *,
+        status: ListStatusFilter = "open",
+    ) -> list[Project]:
+        """List projects. Default ``open`` = everything except abandoned."""
+        stmt = select(Project).where(Project.user_id == user.id)
+        if status == "open":
+            stmt = stmt.where(Project.status != ProjectStatus.abandoned)
+        else:
+            stmt = stmt.where(Project.status == ProjectStatus(status))
+
         result = await self.db.execute(
-            select(Project)
-            .where(
-                Project.user_id == user.id,
-                Project.status != ProjectStatus.abandoned,
+            stmt.order_by(Project.updated_at.desc()).options(
+                *self._project_options()
             )
-            .order_by(Project.updated_at.desc())
-            .options(*self._project_options())
         )
         return list(result.scalars().all())
 
@@ -66,6 +78,33 @@ class ProjectService:
         if project is None:
             raise NotFoundError("Project not found")
         return project
+
+    async def abandon(
+        self,
+        user: User,
+        project_id: UUID,
+        *,
+        reason: str | None = None,
+    ) -> Project:
+        project = await self.get_project(user, project_id, for_update=True)
+        if project.status == ProjectStatus.abandoned:
+            raise ConflictError("Project is already abandoned")
+        if project.status == ProjectStatus.completed:
+            raise ConflictError("Completed projects cannot be abandoned")
+
+        previous = project.status.value
+        project.status = ProjectStatus.abandoned
+        await self.audit.add_event(
+            event_type=EventType.project_abandoned,
+            user_id=user.id,
+            project_id=project.id,
+            payload={
+                "previous_status": previous,
+                "reason": reason,
+            },
+        )
+        await self.db.commit()
+        return await self.get_project(user, project.id)
 
     async def get_latest_state(
         self, project_id: UUID
@@ -139,6 +178,8 @@ class ProjectService:
             paraphrase=project.paraphrase,
             success_criteria=project.success_criteria,
             horizon=project.horizon,
+            domain=project.domain,
+            tags=list(project.tags or []),
             committed_at=project.committed_at,
             created_at=project.created_at,
             updated_at=project.updated_at,

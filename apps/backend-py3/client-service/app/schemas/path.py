@@ -1,6 +1,7 @@
 """Backward-compatible re-exports for Path schemas. """
 
 from app.schemas.api import (
+    AbandonProjectRequest,
     ActionResponse,
     ChecklistItemResponse,
     CommitProjectRequest,
@@ -25,15 +26,18 @@ from app.schemas.api import (
     TranscriptResponse,
 )
 from app.schemas.path_state import (
+    PATH_DOMAINS,
     PATH_RESPONSE_SCHEMA,
     ClarifyQuestion,
     PathAction,
     PathChecklistItem,
+    PathDomain,
     PathGroup,
     PathState,
 )
 
 __all__ = [
+    "AbandonProjectRequest",
     "ActionResponse",
     "ChecklistItemResponse",
     "ClarifyQuestion",
@@ -46,10 +50,12 @@ __all__ = [
     "GroupResponse",
     "InstantAnswerResponse",
     "NextActionResponse",
+    "PATH_DOMAINS",
     "PATH_RESPONSE_SCHEMA",
     "PathAction",
     "PathChecklistItem",
     "PathCreatedResponse",
+    "PathDomain",
     "PathGroup",
     "PathState",
     "ProjectDetail",

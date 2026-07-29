@@ -35,6 +35,9 @@ services:
       LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-8192}
       LLM_PROMPT_CACHE: ${LLM_PROMPT_CACHE:-true}
       LLM_PROMPT_CACHE_TTL: ${LLM_PROMPT_CACHE_TTL:-5m}
+      LOG_LEVEL: ${FASIO_LOG_LEVEL:-INFO}
+      LOG_DIR: ${FASIO_LOG_DIR:-/app/logs}
+      LOG_BACKUP_COUNT: ${FASIO_LOG_BACKUP_COUNT:-30}
     ports:
       - "8000:8000"
     depends_on:
@@ -42,6 +45,7 @@ services:
         condition: service_healthy
     volumes:
       - ./apps/backend-py3/client-service/app:/app/app:ro
+      - ./apps/backend-py3/client-service/logs:/app/logs
 
 volumes:
   fasio_postgres_data:

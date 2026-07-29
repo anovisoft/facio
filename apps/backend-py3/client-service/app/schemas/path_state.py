@@ -1,4 +1,22 @@
+from typing import Literal, get_args
+
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+# Controlled vocab for demand clustering (docs/mvp/04-metrics.md).
+PathDomain = Literal[
+    "cooking",
+    "fitness",
+    "learning",
+    "home",
+    "errands",
+    "work",
+    "health",
+    "finance",
+    "social",
+    "other",
+]
+
+PATH_DOMAINS: frozenset[str] = frozenset(get_args(PathDomain))
 
 
 class PathChecklistItem(BaseModel):
@@ -107,6 +125,19 @@ class PathState(BaseModel):
         min_length=1,
         description='Rough span/load, e.g. "1 evening", "2 weeks, ~20 min/day".',
     )
+    domain: PathDomain = Field(
+        default="other",
+        description=(
+            "Primary demand domain from controlled vocab "
+            "(cooking|fitness|learning|home|errands|work|health|finance|"
+            "social|other). Use other when unsure or safety grey-zone."
+        ),
+    )
+    tags: list[str] = Field(
+        default_factory=list,
+        max_length=5,
+        description="0–5 short slugs for clustering (e.g. pasta, dinner).",
+    )
     groups: list[PathGroup] = Field(
         default_factory=list,
         description="Optional Path sections (Покупки, Готовка, …).",
@@ -145,6 +176,21 @@ class PathState(BaseModel):
                 "questions must be empty or have 2–4 items (got 1)"
             )
         return value
+
+    @field_validator("tags")
+    @classmethod
+    def normalize_tags(cls, value: list[str]) -> list[str]:
+        cleaned: list[str] = []
+        seen: set[str] = set()
+        for raw in value:
+            tag = raw.strip().lower().replace(" ", "-")
+            if not tag or tag in seen:
+                continue
+            seen.add(tag)
+            cleaned.append(tag[:48])
+            if len(cleaned) >= 5:
+                break
+        return cleaned
 
     @model_validator(mode="after")
     def validate_path(self) -> "PathState":

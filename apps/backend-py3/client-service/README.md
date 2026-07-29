@@ -14,11 +14,11 @@ docker compose up --build
 - API: http://localhost:8000
 - Docs: http://localhost:8000/api/v1/docs
 - Health: http://localhost:8000/health
-- Timeline (audit chronology): `GET /api/v1/projects/{id}/timeline`
+- Logs: `apps/backend-py3/client-service/logs/fasio.log` (daily rotate, ~30 days)
 
 Auth: send `X-Device-Id: <any-stable-id>` on protected routes.
 
-LLM: Claude Sonnet 5 (`LLM_MODEL`, default `claude-sonnet-5`). Without `ANTHROPIC_API_KEY`, create/refine/repair return **501**.
+LLM: Claude Sonnet 5 (`LLM_MODEL`, default `claude-sonnet-5`). Without `ANTHROPIC_API_KEY`, create/refine/repair return **501**. Create/refine/repair retry once on schema validation failure (2 attempts total).
 
 Create prompts include a safety/policy block, grey-zone gate hints, FCT/volume caps, field glossary, and two few-shot JSON examples (path + instant_answer).
 
@@ -28,8 +28,8 @@ Prompt caching is on by default (`LLM_PROMPT_CACHE=true`): system + create few-s
 
 Response is a discriminated union:
 
-- `{"kind": "path", "project": {...}}` — draft Path created
-- `{"kind": "instant_answer", "label", "answer", "goal_suggestions", ...}` — not a Facio project; no Project row; full chronology stored under `user_id`
+- `{"kind": "path", "project": {...}}` — draft Path created (`soft_start_shown` + `draft_shown` server events)
+- `{"kind": "instant_answer", "label", "answer", "goal_suggestions", ...}` — not a Facio project; no Project row; chronology stored under `user_id`
 
 ```bash
 # Likely path
@@ -44,6 +44,23 @@ curl -s -X POST http://localhost:8000/api/v1/projects \
   -H 'X-Device-Id: demo' \
   -d '{"intent":"Сколько будет 2 в 100 степени?"}'
 ```
+
+### Client events (`POST /api/v1/events`)
+
+UI beacons only: `app_opened`, `accept_viewed`, `action_shown`, `path_opened`, `project_switched`.  
+Mutation facts (`intent_submitted`, `committed`, `action_done`, …) are written by the server — do not re-post them.
+
+### Metrics views
+
+After `alembic upgrade head`: `mvp_activation_kpis`, `mvp_fct`, `mvp_event_counts`, `mvp_domain_counts`, … (see `docs/mvp/04-metrics.md`).
+
+### Archive
+
+- `POST /api/v1/projects/{id}/abandon` — draft|active → abandoned  
+- `GET /api/v1/projects?status=abandoned` — archive list only  
+- default `?status=open` — Home (excludes abandoned)
+
+Admin history routes (`transcript` / `timeline` / `state-versions`) are removed from the HTTP API (service helpers remain).
 
 ### Schema reset after migration squash
 
