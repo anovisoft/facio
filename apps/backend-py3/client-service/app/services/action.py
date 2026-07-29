@@ -108,6 +108,25 @@ class ActionService:
         )
         return sorted(list(result.scalars().all()), key=action_queue_key)
 
+    async def _complete_project_if_no_pending(
+        self, user: User, project: Project
+    ) -> None:
+        pending = await self.db.execute(
+            select(Action).where(
+                Action.project_id == project.id,
+                Action.status == ActionStatus.pending,
+            )
+        )
+        if pending.scalars().first() is not None:
+            return
+        project.status = ProjectStatus.completed
+        await self.audit.add_event(
+            event_type="project_completed",
+            user_id=user.id,
+            project_id=project.id,
+            payload={},
+        )
+
     async def complete(self, user: User, action_id: UUID) -> Action:
         action, project = await self._get_owned_action(user, action_id)
         self._require_active(project)
@@ -142,21 +161,7 @@ class ActionService:
             },
         )
 
-        pending = await self.db.execute(
-            select(Action).where(
-                Action.project_id == project.id,
-                Action.status == ActionStatus.pending,
-            )
-        )
-        remaining = list(pending.scalars().all())
-        if not remaining:
-            project.status = ProjectStatus.completed
-            await self.audit.add_event(
-                event_type="project_completed",
-                user_id=user.id,
-                project_id=project.id,
-                payload={},
-            )
+        await self._complete_project_if_no_pending(user, project)
 
         done_count_result = await self.db.execute(
             select(func.count())
@@ -188,6 +193,8 @@ class ActionService:
 
         previous = action.status.value
         action.status = ActionStatus.skipped
+        await self.db.flush()
+
         await self.audit.add_event(
             event_type="action_skipped",
             user_id=user.id,
@@ -198,6 +205,7 @@ class ActionService:
                 "new_status": action.status.value,
             },
         )
+        await self._complete_project_if_no_pending(user, project)
         await self.db.commit()
         return (await self._get_owned_action(user, action_id))[0]
 

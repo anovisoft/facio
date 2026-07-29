@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -21,11 +22,18 @@ async def get_current_user(
     device_id = x_device_id.strip()
     result = await db.execute(select(User).where(User.device_id == device_id))
     user = result.scalar_one_or_none()
-    if user is None:
-        user = User(device_id=device_id)
-        db.add(user)
+    if user is not None:
+        return user
+
+    user = User(device_id=device_id)
+    db.add(user)
+    try:
         await db.commit()
         await db.refresh(user)
+    except IntegrityError:
+        await db.rollback()
+        result = await db.execute(select(User).where(User.device_id == device_id))
+        user = result.scalar_one()
     return user
 
 
