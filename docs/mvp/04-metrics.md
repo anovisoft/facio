@@ -29,6 +29,7 @@
 | Событие | Когда |
 |---------|--------|
 | `intent_submitted` | отправил текст |
+| `instant_answer_shown` | вопрос не стал проектом: ответ + goal_suggestions |
 | `soft_start_shown` | paraphrase / soft-start |
 | `draft_shown` | черновик Path |
 | `plan_failed` | LLM/валидация не собрали путь |
@@ -60,6 +61,7 @@
 1. **Commit rate** = committed / intent_submitted  
 2. **Refine rate** = projects with ≥1 refine / draft_shown  
 3. **Generate/draft success** = draft_shown / intent_submitted  
+3a. **Instant-answer rate** = instant_answer_shown / intent_submitted (спрос на Q&A vs цели)  
 4. **FCT** и **% same-day first Сделано** | committed  
 5. **TTF-second** — доля second Сделано &lt; 48h | had first
 

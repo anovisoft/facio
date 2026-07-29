@@ -47,7 +47,7 @@ Retention: для MVP — не удалять; позже политика priva
 
 ```text
 GET  /projects                    # список (multi active)
-POST /projects                    # intent → LLM → validate → draft + full path
+POST /projects                    # intent → LLM → path | instant_answer
 GET  /projects/{id}               # contract + state summary
 GET  /projects/{id}/actions       # полный Path
 GET  /projects/{id}/next-action
@@ -65,13 +65,17 @@ GET  /projects/{id}/transcript    # optional debug/admin
 ## Create pipeline
 
 ```text
-persist user turn (intent)
-  → soft-start paraphrase (+ optional tiny llm or same call)
-  → LLM draft Path + questions → llm_calls + state_versions
+persist intent_submitted + user turn (user_id, project_id=null)
+  → LLM create (Claude Sonnet 5, structured JSON)
+       • kind=instant_answer → assistant turn + instant_answer_shown
+         (no Project; chronology queryable by user_id)
+       • kind=path → create Project draft + state_versions + draft_shown
   → refine loop: each answer → new llm_call + new state version
   → Accept screen: full path
 commit → active (другие active не трогаем)
 ```
+
+Env: `ANTHROPIC_API_KEY`, optional `LLM_MODEL` (default `claude-sonnet-5`).
 
 ---
 

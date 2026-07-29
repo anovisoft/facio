@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from app.deps import CurrentUser, DbSession, LLM
 from app.errors import AppError
+from app.schemas.api import CreateIntentResponse
 from app.schemas.path import (
     ActionResponse,
     CommitProjectRequest,
@@ -41,19 +42,18 @@ async def list_projects(user: CurrentUser, db: DbSession) -> list[ProjectSummary
     ]
 
 
-@router.post("", response_model=ProjectDetail, status_code=201)
+@router.post("", response_model=CreateIntentResponse)
 async def create_project(
     body: CreateProjectRequest,
     user: CurrentUser,
     db: DbSession,
     llm: LLM,
-) -> ProjectDetail:
+) -> CreateIntentResponse:
     service = PathService(db, llm=llm)
     try:
-        project = await service.create_from_intent(user, body.intent)
+        return await service.create_from_intent(user, body.intent)
     except AppError as exc:
         await _commit_on_app_error(db, exc)
-    return await ProjectService(db).to_detail(project)
 
 
 @router.get("/{project_id}", response_model=ProjectDetail)

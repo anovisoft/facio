@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag
 
 from app.schemas.path_state import ClarifyQuestion, PathState
 
@@ -120,6 +120,28 @@ class ProjectDetail(ProjectSummary):
     resources: list[str] = Field(default_factory=list)
     milestones: list[str] = Field(default_factory=list)
     current_version: int | None = None
+
+
+class InstantAnswerResponse(BaseModel):
+    kind: Literal["instant_answer"] = "instant_answer"
+    label: str
+    answer: str
+    goal_suggestions: list[str]
+    raw_intent: str
+    llm_call_id: UUID
+    event_id: UUID | None = None
+
+
+class PathCreatedResponse(BaseModel):
+    kind: Literal["path"] = "path"
+    project: ProjectDetail
+
+
+CreateIntentResponse = Annotated[
+    Annotated[InstantAnswerResponse, Tag("instant_answer")]
+    | Annotated[PathCreatedResponse, Tag("path")],
+    Discriminator("kind"),
+]
 
 
 class NextActionResponse(BaseModel):

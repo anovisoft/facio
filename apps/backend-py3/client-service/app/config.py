@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -13,6 +14,13 @@ class Settings(BaseSettings):
     debug: bool = False
     # Comma-separated. Use "*" for any origin (credentials disabled).
     cors_origins: str = "*"
+
+    anthropic_api_key: str | None = None
+    llm_model: str = "claude-sonnet-5"
+    llm_max_tokens: int = 8192
+    # Anthropic prompt caching for stable system (+ create few-shots).
+    llm_prompt_cache: bool = True
+    llm_prompt_cache_ttl: Literal["5m", "1h"] = "5m"
 
 
 @lru_cache

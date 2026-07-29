@@ -1,49 +1,150 @@
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class PathChecklistItem(BaseModel):
-    id: str | None = None
-    title: str = Field(min_length=1)
-    done: bool = False
-    sort: int = Field(default=0, ge=0)
+    id: str | None = Field(
+        default=None,
+        description="Optional stable id for the checklist row.",
+    )
+    title: str = Field(min_length=1, description="Checklist line, e.g. eggs.")
+    done: bool = Field(default=False, description="Always false on create.")
+    sort: int = Field(default=0, ge=0, description="Order inside the action.")
 
 
 class PathGroup(BaseModel):
-    id: str = Field(min_length=1)
-    title: str = Field(min_length=1)
-    sort: int = Field(default=0, ge=0)
+    id: str = Field(
+        min_length=1,
+        description="Stable section id referenced by actions.",
+    )
+    title: str = Field(
+        min_length=1,
+        description="Section title shown in «Весь путь», e.g. Покупки.",
+    )
+    sort: int = Field(default=0, ge=0, description="Section order, 0-based.")
 
 
 class PathAction(BaseModel):
-    id: str | None = None
-    title: str = Field(min_length=1)
-    why: str = Field(min_length=1)
-    detail: str | None = None
-    estimate_min: int | None = Field(default=None, ge=0)
-    day_offset: int | None = Field(default=None, ge=0)
-    sort: int | None = Field(default=None, ge=0)
-    group_id: str | None = None
-    checklist_items: list[PathChecklistItem] = Field(default_factory=list)
+    id: str | None = Field(
+        default=None,
+        description="Stable step id; reuse on refine/repair when same step.",
+    )
+    title: str = Field(
+        min_length=1,
+        description="What to do (verb + object); shown as «Сегодня» / path step.",
+    )
+    why: str = Field(
+        min_length=1,
+        description=(
+            "Required. Hero «Почему сейчас» — why this step matters for the "
+            "outcome. Never empty, generic filler, or medical/finance guarantees."
+        ),
+    )
+    detail: str | None = Field(
+        default=None,
+        description=(
+            "Concrete how-to (not an essay). Cooking: method/timing. "
+            "Prefer checklist_items for shopping lists."
+        ),
+    )
+    estimate_min: int | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "Honest minutes, or null. First action ideally ≤ 30–60 and doable today."
+        ),
+    )
+    day_offset: int | None = Field(
+        default=None,
+        ge=0,
+        description="Days from first step (0 = day one), or null.",
+    )
+    sort: int | None = Field(
+        default=None, ge=0, description="Order within path/group."
+    )
+    group_id: str | None = Field(
+        default=None,
+        description="Must match groups[].id when set; else null.",
+    )
+    checklist_items: list[PathChecklistItem] = Field(
+        default_factory=list,
+        description=(
+            "Optional sub-checks inside one step "
+            "(prefer over many micro-actions for shopping)."
+        ),
+    )
 
 
 class ClarifyQuestion(BaseModel):
-    id: str
-    prompt: str
-    options: list[str] = Field(default_factory=list)
+    id: str = Field(description="Stable question id for refine answers.")
+    prompt: str = Field(description="Clarify question shown to the user.")
+    options: list[str] = Field(
+        default_factory=list,
+        description="Chip options; user may still type free text.",
+    )
 
 
 class PathState(BaseModel):
     """Structured LLM output for create / refine / repair."""
 
-    outcome: str = Field(min_length=1)
-    paraphrase: str = Field(min_length=1)
-    success_criteria: str = Field(min_length=1)
-    horizon: str = Field(min_length=1)
-    groups: list[PathGroup] = Field(default_factory=list)
-    actions: list[PathAction] = Field(min_length=1)
-    questions: list[ClarifyQuestion] = Field(default_factory=list)
-    resources: list[str] = Field(default_factory=list)
-    milestones: list[str] = Field(default_factory=list)
+    outcome: str = Field(
+        min_length=1,
+        description="Clear goal the user is buying (1 short sentence).",
+    )
+    paraphrase: str = Field(
+        min_length=1,
+        description=(
+            'Soft-start UI line confirming understanding, e.g. '
+            '"Ок — ведём к: …". Warmer than outcome. Match user language.'
+        ),
+    )
+    success_criteria: str = Field(
+        min_length=1,
+        description=(
+            "Verifiable definition of done. No guaranteed health/finance outcomes."
+        ),
+    )
+    horizon: str = Field(
+        min_length=1,
+        description='Rough span/load, e.g. "1 evening", "2 weeks, ~20 min/day".',
+    )
+    groups: list[PathGroup] = Field(
+        default_factory=list,
+        description="Optional Path sections (Покупки, Готовка, …).",
+    )
+    actions: list[PathAction] = Field(
+        min_length=1,
+        max_length=12,
+        description=(
+            "Ordered steps (1–12 soft cap). Every action needs why. "
+            "First step doable today when possible."
+        ),
+    )
+    questions: list[ClarifyQuestion] = Field(
+        default_factory=list,
+        max_length=4,
+        description=(
+            "0 or 2–4 clarifies that materially change the path; max 4. "
+            "Empty if path is already enough."
+        ),
+    )
+    resources: list[str] = Field(
+        default_factory=list,
+        description="Optional materials. Never invent URLs.",
+    )
+    milestones: list[str] = Field(
+        default_factory=list,
+        description="Optional checkpoint labels.",
+    )
+
+    @field_validator("questions")
+    @classmethod
+    def questions_count(cls, value: list[ClarifyQuestion]) -> list[ClarifyQuestion]:
+        # Allow [] (enough already) or 2–4; reject a lone idle question.
+        if len(value) == 1:
+            raise ValueError(
+                "questions must be empty or have 2–4 items (got 1)"
+            )
+        return value
 
     @model_validator(mode="after")
     def validate_path(self) -> "PathState":

@@ -9,6 +9,8 @@ from app.api import api_router
 from app.config import get_settings
 from app.database import engine
 from app.errors import AppError
+from app.providers.anthropic_llm import AnthropicLLMProvider
+from app.providers.llm import set_llm_provider
 
 logging.basicConfig(
     level=logging.INFO,
@@ -22,6 +24,26 @@ API_V1_STR = "/api/v1"
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    if settings.anthropic_api_key:
+        set_llm_provider(
+            AnthropicLLMProvider(
+                api_key=settings.anthropic_api_key,
+                model=settings.llm_model,
+                max_tokens=settings.llm_max_tokens,
+                prompt_cache=settings.llm_prompt_cache,
+                prompt_cache_ttl=settings.llm_prompt_cache_ttl,
+            )
+        )
+        logging.getLogger("app").info(
+            "LLM provider configured: Anthropic model=%s cache=%s ttl=%s",
+            settings.llm_model,
+            settings.llm_prompt_cache,
+            settings.llm_prompt_cache_ttl,
+        )
+    else:
+        logging.getLogger("app").warning(
+            "ANTHROPIC_API_KEY not set; LLM endpoints return 501"
+        )
     yield
     await engine.dispose()
 

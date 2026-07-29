@@ -27,6 +27,7 @@ class EventType(str, enum.Enum):
     app_opened = "app_opened"
     soft_start_shown = "soft_start_shown"
     intent_submitted = "intent_submitted"
+    instant_answer_shown = "instant_answer_shown"
     draft_shown = "draft_shown"
     accept_viewed = "accept_viewed"
     action_shown = "action_shown"
@@ -51,6 +52,7 @@ CLIENT_EVENT_TYPES: frozenset[str] = frozenset(
         EventType.app_opened.value,
         EventType.soft_start_shown.value,
         EventType.draft_shown.value,
+        EventType.instant_answer_shown.value,
         EventType.accept_viewed.value,
         EventType.action_shown.value,
         EventType.path_opened.value,
@@ -77,10 +79,12 @@ class AuditService:
         *,
         role: ConversationRole,
         content: str,
+        user_id: UUID | None = None,
         project_id: UUID | None = None,
         meta: dict[str, Any] | None = None,
     ) -> ConversationTurn:
         turn = ConversationTurn(
+            user_id=user_id,
             project_id=project_id,
             role=role,
             content=content,
@@ -95,6 +99,7 @@ class AuditService:
         *,
         purpose: str,
         prompt_messages: list[dict[str, Any]] | dict[str, Any],
+        user_id: UUID | None = None,
         project_id: UUID | None = None,
         model: str | None = None,
         raw_response: Any = None,
@@ -105,6 +110,7 @@ class AuditService:
         error: str | None = None,
     ) -> LlmCall:
         call = LlmCall(
+            user_id=user_id,
             project_id=project_id,
             purpose=purpose,
             model=model,

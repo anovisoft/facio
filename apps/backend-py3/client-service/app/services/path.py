@@ -20,6 +20,7 @@ from app.models import (
     ConversationRole,
     ConversationTurn,
     Event,
+    LlmCall,
     Project,
     ProjectStatus,
     StateSource,
@@ -30,20 +31,27 @@ from app.providers.llm import (
     LLMNotConfiguredError,
     LLMProvider,
     LLMPurpose,
+    LLMRawResult,
     get_llm_provider,
 )
 from app.schemas.api import (
     ConversationTurnResponse,
+    CreateIntentResponse,
+    InstantAnswerResponse,
+    PathCreatedResponse,
     TimelineEntry,
     TimelineResponse,
 )
+from app.schemas.create_response import CreateLlmResponse, InstantAnswerPayload
 from app.schemas.path_state import PathState
 from app.services.audit import AuditService, EventType
 from app.services.path_llm import (
+    CREATE_RESPONSE_SCHEMA,
     PATH_RESPONSE_SCHEMA,
     messages_for_create,
     messages_for_refine,
     messages_for_repair,
+    parse_create_response,
     parse_path_state,
 )
 from app.services.path_materialize import (
@@ -52,6 +60,8 @@ from app.services.path_materialize import (
     materialize_path,
 )
 from app.services.project import ProjectService
+
+_CREATE_MAX_ATTEMPTS = 2
 
 
 @dataclass
@@ -72,13 +82,40 @@ class PathService:
         self.audit = AuditService(db)
         self.projects = ProjectService(db)
 
-    async def create_from_intent(self, user: User, intent: str) -> Project:
+    async def create_from_intent(
+        self, user: User, intent: str
+    ) -> CreateIntentResponse:
         await self.audit.add_event(
             event_type=EventType.intent_submitted,
             user_id=user.id,
             payload={"intent": intent},
         )
 
+        user_turn = await self.audit.add_turn(
+            user_id=user.id,
+            project_id=None,
+            role=ConversationRole.user,
+            content=intent,
+            meta={"kind": "intent"},
+        )
+
+        messages = messages_for_create(intent)
+        parsed, raw, llm_call_id = await self._generate_create_response(
+            user=user,
+            messages=messages,
+        )
+
+        if parsed.kind == "instant_answer":
+            assert parsed.instant_answer is not None
+            return await self._finish_instant_answer(
+                user=user,
+                intent=intent,
+                user_turn_id=user_turn.id,
+                payload=parsed.instant_answer,
+                llm_call_id=llm_call_id,
+            )
+
+        assert parsed.path is not None
         project = Project(
             user_id=user.id,
             status=ProjectStatus.draft,
@@ -87,30 +124,31 @@ class PathService:
         self.db.add(project)
         await self.db.flush()
 
-        await self.audit.add_turn(
-            project_id=project.id,
-            role=ConversationRole.user,
-            content=intent,
-            meta={"kind": "intent"},
-        )
+        user_turn.project_id = project.id
+        llm_row = await self.db.get(LlmCall, llm_call_id)
+        if llm_row is not None:
+            llm_row.project_id = project.id
 
-        result = await self._run_llm_mutation(
-            user=user,
-            project=project,
-            purpose="create",
-            messages=messages_for_create(intent),
+        state = ensure_action_keys(parsed.path)
+        version = await self._next_version(project.id)
+        await self.audit.add_state_version(
+            project_id=project.id,
+            version=version,
+            state_json=state.model_dump(mode="json"),
             source=StateSource.llm_create,
-            materialize="none",
         )
+        apply_contract(project, state)
+
         await self.audit.add_turn(
+            user_id=user.id,
             project_id=project.id,
             role=ConversationRole.assistant,
-            content=result.state.paraphrase,
+            content=state.paraphrase,
             meta={
                 "kind": "soft_start",
-                "outcome": result.state.outcome,
-                "state_version": result.version,
-                "llm_call_id": str(result.llm_call_id),
+                "outcome": state.outcome,
+                "state_version": version,
+                "llm_call_id": str(llm_call_id),
                 "source": StateSource.llm_create.value,
             },
         )
@@ -118,10 +156,179 @@ class PathService:
             event_type=EventType.draft_shown,
             user_id=user.id,
             project_id=project.id,
-            payload={"outcome": result.state.outcome, "version": result.version},
+            payload={"outcome": state.outcome, "version": version},
         )
         await self.db.commit()
-        return await self.projects.get_project(user, project.id)
+        project = await self.projects.get_project(user, project.id)
+        detail = await self.projects.to_detail(project)
+        return PathCreatedResponse(kind="path", project=detail)
+
+    async def _finish_instant_answer(
+        self,
+        *,
+        user: User,
+        intent: str,
+        user_turn_id: UUID,
+        payload: InstantAnswerPayload,
+        llm_call_id: UUID,
+    ) -> InstantAnswerResponse:
+        assistant_turn = await self.audit.add_turn(
+            user_id=user.id,
+            project_id=None,
+            role=ConversationRole.assistant,
+            content=payload.answer,
+            meta={
+                "kind": "instant_answer",
+                "label": payload.label,
+                "goal_suggestions": payload.goal_suggestions,
+                "llm_call_id": str(llm_call_id),
+            },
+        )
+        event = await self.audit.add_event(
+            event_type=EventType.instant_answer_shown,
+            user_id=user.id,
+            project_id=None,
+            payload={
+                "intent": intent,
+                "label": payload.label,
+                "answer": payload.answer,
+                "goal_suggestions": payload.goal_suggestions,
+                "llm_call_id": str(llm_call_id),
+                "user_turn_id": str(user_turn_id),
+                "assistant_turn_id": str(assistant_turn.id),
+            },
+        )
+        await self.db.commit()
+        return InstantAnswerResponse(
+            kind="instant_answer",
+            label=payload.label,
+            answer=payload.answer,
+            goal_suggestions=payload.goal_suggestions,
+            raw_intent=intent,
+            llm_call_id=llm_call_id,
+            event_id=event.id,
+        )
+
+    async def _generate_create_response(
+        self,
+        *,
+        user: User,
+        messages: list[dict[str, Any]],
+    ) -> tuple[CreateLlmResponse, LLMRawResult, UUID]:
+        last_error: Exception | None = None
+        for attempt in range(_CREATE_MAX_ATTEMPTS):
+            try:
+                raw = await self.llm.generate(
+                    purpose="create",
+                    messages=messages,
+                    response_schema=CREATE_RESPONSE_SCHEMA,
+                )
+            except LLMNotConfiguredError as exc:
+                await self.audit.add_llm_call(
+                    user_id=user.id,
+                    project_id=None,
+                    purpose="create",
+                    prompt_messages=messages,
+                    parsed_ok=False,
+                    error=str(exc),
+                )
+                await self.audit.add_event(
+                    event_type=EventType.plan_failed,
+                    user_id=user.id,
+                    payload={"purpose": "create", "error": str(exc)},
+                )
+                raise NotConfiguredError(str(exc)) from exc
+            except Exception as exc:  # noqa: BLE001
+                await self.audit.add_llm_call(
+                    user_id=user.id,
+                    project_id=None,
+                    purpose="create",
+                    prompt_messages=messages,
+                    parsed_ok=False,
+                    error=str(exc),
+                )
+                await self.audit.add_event(
+                    event_type=EventType.plan_failed,
+                    user_id=user.id,
+                    payload={"purpose": "create", "error": str(exc)},
+                )
+                raise UpstreamError(f"LLM call failed: {exc}") from exc
+
+            try:
+                parsed = parse_create_response(raw.raw_response)
+                if parsed.kind == "path" and parsed.path is not None:
+                    # Validate path fully (keys etc. applied later)
+                    PathState.model_validate(
+                        parsed.path.model_dump(mode="json")
+                    )
+            except (
+                ValidationError,
+                ValueError,
+                TypeError,
+                json.JSONDecodeError,
+            ) as exc:
+                last_error = exc
+                await self.audit.add_llm_call(
+                    user_id=user.id,
+                    project_id=None,
+                    purpose="create",
+                    prompt_messages=messages,
+                    model=raw.model,
+                    raw_response=raw.raw_response,
+                    parsed_ok=False,
+                    tokens_in=raw.tokens_in,
+                    tokens_out=raw.tokens_out,
+                    latency_ms=raw.latency_ms,
+                    error=str(exc),
+                )
+                if attempt + 1 < _CREATE_MAX_ATTEMPTS:
+                    messages = [
+                        *messages,
+                        {
+                            "role": "assistant",
+                            "content": json.dumps(
+                                raw.raw_response, ensure_ascii=False
+                            )
+                            if not isinstance(raw.raw_response, str)
+                            else raw.raw_response,
+                        },
+                        {
+                            "role": "user",
+                            "content": (
+                                "Previous response failed validation: "
+                                f"{exc}. Return corrected JSON matching "
+                                "the schema."
+                            ),
+                        },
+                    ]
+                    continue
+                await self.audit.add_event(
+                    event_type=EventType.plan_failed,
+                    user_id=user.id,
+                    payload={"purpose": "create", "error": str(exc)},
+                )
+                raise ValidationAppError(
+                    f"Invalid create response from LLM: {exc}"
+                ) from exc
+
+            llm_call = await self.audit.add_llm_call(
+                user_id=user.id,
+                project_id=None,
+                purpose="create",
+                prompt_messages=messages,
+                model=raw.model,
+                raw_response=raw.raw_response,
+                parsed_ok=True,
+                tokens_in=raw.tokens_in,
+                tokens_out=raw.tokens_out,
+                latency_ms=raw.latency_ms,
+            )
+            return parsed, raw, llm_call.id
+
+        assert last_error is not None
+        raise ValidationAppError(
+            f"Invalid create response from LLM: {last_error}"
+        ) from last_error
 
     async def refine(
         self,
@@ -138,6 +345,7 @@ class PathService:
             raise ConflictError("Only draft projects can be refined")
 
         await self.audit.add_turn(
+            user_id=user.id,
             project_id=project.id,
             role=ConversationRole.user,
             content=answer,
@@ -167,6 +375,7 @@ class PathService:
             materialize="none",
         )
         await self.audit.add_turn(
+            user_id=user.id,
             project_id=project.id,
             role=ConversationRole.assistant,
             content=result.state.paraphrase,
@@ -195,6 +404,7 @@ class PathService:
             raise ConflictError("Project cannot be repaired in current status")
 
         await self.audit.add_turn(
+            user_id=user.id,
             project_id=project.id,
             role=ConversationRole.user,
             content=reason,
@@ -227,6 +437,7 @@ class PathService:
             materialize=materialize,
         )
         await self.audit.add_turn(
+            user_id=user.id,
             project_id=project.id,
             role=ConversationRole.assistant,
             content=result.state.paraphrase,
@@ -346,6 +557,7 @@ class PathService:
             source=StateSource.user_restore,
         )
         await self.audit.add_turn(
+            user_id=user.id,
             project_id=project.id,
             role=ConversationRole.system,
             content=f"Restored Path to version {version}",
@@ -378,7 +590,7 @@ class PathService:
         source: StateSource,
         materialize: str,
     ) -> ApplyResult:
-        """Shared create/refine/repair LLM pipeline. Does not commit."""
+        """Shared refine/repair LLM pipeline. Does not commit."""
         try:
             raw = await self.llm.generate(
                 purpose=purpose,
@@ -387,6 +599,7 @@ class PathService:
             )
         except LLMNotConfiguredError as exc:
             await self.audit.add_llm_call(
+                user_id=user.id,
                 project_id=project.id,
                 purpose=purpose,
                 prompt_messages=messages,
@@ -402,6 +615,7 @@ class PathService:
             raise NotConfiguredError(str(exc)) from exc
         except Exception as exc:  # noqa: BLE001
             await self.audit.add_llm_call(
+                user_id=user.id,
                 project_id=project.id,
                 purpose=purpose,
                 prompt_messages=messages,
@@ -420,6 +634,7 @@ class PathService:
             state = ensure_action_keys(parse_path_state(raw.raw_response))
         except (ValidationError, ValueError, TypeError, json.JSONDecodeError) as exc:
             await self.audit.add_llm_call(
+                user_id=user.id,
                 project_id=project.id,
                 purpose=purpose,
                 prompt_messages=messages,
@@ -440,6 +655,7 @@ class PathService:
             raise ValidationAppError(f"Invalid Path from LLM: {exc}") from exc
 
         llm_call = await self.audit.add_llm_call(
+            user_id=user.id,
             project_id=project.id,
             purpose=purpose,
             prompt_messages=messages,
