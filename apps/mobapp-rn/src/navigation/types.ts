@@ -1,12 +1,12 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import type { InstantAnswerResponse } from '@/api/types';
+import type { InstantAnswerResponse, ProjectDetail } from '@/api/types';
 
 export type RootStackParamList = {
   Projects: undefined;
   Intent: undefined;
   InstantAnswer: { payload: InstantAnswerResponse };
-  DraftStudio: { projectId: string };
+  DraftStudio: { projectId: string; seed?: ProjectDetail };
   Accept: { projectId: string };
   ProjectHome: { projectId: string };
   Path: { projectId: string };

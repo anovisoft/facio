@@ -4,6 +4,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -12,36 +13,43 @@ import { ApiError } from '@/api/types';
 import { createProject } from '@/api/projects';
 import type { RootScreenProps } from '@/navigation/types';
 import { ClarifyChips } from '@/shared/ui/ClarifyChips';
+import { PrimaryButton } from '@/shared/ui/PrimaryButton';
 import { SafeScreen } from '@/shared/ui/SafeScreen';
 import { useSessionStore } from '@/store';
 import { useTheme } from '@/theme/ThemeContext';
-import { spacing, typography } from '@/theme';
+import { radii, spacing, typography } from '@/theme';
 
-export function InstantAnswerScreen({
-  navigation,
-  route,
-}: RootScreenProps<'InstantAnswer'>) {
+const EXAMPLE_INTENTS = [
+  'Приготовить карбонару',
+  'Навести порядок в квартире',
+  'Подготовиться к собеседованию',
+] as const;
+
+export function IntentScreen({ navigation }: RootScreenProps<'Intent'>) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const setLastProjectId = useSessionStore((s) => s.setLastProjectId);
-  const { payload } = route.params;
+  const [intent, setIntent] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   useLayoutEffect(() => {
-    navigation.setOptions({ title: t('instantAnswer.title') });
+    navigation.setOptions({ title: t('intent.title') });
   }, [navigation, t]);
 
-  const startGoal = async (goal: string) => {
-    if (loading) return;
+  const submit = async (raw: string) => {
+    const trimmed = raw.trim();
+    if (!trimmed || loading) return;
+
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
+
     setLoading(true);
     setError(null);
     try {
-      const result = await createProject(goal, controller.signal);
+      const result = await createProject(trimmed, controller.signal);
       if (result.kind === 'instant_answer') {
         navigation.replace('InstantAnswer', { payload: result });
         return;
@@ -61,23 +69,38 @@ export function InstantAnswerScreen({
 
   return (
     <SafeScreen scroll>
-      <Text style={[styles.label, { color: colors.textMuted }]}>
-        {payload.label}
-      </Text>
-      <Text style={[styles.answer, { color: colors.text }]}>
-        {payload.answer}
-      </Text>
-      <Text style={[styles.cta, { color: colors.text }]}>
-        {t('instantAnswer.cta')}
+      <Text style={[styles.prompt, { color: colors.text }]}>
+        {t('intent.title')}
       </Text>
 
-      {payload.goal_suggestions.length > 0 ? (
-        <ClarifyChips
-          options={payload.goal_suggestions}
-          disabled={loading}
-          onSelect={(goal) => void startGoal(goal)}
-        />
-      ) : null}
+      <TextInput
+        value={intent}
+        onChangeText={setIntent}
+        placeholder={t('intent.placeholder')}
+        placeholderTextColor={colors.textMuted}
+        editable={!loading}
+        multiline
+        style={[
+          styles.input,
+          {
+            color: colors.text,
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
+          },
+        ]}
+      />
+
+      <Text style={[styles.examplesLabel, { color: colors.textMuted }]}>
+        {t('intent.examplesLabel')}
+      </Text>
+      <ClarifyChips
+        options={[...EXAMPLE_INTENTS]}
+        disabled={loading}
+        onSelect={(option) => {
+          setIntent(option);
+          void submit(option);
+        }}
+      />
 
       {error ? (
         <Text style={[styles.error, { color: colors.error }]}>{error}</Text>
@@ -99,23 +122,35 @@ export function InstantAnswerScreen({
             <Text style={{ color: colors.primary }}>{t('common.cancel')}</Text>
           </Pressable>
         </View>
-      ) : null}
+      ) : (
+        <PrimaryButton
+          label={t('intent.submit')}
+          onPress={() => void submit(intent)}
+          disabled={!intent.trim()}
+          style={styles.submit}
+        />
+      )}
     </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  label: {
-    ...typography.caption,
-    marginBottom: spacing.sm,
+  prompt: {
+    ...typography.title,
+    marginBottom: spacing.md,
   },
-  answer: {
+  input: {
     ...typography.body,
+    minHeight: 96,
+    borderWidth: 1,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    textAlignVertical: 'top',
     marginBottom: spacing.lg,
   },
-  cta: {
-    ...typography.subtitle,
-    marginBottom: spacing.md,
+  examplesLabel: {
+    ...typography.caption,
+    marginBottom: spacing.sm,
   },
   error: {
     ...typography.caption,
@@ -130,5 +165,8 @@ const styles = StyleSheet.create({
   loadingText: {
     ...typography.caption,
     flex: 1,
+  },
+  submit: {
+    marginTop: spacing.xl,
   },
 });
