@@ -72,6 +72,8 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
                         "sort": 2,
                     },
                 ],
+                "timers": [],
+                "counter": None,
             },
             {
                 "id": "cook",
@@ -83,6 +85,23 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
                 "sort": 1,
                 "group_id": "cook",
                 "checklist_items": [],
+                "timers": [
+                    {
+                        "id": "pasta",
+                        "title": "Лапша",
+                        "duration_sec": 540,
+                        "signal": "alert",
+                        "parallel_group": None,
+                    },
+                    {
+                        "id": "stir",
+                        "title": "Помешать",
+                        "duration_sec": 120,
+                        "signal": "nudge",
+                        "parallel_group": None,
+                    },
+                ],
+                "counter": None,
             },
         ],
         "questions": [
@@ -138,6 +157,13 @@ def sample_fitness_path_state(**overrides: Any) -> dict[str, Any]:
                     "sort": i,
                     "group_id": None,
                     "checklist_items": [],
+                    "timers": [],
+                    "counter": {
+                        "label": "повторы",
+                        "target": 24,
+                        "current": 0,
+                        "step": 1,
+                    },
                 }
             )
         else:
@@ -152,6 +178,8 @@ def sample_fitness_path_state(**overrides: Any) -> dict[str, Any]:
                     "sort": i,
                     "group_id": None,
                     "checklist_items": [],
+                    "timers": [],
+                    "counter": None,
                 }
             )
     state: dict[str, Any] = {

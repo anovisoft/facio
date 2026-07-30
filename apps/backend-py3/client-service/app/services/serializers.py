@@ -6,13 +6,81 @@ from app.models import Action, ActionGroup, ActionStatus, Project, ProjectStatus
 from app.schemas.api import (
     ActionResponse,
     ChecklistItemResponse,
+    CounterResponse,
     CurrentDayResponse,
     CycleResponse,
     DayResponse,
     GroupResponse,
+    TimerResponse,
 )
-from app.schemas.path_state import DayKind, PathState
+from app.schemas.path_state import DayKind, PathCounter, PathState, PathTimer
 from app.services.path_materialize import action_key, stable_uuid
+
+
+def _serialize_timers_from_orm(raw: list | None) -> list[TimerResponse]:
+    if not raw:
+        return []
+    out: list[TimerResponse] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        out.append(
+            TimerResponse(
+                id=str(item.get("id") or ""),
+                title=str(item.get("title") or ""),
+                duration_sec=int(item.get("duration_sec") or 0),
+                signal=item.get("signal") or "nudge",  # type: ignore[arg-type]
+                parallel_group=item.get("parallel_group"),
+                completed=bool(item.get("completed", False)),
+            )
+        )
+    return out
+
+
+def _serialize_counter_from_orm(raw: dict | None) -> CounterResponse | None:
+    if not isinstance(raw, dict):
+        return None
+    target = raw.get("target")
+    if target is None or int(target) < 1:
+        return None
+    return CounterResponse(
+        label=raw.get("label"),
+        target=int(target),
+        current=max(0, int(raw.get("current") or 0)),
+        step=max(1, int(raw.get("step") or 1)),
+    )
+
+
+def _serialize_timers_from_state(
+    timers: list[PathTimer],
+) -> list[TimerResponse]:
+    out: list[TimerResponse] = []
+    for t_index, timer in enumerate(timers):
+        t_key = timer.id or f"t{t_index}"
+        out.append(
+            TimerResponse(
+                id=t_key,
+                title=timer.title,
+                duration_sec=timer.duration_sec,
+                signal=timer.signal,
+                parallel_group=timer.parallel_group,
+                completed=False,
+            )
+        )
+    return out
+
+
+def _serialize_counter_from_state(
+    counter: PathCounter | None,
+) -> CounterResponse | None:
+    if counter is None:
+        return None
+    return CounterResponse(
+        label=counter.label,
+        target=counter.target,
+        current=counter.current,
+        step=counter.step,
+    )
 
 
 def serialize_action(action: Action) -> ActionResponse:
@@ -36,6 +104,8 @@ def serialize_action(action: Action) -> ActionResponse:
             ChecklistItemResponse.model_validate(item, from_attributes=True)
             for item in sorted(action.checklist_items, key=lambda i: i.sort)
         ],
+        timers=_serialize_timers_from_orm(action.timers),
+        counter=_serialize_counter_from_orm(action.counter),
     )
 
 
@@ -201,6 +271,8 @@ def serialize_path_state(
                 group_key=group_key,
                 group_title=group_spec.title if group_spec else None,
                 checklist_items=checklist,
+                timers=_serialize_timers_from_state(item.timers),
+                counter=_serialize_counter_from_state(item.counter),
             )
         )
     actions.sort(

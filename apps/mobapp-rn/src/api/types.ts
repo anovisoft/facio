@@ -44,6 +44,24 @@ export interface ChecklistItemResponse {
   sort: number;
 }
 
+export type TimerSignal = 'nudge' | 'alert';
+
+export interface TimerResponse {
+  id: string;
+  title: string;
+  duration_sec: number;
+  signal: TimerSignal;
+  parallel_group?: string | null;
+  completed: boolean;
+}
+
+export interface CounterResponse {
+  label?: string | null;
+  target: number;
+  current: number;
+  step: number;
+}
+
 export interface GroupResponse {
   id: string;
   key: string;
@@ -91,6 +109,8 @@ export interface ActionResponse {
   group_key?: string | null;
   group_title?: string | null;
   checklist_items: ChecklistItemResponse[];
+  timers: TimerResponse[];
+  counter?: CounterResponse | null;
 }
 
 export interface ProjectSummary {

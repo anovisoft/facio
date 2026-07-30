@@ -47,7 +47,12 @@ from app.providers.llm import (
     LLMRawResult,
     set_llm_provider,
 )
-from tests.factories import refined_path_state, sample_create_path, sample_path_state
+from tests.factories import (
+    refined_path_state,
+    sample_create_path,
+    sample_fitness_path_state,
+    sample_path_state,
+)
 
 get_settings.cache_clear()
 
@@ -171,6 +176,18 @@ def auth_headers(device_id: str) -> dict[str, str]:
 def enqueue_path(llm: ScriptedLLMProvider) -> Callable[..., None]:
     def _enqueue(**overrides: Any) -> None:
         llm.enqueue("create", sample_create_path(**overrides))
+
+    return _enqueue
+
+
+@pytest.fixture
+def enqueue_fitness(llm: ScriptedLLMProvider) -> Callable[..., None]:
+    def _enqueue(**overrides: Any) -> None:
+        path = sample_fitness_path_state(**overrides)
+        llm.enqueue(
+            "create",
+            {"kind": "path", "path": path, "instant_answer": None},
+        )
 
     return _enqueue
 

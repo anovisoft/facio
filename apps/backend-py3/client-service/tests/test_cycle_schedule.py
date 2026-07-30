@@ -24,6 +24,14 @@ def test_fewshots_parse_as_create_responses():
     assert carbonara.path is not None
     assert carbonara.path.cycle.horizon_days == 1
     assert carbonara.path.days[0].kind == "cook_session"
+    cook = next(a for a in carbonara.path.actions if a.id == "cook")
+    assert len(cook.timers) >= 2
+    signals = {t.signal for t in cook.timers}
+    assert "alert" in signals
+    assert "nudge" in signals
+    buy = next(a for a in carbonara.path.actions if a.id == "buy")
+    assert buy.timers == []
+    assert buy.counter is None
 
     fitness = parse_create_response(_FEWSHOT_FITNESS)
     assert fitness.kind == "path"
@@ -31,6 +39,12 @@ def test_fewshots_parse_as_create_responses():
     assert fitness.path.cycle.horizon_days == 7
     kinds = {d.kind for d in fitness.path.days}
     assert kinds == {"train", "rest"}
+    train = next(a for a in fitness.path.actions if a.day_offset == 0)
+    assert train.counter is not None
+    assert train.counter.target >= 1
+    assert train.counter.current == 0
+    rest = next(a for a in fitness.path.actions if a.day_offset == 1)
+    assert rest.counter is None
 
 
 def test_pick_next_action_prefers_earliest_day():

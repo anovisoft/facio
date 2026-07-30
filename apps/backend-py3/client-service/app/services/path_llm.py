@@ -41,8 +41,12 @@ _WIRE_SENTINELS = """\
 
 Structured output forbids null on optional path fields. Use:
 - missing optional string → "" (id, detail, group_id, goal_for_cycle, \
-  day title/summary, group description, checklist id)
+  day title/summary, group description, checklist id, timer id, \
+  timer parallel_group, counter label)
 - missing optional int → -1 (estimate_min, sort; never for a real day_offset)
+- no counter on a step → counter stub object \
+  {label:"", target:-1, current:0, step:1} (not null)
+- no timers → timers: []
 - unused create branch → empty stub object (not null): see Response shape
 """
 
@@ -91,6 +95,14 @@ _PATH_FIELDS = """\
   - day_offset: REQUIRED when days[] present — must equal a days[].day_index
   - sort (≥0) or -1 if unspecified; group_id matching groups[].id, or ""
   - checklist_items[]: sub-checks (e.g. eggs ☐); done=false on create; id or ""
+  - timers[]: TimerStack for cook/active waits. Each: id (or ""), title, \
+    duration_sec (≥1), signal ("nudge"|"alert"), parallel_group (or ""). \
+    Carbonara cook step MUST include timers (pasta=alert; stir/check=nudge). \
+    Shopping / rest → []. Never put timing only in detail prose when a timer fits.
+  - counter: dose object always present. Real counter: label, target≥1, \
+    current=0 on create, step≥1. No counter → stub \
+    {label:"", target:-1, current:0, step:1}. Push-ups train steps MUST have \
+    a real counter (reps or sets). Rest / shopping → stub.
 - questions[]: 0 or 2–4 (max 4) clarifies that change the path; not an interview. \
   Emit the full batch for one round — user answers all at once.
 - resources[]: optional; never invent URLs
@@ -155,6 +167,9 @@ Unused branch = empty stub. Match user language (RU/EN/…).
 - Push-ups / fitness week: days must mix train and rest — rest days are real \
   days with kind=rest (light mobility OK), not identical "do sets" days.
 - Carbonara: cycle.horizon_days=1, one cook_session day.
+- Carbonara cook step: TimerStack required (pasta alert + stir/check nudges); \
+  shopping uses checklist, not timers.
+- Push-ups train steps: Counter required (reps/sets, current=0); rest → stub.
 - First action executable today; honest estimate_min, ideally ≤ 30–60 min.
 - Soft cap ≤ 8–12 actions; prefer checklist over many buy-micro-steps.
 - Cooking: shopping group + cook how-to in detail; not titles only.
@@ -249,6 +264,13 @@ _EMPTY_PATH_STUB: dict[str, Any] = {
     "milestones": [],
 }
 
+_EMPTY_COUNTER_STUB: dict[str, Any] = {
+    "label": "",
+    "target": -1,
+    "current": 0,
+    "step": 1,
+}
+
 _FEWSHOT_PATH_INTENT = "Приготовить карбонару"
 _FEWSHOT_PATH: dict[str, Any] = {
     "kind": "path",
@@ -324,6 +346,8 @@ _FEWSHOT_PATH: dict[str, Any] = {
                         "sort": 3,
                     },
                 ],
+                "timers": [],
+                "counter": dict(_EMPTY_COUNTER_STUB),
             },
             {
                 "id": "cook",
@@ -339,6 +363,37 @@ _FEWSHOT_PATH: dict[str, Any] = {
                 "sort": 1,
                 "group_id": "cook",
                 "checklist_items": [],
+                "timers": [
+                    {
+                        "id": "guanciale",
+                        "title": "Обжарить гуанчиале",
+                        "duration_sec": 480,
+                        "signal": "nudge",
+                        "parallel_group": "",
+                    },
+                    {
+                        "id": "pasta",
+                        "title": "Лапша al dente",
+                        "duration_sec": 540,
+                        "signal": "alert",
+                        "parallel_group": "boil",
+                    },
+                    {
+                        "id": "stir1",
+                        "title": "Помешать пасту",
+                        "duration_sec": 120,
+                        "signal": "nudge",
+                        "parallel_group": "boil",
+                    },
+                    {
+                        "id": "stir2",
+                        "title": "Помешать ещё раз",
+                        "duration_sec": 300,
+                        "signal": "nudge",
+                        "parallel_group": "boil",
+                    },
+                ],
+                "counter": dict(_EMPTY_COUNTER_STUB),
             },
         ],
         "questions": [
@@ -436,6 +491,13 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                 "sort": 0,
                 "group_id": "",
                 "checklist_items": [],
+                "timers": [],
+                "counter": {
+                    "label": "повторы",
+                    "target": 24,
+                    "current": 0,
+                    "step": 1,
+                },
             },
             {
                 "id": "d1",
@@ -447,6 +509,8 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                 "sort": 1,
                 "group_id": "",
                 "checklist_items": [],
+                "timers": [],
+                "counter": dict(_EMPTY_COUNTER_STUB),
             },
             {
                 "id": "d2",
@@ -458,6 +522,13 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                 "sort": 2,
                 "group_id": "",
                 "checklist_items": [],
+                "timers": [],
+                "counter": {
+                    "label": "повторы",
+                    "target": 24,
+                    "current": 0,
+                    "step": 1,
+                },
             },
             {
                 "id": "d3",
@@ -469,6 +540,8 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                 "sort": 3,
                 "group_id": "",
                 "checklist_items": [],
+                "timers": [],
+                "counter": dict(_EMPTY_COUNTER_STUB),
             },
             {
                 "id": "d4",
@@ -480,6 +553,13 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                 "sort": 4,
                 "group_id": "",
                 "checklist_items": [],
+                "timers": [],
+                "counter": {
+                    "label": "повторы",
+                    "target": 27,
+                    "current": 0,
+                    "step": 1,
+                },
             },
             {
                 "id": "d5",
@@ -491,6 +571,8 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                 "sort": 5,
                 "group_id": "",
                 "checklist_items": [],
+                "timers": [],
+                "counter": dict(_EMPTY_COUNTER_STUB),
             },
             {
                 "id": "d6",
@@ -502,6 +584,13 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                 "sort": 6,
                 "group_id": "",
                 "checklist_items": [],
+                "timers": [],
+                "counter": {
+                    "label": "повторы",
+                    "target": 30,
+                    "current": 0,
+                    "step": 1,
+                },
             },
         ],
         "questions": [
@@ -679,6 +768,31 @@ def normalize_path_wire_dict(data: dict[str, Any]) -> dict[str, Any]:
                     item["id"] = _empty_to_none(item.get("id"))
                     normalized_items.append(item)
                 action["checklist_items"] = normalized_items
+            timers = action.get("timers")
+            if isinstance(timers, list):
+                normalized_timers: list[Any] = []
+                for timer in timers:
+                    if not isinstance(timer, dict):
+                        normalized_timers.append(timer)
+                        continue
+                    timer = dict(timer)
+                    timer["id"] = _empty_to_none(timer.get("id"))
+                    timer["parallel_group"] = _empty_to_none(
+                        timer.get("parallel_group")
+                    )
+                    normalized_timers.append(timer)
+                action["timers"] = normalized_timers
+            elif timers is None:
+                action["timers"] = []
+            counter = action.get("counter")
+            if isinstance(counter, dict):
+                counter = dict(counter)
+                counter["label"] = _empty_to_none(counter.get("label"))
+                target = counter.get("target", -1)
+                if target is None or target == -1:
+                    action["counter"] = None
+                else:
+                    action["counter"] = counter
             normalized_actions.append(action)
         out["actions"] = normalized_actions
 

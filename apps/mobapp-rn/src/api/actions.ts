@@ -32,3 +32,28 @@ export function toggleChecklistItem(
     signal,
   });
 }
+
+export function updateCounter(
+  actionId: string,
+  body: { current?: number; delta?: number },
+  signal?: AbortSignal,
+): Promise<ActionResponse> {
+  return apiRequest(`/actions/${actionId}/counter`, {
+    method: 'POST',
+    body,
+    signal,
+  });
+}
+
+export function completeTimer(
+  actionId: string,
+  timerId: string,
+  completed = true,
+  signal?: AbortSignal,
+): Promise<ActionResponse> {
+  return apiRequest(`/actions/${actionId}/timers/${timerId}/complete`, {
+    method: 'POST',
+    body: { completed },
+    signal,
+  });
+}

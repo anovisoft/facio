@@ -35,8 +35,13 @@ module.exports = {
       'expo-localization',
       'expo-splash-screen',
       '@sentry/react-native',
+      'expo-notifications',
       './plugins/withMmkvZlib',
       ['./plugins/withAppleTeamId', { teamId: 'SXXLPXXJMD' }],
     ],
+    notification: {
+      icon: './assets/icon.png',
+      color: '#2F5D50',
+    },
   },
 };

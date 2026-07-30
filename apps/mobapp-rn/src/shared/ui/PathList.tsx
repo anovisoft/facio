@@ -10,6 +10,7 @@ import type {
   DayResponse,
   GroupResponse,
 } from '@/api/types';
+import { CounterControl, TimerStack } from '@/shared/ui/ActionPlugins';
 import { ChecklistList } from '@/shared/ui/ChecklistList';
 import { useTheme } from '@/theme/ThemeContext';
 import { radii, spacing, typography } from '@/theme';
@@ -24,10 +25,14 @@ type Props = {
   /** Path screen: tap step to expand detail / checklist. */
   expandable?: boolean;
   checklistDisabled?: boolean;
+  /** When true, timers/counters can run (live). Default false = preview. */
+  pluginsInteractive?: boolean;
   onToggleChecklist?: (
     item: ChecklistItemResponse,
     nextDone: boolean,
   ) => void;
+  onCounterChange?: (actionId: string, nextCurrent: number) => void;
+  onCompleteTimer?: (actionId: string, timerId: string) => void;
 };
 
 type Section = {
@@ -205,7 +210,10 @@ export function PathList({
   compact = false,
   expandable = false,
   checklistDisabled,
+  pluginsInteractive = false,
   onToggleChecklist,
+  onCounterChange,
+  onCompleteTimer,
 }: Props) {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -334,7 +342,9 @@ export function PathList({
                   Boolean(
                     action.detail ||
                       action.why ||
-                      action.checklist_items.length > 0,
+                      action.checklist_items.length > 0 ||
+                      (action.timers?.length ?? 0) > 0 ||
+                      action.counter,
                   );
                 const prev = section.actions[index - 1];
                 const showGroup =
@@ -444,6 +454,38 @@ export function PathList({
                                 onToggleChecklist &&
                                 action.status === 'pending'
                                   ? onToggleChecklist
+                                  : undefined
+                              }
+                            />
+                          ) : null}
+                          {(action.timers?.length ?? 0) > 0 ? (
+                            <TimerStack
+                              timers={action.timers ?? []}
+                              interactive={
+                                pluginsInteractive &&
+                                action.status === 'pending'
+                              }
+                              disabled={checklistDisabled}
+                              onCompleteTimer={
+                                onCompleteTimer
+                                  ? (timerId) =>
+                                      onCompleteTimer(action.id, timerId)
+                                  : undefined
+                              }
+                            />
+                          ) : null}
+                          {action.counter ? (
+                            <CounterControl
+                              counter={action.counter}
+                              interactive={
+                                pluginsInteractive &&
+                                action.status === 'pending'
+                              }
+                              disabled={checklistDisabled}
+                              onChange={
+                                onCounterChange
+                                  ? (next) =>
+                                      onCounterChange(action.id, next)
                                   : undefined
                               }
                             />

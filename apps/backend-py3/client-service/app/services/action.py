@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.errors import ConflictError, NotFoundError
 from app.models import (
@@ -199,3 +201,97 @@ class ActionService:
         await self.db.commit()
         await self.db.refresh(item)
         return item
+
+    async def update_counter(
+        self,
+        user: User,
+        action_id: UUID,
+        *,
+        current: int | None = None,
+        delta: int | None = None,
+    ) -> Action:
+        action, project = await self._get_owned_action(user, action_id)
+        self._require_active(project)
+        if action.status != ActionStatus.pending:
+            raise ConflictError("Cannot update counter on a closed action")
+        if not isinstance(action.counter, dict):
+            raise ConflictError("Action has no counter")
+
+        counter = deepcopy(action.counter)
+        previous = int(counter.get("current") or 0)
+        target = int(counter.get("target") or 0)
+        if current is not None:
+            new_current = current
+        else:
+            new_current = previous + int(delta or 0)
+        new_current = max(0, new_current)
+        if target > 0:
+            new_current = min(new_current, target)
+        counter["current"] = new_current
+        action.counter = counter
+        flag_modified(action, "counter")
+        await self.db.flush()
+
+        await self.audit.add_event(
+            event_type=EventType.counter_updated,
+            user_id=user.id,
+            project_id=project.id,
+            payload={
+                "action_id": str(action.id),
+                "previous_current": previous,
+                "current": new_current,
+                "target": target,
+                "label": counter.get("label"),
+            },
+        )
+        await self.db.commit()
+        return (await self._get_owned_action(user, action_id))[0]
+
+    async def complete_timer(
+        self,
+        user: User,
+        action_id: UUID,
+        timer_id: str,
+        *,
+        completed: bool = True,
+    ) -> Action:
+        action, project = await self._get_owned_action(user, action_id)
+        self._require_active(project)
+        if action.status != ActionStatus.pending:
+            raise ConflictError("Cannot update timer on a closed action")
+        timers = action.timers if isinstance(action.timers, list) else []
+        if not timers:
+            raise ConflictError("Action has no timers")
+
+        updated = deepcopy(timers)
+        found = False
+        previous = False
+        for item in updated:
+            if not isinstance(item, dict):
+                continue
+            if str(item.get("id")) != timer_id:
+                continue
+            found = True
+            previous = bool(item.get("completed", False))
+            item["completed"] = completed
+            break
+        if not found:
+            raise NotFoundError("Timer not found")
+
+        action.timers = updated
+        flag_modified(action, "timers")
+        await self.db.flush()
+
+        await self.audit.add_event(
+            event_type=EventType.timer_completed,
+            user_id=user.id,
+            project_id=project.id,
+            payload={
+                "action_id": str(action.id),
+                "timer_id": timer_id,
+                "previous_completed": previous,
+                "completed": completed,
+            },
+        )
+        await self.db.commit()
+        return (await self._get_owned_action(user, action_id))[0]

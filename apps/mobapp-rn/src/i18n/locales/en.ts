@@ -83,6 +83,16 @@ export default {
     firstCompletionBody: 'First step done. Next one is ready.',
     firstCompletionCta: 'Next step',
   },
+  plugins: {
+    timers: 'Timers',
+    counter: 'Count',
+    start: 'Start',
+    stop: 'Stop',
+    timerDone: 'Done',
+    preview: 'Preview',
+    signalNudge: 'Nudge',
+    signalAlert: 'Alert',
+  },
   path: {
     title: 'Full path',
     cyclePlan: 'Cycle plan · {{days}} days',

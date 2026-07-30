@@ -16,8 +16,10 @@ import { useTranslation } from 'react-i18next';
 
 import {
   completeAction,
+  completeTimer,
   skipAction,
   toggleChecklistItem,
+  updateCounter,
 } from '@/api/actions';
 import { getProject, repairProject } from '@/api/projects';
 import { ApiError, type DayKind, type ProjectDetail } from '@/api/types';
@@ -25,6 +27,7 @@ import { FirstCompletionOverlay } from '@/features/home/FirstCompletionOverlay';
 import type { RootScreenProps } from '@/navigation/types';
 import { trackActionShown } from '@/services/beacons';
 import { AsyncState } from '@/shared/ui/AsyncState';
+import { CounterControl, TimerStack } from '@/shared/ui/ActionPlugins';
 import { ChecklistList } from '@/shared/ui/ChecklistList';
 import { PrimaryButton } from '@/shared/ui/PrimaryButton';
 import { SafeScreen } from '@/shared/ui/SafeScreen';
@@ -181,6 +184,61 @@ export function ProjectHomeScreen({
       setError(e instanceof ApiError ? e.message : t('home.error'));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const patchNextAction = (
+    patch: Partial<NonNullable<ProjectDetail['next_action']>>,
+  ) => {
+    setProject((prev) => {
+      if (!prev?.next_action) return prev;
+      const next_action = { ...prev.next_action, ...patch };
+      return {
+        ...prev,
+        next_action,
+        actions: prev.actions.map((action) =>
+          action.id === next_action.id ? { ...action, ...patch } : action,
+        ),
+      };
+    });
+  };
+
+  const onCounterChange = async (nextCurrent: number) => {
+    const action = project?.next_action;
+    if (!action?.counter || busy) return;
+    const previous = action.counter.current;
+    patchNextAction({
+      counter: { ...action.counter, current: nextCurrent },
+    });
+    setBusy(true);
+    setError(null);
+    try {
+      const updated = await updateCounter(action.id, { current: nextCurrent });
+      patchNextAction({
+        counter: updated.counter,
+        timers: updated.timers,
+      });
+    } catch (e) {
+      patchNextAction({
+        counter: { ...action.counter, current: previous },
+      });
+      setError(e instanceof ApiError ? e.message : t('home.error'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onCompleteTimer = async (timerId: string) => {
+    const action = project?.next_action;
+    if (!action) return;
+    try {
+      const updated = await completeTimer(action.id, timerId, true);
+      patchNextAction({
+        timers: updated.timers,
+        counter: updated.counter,
+      });
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t('home.error'));
     }
   };
 
@@ -351,6 +409,12 @@ export function ProjectHomeScreen({
               </Text>
             ) : null}
 
+            {next.detail ? (
+              <Text style={[styles.detail, { color: colors.textSecondary }]}>
+                {next.detail}
+              </Text>
+            ) : null}
+
             {next.checklist_items.length > 0 ? (
               <View style={styles.checklist}>
                 <ChecklistList
@@ -359,6 +423,28 @@ export function ProjectHomeScreen({
                   onToggle={(item, done) =>
                     void onToggleChecklist(item.id, done)
                   }
+                />
+              </View>
+            ) : null}
+
+            {(next.timers?.length ?? 0) > 0 ? (
+              <View style={styles.plugins}>
+                <TimerStack
+                  timers={next.timers ?? []}
+                  interactive
+                  disabled={busy}
+                  onCompleteTimer={(timerId) => void onCompleteTimer(timerId)}
+                />
+              </View>
+            ) : null}
+
+            {next.counter ? (
+              <View style={styles.plugins}>
+                <CounterControl
+                  counter={next.counter}
+                  interactive
+                  disabled={busy}
+                  onChange={(value) => void onCounterChange(value)}
                 />
               </View>
             ) : null}
@@ -474,6 +560,13 @@ const styles = StyleSheet.create({
   },
   checklist: {
     marginTop: spacing.lg,
+  },
+  plugins: {
+    marginTop: spacing.lg,
+  },
+  detail: {
+    ...typography.body,
+    marginTop: spacing.md,
   },
   error: {
     ...typography.caption,

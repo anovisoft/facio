@@ -37,10 +37,61 @@ def ensure_action_keys(state: PathState) -> PathState:
             checklist.append(
                 c.model_copy(update={"id": c.id or f"c{c_index}"})
             )
+        timers = []
+        for t_index, timer in enumerate(item.timers):
+            timers.append(
+                timer.model_copy(update={"id": timer.id or f"t{t_index}"})
+            )
         actions.append(
-            item.model_copy(update={"id": key, "checklist_items": checklist})
+            item.model_copy(
+                update={
+                    "id": key,
+                    "checklist_items": checklist,
+                    "timers": timers,
+                }
+            )
         )
     return state.model_copy(update={"actions": actions})
+
+
+def _timer_payload(
+    timers: list,
+    *,
+    preserved_completed: dict[str, bool] | None = None,
+) -> list[dict]:
+    out: list[dict] = []
+    done_map = preserved_completed or {}
+    for t_index, timer in enumerate(timers):
+        t_key = timer.id or f"t{t_index}"
+        out.append(
+            {
+                "id": t_key,
+                "title": timer.title,
+                "duration_sec": timer.duration_sec,
+                "signal": timer.signal,
+                "parallel_group": timer.parallel_group,
+                "completed": bool(done_map.get(t_key, False)),
+            }
+        )
+    return out
+
+
+def _counter_payload(
+    counter,
+    *,
+    preserved_current: int | None = None,
+) -> dict | None:
+    if counter is None:
+        return None
+    current = (
+        preserved_current if preserved_current is not None else counter.current
+    )
+    return {
+        "label": counter.label,
+        "target": counter.target,
+        "current": max(0, int(current)),
+        "step": counter.step if counter.step else 1,
+    }
 
 
 def apply_contract(project: Project, state: PathState) -> None:
@@ -78,6 +129,8 @@ async def materialize_path(
 
     preserved: dict[str, ActionStatus] = {}
     preserved_checklist: dict[str, dict[str, bool]] = {}
+    preserved_counter: dict[str, int] = {}
+    preserved_timers: dict[str, dict[str, bool]] = {}
     if merge_progress:
         for action in project.actions:
             if action.status in {ActionStatus.done, ActionStatus.skipped}:
@@ -85,6 +138,14 @@ async def materialize_path(
                 preserved_checklist[action.key] = {
                     (item.key or item.title): item.done
                     for item in action.checklist_items
+                }
+            if isinstance(action.counter, dict) and "current" in action.counter:
+                preserved_counter[action.key] = int(action.counter["current"])
+            if isinstance(action.timers, list):
+                preserved_timers[action.key] = {
+                    str(t.get("id")): bool(t.get("completed"))
+                    for t in action.timers
+                    if isinstance(t, dict) and t.get("id")
                 }
 
     for action in list(project.actions):
@@ -125,6 +186,14 @@ async def materialize_path(
             day_offset=item.day_offset,
             sort=sort,
             status=status,
+            timers=_timer_payload(
+                item.timers,
+                preserved_completed=preserved_timers.get(key),
+            ),
+            counter=_counter_payload(
+                item.counter,
+                preserved_current=preserved_counter.get(key),
+            ),
         )
         db.add(action)
         await db.flush()

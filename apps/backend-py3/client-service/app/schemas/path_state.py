@@ -24,6 +24,9 @@ DAY_KINDS: frozenset[str] = frozenset(get_args(DayKind))
 CycleStatus = Literal["draft", "active", "completed", "abandoned"]
 CYCLE_STATUSES: frozenset[str] = frozenset(get_args(CycleStatus))
 
+TimerSignal = Literal["nudge", "alert"]
+TIMER_SIGNALS: frozenset[str] = frozenset(get_args(TimerSignal))
+
 
 class PathChecklistItem(BaseModel):
     id: str | None = Field(
@@ -33,6 +36,55 @@ class PathChecklistItem(BaseModel):
     title: str = Field(min_length=1, description="Checklist line, e.g. eggs.")
     done: bool = Field(default=False, description="Always false on create.")
     sort: int = Field(default=0, ge=0, description="Order inside the action.")
+
+
+class PathTimer(BaseModel):
+    """One timer in a TimerStack (docs/next/04 §5)."""
+
+    id: str | None = Field(
+        default=None,
+        description="Stable timer id; reuse on refine when same timer.",
+    )
+    title: str = Field(
+        min_length=1,
+        description="Timer label, e.g. «Лапша», «Помешать».",
+    )
+    duration_sec: int = Field(
+        ge=1,
+        le=86_400,
+        description="Duration in seconds.",
+    )
+    signal: TimerSignal = Field(
+        description="nudge (fractional stir) | alert (critical, e.g. pasta).",
+    )
+    parallel_group: str | None = Field(
+        default=None,
+        description="Same non-empty key → parallel timers; else sequential UI.",
+    )
+
+
+class PathCounter(BaseModel):
+    """Dose / counter plugin (docs/next/04 §5)."""
+
+    label: str | None = Field(
+        default=None,
+        max_length=80,
+        description="Optional label, e.g. «повторы», «подходы».",
+    )
+    target: int = Field(
+        ge=1,
+        description="Goal count for this step.",
+    )
+    current: int = Field(
+        default=0,
+        ge=0,
+        description="Always 0 on create; live progress after Accept.",
+    )
+    step: int = Field(
+        default=1,
+        ge=1,
+        description="Increment per tap; default 1.",
+    )
 
 
 class PathGroup(BaseModel):
@@ -106,6 +158,37 @@ class PathAction(BaseModel):
             "(prefer over many micro-actions for shopping)."
         ),
     )
+    timers: list[PathTimer] = Field(
+        default_factory=list,
+        description=(
+            "TimerStack for cook steps (pasta alert, stir nudges). "
+            "Empty [] when unused. Wire: always present."
+        ),
+    )
+    counter: PathCounter | None = Field(
+        default=None,
+        description=(
+            "Dose counter for train sets/reps. Wire: always emit object; "
+            "target=-1 means absent (normalized to null)."
+        ),
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_counter_stub(cls, data: object) -> object:
+        """Wire stub ``counter.target == -1`` (or empty) → no counter."""
+        if not isinstance(data, dict):
+            return data
+        out = dict(data)
+        counter = out.get("counter")
+        if counter is None:
+            return out
+        if not isinstance(counter, dict):
+            return out
+        target = counter.get("target", -1)
+        if target is None or target == -1 or target == "":
+            out["counter"] = None
+        return out
 
 
 class PathCycle(BaseModel):
@@ -420,6 +503,11 @@ class PathState(BaseModel):
             for item in action.checklist_items:
                 if not item.title.strip():
                     raise ValueError("checklist_items.title must be non-empty")
+            for timer in action.timers:
+                if not timer.title.strip():
+                    raise ValueError("timers.title must be non-empty")
+            if action.counter is not None and action.counter.current < 0:
+                raise ValueError("counter.current must be >= 0")
         return self
 
 

@@ -83,6 +83,16 @@ export default {
     firstCompletionBody: 'Первый шаг сделан. Дальше — следующий.',
     firstCompletionCta: 'К следующему шагу',
   },
+  plugins: {
+    timers: 'Таймеры',
+    counter: 'Счётчик',
+    start: 'Старт',
+    stop: 'Стоп',
+    timerDone: 'Готово',
+    preview: 'Превью',
+    signalNudge: 'Напоминание',
+    signalAlert: 'Сигнал',
+  },
   path: {
     title: 'Весь путь',
     cyclePlan: 'План цикла · {{days}} дней',

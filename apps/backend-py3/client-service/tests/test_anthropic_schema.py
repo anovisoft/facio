@@ -122,18 +122,39 @@ def test_wire_schema_collapses_nullable_anyof() -> None:
 
 
 def test_wire_schema_size_smoke() -> None:
-    """Guard against grammar blow-ups (Slice 2 cycle/days + future plugins)."""
+    """Guard against grammar blow-ups (Slice 2 cycle/days + Slice 3 plugins)."""
     path = _anthropic_json_schema(PATH_RESPONSE_SCHEMA)
     create = _anthropic_json_schema(CREATE_RESPONSE_SCHEMA)
     path_m = _schema_metrics(path)
     create_m = _schema_metrics(create)
 
     # Pre-fix Path wire was ~7.6k chars with 11 nullable anyOf + descriptions.
-    assert path_m["chars"] < 4500, path_m
-    assert create_m["chars"] < 5500, create_m
+    # Slice 3 adds PathTimer + PathCounter; keep under hard grammar ceiling.
+    assert path_m["chars"] < 5500, path_m
+    assert create_m["chars"] < 6500, create_m
     assert path_m["anyOf_null"] == 0
     assert create_m["anyOf_null"] == 0
     assert create_m["descriptions"] == 0
+
+
+def test_wire_schema_includes_plugin_defs() -> None:
+    out = _anthropic_json_schema(PATH_RESPONSE_SCHEMA)
+    defs = _defs(out)
+    assert "PathTimer" in defs
+    assert "PathCounter" in defs
+    action = defs["PathAction"]["properties"]
+    assert "timers" in action
+    assert "counter" in action
+    # Counter is required object on wire (null collapsed); not anyOf-null.
+    assert action["counter"] == {"$ref": "#/$defs/PathCounter"}
+    timer_props = defs["PathTimer"]["properties"]
+    assert timer_props["signal"]["enum"] == ["nudge", "alert"]
+    assert "parallel_group" in timer_props
+    assert timer_props["parallel_group"] == {"type": "string"}
+    counter_props = defs["PathCounter"]["properties"]
+    assert set(counter_props) == {"label", "target", "current", "step"}
+    for key in counter_props:
+        assert key in (defs["PathCounter"].get("required") or [])
 
 
 def test_create_wire_requires_both_branches_as_objects() -> None:

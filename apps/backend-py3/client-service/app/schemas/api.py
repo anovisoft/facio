@@ -12,7 +12,12 @@ from pydantic import (
     model_validator,
 )
 
-from app.schemas.path_state import ClarifyQuestion, DayKind, PathState
+from app.schemas.path_state import (
+    ClarifyQuestion,
+    DayKind,
+    PathState,
+    TimerSignal,
+)
 
 
 class CreateProjectRequest(BaseModel):
@@ -106,6 +111,23 @@ class ToggleChecklistItemRequest(BaseModel):
     )
 
 
+class UpdateCounterRequest(BaseModel):
+    """Set counter.current absolutely, or delta relative to current."""
+
+    current: int | None = Field(default=None, ge=0)
+    delta: int | None = Field(default=None)
+
+    @model_validator(mode="after")
+    def require_one(self) -> "UpdateCounterRequest":
+        if self.current is None and self.delta is None:
+            raise ValueError("Provide current and/or delta")
+        return self
+
+
+class CompleteTimerRequest(BaseModel):
+    completed: bool = True
+
+
 class ChecklistItemResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -115,6 +137,22 @@ class ChecklistItemResponse(BaseModel):
     title: str
     done: bool
     sort: int
+
+
+class TimerResponse(BaseModel):
+    id: str
+    title: str
+    duration_sec: int
+    signal: TimerSignal
+    parallel_group: str | None = None
+    completed: bool = False
+
+
+class CounterResponse(BaseModel):
+    label: str | None = None
+    target: int
+    current: int
+    step: int = 1
 
 
 class GroupResponse(BaseModel):
@@ -170,6 +208,8 @@ class ActionResponse(BaseModel):
     group_key: str | None = None
     group_title: str | None = None
     checklist_items: list[ChecklistItemResponse] = Field(default_factory=list)
+    timers: list[TimerResponse] = Field(default_factory=list)
+    counter: CounterResponse | None = None
 
 
 class ProjectSummary(BaseModel):

@@ -6,7 +6,9 @@ from app.deps import CurrentUser, DbSession
 from app.schemas.path import (
     ActionResponse,
     ChecklistItemResponse,
+    CompleteTimerRequest,
     ToggleChecklistItemRequest,
+    UpdateCounterRequest,
 )
 from app.services.action import ActionService
 from app.services.serializers import serialize_action
@@ -48,3 +50,42 @@ async def toggle_checklist_item(
         user, item_id, done=body.done
     )
     return ChecklistItemResponse.model_validate(item, from_attributes=True)
+
+
+@router.post(
+    "/actions/{action_id}/counter",
+    response_model=ActionResponse,
+)
+async def update_counter(
+    action_id: UUID,
+    body: UpdateCounterRequest,
+    user: CurrentUser,
+    db: DbSession,
+) -> ActionResponse:
+    action = await ActionService(db).update_counter(
+        user,
+        action_id,
+        current=body.current,
+        delta=body.delta,
+    )
+    return serialize_action(action)
+
+
+@router.post(
+    "/actions/{action_id}/timers/{timer_id}/complete",
+    response_model=ActionResponse,
+)
+async def complete_timer(
+    action_id: UUID,
+    timer_id: str,
+    body: CompleteTimerRequest,
+    user: CurrentUser,
+    db: DbSession,
+) -> ActionResponse:
+    action = await ActionService(db).complete_timer(
+        user,
+        action_id,
+        timer_id,
+        completed=body.completed,
+    )
+    return serialize_action(action)

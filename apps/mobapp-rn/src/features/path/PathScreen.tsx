@@ -8,7 +8,11 @@ import { StyleSheet, Text } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
-import { toggleChecklistItem } from '@/api/actions';
+import {
+  completeTimer,
+  toggleChecklistItem,
+  updateCounter,
+} from '@/api/actions';
 import { getProject } from '@/api/projects';
 import { ApiError, type ProjectDetail } from '@/api/types';
 import type { RootScreenProps } from '@/navigation/types';
@@ -93,6 +97,75 @@ export function PathScreen({ navigation, route }: RootScreenProps<'Path'>) {
     }
   };
 
+  const onCounterChange = async (actionId: string, nextCurrent: number) => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const updated = await updateCounter(actionId, { current: nextCurrent });
+      setProject((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          actions: prev.actions.map((action) =>
+            action.id === actionId
+              ? {
+                  ...action,
+                  counter: updated.counter,
+                  timers: updated.timers,
+                }
+              : action,
+          ),
+          next_action:
+            prev.next_action?.id === actionId
+              ? {
+                  ...prev.next_action,
+                  counter: updated.counter,
+                  timers: updated.timers,
+                }
+              : prev.next_action,
+        };
+      });
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t('path.error'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onCompleteTimer = async (actionId: string, timerId: string) => {
+    try {
+      const updated = await completeTimer(actionId, timerId, true);
+      setProject((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          actions: prev.actions.map((action) =>
+            action.id === actionId
+              ? {
+                  ...action,
+                  timers: updated.timers,
+                  counter: updated.counter,
+                }
+              : action,
+          ),
+          next_action:
+            prev.next_action?.id === actionId
+              ? {
+                  ...prev.next_action,
+                  timers: updated.timers,
+                  counter: updated.counter,
+                }
+              : prev.next_action,
+        };
+      });
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t('path.error'));
+    }
+  };
+
+  const pluginsLive = project?.status === 'active';
+
   return (
     <SafeScreen scroll={Boolean(project) && !loading}>
       <AsyncState
@@ -118,8 +191,15 @@ export function PathScreen({ navigation, route }: RootScreenProps<'Path'>) {
               cycle={project.cycle}
               expandable
               checklistDisabled={busy}
+              pluginsInteractive={pluginsLive}
               onToggleChecklist={(item, done) =>
                 void onToggleChecklist(item.id, done)
+              }
+              onCounterChange={(actionId, next) =>
+                void onCounterChange(actionId, next)
+              }
+              onCompleteTimer={(actionId, timerId) =>
+                void onCompleteTimer(actionId, timerId)
               }
             />
           </>
