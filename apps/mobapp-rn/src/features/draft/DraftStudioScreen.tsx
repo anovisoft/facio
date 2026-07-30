@@ -262,6 +262,8 @@ export function DraftStudioScreen({
                 options={question.options}
                 selected={answers[question.id] ?? null}
                 disabled={busy}
+                allowCustom
+                customPlaceholder={t('draft.freeTextPlaceholder')}
                 onSelect={(option) => selectAnswer(question.id, option)}
               />
             </View>

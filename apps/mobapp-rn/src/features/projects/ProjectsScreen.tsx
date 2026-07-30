@@ -65,15 +65,17 @@ export function ProjectsScreen({ navigation }: RootScreenProps<'Projects'>) {
     setLastProjectId(project.id);
     trackProjectSwitched(project.id);
     if (project.status === 'draft') {
-      navigation.navigate('DraftStudio', { projectId: project.id });
+      // push: avoid reusing a stale DraftStudio instance whose native back
+      // control can stop receiving taps after a prior visit (iOS 26).
+      navigation.push('DraftStudio', { projectId: project.id });
       return;
     }
-    navigation.navigate('ProjectHome', { projectId: project.id });
+    navigation.push('ProjectHome', { projectId: project.id });
   };
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <SafeScreen style={styles.flex}>
+      <SafeScreen style={styles.flex} edges={['top', 'left', 'right']}>
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.text }]}>
             {t('projects.title')}

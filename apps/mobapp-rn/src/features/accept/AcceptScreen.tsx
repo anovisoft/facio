@@ -200,7 +200,7 @@ export function AcceptScreen({
             navigation.goBack();
             return;
           }
-          navigation.navigate('DraftStudio', { projectId });
+          navigation.push('DraftStudio', { projectId });
         }}
       />
     </SafeScreen>

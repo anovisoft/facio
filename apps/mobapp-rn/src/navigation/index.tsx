@@ -15,6 +15,7 @@ import { IntentScreen } from '@/features/intent/IntentScreen';
 import { PathScreen } from '@/features/path/PathScreen';
 import { HistoryScreen } from '@/features/projects/HistoryScreen';
 import { ProjectsScreen } from '@/features/projects/ProjectsScreen';
+import { renderReliableHeaderBack } from '@/navigation/reliableBack';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTheme } from '@/theme/ThemeContext';
 
@@ -44,7 +45,7 @@ export default function AppNavigator() {
     <NavigationContainer theme={navTheme}>
       <Stack.Navigator
         initialRouteName="Projects"
-        screenOptions={{
+        screenOptions={({ navigation }) => ({
           headerShown: true,
           headerShadowVisible: false,
           headerTransparent: false,
@@ -52,12 +53,11 @@ export default function AppNavigator() {
           headerTintColor: colors.primary,
           headerTitleStyle: { color: colors.text },
           contentStyle: { backgroundColor: colors.background },
-          // Keep UIKit chrome in lockstep with app theme (iOS 26 glass back btn).
-          headerBlurEffect:
-            effectiveTheme === 'dark'
-              ? 'systemMaterialDark'
-              : 'systemMaterialLight',
-        }}
+          // Opaque header — avoid headerBlurEffect with headerTransparent:false;
+          // the blur overlay has been linked to dead back-button taps on iOS 26.
+          headerLeft: (props) =>
+            renderReliableHeaderBack(navigation, props, 'Projects'),
+        })}
       >
         <Stack.Screen
           name="Projects"
