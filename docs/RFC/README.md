@@ -75,4 +75,9 @@ Product name in docs: **Facio**. Repository folder may remain `fasio`. Decide br
 
 ## Related
 
-Product experiment for the near-term build: see [`../mvp/`](../mvp/README.md) (hypotheses, scope, metrics, go/no-go). RFC remains the long-horizon architecture pack.
+Product experiments:
+
+- Near-term first slice: [`../mvp/`](../mvp/README.md) (hypotheses, scope, metrics, go/no-go)
+- Next slice (cycles, plugins, executable plan): [`../next/`](../next/README.md)
+
+RFC remains the long-horizon architecture pack.
