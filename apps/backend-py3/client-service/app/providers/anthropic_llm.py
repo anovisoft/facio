@@ -22,7 +22,7 @@ class AnthropicLLMProvider(LLMProvider):
         self,
         *,
         api_key: str,
-        model: str = "claude-sonnet-5",
+        model: str = "claude-haiku-4-5",
         max_tokens: int = 8192,
         prompt_cache: bool = True,
         prompt_cache_ttl: CacheTtl = "5m",

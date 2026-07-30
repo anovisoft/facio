@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     cors_origins: str = "*"
 
     anthropic_api_key: str | None = None
-    llm_model: str = "claude-sonnet-5"
+    llm_model: str = "claude-haiku-4-5"
     llm_max_tokens: int = 8192
     # Anthropic prompt caching for stable system (+ create few-shots).
     llm_prompt_cache: bool = True

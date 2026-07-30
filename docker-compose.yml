@@ -31,7 +31,7 @@ services:
       DEBUG: ${FASIO_DEBUG:-false}
       CORS_ORIGINS: ${FASIO_CORS_ORIGINS:-*}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      LLM_MODEL: ${LLM_MODEL:-claude-sonnet-5}
+      LLM_MODEL: ${LLM_MODEL:-claude-haiku-4-5}
       LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-8192}
       LLM_PROMPT_CACHE: ${LLM_PROMPT_CACHE:-true}
       LLM_PROMPT_CACHE_TTL: ${LLM_PROMPT_CACHE_TTL:-5m}

@@ -30,7 +30,7 @@ docker compose up --build
 
 Auth: send `X-Device-Id: <any-stable-id>` on protected routes.
 
-LLM: Claude Sonnet 5 (`LLM_MODEL`, default `claude-sonnet-5`). Without `ANTHROPIC_API_KEY`, create/refine/repair return **501**. Create/refine/repair retry once on schema validation failure (2 attempts total).
+LLM: Claude Haiku 4.5 (`LLM_MODEL`, default `claude-haiku-4-5`). Without `ANTHROPIC_API_KEY`, create/refine/repair return **501**. Create/refine/repair retry once on schema validation failure (2 attempts total).
 
 Create prompts include a safety/policy block, grey-zone gate hints, FCT/volume caps, field glossary, and two few-shot JSON examples (path + instant_answer).
 

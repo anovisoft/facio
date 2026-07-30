@@ -94,7 +94,7 @@ Admin/debug history routes (`transcript` / `timeline`) removed from the HTTP sur
 
 ```text
 persist intent_submitted + user turn (user_id, project_id=null)
-  → LLM create (Claude Sonnet 5, structured JSON; validate + до 2 попыток)
+  → LLM create (Claude Haiku 4.5, structured JSON; validate + до 2 попыток)
        • kind=instant_answer → assistant turn + instant_answer_shown
          (no Project; audit rows by user_id)
        • kind=path → create Project draft + state_versions
@@ -105,7 +105,7 @@ persist intent_submitted + user turn (user_id, project_id=null)
 commit → active (другие active не трогаем)
 ```
 
-Env: `ANTHROPIC_API_KEY`, optional `LLM_MODEL` (default `claude-sonnet-5`).  
+Env: `ANTHROPIC_API_KEY`, optional `LLM_MODEL` (default `claude-haiku-4-5`).  
 Logs: `LOG_DIR` (default `logs`), daily rotate, `LOG_BACKUP_COUNT=30`.
 
 ---
