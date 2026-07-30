@@ -49,12 +49,20 @@ async def test_refine_creates_new_state_version(
     response = await client.post(
         f"/api/v1/projects/{project['id']}/refine",
         headers=auth_headers,
-        json={"answer": "2", "question_id": "q_servings"},
+        json={
+            "answers": [
+                {"question_id": "q_servings", "value": "2"},
+                {"question_id": "q_guanciale", "value": "гуанчиале"},
+            ],
+            "comment": "без чеснока",
+        },
     )
     assert response.status_code == 200
     body = response.json()
     assert body["current_version"] == 2
     assert body["questions"] == []
+    assert body["title"]
+    assert body["summary"]
 
     events = (
         await db_session.execute(
@@ -67,6 +75,20 @@ async def test_refine_creates_new_state_version(
     assert len(events) == 1
 
 
+async def test_refine_legacy_single_answer_still_works(
+    client, auth_headers, enqueue_path, enqueue_refine
+):
+    project = await _create_draft(client, auth_headers, enqueue_path)
+    enqueue_refine()
+    response = await client.post(
+        f"/api/v1/projects/{project['id']}/refine",
+        headers=auth_headers,
+        json={"answer": "2", "question_id": "q_servings"},
+    )
+    assert response.status_code == 200
+    assert response.json()["current_version"] == 2
+
+
 async def test_restore_state_appends_user_restore(
     client, auth_headers, enqueue_path, enqueue_refine, db_session
 ):
@@ -75,7 +97,12 @@ async def test_restore_state_appends_user_restore(
     await client.post(
         f"/api/v1/projects/{project['id']}/refine",
         headers=auth_headers,
-        json={"answer": "2", "question_id": "q_servings"},
+        json={
+            "answers": [
+                {"question_id": "q_servings", "value": "2"},
+                {"question_id": "q_guanciale", "value": "гуанчиале"},
+            ],
+        },
     )
 
     versions = await client.get(

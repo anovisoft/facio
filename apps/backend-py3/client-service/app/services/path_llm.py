@@ -37,6 +37,10 @@ _SAFETY = """\
 _PATH_FIELDS = """\
 ## Path fields (kind=path → fill `path`, set `instant_answer` null)
 
+- title: plan hero title (one short line, ≤ ~120 chars). Shown at the top of \
+  the plan body. Examples: "Карбонара на ужин", "К 30 отжиманиям — неделя 1".
+- summary: 1–3 sentences at the start of the plan body (≤ ~600 chars). What \
+  this cycle delivers and the logic of stages — not a bullet dump. Never empty.
 - outcome: clear goal (1 short sentence).
 - paraphrase: soft-start UI line confirming understanding \
   (e.g. "Ок — ведём к: …"); warmer than outcome; match user language.
@@ -45,7 +49,8 @@ _PATH_FIELDS = """\
 - domain: ONE of cooking|fitness|learning|home|errands|work|health|finance|\
   social|other (primary demand cluster). Unsure / safety grey → other.
 - tags: 0–5 short slugs (e.g. pasta, dinner); optional finer clustering.
-- groups[]: optional sections (Покупки, Готовка). Stable `id`, `title`, `sort`.
+- groups[]: optional sections (Покупки, Готовка). Stable `id`, `title`, \
+  optional `description` (1–2 sentences: why this phase), `sort`.
 - actions[]: ordered steps, soft cap ≤ 8–12 (never a 40-step dump). Each:
   - id: stable key; reuse on refine/repair when the step is the same
   - title: verb + object («Сегодня» / path step)
@@ -57,7 +62,8 @@ _PATH_FIELDS = """\
   - day_offset: days from first step (0 = today), or null
   - sort, group_id (must match groups[].id when set)
   - checklist_items[]: sub-checks (e.g. eggs ☐); done=false on create
-- questions[]: 0 or 2–4 (max 4) clarifies that change the path; not an interview
+- questions[]: 0 or 2–4 (max 4) clarifies that change the path; not an interview. \
+  Emit the full batch for one round — user answers all at once.
 - resources[]: optional; never invent URLs
 - milestones[]: optional checkpoint labels
 """
@@ -107,6 +113,8 @@ kind + path|null + instant_answer|null. Match user language (RU/EN/…).
 
 ## FCT / quality
 
+- Always fill title + summary on path create (reference intents: carbonara, \
+  push-ups → narrative must be visible immediately).
 - First action executable today; honest estimate_min, ideally ≤ 30–60 min.
 - Soft cap ≤ 8–12 actions; prefer checklist over many buy-micro-steps.
 - Cooking: shopping group + cook how-to in detail; not titles only.
@@ -116,15 +124,22 @@ Do not chat. JSON fields only.
 """
 
 _REFINE_SYSTEM = f"""\
-You refine an existing Facio Path from the user's clarification.
+You refine an existing Facio Path from the user's clarification batch.
 Return Path JSON only (not the create kind-union).
 
 {_SAFETY}
 
+The user payload has:
+- current_state: existing Path JSON
+- answers[]: {{question_id, value}} for this round (may be empty)
+- comment: optional free-text for the whole round (may be null)
+
 Rules:
+- Apply ALL answers and the comment in ONE pass — do not ignore any.
 - Do NOT invent constraints/slots the user did not provide.
-- If clarify changes the contract → update outcome, success_criteria, \
-  horizon, and paraphrase explicitly.
+- If clarify changes the contract → update title, summary, outcome, \
+  success_criteria, horizon, and paraphrase explicitly.
+- Keep title + summary non-empty and useful after refine.
 - Preserve action/group ids when the step is the same; do not reshuffle \
   the whole path without cause. New/replaced steps may get new ids.
 - Keep every action.why non-empty and meaningful.
@@ -162,6 +177,12 @@ _FEWSHOT_PATH_INTENT = "Приготовить карбонару"
 _FEWSHOT_PATH: dict[str, Any] = {
     "kind": "path",
     "path": {
+        "title": "Карбонара на ужин",
+        "summary": (
+            "За один вечер купим продукты и приготовим классическую "
+            "карбонару без сливок. Сначала покупки, потом готовка "
+            "по шагам — около часа с магазином."
+        ),
         "outcome": "Приготовить карбонару дома",
         "paraphrase": "Ок — ведём к: карбонара на ужин",
         "success_criteria": "Тарелка карбонары съедена сегодня вечером",
@@ -169,8 +190,18 @@ _FEWSHOT_PATH: dict[str, Any] = {
         "domain": "cooking",
         "tags": ["pasta", "dinner", "carbonara"],
         "groups": [
-            {"id": "shop", "title": "Покупки", "sort": 0},
-            {"id": "cook", "title": "Готовка", "sort": 1},
+            {
+                "id": "shop",
+                "title": "Покупки",
+                "description": "Собрать ингредиенты до готовки.",
+                "sort": 0,
+            },
+            {
+                "id": "cook",
+                "title": "Готовка",
+                "description": "Собрать блюдо по классическому методу.",
+                "sort": 1,
+            },
         ],
         "actions": [
             {
@@ -277,8 +308,8 @@ def messages_for_create(intent: str) -> list[dict[str, Any]]:
 def messages_for_refine(
     *,
     current_state: dict[str, Any],
-    answer: str,
-    question_id: str | None,
+    answers: list[dict[str, str]],
+    comment: str | None = None,
 ) -> list[dict[str, Any]]:
     return [
         {"role": "system", "content": _REFINE_SYSTEM},
@@ -287,8 +318,8 @@ def messages_for_refine(
             "content": json.dumps(
                 {
                     "current_state": current_state,
-                    "question_id": question_id,
-                    "answer": answer,
+                    "answers": answers,
+                    "comment": comment,
                 },
                 ensure_ascii=False,
             ),

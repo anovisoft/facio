@@ -99,7 +99,7 @@ export function HistoryScreen(_props: RootScreenProps<'History'>) {
                 style={[styles.rowTitle, { color: colors.text }]}
                 numberOfLines={2}
               >
-                {item.outcome || item.raw_intent}
+                {item.title || item.outcome || item.raw_intent}
               </Text>
               <Text style={[styles.muted, { color: colors.textSecondary }]}>
                 {statusLabel(item.status, t)}

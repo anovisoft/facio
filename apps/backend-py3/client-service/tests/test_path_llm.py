@@ -50,12 +50,20 @@ def test_messages_for_create_include_intent():
 def test_messages_for_refine_and_repair_shape():
     state = sample_path_state()
     refine = messages_for_refine(
-        current_state=state, answer="2", question_id="q_servings"
+        current_state=state,
+        answers=[
+            {"question_id": "q_servings", "value": "2"},
+            {"question_id": "q_guanciale", "value": "гуанчиале"},
+        ],
+        comment="без чеснока",
     )
     assert refine[0]["role"] == "system"
     body = json.loads(refine[1]["content"])
-    assert body["answer"] == "2"
-    assert body["question_id"] == "q_servings"
+    assert body["answers"] == [
+        {"question_id": "q_servings", "value": "2"},
+        {"question_id": "q_guanciale", "value": "гуанчиале"},
+    ]
+    assert body["comment"] == "без чеснока"
 
     repair = messages_for_repair(
         current_state=state, reason="нет времени", project_status="active"

@@ -38,6 +38,13 @@ class PathGroup(BaseModel):
         min_length=1,
         description="Section title shown in «Весь путь», e.g. Покупки.",
     )
+    description: str | None = Field(
+        default=None,
+        max_length=300,
+        description=(
+            "Optional: why this phase/section exists (1–2 sentences)."
+        ),
+    )
     sort: int = Field(default=0, ge=0, description="Section order, 0-based.")
 
 
@@ -104,6 +111,22 @@ class ClarifyQuestion(BaseModel):
 class PathState(BaseModel):
     """Structured LLM output for create / refine / repair."""
 
+    title: str = Field(
+        min_length=1,
+        max_length=120,
+        description=(
+            "Plan hero title (one short line). Shown at the start of the "
+            "plan body on draft/accept — not a todo dump."
+        ),
+    )
+    summary: str = Field(
+        min_length=1,
+        max_length=600,
+        description=(
+            "1–3 sentences at the start of the plan body: what the cycle "
+            "delivers and the logic of stages. Never empty on create."
+        ),
+    )
     outcome: str = Field(
         min_length=1,
         description="Clear goal the user is buying (1 short sentence).",
@@ -167,6 +190,24 @@ class PathState(BaseModel):
         description="Optional checkpoint labels.",
     )
 
+    @model_validator(mode="before")
+    @classmethod
+    def backfill_missing_narrative(cls, data: object) -> object:
+        """Older state_json may lack title/summary — derive from contract."""
+        if not isinstance(data, dict):
+            return data
+        out = dict(data)
+        if out.get("title") is None or "title" not in out:
+            out["title"] = out.get("outcome") or "Plan"
+        if out.get("summary") is None or "summary" not in out:
+            out["summary"] = (
+                out.get("success_criteria")
+                or out.get("horizon")
+                or out.get("outcome")
+                or out["title"]
+            )
+        return out
+
     @field_validator("questions")
     @classmethod
     def questions_count(cls, value: list[ClarifyQuestion]) -> list[ClarifyQuestion]:
@@ -190,6 +231,14 @@ class PathState(BaseModel):
             cleaned.append(tag[:48])
             if len(cleaned) >= 5:
                 break
+        return cleaned
+
+    @field_validator("title", "summary")
+    @classmethod
+    def strip_narrative(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("must be non-empty")
         return cleaned
 
     @model_validator(mode="after")

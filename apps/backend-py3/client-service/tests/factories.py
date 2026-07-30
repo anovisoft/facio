@@ -8,6 +8,11 @@ from typing import Any
 
 def sample_path_state(**overrides: Any) -> dict[str, Any]:
     state: dict[str, Any] = {
+        "title": "Карбонара на двоих",
+        "summary": (
+            "За вечер купим продукты и приготовим карбонару на двоих. "
+            "Сначала покупки со списком, потом готовка по шагам."
+        ),
         "outcome": "Приготовить карбонару на двоих",
         "paraphrase": "Ок — ведём к карбонаре на двоих сегодня вечером",
         "success_criteria": "Два порции карбонары на столе",
@@ -15,8 +20,18 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
         "domain": "cooking",
         "tags": ["pasta", "dinner", "carbonara"],
         "groups": [
-            {"id": "shop", "title": "Покупки", "sort": 0},
-            {"id": "cook", "title": "Готовка", "sort": 1},
+            {
+                "id": "shop",
+                "title": "Покупки",
+                "description": "Собрать ингредиенты до готовки.",
+                "sort": 0,
+            },
+            {
+                "id": "cook",
+                "title": "Готовка",
+                "description": "Собрать блюдо по классическому методу.",
+                "sort": 1,
+            },
         ],
         "actions": [
             {
@@ -104,6 +119,11 @@ def sample_instant_answer(**overrides: Any) -> dict[str, Any]:
 
 def refined_path_state(base: dict[str, Any] | None = None) -> dict[str, Any]:
     state = deepcopy(base or sample_path_state())
+    state["title"] = "Карбонара на 2 с гуанчиале"
+    state["summary"] = (
+        "Путь уточнён под 2 порции и гуанчиале. "
+        "Покупки с количествами, затем классическая готовка."
+    )
     state["paraphrase"] = "Ок — карбонара на 2 порции с гуанчиале"
     state["questions"] = []
     state["actions"][0]["checklist_items"] = [

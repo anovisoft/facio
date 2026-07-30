@@ -23,6 +23,8 @@ async def test_create_path_project(
     assert project["raw_intent"] == "Приготовить карбонару"
     assert project["outcome"]
     assert project["paraphrase"]
+    assert project["title"]
+    assert project["summary"]
     assert project["domain"] == "cooking"
     assert project["current_version"] == 1
     assert len(project["actions"]) >= 1

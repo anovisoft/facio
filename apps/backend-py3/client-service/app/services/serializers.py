@@ -53,6 +53,7 @@ def serialize_path_state(
             id=stable_uuid(project.id, "group", g.id),
             key=g.id,
             title=g.title,
+            description=g.description,
             sort=g.sort,
         )
         for g in sorted(state.groups, key=lambda g: g.sort)

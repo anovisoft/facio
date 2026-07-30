@@ -28,6 +28,7 @@ type Props = {
 type Section = {
   key: string;
   title: string | null;
+  description: string | null;
   actions: ActionResponse[];
 };
 
@@ -55,7 +56,12 @@ function buildSections(
   for (const group of sortedGroups) {
     const list = byGroup.get(group.id) ?? byGroup.get(group.key) ?? [];
     if (list.length === 0) continue;
-    sections.push({ key: group.id, title: group.title, actions: list });
+    sections.push({
+      key: group.id,
+      title: group.title,
+      description: group.description ?? null,
+      actions: list,
+    });
     byGroup.delete(group.id);
     byGroup.delete(group.key);
   }
@@ -64,12 +70,18 @@ function buildSections(
     sections.push({
       key,
       title: list[0]?.group_title ?? null,
+      description: null,
       actions: list,
     });
   }
 
   if (ungrouped.length > 0) {
-    sections.push({ key: '_ungrouped', title: null, actions: ungrouped });
+    sections.push({
+      key: '_ungrouped',
+      title: null,
+      description: null,
+      actions: ungrouped,
+    });
   }
 
   return sections;
@@ -143,6 +155,13 @@ export function PathList({
             {section.title ? (
               <Text style={[styles.groupTitle, { color: colors.textMuted }]}>
                 {section.title}
+              </Text>
+            ) : null}
+            {section.description ? (
+              <Text
+                style={[styles.groupDescription, { color: colors.textSecondary }]}
+              >
+                {section.description}
               </Text>
             ) : null}
             {section.actions.map((action, index) => {
@@ -279,6 +298,10 @@ const styles = StyleSheet.create({
     ...typography.label,
     textTransform: 'uppercase',
     marginBottom: spacing.xs,
+  },
+  groupDescription: {
+    ...typography.caption,
+    marginBottom: spacing.sm,
   },
   step: {
     borderWidth: 1,

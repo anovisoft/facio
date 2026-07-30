@@ -107,8 +107,11 @@ async def refine_project(
         project = await service.refine(
             user,
             project_id,
-            answer=body.answer,
-            question_id=body.question_id,
+            answers=[
+                {"question_id": item.question_id, "value": item.value}
+                for item in body.answers
+            ],
+            comment=body.comment,
         )
     except AppError as exc:
         await _commit_on_app_error(db, exc)

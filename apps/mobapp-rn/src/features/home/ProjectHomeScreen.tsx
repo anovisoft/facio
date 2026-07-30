@@ -57,9 +57,9 @@ export function ProjectHomeScreen({
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: project?.outcome || project?.paraphrase || t('home.today'),
+      title: project?.title || project?.outcome || project?.paraphrase || t('home.today'),
     });
-  }, [navigation, project?.outcome, project?.paraphrase, t]);
+  }, [navigation, project?.title, project?.outcome, project?.paraphrase, t]);
 
   const load = useCallback(async () => {
     abortRef.current?.abort();

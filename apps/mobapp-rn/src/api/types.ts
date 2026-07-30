@@ -26,6 +26,11 @@ export interface ClarifyQuestion {
   options: string[];
 }
 
+export interface RefineAnswerItem {
+  question_id: string;
+  value: string;
+}
+
 export interface ChecklistItemResponse {
   id: string;
   action_id: string;
@@ -39,6 +44,7 @@ export interface GroupResponse {
   id: string;
   key: string;
   title: string;
+  description?: string | null;
   sort: number;
 }
 
@@ -64,6 +70,8 @@ export interface ProjectSummary {
   id: string;
   status: ProjectStatus;
   raw_intent: string;
+  title?: string | null;
+  summary?: string | null;
   outcome?: string | null;
   paraphrase?: string | null;
   success_criteria?: string | null;

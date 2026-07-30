@@ -1,5 +1,6 @@
 import React, {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -45,7 +46,8 @@ export function DraftStudioScreen({
   const [loading, setLoading] = useState(!seed);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [freeText, setFreeText] = useState('');
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [comment, setComment] = useState('');
   const [canGoBack, setCanGoBack] = useState(false);
   const undoStackRef = useRef<number[]>([]);
   const abortRef = useRef<AbortController | null>(null);
@@ -100,9 +102,29 @@ export function DraftStudioScreen({
     }, [load, refreshBackAvailability, seed]),
   );
 
-  const runRefine = async (answer: string, questionId?: string | null) => {
-    const trimmed = answer.trim();
-    if (!trimmed || busy || !project) return;
+  const questionRoundKey = project?.questions.map((q) => q.id).join('|') ?? '';
+
+  useEffect(() => {
+    setAnswers({});
+    setComment('');
+  }, [questionRoundKey, project?.current_version]);
+
+  const selectAnswer = (questionId: string, value: string) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: value }));
+  };
+
+  const questions = project?.questions ?? [];
+  const allAnswered =
+    questions.length > 0 &&
+    questions.every((q) => Boolean(answers[q.id]?.trim()));
+  const canRefine =
+    !busy &&
+    (allAnswered || (questions.length === 0 && Boolean(comment.trim())));
+
+  const runRefine = async () => {
+    if (!project || busy) return;
+    if (questions.length > 0 && !allAnswered) return;
+    if (questions.length === 0 && !comment.trim()) return;
 
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -117,12 +139,18 @@ export function DraftStudioScreen({
     try {
       const detail = await refineProject(
         projectId,
-        trimmed,
-        questionId,
+        {
+          answers: questions.map((q) => ({
+            question_id: q.id,
+            value: answers[q.id].trim(),
+          })),
+          comment: comment.trim() || null,
+        },
         controller.signal,
       );
       setProject(detail);
-      setFreeText('');
+      setAnswers({});
+      setComment('');
       await refreshBackAvailability(detail, controller.signal);
     } catch (e) {
       if (controller.signal.aborted) return;
@@ -193,9 +221,10 @@ export function DraftStudioScreen({
     );
   }
 
-  const question = project.questions[0] ?? null;
   const paraphrase =
     project.paraphrase || project.outcome || project.raw_intent;
+  const planTitle = project.title || project.outcome;
+  const planSummary = project.summary;
 
   return (
     <SafeScreen scroll>
@@ -203,33 +232,49 @@ export function DraftStudioScreen({
         {t('draft.softStart', { paraphrase })}
       </Text>
 
+      {planTitle ? (
+        <Text style={[styles.planTitle, { color: colors.text }]}>
+          {planTitle}
+        </Text>
+      ) : null}
+      {planSummary ? (
+        <Text style={[styles.planSummary, { color: colors.textSecondary }]}>
+          {planSummary}
+        </Text>
+      ) : null}
+
       <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
         {t('draft.pathLabel')}
       </Text>
-      <PathList
-        groups={project.groups}
-        actions={project.actions}
-        compact
-      />
+      <PathList groups={project.groups} actions={project.actions} />
 
-      {question ? (
+      {questions.length > 0 ? (
         <View style={styles.clarify}>
           <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
             {t('draft.clarifyLabel')}
           </Text>
-          <Text style={[styles.question, { color: colors.text }]}>
-            {question.prompt}
+          {questions.map((question, index) => (
+            <View key={question.id} style={styles.questionBlock}>
+              <Text style={[styles.question, { color: colors.text }]}>
+                {index + 1}. {question.prompt}
+              </Text>
+              <ClarifyChips
+                options={question.options}
+                selected={answers[question.id] ?? null}
+                disabled={busy}
+                onSelect={(option) => selectAnswer(question.id, option)}
+              />
+            </View>
+          ))}
+          <Text style={[styles.commentLabel, { color: colors.textMuted }]}>
+            {t('draft.commentLabel')}
           </Text>
-          <ClarifyChips
-            options={question.options}
-            disabled={busy}
-            onSelect={(option) => void runRefine(option, question.id)}
-          />
           <TextInput
-            value={freeText}
-            onChangeText={setFreeText}
+            value={comment}
+            onChangeText={setComment}
             editable={!busy}
-            placeholder={t('draft.freeTextPlaceholder')}
+            multiline
+            placeholder={t('draft.commentPlaceholder')}
             placeholderTextColor={colors.textMuted}
             style={[
               styles.input,
@@ -280,10 +325,8 @@ export function DraftStudioScreen({
         <PrimaryButton
           variant="secondary"
           label={t('draft.refine')}
-          disabled={busy || !freeText.trim()}
-          onPress={() =>
-            void runRefine(freeText, question?.id ?? null)
-          }
+          disabled={!canRefine}
+          onPress={() => void runRefine()}
           style={styles.actionBtn}
         />
       </View>
@@ -309,6 +352,14 @@ const styles = StyleSheet.create({
     ...typography.title,
     marginBottom: spacing.lg,
   },
+  planTitle: {
+    ...typography.subtitle,
+    marginBottom: spacing.sm,
+  },
+  planSummary: {
+    ...typography.body,
+    marginBottom: spacing.md,
+  },
   sectionLabel: {
     ...typography.label,
     marginTop: spacing.lg,
@@ -316,18 +367,25 @@ const styles = StyleSheet.create({
   },
   clarify: {
     marginTop: spacing.sm,
+    gap: spacing.md,
+  },
+  questionBlock: {
     gap: spacing.sm,
   },
   question: {
     ...typography.subtitle,
-    marginBottom: spacing.xs,
+  },
+  commentLabel: {
+    ...typography.label,
+    marginTop: spacing.xs,
   },
   input: {
     ...typography.body,
     borderWidth: 1,
     borderRadius: radii.md,
     padding: spacing.md,
-    marginTop: spacing.sm,
+    minHeight: 72,
+    textAlignVertical: 'top',
   },
   ready: {
     ...typography.body,

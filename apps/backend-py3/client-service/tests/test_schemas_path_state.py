@@ -7,6 +7,8 @@ from tests.factories import sample_path_state
 
 def test_valid_path_state():
     state = PathState.model_validate(sample_path_state())
+    assert state.title
+    assert state.summary
     assert state.outcome
     assert state.domain == "cooking"
     assert len(state.actions) == 2
@@ -67,3 +69,27 @@ def test_no_actions_rejected():
     payload = sample_path_state(actions=[])
     with pytest.raises(ValidationError):
         PathState.model_validate(payload)
+
+
+def test_missing_title_summary_backfilled_from_contract():
+    payload = sample_path_state()
+    del payload["title"]
+    del payload["summary"]
+    state = PathState.model_validate(payload)
+    assert state.title == payload["outcome"]
+    assert state.summary == payload["success_criteria"]
+
+
+def test_empty_title_rejected():
+    payload = sample_path_state(title="   ")
+    with pytest.raises(ValidationError):
+        PathState.model_validate(payload)
+
+
+def test_group_description_optional():
+    state = PathState.model_validate(sample_path_state())
+    assert state.groups[0].description
+    payload = sample_path_state()
+    payload["groups"][0]["description"] = None
+    cleared = PathState.model_validate(payload)
+    assert cleared.groups[0].description is None

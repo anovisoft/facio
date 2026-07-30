@@ -7,33 +7,51 @@ import { radii, spacing, typography } from '@/theme';
 type Props = {
   options: string[];
   onSelect: (option: string) => void;
+  selected?: string | null;
   disabled?: boolean;
 };
 
-export function ClarifyChips({ options, onSelect, disabled }: Props) {
+export function ClarifyChips({
+  options,
+  onSelect,
+  selected,
+  disabled,
+}: Props) {
   const { colors } = useTheme();
 
   return (
     <View style={styles.row}>
-      {options.map((option) => (
-        <Pressable
-          key={option}
-          disabled={disabled}
-          onPress={() => onSelect(option)}
-          style={({ pressed }) => [
-            styles.chip,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-              opacity: disabled ? 0.5 : pressed ? 0.85 : 1,
-            },
-          ]}
-        >
-          <Text style={[styles.label, { color: colors.primary }]}>
-            {option}
-          </Text>
-        </Pressable>
-      ))}
+      {options.map((option) => {
+        const isSelected = selected === option;
+        return (
+          <Pressable
+            key={option}
+            disabled={disabled}
+            onPress={() => onSelect(option)}
+            style={({ pressed }) => [
+              styles.chip,
+              {
+                backgroundColor: isSelected
+                  ? colors.primary
+                  : colors.surface,
+                borderColor: isSelected ? colors.primary : colors.border,
+                opacity: disabled ? 0.5 : pressed ? 0.85 : 1,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.label,
+                {
+                  color: isSelected ? colors.white : colors.primary,
+                },
+              ]}
+            >
+              {option}
+            </Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }

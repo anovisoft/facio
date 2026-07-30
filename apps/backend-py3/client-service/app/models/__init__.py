@@ -87,6 +87,8 @@ class Project(Base):
         default=ProjectStatus.draft,
     )
     raw_intent: Mapped[str] = mapped_column(Text, nullable=False)
+    title: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     outcome: Mapped[str | None] = mapped_column(Text, nullable=True)
     paraphrase: Mapped[str | None] = mapped_column(Text, nullable=True)
     success_criteria: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -137,6 +139,7 @@ class ActionGroup(Base):
     )
     key: Mapped[str] = mapped_column(String(100), nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
     sort: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

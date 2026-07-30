@@ -5,6 +5,7 @@ import type {
   ListStatusFilter,
   ProjectDetail,
   ProjectSummary,
+  RefineAnswerItem,
   StateVersionSummary,
 } from '@/api/types';
 
@@ -35,16 +36,26 @@ export function getProject(
 
 export function refineProject(
   projectId: string,
-  answer: string,
-  questionId?: string | null,
+  payload: {
+    answers?: RefineAnswerItem[];
+    comment?: string | null;
+  },
   signal?: AbortSignal,
 ): Promise<ProjectDetail> {
+  const body: {
+    answers?: RefineAnswerItem[];
+    comment?: string;
+  } = {};
+  if (payload.answers && payload.answers.length > 0) {
+    body.answers = payload.answers;
+  }
+  const comment = payload.comment?.trim();
+  if (comment) {
+    body.comment = comment;
+  }
   return apiRequest(`/projects/${projectId}/refine`, {
     method: 'POST',
-    body: {
-      answer,
-      ...(questionId ? { question_id: questionId } : {}),
-    },
+    body,
     signal,
   });
 }

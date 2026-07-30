@@ -142,7 +142,7 @@ export function ProjectsScreen({ navigation }: RootScreenProps<'Projects'>) {
                     style={[styles.cardTitle, { color: colors.text }]}
                     numberOfLines={2}
                   >
-                    {item.outcome || item.raw_intent}
+                    {item.title || item.outcome || item.raw_intent}
                   </Text>
                   {item.status === 'draft' ? (
                     <Text

@@ -29,5 +29,7 @@ def test_apply_contract_copies_fields():
     apply_contract(project, state)
     assert project.outcome == state.outcome
     assert project.paraphrase == state.paraphrase
+    assert project.title == state.title
+    assert project.summary == state.summary
     assert project.domain == state.domain
     assert project.tags == list(state.tags)

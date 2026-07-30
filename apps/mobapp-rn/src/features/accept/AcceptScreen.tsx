@@ -102,14 +102,21 @@ export function AcceptScreen({
     );
   }
 
-  const outcome = project.outcome || project.paraphrase || project.raw_intent;
+  const planTitle =
+    project.title || project.outcome || project.paraphrase || project.raw_intent;
 
   return (
     <SafeScreen scroll>
       <Text style={[styles.outcomeLabel, { color: colors.textMuted }]}>
         {t('accept.goal')}
       </Text>
-      <Text style={[styles.outcome, { color: colors.text }]}>{outcome}</Text>
+      <Text style={[styles.outcome, { color: colors.text }]}>{planTitle}</Text>
+
+      {project.summary ? (
+        <Text style={[styles.summary, { color: colors.textSecondary }]}>
+          {project.summary}
+        </Text>
+      ) : null}
 
       {project.success_criteria ? (
         <>
@@ -213,6 +220,10 @@ const styles = StyleSheet.create({
   },
   outcome: {
     ...typography.title,
+    marginBottom: spacing.sm,
+  },
+  summary: {
+    ...typography.body,
     marginBottom: spacing.lg,
   },
   metaLabel: {

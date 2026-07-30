@@ -2,7 +2,15 @@ from datetime import datetime
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Discriminator,
+    Field,
+    Tag,
+    field_validator,
+    model_validator,
+)
 
 from app.schemas.path_state import ClarifyQuestion, PathState
 
@@ -11,9 +19,49 @@ class CreateProjectRequest(BaseModel):
     intent: str = Field(min_length=1, max_length=4000)
 
 
+class RefineAnswerItem(BaseModel):
+    question_id: str = Field(min_length=1, max_length=100)
+    value: str = Field(min_length=1, max_length=2000)
+
+
 class RefineProjectRequest(BaseModel):
-    answer: str = Field(min_length=1, max_length=4000)
-    question_id: str | None = None
+    """Batch clarify: answers for the round + optional free-text comment.
+
+    Legacy single ``answer`` / ``question_id`` still accepted and normalized
+    into ``answers`` so older clients keep working.
+    """
+
+    answers: list[RefineAnswerItem] = Field(default_factory=list)
+    comment: str | None = Field(default=None, max_length=4000)
+    answer: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=4000,
+        description="Deprecated: single answer; prefer answers[].",
+    )
+    question_id: str | None = Field(
+        default=None,
+        description="Deprecated: pairs with legacy answer.",
+    )
+
+    @model_validator(mode="after")
+    def normalize_and_require_payload(self) -> "RefineProjectRequest":
+        answers = list(self.answers)
+        if self.answer is not None:
+            answers.append(
+                RefineAnswerItem(
+                    question_id=self.question_id or "_free",
+                    value=self.answer,
+                )
+            )
+        comment = (self.comment or "").strip() or None
+        if not answers and not comment:
+            raise ValueError(
+                "Provide answers[] and/or comment (or legacy answer)"
+            )
+        return self.model_copy(
+            update={"answers": answers, "comment": comment}
+        )
 
 
 class RepairProjectRequest(BaseModel):
@@ -75,6 +123,7 @@ class GroupResponse(BaseModel):
     id: UUID
     key: str
     title: str
+    description: str | None = None
     sort: int
 
 
@@ -104,6 +153,8 @@ class ProjectSummary(BaseModel):
     id: UUID
     status: str
     raw_intent: str
+    title: str | None = None
+    summary: str | None = None
     outcome: str | None
     paraphrase: str | None
     success_criteria: str | None

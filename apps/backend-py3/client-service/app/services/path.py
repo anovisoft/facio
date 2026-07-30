@@ -282,8 +282,8 @@ class PathService:
         user: User,
         project_id: UUID,
         *,
-        answer: str,
-        question_id: str | None = None,
+        answers: list[dict[str, str]],
+        comment: str | None = None,
     ) -> Project:
         project = await self.projects.get_project(
             user, project_id, for_update=True
@@ -291,18 +291,29 @@ class PathService:
         if project.status != ProjectStatus.draft:
             raise ConflictError("Only draft projects can be refined")
 
+        answer_lines = [
+            f"{item['question_id']}: {item['value']}" for item in answers
+        ]
+        if comment:
+            answer_lines.append(f"comment: {comment}")
+        turn_content = "\n".join(answer_lines) if answer_lines else (comment or "")
+
         await self.audit.add_turn(
             user_id=user.id,
             project_id=project.id,
             role=ConversationRole.user,
-            content=answer,
-            meta={"kind": "refine_answer", "question_id": question_id},
+            content=turn_content,
+            meta={
+                "kind": "refine_answer",
+                "answers": answers,
+                "comment": comment,
+            },
         )
         await self.audit.add_event(
             event_type=EventType.refine_answered,
             user_id=user.id,
             project_id=project.id,
-            payload={"question_id": question_id},
+            payload={"answers": answers, "comment": comment},
         )
 
         _, current = await self.projects.get_latest_state(project.id)
@@ -315,8 +326,8 @@ class PathService:
             purpose="refine",
             messages=messages_for_refine(
                 current_state=current.model_dump(mode="json"),
-                answer=answer,
-                question_id=question_id,
+                answers=answers,
+                comment=comment,
             ),
             source=StateSource.llm_refine,
             materialize="none",
@@ -331,15 +342,17 @@ class PathService:
                 "state_version": result.version,
                 "llm_call_id": str(result.llm_call_id),
                 "source": StateSource.llm_refine.value,
-                "question_id": question_id,
+                "answers": answers,
+                "comment": comment,
             },
         )
         await self.db.commit()
         logger.info(
-            "refine project=%s version=%s question_id=%s",
+            "refine project=%s version=%s answers=%s has_comment=%s",
             project.id,
             result.version,
-            question_id,
+            [a["question_id"] for a in answers],
+            bool(comment),
         )
         return await self.projects.get_project(user, project.id)
 

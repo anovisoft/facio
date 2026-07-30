@@ -44,6 +44,8 @@ def ensure_action_keys(state: PathState) -> PathState:
 
 
 def apply_contract(project: Project, state: PathState) -> None:
+    project.title = state.title
+    project.summary = state.summary
     project.outcome = state.outcome
     project.paraphrase = state.paraphrase
     project.success_criteria = state.success_criteria
@@ -91,6 +93,7 @@ async def materialize_path(
             project_id=project.id,
             key=group_spec.id,
             title=group_spec.title,
+            description=group_spec.description,
             sort=group_spec.sort,
         )
         db.add(group)
