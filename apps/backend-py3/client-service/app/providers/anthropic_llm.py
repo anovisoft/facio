@@ -209,13 +209,20 @@ def _transform_schema_node(node: Any) -> None:
     for key in list(node.keys()):
         if key in _STRIP_KEYS:
             del node[key]
-    if node.get("type") == "object" or "properties" in node:
+    props = node.get("properties")
+    if node.get("type") == "object" or isinstance(props, dict):
         node.setdefault("additionalProperties", False)
-        props = node.get("properties")
         if isinstance(props, dict) and props:
             # Anthropic structured outputs expect every property listed in required
             node["required"] = list(props.keys())
-    for value in node.values():
+            # Transform each property schema — do NOT walk `properties` itself
+            # as a schema node: stripping metadata key "title" would delete the
+            # real field named "title" (PathGroup / PathAction / checklist).
+            for prop_schema in props.values():
+                _transform_schema_node(prop_schema)
+    for key, value in node.items():
+        if key == "properties":
+            continue
         if isinstance(value, dict):
             _transform_schema_node(value)
         elif isinstance(value, list):
