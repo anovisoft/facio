@@ -52,6 +52,13 @@ def apply_contract(project: Project, state: PathState) -> None:
     project.horizon = state.horizon
     project.domain = state.domain
     project.tags = list(state.tags)
+    project.cycle_index = state.cycle.index
+    project.cycle_horizon_days = state.cycle.horizon_days
+    project.cycle_status = state.cycle.status
+    project.cycle_goal = state.cycle.goal_for_cycle
+    project.schedule_days = [
+        day.model_dump(mode="json") for day in state.days
+    ]
 
 
 async def materialize_path(

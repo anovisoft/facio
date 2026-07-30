@@ -20,7 +20,7 @@ import {
   toggleChecklistItem,
 } from '@/api/actions';
 import { getProject, repairProject } from '@/api/projects';
-import { ApiError, type ProjectDetail } from '@/api/types';
+import { ApiError, type DayKind, type ProjectDetail } from '@/api/types';
 import { FirstCompletionOverlay } from '@/features/home/FirstCompletionOverlay';
 import type { RootScreenProps } from '@/navigation/types';
 import { trackActionShown } from '@/services/beacons';
@@ -212,10 +212,48 @@ export function ProjectHomeScreen({
   };
 
   const next = project?.next_action ?? null;
+  const currentDay = project?.current_day ?? null;
+  const dayKind = currentDay?.kind ?? null;
+  const isRestDay = dayKind === 'rest';
   const groupLabel = next?.group_title ?? null;
   const projectDone =
     project != null &&
     (project.status === 'completed' || next == null);
+
+  const kindLabel = (kind: DayKind): string => {
+    switch (kind) {
+      case 'train':
+        return t('dayKind.train');
+      case 'rest':
+        return t('dayKind.rest');
+      case 'cook_session':
+        return t('dayKind.cook_session');
+      case 'other':
+        return t('dayKind.other');
+      default: {
+        const _exhaustive: never = kind;
+        return _exhaustive;
+      }
+    }
+  };
+
+  const todayLead = (): string => {
+    if (!dayKind) return t('home.today');
+    switch (dayKind) {
+      case 'rest':
+        return t('home.restLead');
+      case 'train':
+        return t('home.trainLead');
+      case 'cook_session':
+        return t('home.cookLead');
+      case 'other':
+        return t('home.today');
+      default: {
+        const _exhaustive: never = dayKind;
+        return _exhaustive;
+      }
+    }
+  };
 
   if (loading && !project) {
     return (
@@ -260,15 +298,44 @@ export function ProjectHomeScreen({
           </View>
         ) : next ? (
           <>
+            {currentDay ? (
+              <Text style={[styles.dayOf, { color: colors.textSecondary }]}>
+                {t('home.dayOf', {
+                  n: currentDay.day_number,
+                  m: currentDay.horizon_days,
+                  kind: kindLabel(currentDay.kind),
+                })}
+              </Text>
+            ) : null}
             <Text style={[styles.todayLabel, { color: colors.textMuted }]}>
-              {t('home.today')}
+              {todayLead()}
             </Text>
-            {groupLabel ? (
+            {isRestDay ? (
+              <Text style={[styles.restHint, { color: colors.textSecondary }]}>
+                {currentDay?.summary || t('home.restHint')}
+              </Text>
+            ) : null}
+            {currentDay?.title && !isRestDay ? (
+              <Text style={[styles.groupLabel, { color: colors.textMuted }]}>
+                {currentDay.title}
+              </Text>
+            ) : null}
+            {isRestDay && currentDay?.title ? (
+              <Text style={[styles.restTitle, { color: colors.text }]}>
+                {currentDay.title}
+              </Text>
+            ) : null}
+            {groupLabel && !isRestDay ? (
               <Text style={[styles.groupLabel, { color: colors.textMuted }]}>
                 {groupLabel}
               </Text>
             ) : null}
-            <Text style={[styles.stepTitle, { color: colors.text }]}>
+            <Text
+              style={[
+                isRestDay ? styles.restStepTitle : styles.stepTitle,
+                { color: colors.text },
+              ]}
+            >
               {next.title}
             </Text>
             {next.estimate_min != null ? (
@@ -277,7 +344,12 @@ export function ProjectHomeScreen({
               </Text>
             ) : null}
 
-            <WhyHero why={next.why} />
+            {!isRestDay ? <WhyHero why={next.why} /> : null}
+            {isRestDay && next.why ? (
+              <Text style={[styles.restWhy, { color: colors.textSecondary }]}>
+                {next.why}
+              </Text>
+            ) : null}
 
             {next.checklist_items.length > 0 ? (
               <View style={styles.checklist}>
@@ -321,7 +393,7 @@ export function ProjectHomeScreen({
 
             <View style={styles.actions}>
               <PrimaryButton
-                label={t('home.done')}
+                label={isRestDay ? t('home.doneRest') : t('home.done')}
                 loading={busy}
                 onPress={() => void onComplete()}
                 style={styles.actionBtn}
@@ -364,10 +436,26 @@ export function ProjectHomeScreen({
 }
 
 const styles = StyleSheet.create({
+  dayOf: {
+    ...typography.caption,
+    marginBottom: spacing.sm,
+  },
   todayLabel: {
     ...typography.label,
     textTransform: 'uppercase',
     marginBottom: spacing.xs,
+  },
+  restHint: {
+    ...typography.body,
+    marginBottom: spacing.sm,
+  },
+  restTitle: {
+    ...typography.subtitle,
+    marginBottom: spacing.xs,
+  },
+  restWhy: {
+    ...typography.body,
+    marginTop: spacing.md,
   },
   groupLabel: {
     ...typography.caption,
@@ -375,6 +463,10 @@ const styles = StyleSheet.create({
   },
   stepTitle: {
     ...typography.hero,
+    marginBottom: spacing.xs,
+  },
+  restStepTitle: {
+    ...typography.subtitle,
     marginBottom: spacing.xs,
   },
   estimate: {

@@ -23,7 +23,12 @@ from app.services.path_materialize import ensure_action_keys, materialize_path
 from app.services.serializers import (
     action_queue_key,
     pick_next_action,
+    resolve_current_day,
     serialize_action,
+    serialize_cycle_from_project,
+    serialize_cycle_from_state,
+    serialize_days_from_project,
+    serialize_days_from_state,
     serialize_groups,
     serialize_path_state,
 )
@@ -161,13 +166,27 @@ class ProjectService:
 
     def to_summary(self, project: Project) -> ProjectSummary:
         next_orm = pick_next_action(project)
+        next_action = serialize_action(next_orm) if next_orm else None
+        cycle = serialize_cycle_from_project(project)
+        days = serialize_days_from_project(project)
+        action_responses = (
+            [serialize_action(a) for a in project.actions]
+            if project.status == ProjectStatus.active
+            else None
+        )
+        current_day = resolve_current_day(
+            cycle=cycle,
+            days=days,
+            next_action=next_action,
+            actions=action_responses,
+        )
         return ProjectSummary.model_validate(
             project, from_attributes=True
         ).model_copy(
             update={
-                "next_action": (
-                    serialize_action(next_orm) if next_orm else None
-                ),
+                "next_action": next_action,
+                "cycle": cycle,
+                "current_day": current_day,
             }
         )
 
@@ -179,15 +198,43 @@ class ProjectService:
 
         if project.status == ProjectStatus.draft and state is not None:
             groups, actions = serialize_path_state(project, state)
+            cycle = serialize_cycle_from_state(state)
+            days = serialize_days_from_state(state)
         else:
             ordered_actions = sorted(project.actions, key=action_queue_key)
             groups = serialize_groups(project.groups)
             actions = [serialize_action(a) for a in ordered_actions]
+            cycle = serialize_cycle_from_project(project)
+            days = serialize_days_from_project(project)
+            if cycle is None and state is not None:
+                cycle = serialize_cycle_from_state(state)
+            if not days and state is not None:
+                days = serialize_days_from_state(state)
 
-        summary = self.to_summary(project)
+        next_action = None
+        if project.status == ProjectStatus.active:
+            next_orm = pick_next_action(project)
+            next_action = serialize_action(next_orm) if next_orm else None
+        current_day = resolve_current_day(
+            cycle=cycle,
+            days=days,
+            next_action=next_action,
+            actions=actions,
+        )
+
+        summary = ProjectSummary.model_validate(
+            project, from_attributes=True
+        ).model_copy(
+            update={
+                "next_action": next_action,
+                "cycle": cycle,
+                "current_day": current_day,
+            }
+        )
         return ProjectDetail(
             **summary.model_dump(),
             groups=groups,
+            days=days,
             actions=actions,
             questions=questions,
             resources=resources,
@@ -214,6 +261,12 @@ class ProjectService:
             raise ValidationAppError("Project contract incomplete")
 
         state = ensure_action_keys(state)
+        # Accept activates the current cycle.
+        state = state.model_copy(
+            update={
+                "cycle": state.cycle.model_copy(update={"status": "active"}),
+            }
+        )
         await materialize_path(self.db, project, state, merge_progress=False)
 
         if not project.actions:
@@ -222,6 +275,7 @@ class ProjectService:
         now = datetime.now(UTC)
         project.status = ProjectStatus.active
         project.committed_at = now
+        project.cycle_status = "active"
 
         ordered = sorted(project.actions, key=action_queue_key)
         base = self._resolve_first_due(first_step_when, now)

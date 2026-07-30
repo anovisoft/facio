@@ -114,6 +114,8 @@ export function PathScreen({ navigation, route }: RootScreenProps<'Path'>) {
             <PathList
               groups={project.groups}
               actions={project.actions}
+              days={project.days}
+              cycle={project.cycle}
               expandable
               checklistDisabled={busy}
               onToggleChecklist={(item, done) =>

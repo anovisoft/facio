@@ -19,6 +19,20 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
         "horizon": "1 evening, ~45 min",
         "domain": "cooking",
         "tags": ["pasta", "dinner", "carbonara"],
+        "cycle": {
+            "index": 1,
+            "horizon_days": 1,
+            "status": "draft",
+            "goal_for_cycle": "Карбонара на двоих сегодня",
+        },
+        "days": [
+            {
+                "day_index": 0,
+                "kind": "cook_session",
+                "title": "Вечер готовки",
+                "summary": "Покупки и карбонара за один заход.",
+            }
+        ],
         "groups": [
             {
                 "id": "shop",
@@ -85,6 +99,96 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
         ],
         "resources": [],
         "milestones": ["продукты куплены", "блюдо готово"],
+    }
+    state.update(overrides)
+    return state
+
+
+def sample_fitness_path_state(**overrides: Any) -> dict[str, Any]:
+    """Push-ups week: 7-day cycle with train/rest mix."""
+    days = []
+    actions = []
+    kinds = [
+        ("train", "Силовая A", "Короткие подходы."),
+        ("rest", "Отдых + мобилити", "Восстановление без силовых."),
+        ("train", "Силовая B", "Повторяем объём."),
+        ("rest", "Отдых", "Лёгкая мобилити."),
+        ("train", "Силовая C", "Третья силовая."),
+        ("rest", "Отдых", "Спокойный день."),
+        ("train", "Силовая D", "Закрываем неделю."),
+    ]
+    for i, (kind, title, summary) in enumerate(kinds):
+        days.append(
+            {
+                "day_index": i,
+                "kind": kind,
+                "title": title,
+                "summary": summary,
+            }
+        )
+        if kind == "train":
+            actions.append(
+                {
+                    "id": f"d{i}",
+                    "title": "Подходы отжиманий",
+                    "why": f"Силовой день {i // 2 + 1} двигает к 30 отжиманиям",
+                    "detail": "3 коротких подхода с хорошей формой.",
+                    "estimate_min": 15,
+                    "day_offset": i,
+                    "sort": i,
+                    "group_id": None,
+                    "checklist_items": [],
+                }
+            )
+        else:
+            actions.append(
+                {
+                    "id": f"d{i}",
+                    "title": "Лёгкая мобилити",
+                    "why": "Отдых — часть программы, не пропуск",
+                    "detail": "5–10 минут мягкой подвижности.",
+                    "estimate_min": 10,
+                    "day_offset": i,
+                    "sort": i,
+                    "group_id": None,
+                    "checklist_items": [],
+                }
+            )
+    state: dict[str, Any] = {
+        "title": "К 30 отжиманиям — неделя 1",
+        "summary": (
+            "За ~6–8 недель дойдём к 30. Эта неделя — база: "
+            "силовые чередуются с отдыхом."
+        ),
+        "outcome": "Заложить базу к 30 отжиманиям",
+        "paraphrase": "Ок — ведём к: 30 отжиманий, неделя базы",
+        "success_criteria": "Закрыты силовые дни недели",
+        "horizon": "7 дней, ~15 мин в силовые",
+        "domain": "fitness",
+        "tags": ["push-ups"],
+        "cycle": {
+            "index": 1,
+            "horizon_days": 7,
+            "status": "draft",
+            "goal_for_cycle": "Неделя базы",
+        },
+        "days": days,
+        "groups": [],
+        "actions": actions,
+        "questions": [
+            {
+                "id": "level",
+                "prompt": "Сколько отжиманий сейчас?",
+                "options": ["0–5", "6–15", "16+"],
+            },
+            {
+                "id": "days",
+                "prompt": "Дней в неделю?",
+                "options": ["3", "4", "5+"],
+            },
+        ],
+        "resources": [],
+        "milestones": [],
     }
     state.update(overrides)
     return state

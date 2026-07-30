@@ -18,6 +18,12 @@ PathDomain = Literal[
 
 PATH_DOMAINS: frozenset[str] = frozenset(get_args(PathDomain))
 
+DayKind = Literal["train", "rest", "cook_session", "other"]
+DAY_KINDS: frozenset[str] = frozenset(get_args(DayKind))
+
+CycleStatus = Literal["draft", "active", "completed", "abandoned"]
+CYCLE_STATUSES: frozenset[str] = frozenset(get_args(CycleStatus))
+
 
 class PathChecklistItem(BaseModel):
     id: str | None = Field(
@@ -81,7 +87,10 @@ class PathAction(BaseModel):
     day_offset: int | None = Field(
         default=None,
         ge=0,
-        description="Days from first step (0 = day one), or null.",
+        description=(
+            "Day index within the current cycle (0 = day one). "
+            "Must match days[].day_index when days are present."
+        ),
     )
     sort: int | None = Field(
         default=None, ge=0, description="Order within path/group."
@@ -99,6 +108,55 @@ class PathAction(BaseModel):
     )
 
 
+class PathCycle(BaseModel):
+    """Current execution cycle for the plan (docs/next/04 §3)."""
+
+    index: int = Field(
+        default=1,
+        ge=1,
+        description="1-based cycle number inside the project.",
+    )
+    horizon_days: int = Field(
+        ge=1,
+        le=90,
+        description=(
+            "Length of this cycle in days. Defaults: cooking/carbonara → 1; "
+            "fitness/push-ups → 7."
+        ),
+    )
+    status: CycleStatus = Field(
+        default="draft",
+        description="draft | active | completed | abandoned.",
+    )
+    goal_for_cycle: str | None = Field(
+        default=None,
+        max_length=300,
+        description="Optional goal specific to this cycle.",
+    )
+
+
+class PathDay(BaseModel):
+    """One scheduled day inside the current cycle (docs/next/04 §4)."""
+
+    day_index: int = Field(
+        ge=0,
+        description="0-based day within the cycle (0 .. horizon_days-1).",
+    )
+    kind: DayKind = Field(
+        description="train | rest | cook_session | other.",
+    )
+    title: str | None = Field(
+        default=None,
+        max_length=120,
+        description="Optional day label, e.g. «Силовая A», «Отдых + мобилити».",
+    )
+    summary: str | None = Field(
+        default=None,
+        max_length=300,
+        description="Short note on what this day is for.",
+    )
+
+
 class ClarifyQuestion(BaseModel):
     id: str = Field(description="Stable question id for refine answers.")
     prompt: str = Field(description="Clarify question shown to the user.")
@@ -106,6 +164,30 @@ class ClarifyQuestion(BaseModel):
         default_factory=list,
         description="Chip options; user may still type free text.",
     )
+
+
+def _default_horizon_days(domain: str | None, actions: list) -> int:
+    offsets = [
+        a.get("day_offset")
+        for a in actions
+        if isinstance(a, dict) and a.get("day_offset") is not None
+    ]
+    if offsets:
+        return max(int(o) for o in offsets) + 1
+    if domain == "fitness":
+        return 7
+    if domain == "cooking":
+        return 1
+    return 1
+
+
+def _default_day_kind(domain: str | None, day_index: int) -> str:
+    if domain == "cooking":
+        return "cook_session"
+    if domain == "fitness":
+        # Alternate train / rest starting with train on day 0.
+        return "train" if day_index % 2 == 0 else "rest"
+    return "other"
 
 
 class PathState(BaseModel):
@@ -161,16 +243,29 @@ class PathState(BaseModel):
         max_length=5,
         description="0–5 short slugs for clustering (e.g. pasta, dinner).",
     )
+    cycle: PathCycle = Field(
+        description=(
+            "Current cycle: index, horizon_days, status. Required on create; "
+            "cooking → short (1); fitness push-ups → ~7."
+        ),
+    )
+    days: list[PathDay] = Field(
+        default_factory=list,
+        description=(
+            "Explicit day map for the cycle (kind train|rest|cook_session|other). "
+            "Actions attach via day_offset == day_index."
+        ),
+    )
     groups: list[PathGroup] = Field(
         default_factory=list,
         description="Optional Path sections (Покупки, Готовка, …).",
     )
     actions: list[PathAction] = Field(
         min_length=1,
-        max_length=12,
+        max_length=16,
         description=(
-            "Ordered steps (1–12 soft cap). Every action needs why. "
-            "First step doable today when possible."
+            "Ordered steps (1–16 soft cap; prefer ≤12). Every action needs why. "
+            "First step doable today when possible. Attach to days via day_offset."
         ),
     )
     questions: list[ClarifyQuestion] = Field(
@@ -192,8 +287,8 @@ class PathState(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def backfill_missing_narrative(cls, data: object) -> object:
-        """Older state_json may lack title/summary — derive from contract."""
+    def backfill_missing_fields(cls, data: object) -> object:
+        """Older state_json may lack narrative / cycle / days — derive."""
         if not isinstance(data, dict):
             return data
         out = dict(data)
@@ -206,6 +301,57 @@ class PathState(BaseModel):
                 or out.get("outcome")
                 or out["title"]
             )
+
+        actions = out.get("actions") if isinstance(out.get("actions"), list) else []
+        domain = out.get("domain") if isinstance(out.get("domain"), str) else None
+
+        cycle = out.get("cycle")
+        if not isinstance(cycle, dict):
+            cycle = {}
+        else:
+            cycle = dict(cycle)
+        if "index" not in cycle or cycle.get("index") is None:
+            cycle["index"] = 1
+        if "horizon_days" not in cycle or cycle.get("horizon_days") is None:
+            cycle["horizon_days"] = _default_horizon_days(domain, actions)
+        if "status" not in cycle or cycle.get("status") is None:
+            cycle["status"] = "draft"
+        out["cycle"] = cycle
+
+        days = out.get("days")
+        if not isinstance(days, list) or len(days) == 0:
+            horizon = int(cycle["horizon_days"])
+            offsets: set[int] = set()
+            for action in actions:
+                if not isinstance(action, dict):
+                    continue
+                off = action.get("day_offset")
+                if off is None:
+                    offsets.add(0)
+                else:
+                    offsets.add(int(off))
+            if not offsets:
+                offsets = {0}
+            # Ensure contiguous skeleton 0..horizon-1 for fitness/cooking maps.
+            for i in range(horizon):
+                offsets.add(i)
+            synthesized: list[dict] = []
+            for day_index in sorted(offsets):
+                if day_index >= horizon:
+                    # Expand horizon if actions reference a later day.
+                    horizon = day_index + 1
+                    cycle["horizon_days"] = horizon
+                    out["cycle"] = cycle
+                synthesized.append(
+                    {
+                        "day_index": day_index,
+                        "kind": _default_day_kind(domain, day_index),
+                        "title": None,
+                        "summary": None,
+                    }
+                )
+            out["days"] = synthesized
+
         return out
 
     @field_validator("questions")
@@ -247,6 +393,17 @@ class PathState(BaseModel):
         if len(group_ids) != len(self.groups):
             raise ValueError("groups[].id must be unique")
 
+        day_indexes = [d.day_index for d in self.days]
+        if len(day_indexes) != len(set(day_indexes)):
+            raise ValueError("days[].day_index must be unique")
+        for day in self.days:
+            if day.day_index >= self.cycle.horizon_days:
+                raise ValueError(
+                    f"days[].day_index {day.day_index} exceeds "
+                    f"cycle.horizon_days {self.cycle.horizon_days}"
+                )
+
+        day_index_set = set(day_indexes)
         for action in self.actions:
             if not action.why.strip():
                 raise ValueError("action.why must be non-empty")
@@ -254,6 +411,12 @@ class PathState(BaseModel):
                 raise ValueError(
                     f"action.group_id '{action.group_id}' has no matching group"
                 )
+            if action.day_offset is not None and day_index_set:
+                if action.day_offset not in day_index_set:
+                    raise ValueError(
+                        f"action.day_offset {action.day_offset} has no matching "
+                        "days[].day_index"
+                    )
             for item in action.checklist_items:
                 if not item.title.strip():
                     raise ValueError("checklist_items.title must be non-empty")

@@ -93,3 +93,49 @@ def test_group_description_optional():
     payload["groups"][0]["description"] = None
     cleared = PathState.model_validate(payload)
     assert cleared.groups[0].description is None
+
+
+def test_cycle_and_days_present():
+    state = PathState.model_validate(sample_path_state())
+    assert state.cycle.horizon_days == 1
+    assert state.cycle.status == "draft"
+    assert len(state.days) == 1
+    assert state.days[0].kind == "cook_session"
+
+
+def test_cycle_days_backfilled_from_legacy_payload():
+    payload = sample_path_state()
+    del payload["cycle"]
+    del payload["days"]
+    state = PathState.model_validate(payload)
+    assert state.cycle.horizon_days == 1
+    assert state.days[0].kind == "cook_session"
+    assert state.days[0].day_index == 0
+
+
+def test_fitness_week_has_train_and_rest():
+    from tests.factories import sample_fitness_path_state
+
+    state = PathState.model_validate(sample_fitness_path_state())
+    assert state.cycle.horizon_days == 7
+    kinds = {d.kind for d in state.days}
+    assert "train" in kinds
+    assert "rest" in kinds
+    assert len(state.days) == 7
+
+
+def test_action_day_offset_must_match_day():
+    payload = sample_path_state()
+    payload["actions"][0]["day_offset"] = 3
+    with pytest.raises(ValidationError, match="day_offset"):
+        PathState.model_validate(payload)
+
+
+def test_duplicate_day_index_rejected():
+    payload = sample_path_state()
+    payload["days"] = [
+        {"day_index": 0, "kind": "cook_session"},
+        {"day_index": 0, "kind": "other"},
+    ]
+    with pytest.raises(ValidationError, match="day_index"):
+        PathState.model_validate(payload)

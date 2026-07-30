@@ -246,7 +246,12 @@ export function DraftStudioScreen({
       <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
         {t('draft.pathLabel')}
       </Text>
-      <PathList groups={project.groups} actions={project.actions} />
+      <PathList
+        groups={project.groups}
+        actions={project.actions}
+        days={project.days}
+        cycle={project.cycle}
+      />
 
       {questions.length > 0 ? (
         <View style={styles.clarify}>

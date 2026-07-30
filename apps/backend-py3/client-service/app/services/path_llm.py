@@ -34,8 +34,20 @@ _SAFETY = """\
 - When unsure about safety → refuse / instant_answer; never a "helpful" path.
 """
 
+# Wire schema forbids JSON null on optional fields (Anthropic grammar size).
+# Missing optionals use sentinels; parse_* normalizes them to None.
+_WIRE_SENTINELS = """\
+## Wire sentinels (no JSON null on path fields)
+
+Structured output forbids null on optional path fields. Use:
+- missing optional string → "" (id, detail, group_id, goal_for_cycle, \
+  day title/summary, group description, checklist id)
+- missing optional int → -1 (estimate_min, sort; never for a real day_offset)
+- unused create branch → empty stub object (not null): see Response shape
+"""
+
 _PATH_FIELDS = """\
-## Path fields (kind=path → fill `path`, set `instant_answer` null)
+## Path fields (kind=path → fill `path`; unused `instant_answer` = empty stub)
 
 - title: plan hero title (one short line, ≤ ~120 chars). Shown at the top of \
   the plan body. Examples: "Карбонара на ужин", "К 30 отжиманиям — неделя 1".
@@ -45,23 +57,38 @@ _PATH_FIELDS = """\
 - paraphrase: soft-start UI line confirming understanding \
   (e.g. "Ок — ведём к: …"); warmer than outcome; match user language.
 - success_criteria: verifiable done condition (no guaranteed health/finance claims).
-- horizon: rough span/load (e.g. "1 evening", "2 weeks, ~20 min/day").
+- horizon: rough span/load (e.g. "1 evening", "7 days, ~20 min/session").
 - domain: ONE of cooking|fitness|learning|home|errands|work|health|finance|\
   social|other (primary demand cluster). Unsure / safety grey → other.
 - tags: 0–5 short slugs (e.g. pasta, dinner); optional finer clustering.
+- cycle: REQUIRED first-class cycle object:
+  - index: usually 1 on create
+  - horizon_days: integer length of THIS cycle
+      * cooking / one-dish (carbonara) → 1
+      * fitness / push-ups toward a rep goal → 7 (week)
+      * other domains: pick a short honest horizon (1–14 typical)
+  - status: "draft" on create/refine; never invent completed
+  - goal_for_cycle: short goal for this cycle, or "" if none
+- days[]: REQUIRED explicit day map for the cycle (not only day_offset):
+  - day_index: 0 .. horizon_days-1 (include every day in the skeleton)
+  - kind: train | rest | cook_session | other
+      * carbonara / cooking session → one day kind=cook_session
+      * push-ups week → mix train and rest (NOT 7 identical train days)
+  - title / summary: short labels or "" (e.g. "Силовая A", "Отдых + мобилити")
 - groups[]: optional sections (Покупки, Готовка). Stable `id`, `title`, \
-  optional `description` (1–2 sentences: why this phase), `sort`.
-- actions[]: ordered steps, soft cap ≤ 8–12 (never a 40-step dump). Each:
-  - id: stable key; reuse on refine/repair when the step is the same
+  description (1–2 sentences or ""), `sort`.
+- actions[]: ordered steps, soft cap ≤ 8–12 (never a 40-step dump; multi-day \
+  may use up to ~16 with one focus per day). Each:
+  - id: stable key (or ""); reuse on refine/repair when the step is the same
   - title: verb + object («Сегодня» / path step)
   - why: REQUIRED — hero «Почему сейчас»; why THIS step matters; never filler
-  - detail: concrete how-to (not an essay). Cooking: method/timing. \
+  - detail: concrete how-to (or ""). Cooking: method/timing. \
     Shopping: use checklist_items instead of many micro-actions
-  - estimate_min: honest minutes (or null). First action: doable today, \
+  - estimate_min: honest minutes, or -1 if unknown. First action: doable today, \
     ideally ≤ 30–60 min
-  - day_offset: days from first step (0 = today), or null
-  - sort, group_id (must match groups[].id when set)
-  - checklist_items[]: sub-checks (e.g. eggs ☐); done=false on create
+  - day_offset: REQUIRED when days[] present — must equal a days[].day_index
+  - sort (≥0) or -1 if unspecified; group_id matching groups[].id, or ""
+  - checklist_items[]: sub-checks (e.g. eggs ☐); done=false on create; id or ""
 - questions[]: 0 or 2–4 (max 4) clarifies that change the path; not an interview. \
   Emit the full batch for one round — user answers all at once.
 - resources[]: optional; never invent URLs
@@ -75,11 +102,16 @@ On each intent: (1) safety gate (2) path vs instant_answer (3) fill schema JSON 
 
 {_SAFETY}
 
+{_WIRE_SENTINELS}
+
 ## Gate — sequence over time?
 
 Ask: does this require a SEQUENCE OF ACTIONS OVER TIME?
-- NO → kind=instant_answer; path=null. Do not invent a Path.
-- YES → kind=path; instant_answer=null.
+- NO → kind=instant_answer; fill instant_answer; path = empty stub \
+  (empty strings, empty arrays, cycle index=1 horizon_days=1 status=draft). \
+  Do not invent a real Path.
+- YES → kind=path; fill path; instant_answer = empty stub \
+  (label="", answer="", goal_suggestions=[], domain="other").
 
 Clear instant_answer: one-shot math/facts (2^100), FX rates, translate a word, \
 pure Q&A with no multi-step pursuit.
@@ -98,7 +130,8 @@ Clear path: buy a car, learn Python, cook carbonara, write a thesis.
 
 ## Response shape
 
-kind + path|null + instant_answer|null. Match user language (RU/EN/…).
+Always emit both `path` and `instant_answer` objects (never JSON null). \
+Unused branch = empty stub. Match user language (RU/EN/…).
 
 ### kind=instant_answer
 
@@ -106,6 +139,7 @@ kind + path|null + instant_answer|null. Match user language (RU/EN/…).
 - answer: useful direct answer — or short safe refusal/redirect under Safety
 - goal_suggestions: exactly 2–4 related Facio projects (sequences over time)
 - domain: same controlled vocab as path (cooking|…|other) for Q&A demand
+- path: empty stub (not a real plan)
 
 ### kind=path
 
@@ -115,6 +149,10 @@ kind + path|null + instant_answer|null. Match user language (RU/EN/…).
 
 - Always fill title + summary on path create (reference intents: carbonara, \
   push-ups → narrative must be visible immediately).
+- Always fill cycle + full days[] skeleton on create (reference defaults above).
+- Push-ups / fitness week: days must mix train and rest — rest days are real \
+  days with kind=rest (light mobility OK), not identical "do sets" days.
+- Carbonara: cycle.horizon_days=1, one cook_session day.
 - First action executable today; honest estimate_min, ideally ≤ 30–60 min.
 - Soft cap ≤ 8–12 actions; prefer checklist over many buy-micro-steps.
 - Cooking: shopping group + cook how-to in detail; not titles only.
@@ -129,6 +167,8 @@ Return Path JSON only (not the create kind-union).
 
 {_SAFETY}
 
+{_WIRE_SENTINELS}
+
 The user payload has:
 - current_state: existing Path JSON
 - answers[]: {{question_id, value}} for this round (may be empty)
@@ -140,6 +180,8 @@ Rules:
 - If clarify changes the contract → update title, summary, outcome, \
   success_criteria, horizon, and paraphrase explicitly.
 - Keep title + summary non-empty and useful after refine.
+- Keep cycle + days coherent: if horizon_days changes, rewrite days[] and \
+  action day_offset to match; preserve train/rest mix for fitness weeks.
 - Preserve action/group ids when the step is the same; do not reshuffle \
   the whole path without cause. New/replaced steps may get new ids.
 - Keep every action.why non-empty and meaningful.
@@ -173,6 +215,36 @@ Also:
 """
 
 # Compact few-shots — validated by parse_create_response in messages_for_create.
+# Unused create branch is an empty stub (wire schema forbids JSON null).
+_EMPTY_INSTANT_STUB: dict[str, Any] = {
+    "label": "",
+    "answer": "",
+    "goal_suggestions": [],
+    "domain": "other",
+}
+_EMPTY_PATH_STUB: dict[str, Any] = {
+    "title": "",
+    "summary": "",
+    "outcome": "",
+    "paraphrase": "",
+    "success_criteria": "",
+    "horizon": "",
+    "domain": "other",
+    "tags": [],
+    "cycle": {
+        "index": 1,
+        "horizon_days": 1,
+        "status": "draft",
+        "goal_for_cycle": "",
+    },
+    "days": [],
+    "groups": [],
+    "actions": [],
+    "questions": [],
+    "resources": [],
+    "milestones": [],
+}
+
 _FEWSHOT_PATH_INTENT = "Приготовить карбонару"
 _FEWSHOT_PATH: dict[str, Any] = {
     "kind": "path",
@@ -189,6 +261,20 @@ _FEWSHOT_PATH: dict[str, Any] = {
         "horizon": "1 вечер, ~60–90 мин с покупками",
         "domain": "cooking",
         "tags": ["pasta", "dinner", "carbonara"],
+        "cycle": {
+            "index": 1,
+            "horizon_days": 1,
+            "status": "draft",
+            "goal_for_cycle": "Карбонара на столе сегодня вечером",
+        },
+        "days": [
+            {
+                "day_index": 0,
+                "kind": "cook_session",
+                "title": "Вечер готовки",
+                "summary": "Покупки и классическая карбонара за один заход.",
+            }
+        ],
         "groups": [
             {
                 "id": "shop",
@@ -266,13 +352,176 @@ _FEWSHOT_PATH: dict[str, Any] = {
         "resources": [],
         "milestones": [],
     },
-    "instant_answer": None,
+    "instant_answer": dict(_EMPTY_INSTANT_STUB),
+}
+
+_FEWSHOT_FITNESS_INTENT = "Хочу научиться делать 30 отжиманий"
+_FEWSHOT_FITNESS: dict[str, Any] = {
+    "kind": "path",
+    "path": {
+        "title": "К 30 отжиманиям — неделя 1",
+        "summary": (
+            "За ~6–8 недель дойдём к 30 отжиманиям. Эта неделя — база: "
+            "четыре короткие силовые и три дня отдыха с лёгкой мобилити."
+        ),
+        "outcome": "Заложить базу к 30 отжиманиям",
+        "paraphrase": "Ок — ведём к: 30 отжиманий, неделя базы",
+        "success_criteria": "Закрыты 4 силовых дня недели без срыва программы",
+        "horizon": "7 дней, ~15–20 мин в силовые",
+        "domain": "fitness",
+        "tags": ["push-ups", "strength"],
+        "cycle": {
+            "index": 1,
+            "horizon_days": 7,
+            "status": "draft",
+            "goal_for_cycle": "Неделя базы: привыкнуть к объёму",
+        },
+        "days": [
+            {
+                "day_index": 0,
+                "kind": "train",
+                "title": "Силовая A",
+                "summary": "Короткие подходы отжиманий.",
+            },
+            {
+                "day_index": 1,
+                "kind": "rest",
+                "title": "Отдых + мобилити",
+                "summary": "Восстановление, без силовых подходов.",
+            },
+            {
+                "day_index": 2,
+                "kind": "train",
+                "title": "Силовая B",
+                "summary": "Повторяем объём спокойно.",
+            },
+            {
+                "day_index": 3,
+                "kind": "rest",
+                "title": "Отдых",
+                "summary": "Лёгкая мобилити, мышцы восстанавливаются.",
+            },
+            {
+                "day_index": 4,
+                "kind": "train",
+                "title": "Силовая C",
+                "summary": "Третья силовая недели.",
+            },
+            {
+                "day_index": 5,
+                "kind": "rest",
+                "title": "Отдых",
+                "summary": "Спокойный день без нагрузки.",
+            },
+            {
+                "day_index": 6,
+                "kind": "train",
+                "title": "Силовая D",
+                "summary": "Закрываем неделю короткими подходами.",
+            },
+        ],
+        "groups": [],
+        "actions": [
+            {
+                "id": "d0",
+                "title": "Подходы отжиманий",
+                "why": "Первый силовой день задаёт ритм недели",
+                "detail": "3 подхода по столько, сколько можете с хорошей формой.",
+                "estimate_min": 15,
+                "day_offset": 0,
+                "sort": 0,
+                "group_id": "",
+                "checklist_items": [],
+            },
+            {
+                "id": "d1",
+                "title": "Лёгкая мобилити плеч",
+                "why": "Отдых — часть программы, не пропуск тренировки",
+                "detail": "5–10 минут мягких кругов руками и растяжки груди.",
+                "estimate_min": 10,
+                "day_offset": 1,
+                "sort": 1,
+                "group_id": "",
+                "checklist_items": [],
+            },
+            {
+                "id": "d2",
+                "title": "Подходы отжиманий",
+                "why": "Второй силовой день закрепляет объём",
+                "detail": "Снова 3 коротких подхода, без гонки за максимумом.",
+                "estimate_min": 15,
+                "day_offset": 2,
+                "sort": 2,
+                "group_id": "",
+                "checklist_items": [],
+            },
+            {
+                "id": "d3",
+                "title": "Прогулка или дыхание",
+                "why": "Восстановление даёт следующий силовой день",
+                "detail": "Короткая прогулка или 5 минут спокойного дыхания.",
+                "estimate_min": 10,
+                "day_offset": 3,
+                "sort": 3,
+                "group_id": "",
+                "checklist_items": [],
+            },
+            {
+                "id": "d4",
+                "title": "Подходы отжиманий",
+                "why": "Держим ритм недели",
+                "detail": "3 подхода; остановитесь, если форма ломается.",
+                "estimate_min": 15,
+                "day_offset": 4,
+                "sort": 4,
+                "group_id": "",
+                "checklist_items": [],
+            },
+            {
+                "id": "d5",
+                "title": "Мягкая мобилити",
+                "why": "Отдых перед финальной силовой",
+                "detail": "Без отжиманий — только лёгкая подвижность.",
+                "estimate_min": 8,
+                "day_offset": 5,
+                "sort": 5,
+                "group_id": "",
+                "checklist_items": [],
+            },
+            {
+                "id": "d6",
+                "title": "Подходы отжиманий",
+                "why": "Закрываем цикл базы",
+                "detail": "Последняя силовая недели — спокойный объём.",
+                "estimate_min": 15,
+                "day_offset": 6,
+                "sort": 6,
+                "group_id": "",
+                "checklist_items": [],
+            },
+        ],
+        "questions": [
+            {
+                "id": "level",
+                "prompt": "Сколько отжиманий сейчас получается подряд?",
+                "options": ["0–5", "6–15", "16–25", "с колен"],
+            },
+            {
+                "id": "days",
+                "prompt": "Сколько дней в неделю реально можете?",
+                "options": ["3", "4", "5+"],
+            },
+        ],
+        "resources": [],
+        "milestones": [],
+    },
+    "instant_answer": dict(_EMPTY_INSTANT_STUB),
 }
 
 _FEWSHOT_IA_INTENT = "Сколько будет 2 в 100 степени?"
 _FEWSHOT_INSTANT: dict[str, Any] = {
     "kind": "instant_answer",
-    "path": None,
+    "path": dict(_EMPTY_PATH_STUB),
     "instant_answer": {
         "label": "Это похоже на вопрос, а не на цель.",
         "answer": (
@@ -295,6 +544,11 @@ def messages_for_create(intent: str) -> list[dict[str, Any]]:
         {
             "role": "assistant",
             "content": json.dumps(_FEWSHOT_PATH, ensure_ascii=False),
+        },
+        {"role": "user", "content": _FEWSHOT_FITNESS_INTENT},
+        {
+            "role": "assistant",
+            "content": json.dumps(_FEWSHOT_FITNESS, ensure_ascii=False),
         },
         {"role": "user", "content": _FEWSHOT_IA_INTENT},
         {
@@ -349,6 +603,105 @@ def messages_for_repair(
     ]
 
 
+def _empty_to_none(value: Any) -> Any:
+    if value == "":
+        return None
+    return value
+
+
+def _neg1_to_none(value: Any) -> Any:
+    if value == -1:
+        return None
+    return value
+
+
+def normalize_path_wire_dict(data: dict[str, Any]) -> dict[str, Any]:
+    """Map Anthropic wire sentinels (``""``, ``-1``) to ``None`` for PathState."""
+    out = dict(data)
+
+    cycle = out.get("cycle")
+    if isinstance(cycle, dict):
+        cycle = dict(cycle)
+        cycle["goal_for_cycle"] = _empty_to_none(cycle.get("goal_for_cycle"))
+        out["cycle"] = cycle
+
+    days = out.get("days")
+    if isinstance(days, list):
+        normalized_days: list[Any] = []
+        for day in days:
+            if not isinstance(day, dict):
+                normalized_days.append(day)
+                continue
+            day = dict(day)
+            day["title"] = _empty_to_none(day.get("title"))
+            day["summary"] = _empty_to_none(day.get("summary"))
+            normalized_days.append(day)
+        out["days"] = normalized_days
+
+    groups = out.get("groups")
+    if isinstance(groups, list):
+        normalized_groups: list[Any] = []
+        for group in groups:
+            if not isinstance(group, dict):
+                normalized_groups.append(group)
+                continue
+            group = dict(group)
+            group["description"] = _empty_to_none(group.get("description"))
+            normalized_groups.append(group)
+        out["groups"] = normalized_groups
+
+    actions = out.get("actions")
+    if isinstance(actions, list):
+        normalized_actions: list[Any] = []
+        for action in actions:
+            if not isinstance(action, dict):
+                normalized_actions.append(action)
+                continue
+            action = dict(action)
+            action["id"] = _empty_to_none(action.get("id"))
+            action["detail"] = _empty_to_none(action.get("detail"))
+            action["group_id"] = _empty_to_none(action.get("group_id"))
+            action["estimate_min"] = _neg1_to_none(action.get("estimate_min"))
+            action["day_offset"] = _neg1_to_none(action.get("day_offset"))
+            action["sort"] = _neg1_to_none(action.get("sort"))
+            items = action.get("checklist_items")
+            if isinstance(items, list):
+                normalized_items: list[Any] = []
+                for item in items:
+                    if not isinstance(item, dict):
+                        normalized_items.append(item)
+                        continue
+                    item = dict(item)
+                    item["id"] = _empty_to_none(item.get("id"))
+                    normalized_items.append(item)
+                action["checklist_items"] = normalized_items
+            normalized_actions.append(action)
+        out["actions"] = normalized_actions
+
+    return out
+
+
+def _is_empty_path_stub(path: Any) -> bool:
+    if path is None:
+        return True
+    if not isinstance(path, dict):
+        return False
+    title = path.get("title")
+    actions = path.get("actions")
+    return (not title) and (not actions)
+
+
+def _is_empty_instant_stub(payload: Any) -> bool:
+    if payload is None:
+        return True
+    if not isinstance(payload, dict):
+        return False
+    label = payload.get("label")
+    answer = payload.get("answer")
+    suggestions = payload.get("goal_suggestions") or []
+    return (not label) and (not answer) and len(suggestions) == 0
+
+
 def parse_path_state(raw_response: Any) -> PathState:
     if isinstance(raw_response, PathState):
         return raw_response
@@ -360,6 +713,8 @@ def parse_path_state(raw_response: Any) -> PathState:
         raise TypeError(
             f"Unexpected raw_response type: {type(raw_response)!r}"
         )
+    if isinstance(data, dict):
+        data = normalize_path_wire_dict(data)
     return PathState.model_validate(data)
 
 
@@ -374,4 +729,28 @@ def parse_create_response(raw_response: Any) -> CreateLlmResponse:
         raise TypeError(
             f"Unexpected raw_response type: {type(raw_response)!r}"
         )
-    return CreateLlmResponse.model_validate(data)
+    if not isinstance(data, dict):
+        return CreateLlmResponse.model_validate(data)
+
+    out = dict(data)
+    kind = out.get("kind")
+    # Wire schema requires both branches as objects; drop the unused stub/null
+    # before Pydantic validates the discriminated union.
+    if kind == "path":
+        out["instant_answer"] = None
+        path = out.get("path")
+        if isinstance(path, dict):
+            out["path"] = normalize_path_wire_dict(path)
+    elif kind == "instant_answer":
+        out["path"] = None
+    else:
+        # Defensive: still normalize if a path object is present.
+        path = out.get("path")
+        if isinstance(path, dict) and not _is_empty_path_stub(path):
+            out["path"] = normalize_path_wire_dict(path)
+        if _is_empty_instant_stub(out.get("instant_answer")):
+            out["instant_answer"] = None
+        if _is_empty_path_stub(out.get("path")):
+            out["path"] = None
+
+    return CreateLlmResponse.model_validate(out)

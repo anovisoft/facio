@@ -33,3 +33,8 @@ def test_apply_contract_copies_fields():
     assert project.summary == state.summary
     assert project.domain == state.domain
     assert project.tags == list(state.tags)
+    assert project.cycle_index == 1
+    assert project.cycle_horizon_days == 1
+    assert project.cycle_status == "draft"
+    assert project.schedule_days is not None
+    assert project.schedule_days[0]["kind"] == "cook_session"

@@ -4,6 +4,10 @@ export type ProjectStatus = 'draft' | 'active' | 'abandoned' | 'completed';
 
 export type ActionStatus = 'pending' | 'done' | 'skipped';
 
+export type DayKind = 'train' | 'rest' | 'cook_session' | 'other';
+
+export type CycleStatus = 'draft' | 'active' | 'completed' | 'abandoned';
+
 export type ListStatusFilter =
   | 'open'
   | 'abandoned'
@@ -48,6 +52,29 @@ export interface GroupResponse {
   sort: number;
 }
 
+export interface CycleResponse {
+  index: number;
+  horizon_days: number;
+  status: CycleStatus | string;
+  goal_for_cycle?: string | null;
+}
+
+export interface DayResponse {
+  day_index: number;
+  kind: DayKind;
+  title?: string | null;
+  summary?: string | null;
+}
+
+export interface CurrentDayResponse {
+  day_index: number;
+  day_number: number;
+  horizon_days: number;
+  kind: DayKind;
+  title?: string | null;
+  summary?: string | null;
+}
+
 export interface ActionResponse {
   id: string;
   project_id: string;
@@ -78,6 +105,8 @@ export interface ProjectSummary {
   horizon?: string | null;
   domain?: string | null;
   tags: string[];
+  cycle?: CycleResponse | null;
+  current_day?: CurrentDayResponse | null;
   committed_at?: string | null;
   created_at: string;
   updated_at: string;
@@ -86,6 +115,7 @@ export interface ProjectSummary {
 
 export interface ProjectDetail extends ProjectSummary {
   groups: GroupResponse[];
+  days: DayResponse[];
   actions: ActionResponse[];
   questions: ClarifyQuestion[];
   resources: string[];

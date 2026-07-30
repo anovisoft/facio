@@ -200,15 +200,60 @@ _STRIP_KEYS = {
     "format",
     "title",
     "default",
+    # Field descriptions bloat constrained-decoding grammars; guidance lives in prompts.
+    "description",
 }
+
+
+def _strip_meta_keys(node: dict[str, Any]) -> None:
+    for key in list(node.keys()):
+        if key in _STRIP_KEYS:
+            del node[key]
+
+
+def _collapse_nullable_anyof(node: dict[str, Any]) -> None:
+    """Replace ``anyOf: [T, {"type":"null"}]`` with ``T``.
+
+    Nullable unions explode Anthropic grammar size — especially inside arrays
+    (actions/days/checklist). Wire format uses sentinels instead (``""``, ``-1``,
+    or empty stub objects); parsers normalize back to ``None``.
+    """
+    any_of = node.get("anyOf")
+    if not isinstance(any_of, list) or len(any_of) < 2:
+        return
+    non_null: list[dict[str, Any]] = []
+    null_count = 0
+    for branch in any_of:
+        if not isinstance(branch, dict):
+            return
+        if branch.get("type") == "null":
+            null_count += 1
+        else:
+            non_null.append(branch)
+    if null_count == 0 or len(non_null) != 1:
+        return
+    kept = non_null[0]
+    node.clear()
+    node.update(kept)
+    _strip_meta_keys(node)
+
+
+def _collapse_nullable_type_list(node: dict[str, Any]) -> None:
+    """Replace ``"type": ["string", "null"]`` (etc.) with the non-null type."""
+    typ = node.get("type")
+    if not isinstance(typ, list):
+        return
+    non_null = [t for t in typ if t != "null"]
+    if len(non_null) == 1 and "null" in typ:
+        node["type"] = non_null[0]
 
 
 def _transform_schema_node(node: Any) -> None:
     if not isinstance(node, dict):
         return
-    for key in list(node.keys()):
-        if key in _STRIP_KEYS:
-            del node[key]
+    _strip_meta_keys(node)
+    _collapse_nullable_anyof(node)
+    _collapse_nullable_type_list(node)
     props = node.get("properties")
     if node.get("type") == "object" or isinstance(props, dict):
         node.setdefault("additionalProperties", False)

@@ -143,7 +143,12 @@ export function AcceptScreen({
       <Text style={[styles.pathLabel, { color: colors.textMuted }]}>
         {t('path.title')}
       </Text>
-      <PathList groups={project.groups} actions={project.actions} />
+      <PathList
+        groups={project.groups}
+        actions={project.actions}
+        days={project.days}
+        cycle={project.cycle}
+      />
 
       <Text style={[styles.whenLabel, { color: colors.text }]}>
         {t('accept.firstStepWhen')}

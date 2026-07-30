@@ -95,6 +95,11 @@ class Project(Base):
     horizon: Mapped[str | None] = mapped_column(Text, nullable=True)
     domain: Mapped[str | None] = mapped_column(String(32), nullable=True)
     tags: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    cycle_index: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    cycle_horizon_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    cycle_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    cycle_goal: Mapped[str | None] = mapped_column(Text, nullable=True)
+    schedule_days: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     committed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

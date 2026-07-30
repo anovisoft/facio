@@ -12,7 +12,7 @@ from pydantic import (
     model_validator,
 )
 
-from app.schemas.path_state import ClarifyQuestion, PathState
+from app.schemas.path_state import ClarifyQuestion, DayKind, PathState
 
 
 class CreateProjectRequest(BaseModel):
@@ -127,6 +127,31 @@ class GroupResponse(BaseModel):
     sort: int
 
 
+class CycleResponse(BaseModel):
+    index: int
+    horizon_days: int
+    status: str
+    goal_for_cycle: str | None = None
+
+
+class DayResponse(BaseModel):
+    day_index: int
+    kind: DayKind
+    title: str | None = None
+    summary: str | None = None
+
+
+class CurrentDayResponse(BaseModel):
+    """«Сегодня» framing: day N of M with kind (1-based day_number for UI)."""
+
+    day_index: int
+    day_number: int
+    horizon_days: int
+    kind: DayKind
+    title: str | None = None
+    summary: str | None = None
+
+
 class ActionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -161,6 +186,8 @@ class ProjectSummary(BaseModel):
     horizon: str | None
     domain: str | None = None
     tags: list[str] = Field(default_factory=list)
+    cycle: CycleResponse | None = None
+    current_day: CurrentDayResponse | None = None
     committed_at: datetime | None
     created_at: datetime
     updated_at: datetime
@@ -180,6 +207,7 @@ class ProjectSummary(BaseModel):
 
 class ProjectDetail(ProjectSummary):
     groups: list[GroupResponse] = Field(default_factory=list)
+    days: list[DayResponse] = Field(default_factory=list)
     actions: list[ActionResponse] = Field(default_factory=list)
     questions: list[ClarifyQuestion] = Field(default_factory=list)
     resources: list[str] = Field(default_factory=list)
