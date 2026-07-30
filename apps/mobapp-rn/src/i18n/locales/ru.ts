@@ -85,7 +85,7 @@ export default {
   },
   path: {
     title: 'Весь путь',
-    cyclePlan: 'План на цикл ({{days}} дн.)',
+    cyclePlan: 'План цикла · {{days}} дней',
     dayHeader: 'День {{n}} · {{kind}}',
     restEmpty: 'Отдых — без силовой нагрузки.',
     loading: 'Загрузка пути…',

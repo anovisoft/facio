@@ -38,6 +38,11 @@ type Section = {
   actions: ActionResponse[];
 };
 
+function capitalizeLabel(value: string): string {
+  if (!value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
 function dayKindLabel(
   kind: DayKind,
   t: (key: string) => string,
@@ -84,7 +89,7 @@ function buildDaySections(
   }
 
   const sections: Section[] = sortedDays.map((day) => {
-    const kindLabel = dayKindLabel(day.kind, t);
+    const kindLabel = capitalizeLabel(dayKindLabel(day.kind, t));
     const dayTitle = t('path.dayHeader', {
       n: day.day_index + 1,
       kind: kindLabel,
@@ -211,6 +216,9 @@ export function PathList({
     ? buildDaySections(days ?? [], actions, t)
     : buildGroupSections(groups, actions);
   const showDetail = !compact || expanded;
+  // Multi-day maps: Day is the only section header. Single-day (e.g. cook
+  // session) may keep subtle in-day group captions for shop/cook clusters.
+  const showInnerGroups = useDays && (days?.length ?? 0) === 1;
 
   if (actions.length === 0) {
     return null;
@@ -223,7 +231,7 @@ export function PathList({
   return (
     <View style={styles.root}>
       {cycle && showDetail ? (
-        <Text style={[styles.cycleLabel, { color: colors.textMuted }]}>
+        <Text style={[styles.cycleLabel, { color: colors.textSecondary }]}>
           {t('path.cyclePlan', { days: cycle.horizon_days })}
         </Text>
       ) : null}
@@ -242,7 +250,7 @@ export function PathList({
               >
                 {t('path.dayHeader', {
                   n: day.day_index + 1,
-                  kind: dayKindLabel(day.kind, t),
+                  kind: capitalizeLabel(dayKindLabel(day.kind, t)),
                 })}
                 {day.title ? ` · ${day.title}` : ''}
               </Text>
@@ -267,173 +275,188 @@ export function PathList({
           ) : null}
         </View>
       ) : (
-        sections.map((section) => (
-          <View
-            key={section.key}
-            style={[
-              styles.section,
-              section.kind === 'rest'
-                ? {
-                    backgroundColor: colors.surface,
-                    borderRadius: radii.md,
-                    padding: spacing.md,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                  }
-                : null,
-            ]}
-          >
-            {section.title ? (
-              <Text
-                style={[
-                  styles.groupTitle,
-                  {
-                    color:
-                      section.kind === 'rest'
-                        ? colors.textSecondary
+        sections.map((section) => {
+          const isDaySection = useDays && section.kind != null;
+          const isRestDay = section.kind === 'rest';
+          return (
+            <View
+              key={section.key}
+              style={[
+                styles.section,
+                isRestDay
+                  ? {
+                      borderLeftWidth: 3,
+                      borderLeftColor: colors.border,
+                      paddingLeft: spacing.sm,
+                      opacity: 0.92,
+                    }
+                  : null,
+              ]}
+            >
+              {section.title ? (
+                <Text
+                  style={[
+                    isDaySection ? styles.dayTitle : styles.groupTitle,
+                    {
+                      color: isDaySection
+                        ? isRestDay
+                          ? colors.textSecondary
+                          : colors.text
                         : colors.textMuted,
-                  },
-                ]}
-              >
-                {section.title}
-              </Text>
-            ) : null}
-            {section.description ? (
-              <Text
-                style={[styles.groupDescription, { color: colors.textSecondary }]}
-              >
-                {section.description}
-              </Text>
-            ) : null}
-            {section.actions.length === 0 && section.kind === 'rest' ? (
-              <Text style={[styles.meta, { color: colors.textSecondary }]}>
-                {t('path.restEmpty')}
-              </Text>
-            ) : null}
-            {section.actions.map((action, index) => {
-              const status = statusLabel(action.status, t);
-              const isOpen = expandable
-                ? Boolean(openIds[action.id])
-                : true;
-              const canExpand =
-                expandable &&
-                Boolean(
-                  action.detail ||
-                    action.why ||
-                    action.checklist_items.length > 0,
-                );
-              const prev = section.actions[index - 1];
-              const showGroup =
-                Boolean(action.group_title) &&
-                action.group_title !== prev?.group_title;
+                    },
+                  ]}
+                >
+                  {section.title}
+                </Text>
+              ) : null}
+              {section.description ? (
+                <Text
+                  style={[
+                    styles.groupDescription,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  {section.description}
+                </Text>
+              ) : null}
+              {section.actions.length === 0 && section.kind === 'rest' ? (
+                <Text style={[styles.meta, { color: colors.textSecondary }]}>
+                  {t('path.restEmpty')}
+                </Text>
+              ) : null}
+              {section.actions.map((action, index) => {
+                const status = statusLabel(action.status, t);
+                const isOpen = expandable
+                  ? Boolean(openIds[action.id])
+                  : true;
+                const canExpand =
+                  expandable &&
+                  Boolean(
+                    action.detail ||
+                      action.why ||
+                      action.checklist_items.length > 0,
+                  );
+                const prev = section.actions[index - 1];
+                const showGroup =
+                  showInnerGroups &&
+                  Boolean(action.group_title) &&
+                  action.group_title !== prev?.group_title;
 
-              return (
-                <View key={action.id}>
-                  {showGroup ? (
-                    <Text
+                return (
+                  <View key={action.id}>
+                    {showGroup ? (
+                      <Text
+                        style={[
+                          styles.innerGroup,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        {action.group_title}
+                      </Text>
+                    ) : null}
+                    <View
                       style={[
-                        styles.innerGroup,
-                        { color: colors.textMuted },
+                        styles.step,
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: colors.border,
+                          opacity: action.status === 'pending' ? 1 : 0.72,
+                        },
                       ]}
                     >
-                      {action.group_title}
-                    </Text>
-                  ) : null}
-                  <View
-                    style={[
-                      styles.step,
-                      {
-                        backgroundColor: colors.surface,
-                        borderColor: colors.border,
-                        opacity: action.status === 'pending' ? 1 : 0.72,
-                      },
-                    ]}
-                  >
-                    <Pressable
-                      disabled={!canExpand}
-                      onPress={() => toggleOpen(action.id)}
-                    >
-                      <View style={styles.stepHeader}>
-                        <Text
-                          style={[
-                            styles.stepTitle,
-                            { color: colors.text, flex: 1 },
-                          ]}
-                        >
-                          {index + 1}. {action.title}
-                        </Text>
-                        {status ? (
+                      <Pressable
+                        disabled={!canExpand}
+                        onPress={() => toggleOpen(action.id)}
+                      >
+                        <View style={styles.stepHeader}>
                           <Text
                             style={[
-                              styles.status,
+                              styles.stepTitle,
+                              { color: colors.text, flex: 1 },
+                            ]}
+                          >
+                            {index + 1}. {action.title}
+                          </Text>
+                          {status ? (
+                            <Text
+                              style={[
+                                styles.status,
+                                { color: colors.textSecondary },
+                              ]}
+                            >
+                              {status}
+                            </Text>
+                          ) : null}
+                        </View>
+                        {action.estimate_min != null ? (
+                          <Text
+                            style={[
+                              styles.meta,
                               { color: colors.textSecondary },
                             ]}
                           >
-                            {status}
+                            {t('common.minutes', {
+                              count: action.estimate_min,
+                            })}
                           </Text>
                         ) : null}
-                      </View>
-                      {action.estimate_min != null ? (
-                        <Text
-                          style={[styles.meta, { color: colors.textSecondary }]}
-                        >
-                          {t('common.minutes', { count: action.estimate_min })}
-                        </Text>
-                      ) : null}
-                      {canExpand ? (
-                        <Text
-                          style={[styles.toggle, { color: colors.primary }]}
-                        >
-                          {isOpen
-                            ? t('path.collapseStep')
-                            : t('path.expandStep')}
-                        </Text>
-                      ) : null}
-                    </Pressable>
+                        {canExpand ? (
+                          <Text
+                            style={[styles.toggle, { color: colors.primary }]}
+                          >
+                            {isOpen
+                              ? t('path.collapseStep')
+                              : t('path.expandStep')}
+                          </Text>
+                        ) : null}
+                      </Pressable>
 
-                    {isOpen ? (
-                      <View style={styles.expanded}>
-                        {action.why ? (
-                          <Text
-                            style={[
-                              styles.detail,
-                              { color: colors.textSecondary },
-                            ]}
-                          >
-                            {action.why}
-                          </Text>
-                        ) : null}
-                        {action.detail ? (
-                          <Text
-                            style={[
-                              styles.detail,
-                              { color: colors.textSecondary },
-                            ]}
-                          >
-                            {action.detail}
-                          </Text>
-                        ) : null}
-                        {action.checklist_items.length > 0 ? (
-                          <ChecklistList
-                            items={action.checklist_items}
-                            disabled={
-                              checklistDisabled || action.status !== 'pending'
-                            }
-                            onToggle={
-                              onToggleChecklist && action.status === 'pending'
-                                ? onToggleChecklist
-                                : undefined
-                            }
-                          />
-                        ) : null}
-                      </View>
-                    ) : null}
+                      {isOpen ? (
+                        <View style={styles.expanded}>
+                          {action.why ? (
+                            <Text
+                              style={[
+                                styles.detail,
+                                { color: colors.textSecondary },
+                              ]}
+                            >
+                              {action.why}
+                            </Text>
+                          ) : null}
+                          {action.detail ? (
+                            <Text
+                              style={[
+                                styles.detail,
+                                { color: colors.textSecondary },
+                              ]}
+                            >
+                              {action.detail}
+                            </Text>
+                          ) : null}
+                          {action.checklist_items.length > 0 ? (
+                            <ChecklistList
+                              items={action.checklist_items}
+                              disabled={
+                                checklistDisabled ||
+                                action.status !== 'pending'
+                              }
+                              onToggle={
+                                onToggleChecklist &&
+                                action.status === 'pending'
+                                  ? onToggleChecklist
+                                  : undefined
+                              }
+                            />
+                          ) : null}
+                        </View>
+                      ) : null}
+                    </View>
                   </View>
-                </View>
-              );
-            })}
-          </View>
-        ))
+                );
+              })}
+            </View>
+          );
+        })
       )}
 
       {compact ? (
@@ -452,7 +475,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   cycleLabel: {
-    ...typography.label,
+    ...typography.caption,
     marginBottom: spacing.xs,
   },
   preview: {
@@ -468,6 +491,11 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.sm,
   },
+  dayTitle: {
+    ...typography.subtitle,
+    fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
   groupTitle: {
     ...typography.label,
     textTransform: 'uppercase',
@@ -475,9 +503,8 @@ const styles = StyleSheet.create({
   },
   innerGroup: {
     ...typography.caption,
-    textTransform: 'uppercase',
     marginTop: spacing.xs,
-    marginBottom: spacing.xs,
+    marginBottom: 2,
   },
   groupDescription: {
     ...typography.caption,
@@ -495,7 +522,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   stepTitle: {
-    ...typography.subtitle,
+    ...typography.body,
+    fontWeight: '600',
   },
   status: {
     ...typography.caption,

@@ -80,7 +80,9 @@ _PATH_FIELDS = """\
 - actions[]: ordered steps, soft cap ≤ 8–12 (never a 40-step dump; multi-day \
   may use up to ~16 with one focus per day). Each:
   - id: stable key (or ""); reuse on refine/repair when the step is the same
-  - title: verb + object («Сегодня» / path step)
+  - title: verb + object («Сегодня» / path step). When days[] present, \
+    do NOT put "день N" / "day N" / "(день N)" in titles — day affiliation \
+    is via day_offset + UI days[] headers
   - why: REQUIRED — hero «Почему сейчас»; why THIS step matters; never filler
   - detail: concrete how-to (or ""). Cooking: method/timing. \
     Shopping: use checklist_items instead of many micro-actions
@@ -157,6 +159,8 @@ Unused branch = empty stub. Match user language (RU/EN/…).
 - Soft cap ≤ 8–12 actions; prefer checklist over many buy-micro-steps.
 - Cooking: shopping group + cook how-to in detail; not titles only.
 - Prefer a few strong steps over a long todo dump.
+- When days[] exist, action titles must not repeat day numbers \
+  ("день 2", "day 3") — structure lives in days[] + day_offset.
 
 Do not chat. JSON fields only.
 """

@@ -85,7 +85,7 @@ export default {
   },
   path: {
     title: 'Full path',
-    cyclePlan: 'Plan for cycle ({{days}} days)',
+    cyclePlan: 'Cycle plan · {{days}} days',
     dayHeader: 'Day {{n}} · {{kind}}',
     restEmpty: 'Rest — no strength work today.',
     loading: 'Loading path…',

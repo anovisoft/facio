@@ -243,9 +243,6 @@ export function DraftStudioScreen({
         </Text>
       ) : null}
 
-      <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
-        {t('draft.pathLabel')}
-      </Text>
       <PathList
         groups={project.groups}
         actions={project.actions}
