@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -14,10 +14,8 @@ import { useTranslation } from 'react-i18next';
 import { ApiError } from '@/api/types';
 import type { ProjectSummary } from '@/api/types';
 import { listProjects } from '@/api/projects';
-import { getApiBaseUrl } from '@/api/client';
 import type { RootScreenProps } from '@/navigation/types';
 import { trackProjectSwitched } from '@/services/beacons';
-import { getDeviceId } from '@/services/deviceId';
 import { GlassFab } from '@/shared/ui/GlassFab';
 import { PrimaryButton } from '@/shared/ui/PrimaryButton';
 import { SafeScreen } from '@/shared/ui/SafeScreen';
@@ -63,10 +61,6 @@ export function ProjectsScreen({ navigation }: RootScreenProps<'Projects'>) {
     }, [load]),
   );
 
-  useEffect(() => {
-    void getDeviceId();
-  }, []);
-
   const openProject = (project: ProjectSummary) => {
     setLastProjectId(project.id);
     trackProjectSwitched(project.id);
@@ -91,11 +85,9 @@ export function ProjectsScreen({ navigation }: RootScreenProps<'Projects'>) {
           </Pressable>
         </View>
 
-        <ThemeModeSwitcher value={themeMode} onChange={setThemeMode} />
-
-        <Text style={[styles.meta, { color: colors.textMuted }]}>
-          {t('projects.apiBase')}: {getApiBaseUrl()}
-        </Text>
+        <View style={styles.themeRow}>
+          <ThemeModeSwitcher value={themeMode} onChange={setThemeMode} />
+        </View>
 
         {loading && !refreshing ? (
           <View style={styles.center}>
@@ -200,8 +192,7 @@ const styles = StyleSheet.create({
   link: {
     ...typography.caption,
   },
-  meta: {
-    ...typography.caption,
+  themeRow: {
     marginTop: spacing.sm,
     marginBottom: spacing.md,
   },

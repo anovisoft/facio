@@ -11,15 +11,16 @@ import {
   darkColors,
   lightColors,
   type ColorPalette,
+  type ThemeMode,
 } from '@/theme/index';
-
-export type ThemeMode = 'system' | 'light' | 'dark';
 
 interface ThemeContextValue {
   colors: ColorPalette;
   effectiveTheme: 'light' | 'dark';
   themeMode: ThemeMode;
 }
+
+export type { ThemeMode };
 
 const ThemeContext = createContext<ThemeContextValue>({
   colors: lightColors,

@@ -1,5 +1,7 @@
 /** Facio color tokens — calm green accent, not purple-AI default. */
 
+export type ThemeMode = 'system' | 'light' | 'dark';
+
 export type ColorPalette = {
   background: string;
   surface: string;
@@ -56,9 +58,6 @@ export const darkColors: ColorPalette = {
   fabFallback: 'rgba(28, 31, 27, 0.78)',
   fabIcon: '#F2F0EA',
 };
-
-/** @deprecated Prefer useTheme().colors — defaults to light for static StyleSheets. */
-export const colors = lightColors;
 
 export const typography = {
   hero: { fontSize: 28, fontWeight: '700' as const, letterSpacing: -0.4 },

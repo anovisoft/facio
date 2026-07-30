@@ -2,9 +2,8 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import type { ThemeMode } from '@/theme/ThemeContext';
 import { useTheme } from '@/theme/ThemeContext';
-import { radii, spacing, typography } from '@/theme';
+import { radii, spacing, typography, type ThemeMode } from '@/theme';
 
 const MODES: ThemeMode[] = ['system', 'light', 'dark'];
 

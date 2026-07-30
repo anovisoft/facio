@@ -9,7 +9,6 @@ export default {
     loading: 'Загрузка…',
     error: 'Не удалось загрузить проекты',
     retry: 'Повторить',
-    apiBase: 'API',
   },
   intent: {
     title: 'Что вы хотите сделать?',

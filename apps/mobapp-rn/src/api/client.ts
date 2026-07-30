@@ -78,7 +78,3 @@ export async function apiRequest<T>(
 
   return parsed as T;
 }
-
-export function getApiBaseUrl(): string {
-  return apiBase();
-}

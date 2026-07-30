@@ -19,10 +19,7 @@ async function fire(
 }
 
 export function trackAppOpened(projectId?: string | null): void {
-  void fire('app_opened', {
-    projectId,
-    payload: projectId ? { project_id: projectId } : {},
-  });
+  void fire('app_opened', { projectId });
 }
 
 export function trackAcceptViewed(projectId: string): void {

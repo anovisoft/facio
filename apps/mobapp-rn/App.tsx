@@ -55,7 +55,6 @@ export default function App() {
   const [hydrated, setHydrated] = useState(() =>
     useSessionStore.persist.hasHydrated(),
   );
-  const [forceReady, setForceReady] = useState(false);
   const themeMode = useSessionStore((s) => s.themeMode);
 
   useEffect(() => {
@@ -68,18 +67,13 @@ export default function App() {
   }, [hydrated]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setForceReady(true), 3000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated && !forceReady) return;
+    if (!hydrated) return;
     getDeviceId();
     trackAppOpened(useSessionStore.getState().lastProjectId);
     SplashScreen.hideAsync().catch(() => undefined);
-  }, [hydrated, forceReady]);
+  }, [hydrated]);
 
-  if (!hydrated && !forceReady) {
+  if (!hydrated) {
     return <View style={styles.boot} />;
   }
 

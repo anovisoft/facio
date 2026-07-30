@@ -9,7 +9,6 @@ export default {
     loading: 'Loading…',
     error: 'Could not load projects',
     retry: 'Retry',
-    apiBase: 'API',
   },
   intent: {
     title: 'What do you want to do?',

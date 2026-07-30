@@ -2,6 +2,8 @@
 
 export type ProjectStatus = 'draft' | 'active' | 'abandoned' | 'completed';
 
+export type ActionStatus = 'pending' | 'done' | 'skipped';
+
 export type ListStatusFilter =
   | 'open'
   | 'abandoned'
@@ -50,7 +52,7 @@ export interface ActionResponse {
   estimate_min?: number | null;
   due_at?: string | null;
   sort: number;
-  status: string;
+  status: ActionStatus;
   day_offset?: number | null;
   group_id?: string | null;
   group_key?: string | null;
@@ -60,7 +62,7 @@ export interface ActionResponse {
 
 export interface ProjectSummary {
   id: string;
-  status: ProjectStatus | string;
+  status: ProjectStatus;
   raw_intent: string;
   outcome?: string | null;
   paraphrase?: string | null;

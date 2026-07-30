@@ -91,10 +91,6 @@ export function GlassSurface({
   );
 }
 
-export function isGlassEffectAvailable(): boolean {
-  return Boolean(liquidGlass?.isLiquidGlassSupported);
-}
-
 const styles = StyleSheet.create({
   fallbackShell: {
     overflow: 'hidden',

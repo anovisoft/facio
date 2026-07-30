@@ -37,8 +37,5 @@ module.exports = {
       './plugins/withMmkvZlib',
       ['./plugins/withAppleTeamId', { teamId: 'SXXLPXXJMD' }],
     ],
-    extra: {
-      apiUrl: process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000',
-    },
   },
 };

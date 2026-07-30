@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { buildZustandStorage } from '@/services/storage';
-import type { ThemeMode } from '@/theme/ThemeContext';
+import type { ThemeMode } from '@/theme';
 
 interface SessionState {
   /** Last focused project for beacons / resume hints. */
