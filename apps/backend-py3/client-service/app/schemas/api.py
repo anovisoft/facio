@@ -113,6 +113,13 @@ class ProjectSummary(BaseModel):
     committed_at: datetime | None
     created_at: datetime
     updated_at: datetime
+    next_action: ActionResponse | None = Field(
+        default=None,
+        description=(
+            "Current «Сегодня» step for active projects; null for draft / "
+            "completed / abandoned or when no pending actions remain."
+        ),
+    )
 
     @field_validator("tags", mode="before")
     @classmethod
@@ -158,11 +165,6 @@ CreateIntentResponse = Annotated[
     | Annotated[PathCreatedResponse, Tag("path")],
     Discriminator("kind"),
 ]
-
-
-class NextActionResponse(BaseModel):
-    project_id: UUID
-    action: ActionResponse | None
 
 
 class ConversationTurnResponse(BaseModel):

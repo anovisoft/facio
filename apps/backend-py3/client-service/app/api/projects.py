@@ -10,17 +10,15 @@ from app.schemas.path import (
     ActionResponse,
     CommitProjectRequest,
     CreateProjectRequest,
-    NextActionResponse,
     ProjectDetail,
     ProjectSummary,
     RefineProjectRequest,
     RepairProjectRequest,
     RestoreStateRequest,
+    StateVersionSummary,
 )
-from app.services.action import ActionService
 from app.services.path import PathService
 from app.services.project import ListStatusFilter, ProjectService
-from app.services.serializers import serialize_action
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -46,9 +44,7 @@ async def list_projects(
 ) -> list[ProjectSummary]:
     service = ProjectService(db)
     projects = await service.list_projects(user, status=status)
-    return [
-        ProjectSummary.model_validate(p, from_attributes=True) for p in projects
-    ]
+    return [service.to_summary(p) for p in projects]
 
 
 @router.post("", response_model=CreateIntentResponse)
@@ -85,17 +81,17 @@ async def list_actions(
     return await ProjectService(db).list_action_responses(user, project_id)
 
 
-@router.get("/{project_id}/next-action", response_model=NextActionResponse)
-async def next_action(
+@router.get(
+    "/{project_id}/state-versions",
+    response_model=list[StateVersionSummary],
+)
+async def list_state_versions(
     project_id: UUID,
     user: CurrentUser,
     db: DbSession,
-) -> NextActionResponse:
-    action = await ActionService(db).get_next_action(user, project_id)
-    return NextActionResponse(
-        project_id=project_id,
-        action=serialize_action(action) if action else None,
-    )
+) -> list[StateVersionSummary]:
+    """Draft undo targets for «Назад» (append-only log; filter on client)."""
+    return await ProjectService(db).list_state_versions(user, project_id)
 
 
 @router.post("/{project_id}/refine", response_model=ProjectDetail)

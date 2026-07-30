@@ -51,28 +51,6 @@ class ActionService:
             raise NotFoundError("Action not found")
         return action, action.project
 
-    async def get_next_action(
-        self, user: User, project_id: UUID
-    ) -> Action | None:
-        project = await self.projects.get_project(user, project_id)
-        if project.status != ProjectStatus.active:
-            return None
-        result = await self.db.execute(
-            select(Action)
-            .where(
-                Action.project_id == project_id,
-                Action.status == ActionStatus.pending,
-            )
-            .options(
-                selectinload(Action.group),
-                selectinload(Action.checklist_items),
-            )
-        )
-        actions = list(result.scalars().all())
-        if not actions:
-            return None
-        return sorted(actions, key=action_queue_key)[0]
-
     async def list_actions(self, user: User, project_id: UUID) -> list[Action]:
         project = await self.projects.get_project(user, project_id)
         result = await self.db.execute(

@@ -61,10 +61,11 @@ Alembic `003_mvp_metric_views` + `004` (`mvp_domain_counts`): `mvp_event_counts`
 
 ```text
 GET  /projects                    # ?status=open|abandoned|draft|active|completed
+                                  # ProjectSummary includes next_action for active
 POST /projects                    # intent → LLM → path | instant_answer
-GET  /projects/{id}               # contract + state summary
+GET  /projects/{id}               # contract + Path + next_action
 GET  /projects/{id}/actions       # полный Path
-GET  /projects/{id}/next-action
+GET  /projects/{id}/state-versions  # «Назад» targets (append-only log)
 POST /projects/{id}/refine
 POST /projects/{id}/commit
 POST /projects/{id}/abandon       # draft|active → abandoned (архив)
@@ -76,7 +77,7 @@ POST /checklist-items/{id}/toggle
 POST /events                      # UI beacons only (см. ниже)
 ```
 
-Admin/debug history routes (`transcript` / `timeline` / `state-versions`) removed from the HTTP surface; service methods remain for future admin tooling. Restore from git if needed.
+Admin/debug history routes (`transcript` / `timeline`) removed from the HTTP surface; service methods remain for future admin tooling. Restore from git if needed. `state-versions` is client-facing for draft undo.
 
 `GET /projects/active` → заменить/дополнить списком всех non-abandoned.
 

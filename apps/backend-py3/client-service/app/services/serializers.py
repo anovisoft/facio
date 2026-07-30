@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from app.models import Action, ActionGroup, ActionStatus, Project
+from app.models import Action, ActionGroup, ActionStatus, Project, ProjectStatus
 from app.schemas.api import (
     ActionResponse,
     ChecklistItemResponse,
@@ -111,3 +111,13 @@ def action_queue_key(action: Action) -> tuple[int, int]:
     """Order: group.sort (ungrouped last), then action.sort."""
     group_sort = action.group.sort if action.group is not None else 10**9
     return (group_sort, action.sort)
+
+
+def pick_next_action(project: Project) -> Action | None:
+    """First pending action for an active project (queue order)."""
+    if project.status != ProjectStatus.active:
+        return None
+    pending = [a for a in project.actions if a.status == ActionStatus.pending]
+    if not pending:
+        return None
+    return sorted(pending, key=action_queue_key)[0]

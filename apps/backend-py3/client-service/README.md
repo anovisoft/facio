@@ -72,7 +72,9 @@ After `alembic upgrade head`: `mvp_activation_kpis`, `mvp_fct`, `mvp_event_count
 - `GET /api/v1/projects?status=abandoned` — archive list only  
 - default `?status=open` — Home (excludes abandoned)
 
-Admin history routes (`transcript` / `timeline` / `state-versions`) are removed from the HTTP API (service helpers remain).
+Admin history routes (`transcript` / `timeline`) are removed from the HTTP API (service helpers remain). `GET /projects/{id}/state-versions` is available for draft «Назад».
+
+`GET /projects` and `GET /projects/{id}` include `next_action` (null unless status is active with a pending step).
 
 ### Schema reset after migration squash
 

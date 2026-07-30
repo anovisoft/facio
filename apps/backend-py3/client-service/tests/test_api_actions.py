@@ -1,4 +1,4 @@
-"""Action execution: Сегодня / Сделано / Пропустить / checklist / next-action."""
+"""Action execution: Сегодня / Сделано / Пропустить / checklist / next_action."""
 
 from sqlalchemy import select
 
@@ -22,20 +22,39 @@ async def _create_and_commit(client, auth_headers, enqueue_path) -> dict:
     return committed.json()
 
 
-async def test_next_action_returns_first_pending(
+async def test_next_action_on_summary_and_detail(
     client, auth_headers, enqueue_path
 ):
     project = await _create_and_commit(client, auth_headers, enqueue_path)
-    response = await client.get(
-        f"/api/v1/projects/{project['id']}/next-action",
+
+    assert project["next_action"] is not None
+    assert project["next_action"]["status"] == "pending"
+    assert project["next_action"]["why"]
+    assert project["next_action"]["key"] == "buy"
+
+    listed = await client.get(
+        "/api/v1/projects",
         headers=auth_headers,
+        params={"status": "active"},
     )
-    assert response.status_code == 200
-    body = response.json()
-    assert body["action"] is not None
-    assert body["action"]["status"] == "pending"
-    assert body["action"]["why"]
-    assert body["action"]["key"] == "buy"
+    assert listed.status_code == 200
+    row = next(p for p in listed.json() if p["id"] == project["id"])
+    assert row["next_action"]["key"] == "buy"
+
+
+async def test_draft_next_action_is_null(client, auth_headers, enqueue_path):
+    enqueue_path()
+    created = await client.post(
+        "/api/v1/projects",
+        headers=auth_headers,
+        json={"intent": "Приготовить карбонару"},
+    )
+    project = created.json()["project"]
+    assert project["next_action"] is None
+
+    listed = await client.get("/api/v1/projects", headers=auth_headers)
+    row = next(p for p in listed.json() if p["id"] == project["id"])
+    assert row["next_action"] is None
 
 
 async def test_complete_requires_checklist(
@@ -84,11 +103,10 @@ async def test_toggle_checklist_then_complete(
     assert "action_done" in event_types
     assert "first_completion" in event_types
 
-    next_action = await client.get(
-        f"/api/v1/projects/{project['id']}/next-action",
-        headers=auth_headers,
+    detail = await client.get(
+        f"/api/v1/projects/{project['id']}", headers=auth_headers
     )
-    assert next_action.json()["action"]["key"] == "cook"
+    assert detail.json()["next_action"]["key"] == "cook"
 
 
 async def test_skip_action(client, auth_headers, enqueue_path, db_session):
@@ -136,7 +154,9 @@ async def test_completing_all_actions_completes_project(
     detail = await client.get(
         f"/api/v1/projects/{project['id']}", headers=auth_headers
     )
-    assert detail.json()["status"] == "completed"
+    body = detail.json()
+    assert body["status"] == "completed"
+    assert body["next_action"] is None
 
     row = (
         await db_session.execute(

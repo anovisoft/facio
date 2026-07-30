@@ -14,6 +14,7 @@ from app.models import Action, Project, ProjectStatus, StateVersion, User
 from app.schemas.api import (
     ActionResponse,
     ProjectDetail,
+    ProjectSummary,
     StateVersionSummary,
 )
 from app.schemas.path_state import PathState
@@ -21,6 +22,7 @@ from app.services.audit import AuditService, EventType
 from app.services.path_materialize import ensure_action_keys, materialize_path
 from app.services.serializers import (
     action_queue_key,
+    pick_next_action,
     serialize_action,
     serialize_groups,
     serialize_path_state,
@@ -157,6 +159,18 @@ class ProjectService:
         ordered = sorted(project.actions, key=action_queue_key)
         return [serialize_action(a) for a in ordered]
 
+    def to_summary(self, project: Project) -> ProjectSummary:
+        next_orm = pick_next_action(project)
+        return ProjectSummary.model_validate(
+            project, from_attributes=True
+        ).model_copy(
+            update={
+                "next_action": (
+                    serialize_action(next_orm) if next_orm else None
+                ),
+            }
+        )
+
     async def to_detail(self, project: Project) -> ProjectDetail:
         version, state = await self.get_latest_state(project.id)
         questions = list(state.questions) if state else []
@@ -170,19 +184,9 @@ class ProjectService:
             groups = serialize_groups(project.groups)
             actions = [serialize_action(a) for a in ordered_actions]
 
+        summary = self.to_summary(project)
         return ProjectDetail(
-            id=project.id,
-            status=project.status.value,
-            raw_intent=project.raw_intent,
-            outcome=project.outcome,
-            paraphrase=project.paraphrase,
-            success_criteria=project.success_criteria,
-            horizon=project.horizon,
-            domain=project.domain,
-            tags=list(project.tags or []),
-            committed_at=project.committed_at,
-            created_at=project.created_at,
-            updated_at=project.updated_at,
+            **summary.model_dump(),
             groups=groups,
             actions=actions,
             questions=questions,

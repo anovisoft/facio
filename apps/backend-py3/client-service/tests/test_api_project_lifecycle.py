@@ -78,6 +78,16 @@ async def test_restore_state_appends_user_restore(
         json={"answer": "2", "question_id": "q_servings"},
     )
 
+    versions = await client.get(
+        f"/api/v1/projects/{project['id']}/state-versions",
+        headers=auth_headers,
+    )
+    assert versions.status_code == 200
+    assert [(v["version"], v["source"]) for v in versions.json()] == [
+        (1, "llm_create"),
+        (2, "llm_refine"),
+    ]
+
     response = await client.post(
         f"/api/v1/projects/{project['id']}/restore-state",
         headers=auth_headers,
@@ -87,6 +97,16 @@ async def test_restore_state_appends_user_restore(
     body = response.json()
     assert body["current_version"] == 3
     assert len(body["questions"]) == 2
+
+    versions_after = await client.get(
+        f"/api/v1/projects/{project['id']}/state-versions",
+        headers=auth_headers,
+    )
+    assert [(v["version"], v["source"]) for v in versions_after.json()] == [
+        (1, "llm_create"),
+        (2, "llm_refine"),
+        (3, "user_restore"),
+    ]
 
     sources = (
         await db_session.execute(
