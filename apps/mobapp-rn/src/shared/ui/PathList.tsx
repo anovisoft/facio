@@ -2,7 +2,12 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import type { ActionResponse, GroupResponse } from '@/api/types';
+import type {
+  ActionResponse,
+  ChecklistItemResponse,
+  GroupResponse,
+} from '@/api/types';
+import { ChecklistList } from '@/shared/ui/ChecklistList';
 import { useTheme } from '@/theme/ThemeContext';
 import { radii, spacing, typography } from '@/theme';
 
@@ -11,6 +16,13 @@ type Props = {
   actions: ActionResponse[];
   /** Draft preview: titles first; expand for detail. */
   compact?: boolean;
+  /** Path screen: tap step to expand detail / checklist. */
+  expandable?: boolean;
+  checklistDisabled?: boolean;
+  onToggleChecklist?: (
+    item: ChecklistItemResponse,
+    nextDone: boolean,
+  ) => void;
 };
 
 type Section = {
@@ -63,16 +75,46 @@ function buildSections(
   return sections;
 }
 
-export function PathList({ groups, actions, compact = false }: Props) {
+function statusLabel(
+  status: ActionResponse['status'],
+  t: (key: string) => string,
+): string | null {
+  switch (status) {
+    case 'done':
+      return t('path.statusDone');
+    case 'skipped':
+      return t('path.statusSkipped');
+    case 'pending':
+      return null;
+    default: {
+      const _exhaustive: never = status;
+      return _exhaustive;
+    }
+  }
+}
+
+export function PathList({
+  groups,
+  actions,
+  compact = false,
+  expandable = false,
+  checklistDisabled,
+  onToggleChecklist,
+}: Props) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const [expanded, setExpanded] = useState(!compact);
+  const [openIds, setOpenIds] = useState<Record<string, boolean>>({});
   const sections = buildSections(groups, actions);
   const showDetail = !compact || expanded;
 
   if (actions.length === 0) {
     return null;
   }
+
+  const toggleOpen = (id: string) => {
+    setOpenIds((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   return (
     <View style={styles.root}>
@@ -103,32 +145,104 @@ export function PathList({ groups, actions, compact = false }: Props) {
                 {section.title}
               </Text>
             ) : null}
-            {section.actions.map((action, index) => (
-              <View
-                key={action.id}
-                style={[
-                  styles.step,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <Text style={[styles.stepTitle, { color: colors.text }]}>
-                  {index + 1}. {action.title}
-                </Text>
-                {action.estimate_min != null ? (
-                  <Text style={[styles.meta, { color: colors.textSecondary }]}>
-                    {t('common.minutes', { count: action.estimate_min })}
-                  </Text>
-                ) : null}
-                {action.detail ? (
-                  <Text style={[styles.detail, { color: colors.textSecondary }]}>
-                    {action.detail}
-                  </Text>
-                ) : null}
-              </View>
-            ))}
+            {section.actions.map((action, index) => {
+              const status = statusLabel(action.status, t);
+              const isOpen = expandable
+                ? Boolean(openIds[action.id])
+                : true;
+              const canExpand =
+                expandable &&
+                Boolean(
+                  action.detail ||
+                    action.why ||
+                    action.checklist_items.length > 0,
+                );
+
+              return (
+                <View
+                  key={action.id}
+                  style={[
+                    styles.step,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                      opacity: action.status === 'pending' ? 1 : 0.72,
+                    },
+                  ]}
+                >
+                  <Pressable
+                    disabled={!canExpand}
+                    onPress={() => toggleOpen(action.id)}
+                  >
+                    <View style={styles.stepHeader}>
+                      <Text
+                        style={[styles.stepTitle, { color: colors.text, flex: 1 }]}
+                      >
+                        {index + 1}. {action.title}
+                      </Text>
+                      {status ? (
+                        <Text
+                          style={[
+                            styles.status,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          {status}
+                        </Text>
+                      ) : null}
+                    </View>
+                    {action.estimate_min != null ? (
+                      <Text
+                        style={[styles.meta, { color: colors.textSecondary }]}
+                      >
+                        {t('common.minutes', { count: action.estimate_min })}
+                      </Text>
+                    ) : null}
+                    {canExpand ? (
+                      <Text
+                        style={[styles.toggle, { color: colors.primary }]}
+                      >
+                        {isOpen
+                          ? t('path.collapseStep')
+                          : t('path.expandStep')}
+                      </Text>
+                    ) : null}
+                  </Pressable>
+
+                  {isOpen ? (
+                    <View style={styles.expanded}>
+                      {action.why ? (
+                        <Text
+                          style={[styles.detail, { color: colors.textSecondary }]}
+                        >
+                          {action.why}
+                        </Text>
+                      ) : null}
+                      {action.detail ? (
+                        <Text
+                          style={[styles.detail, { color: colors.textSecondary }]}
+                        >
+                          {action.detail}
+                        </Text>
+                      ) : null}
+                      {action.checklist_items.length > 0 ? (
+                        <ChecklistList
+                          items={action.checklist_items}
+                          disabled={
+                            checklistDisabled || action.status !== 'pending'
+                          }
+                          onToggle={
+                            onToggleChecklist && action.status === 'pending'
+                              ? onToggleChecklist
+                              : undefined
+                          }
+                        />
+                      ) : null}
+                    </View>
+                  ) : null}
+                </View>
+              );
+            })}
           </View>
         ))
       )}
@@ -172,15 +286,26 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.xs,
   },
+  stepHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
   stepTitle: {
     ...typography.subtitle,
+  },
+  status: {
+    ...typography.caption,
   },
   meta: {
     ...typography.caption,
   },
   detail: {
     ...typography.body,
-    marginTop: spacing.xs,
+  },
+  expanded: {
+    marginTop: spacing.sm,
+    gap: spacing.sm,
   },
   toggle: {
     ...typography.caption,

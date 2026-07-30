@@ -91,3 +91,15 @@ export function abandonProject(
     signal,
   });
 }
+
+export function repairProject(
+  projectId: string,
+  reason: string,
+  signal?: AbortSignal,
+): Promise<ProjectDetail> {
+  return apiRequest(`/projects/${projectId}/repair`, {
+    method: 'POST',
+    body: { reason },
+    signal,
+  });
+}

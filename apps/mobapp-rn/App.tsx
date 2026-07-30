@@ -9,9 +9,16 @@ import '@/i18n';
 import AppNavigator from '@/navigation';
 import { trackAppOpened } from '@/services/beacons';
 import { getDeviceId } from '@/services/deviceId';
+import {
+  captureException,
+  initSentry,
+  wrapRootComponent,
+} from '@/services/sentry';
 import { useSessionStore } from '@/store';
 import { ThemeProvider, useTheme } from '@/theme/ThemeContext';
 import { lightColors, spacing, typography } from '@/theme';
+
+initSentry();
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -23,6 +30,10 @@ class ErrorBoundary extends Component<
 
   static getDerivedStateFromError(error: unknown) {
     return { error: String(error) };
+  }
+
+  componentDidCatch(error: unknown) {
+    captureException(error);
   }
 
   render() {
@@ -51,7 +62,7 @@ function AppShell() {
   );
 }
 
-export default function App() {
+function App() {
   const [hydrated, setHydrated] = useState(() =>
     useSessionStore.persist.hasHydrated(),
   );
@@ -106,3 +117,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+export default wrapRootComponent(App);

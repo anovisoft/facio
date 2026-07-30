@@ -6,6 +6,7 @@ import React, {
 } from 'react';
 import {
   ActivityIndicator,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -253,9 +254,18 @@ export function DraftStudioScreen({
       {busy ? (
         <View style={styles.busyRow}>
           <ActivityIndicator color={colors.primary} />
-          <Text style={[styles.muted, { color: colors.textSecondary }]}>
+          <Text style={[styles.muted, { color: colors.textSecondary, flex: 1 }]}>
             {t('draft.working')}
           </Text>
+          <Pressable
+            onPress={() => {
+              abortRef.current?.abort();
+              setBusy(false);
+            }}
+            hitSlop={8}
+          >
+            <Text style={{ color: colors.primary }}>{t('common.cancel')}</Text>
+          </Pressable>
         </View>
       ) : null}
 

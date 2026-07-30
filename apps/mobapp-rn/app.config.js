@@ -34,6 +34,7 @@ module.exports = {
     plugins: [
       'expo-localization',
       'expo-splash-screen',
+      '@sentry/react-native',
       './plugins/withMmkvZlib',
       ['./plugins/withAppleTeamId', { teamId: 'SXXLPXXJMD' }],
     ],

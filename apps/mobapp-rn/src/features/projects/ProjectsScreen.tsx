@@ -158,12 +158,14 @@ export function ProjectsScreen({ navigation }: RootScreenProps<'Projects'>) {
                     </Text>
                   ) : null}
                 </View>
-                {item.next_action?.title ? (
+                {item.status === 'active' && item.next_action?.title ? (
                   <Text
                     style={[styles.cardSub, { color: colors.textSecondary }]}
                     numberOfLines={2}
                   >
-                    {item.next_action.title}
+                    {t('projects.nextAction', {
+                      title: item.next_action.title,
+                    })}
                   </Text>
                 ) : null}
               </Pressable>

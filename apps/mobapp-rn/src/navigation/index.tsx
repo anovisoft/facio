@@ -9,18 +9,16 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { AcceptScreen } from '@/features/accept/AcceptScreen';
 import { DraftStudioScreen } from '@/features/draft/DraftStudioScreen';
+import { ProjectHomeScreen } from '@/features/home/ProjectHomeScreen';
 import { InstantAnswerScreen } from '@/features/intent/InstantAnswerScreen';
 import { IntentScreen } from '@/features/intent/IntentScreen';
+import { PathScreen } from '@/features/path/PathScreen';
 import { HistoryScreen } from '@/features/projects/HistoryScreen';
 import { ProjectsScreen } from '@/features/projects/ProjectsScreen';
-import { projectPlaceholderScreen } from '@/navigation/placeholders';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTheme } from '@/theme/ThemeContext';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-
-const ProjectHomeScreen = projectPlaceholderScreen('home.today');
-const PathScreen = projectPlaceholderScreen('path.title');
 
 export default function AppNavigator() {
   const { colors, effectiveTheme } = useTheme();

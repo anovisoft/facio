@@ -73,7 +73,12 @@ Liquid glass is **not** supported in Expo Go — use this native build.
 
 **S1:** API client, beacons, nav shell, Projects/History live.  
 **S1.5:** i18n en-first, theme modes, glass FAB `+`.  
-**S2–S3:** Intent → draft → Accept → Home daily loop.
+**S2:** Intent → InstantAnswer | Draft → Accept → commit.  
+**S3:** ProjectHome (Сегодня / Сделано / skip / checklist / repair), Path, First Completion, loading/errors, optional Sentry.
+
+## Optional Sentry
+
+Set `EXPO_PUBLIC_SENTRY_DSN` in `.env`. Without it the SDK stays disabled (no-op). After adding the DSN, rebuild the native app (`prebuild` + `ios`/`android`) so the Sentry plugin is applied.
 
 ## Scripts
 
