@@ -15,6 +15,61 @@ from app.models import (
 )
 from app.schemas.path_state import PathAction, PathState
 
+
+def action_plugins_filled(action: PathAction) -> bool:
+    """True when every plugin_hint has a corresponding payload."""
+    hints = list(action.plugin_hints or [])
+    if not hints:
+        return True
+    for hint in hints:
+        if hint == "timers" and not action.timers:
+            return False
+        if hint == "timeline" and action.timeline is None:
+            return False
+        if hint == "interval" and action.interval_plan is None:
+            return False
+        if hint == "counter" and action.counter is None:
+            return False
+    return True
+
+
+def path_plugins_ready(state: PathState | None) -> bool:
+    if state is None:
+        return True
+    return all(action_plugins_filled(a) for a in state.actions)
+
+
+def merge_plugin_payloads(
+    state: PathState,
+    payloads: list,
+) -> PathState:
+    """Merge materialize #3 payloads into PathState actions by id."""
+    by_id = {p.action_id: p for p in payloads}
+    actions: list[PathAction] = []
+    for index, item in enumerate(state.actions):
+        key = item.id or f"a{index}"
+        payload = by_id.get(key)
+        if payload is None:
+            actions.append(item)
+            continue
+        timers = []
+        for t_index, timer in enumerate(payload.timers):
+            timers.append(
+                timer.model_copy(update={"id": timer.id or f"t{t_index}"})
+            )
+        actions.append(
+            item.model_copy(
+                update={
+                    "timers": timers,
+                    "counter": payload.counter,
+                    "timeline": payload.timeline,
+                    "interval_plan": payload.interval_plan,
+                }
+            )
+        )
+    return state.model_copy(update={"actions": actions})
+
+
 # Stable draft/API ids derived from project + logical key.
 PATH_ID_NAMESPACE = UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
@@ -162,8 +217,11 @@ async def materialize_path(
     preserved_checklist: dict[str, dict[str, bool]] = {}
     preserved_counter: dict[str, int] = {}
     preserved_timers: dict[str, dict[str, bool]] = {}
+    preserved_due: dict[str, object] = {}
     if merge_progress:
         for action in project.actions:
+            if action.due_at is not None:
+                preserved_due[action.key] = action.due_at
             if action.status in {ActionStatus.done, ActionStatus.skipped}:
                 preserved[action.key] = action.status
                 preserved_checklist[action.key] = {
@@ -215,6 +273,7 @@ async def materialize_path(
             detail=item.detail,
             estimate_min=item.estimate_min,
             day_offset=item.day_offset,
+            due_at=preserved_due.get(key),
             sort=sort,
             status=status,
             timers=_timer_payload(

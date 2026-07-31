@@ -3,7 +3,7 @@
 from sqlalchemy import select
 
 from app.models import Event, Project, ProjectStatus
-from tests.conftest import wait_path_ready
+from tests.conftest import wait_path_ready, wait_plugins_ready
 
 
 async def _create_and_commit(client, auth_headers, enqueue_path) -> dict:
@@ -21,7 +21,9 @@ async def _create_and_commit(client, auth_headers, enqueue_path) -> dict:
         json={"first_step_when": "today"},
     )
     assert committed.status_code == 200
-    return committed.json()
+    return await wait_plugins_ready(
+        client, auth_headers, committed.json()["id"]
+    )
 
 
 async def test_next_action_on_summary_and_detail(
@@ -201,7 +203,7 @@ async def test_cannot_complete_on_draft(client, auth_headers, enqueue_path):
     assert response.status_code in {404, 409}
 
 
-async def test_draft_exposes_timers_preview(client, auth_headers, enqueue_path):
+async def test_draft_exposes_plugin_hints(client, auth_headers, enqueue_path):
     enqueue_path()
     created = await client.post(
         "/api/v1/projects",
@@ -212,15 +214,10 @@ async def test_draft_exposes_timers_preview(client, auth_headers, enqueue_path):
         client, auth_headers, created.json()["project"]["id"]
     )
     cook = next(a for a in project["actions"] if a["key"] == "cook")
-    assert cook["timeline"] is not None
-    assert cook["timeline"]["duration_sec"] >= 1
-    assert len(cook["timeline"]["markers"]) >= 2
-    assert {m["signal"] for m in cook["timeline"]["markers"]} >= {
-        "alert",
-        "nudge",
-    }
-    assert len(cook["timers"]) >= 1
-    assert all(t["completed"] is False for t in cook["timers"])
+    assert "timeline" in cook["plugin_hints"]
+    # Full payloads arrive after Start (#3), not on draft Path wire.
+    assert cook.get("timeline") is None
+    assert cook.get("timers") == []
 
 
 async def test_counter_update_and_timer_complete(
@@ -235,16 +232,22 @@ async def test_counter_update_and_timer_complete(
     project = await wait_path_ready(
         client, auth_headers, created.json()["project"]["id"]
     )
+    d0 = next(a for a in project["actions"] if a["key"] == "d0")
+    assert "interval" in d0["plugin_hints"]
+    assert "counter" in d0["plugin_hints"]
     committed = await client.post(
         f"/api/v1/projects/{project['id']}/commit",
         headers=auth_headers,
         json={"first_step_when": "today"},
     )
     assert committed.status_code == 200
-    project = committed.json()
+    project = await wait_plugins_ready(
+        client, auth_headers, committed.json()["id"]
+    )
     train = next(a for a in project["actions"] if a["key"] == "d0")
     assert train["counter"] is not None
     assert train["counter"]["current"] == 0
+    assert train["interval_plan"] is not None
 
     bumped = await client.post(
         f"/api/v1/actions/{train['id']}/counter",

@@ -37,6 +37,7 @@ export default {
     startToday: 'Начать сегодня',
     startError: 'Не удалось начать план',
     pathLoading: 'Собираю полный план…',
+    pathError: 'Не удалось собрать план. Попробуйте создать ещё раз.',
     refineWaitPath:
       'Можно выбрать ответы сейчас — «Обновить путь» откроется, когда план будет готов.',
     success: 'Успех',
@@ -97,6 +98,10 @@ export default {
     timeline: 'Таймлайн сессии',
     interval: 'Интервалы',
     counter: 'Счётчик',
+    hintTimers: 'Таймеры',
+    hintTimeline: 'Таймлайн',
+    hintInterval: 'Интервалы',
+    hintCounter: 'Счётчик',
     start: 'Старт',
     stop: 'Стоп',
     pause: 'Пауза',

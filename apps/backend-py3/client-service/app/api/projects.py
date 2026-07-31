@@ -17,7 +17,11 @@ from app.schemas.path import (
     RestoreStateRequest,
     StateVersionSummary,
 )
-from app.services.path import PathService, complete_create_path_job
+from app.services.path import (
+    PathService,
+    complete_create_path_job,
+    complete_materialize_plugins_job,
+)
 from app.services.project import ListStatusFilter, ProjectService
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -135,6 +139,8 @@ async def commit_project(
     body: CommitProjectRequest,
     user: CurrentUser,
     db: DbSession,
+    llm: LLM,
+    background_tasks: BackgroundTasks,
 ) -> ProjectDetail:
     service = ProjectService(db)
     project = await service.commit(
@@ -142,7 +148,16 @@ async def commit_project(
         project_id,
         first_step_when=body.first_step_when,
     )
-    return await service.to_detail(project)
+    detail = await service.to_detail(project)
+    # Phase-3: materialize plugins in background when hints still unfilled.
+    path_service = PathService(db, llm=llm)
+    if await path_service.needs_plugin_materialize(user, project.id):
+        background_tasks.add_task(
+            complete_materialize_plugins_job,
+            project_id=project.id,
+            user_id=user.id,
+        )
+    return detail
 
 
 @router.post("/{project_id}/abandon", response_model=ProjectDetail)

@@ -72,6 +72,7 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
                         "sort": 2,
                     },
                 ],
+                "plugin_hints": [],
                 "timers": [],
                 "counter": None,
                 "timeline": None,
@@ -87,6 +88,38 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
                 "sort": 1,
                 "group_id": "cook",
                 "checklist_items": [],
+                "plugin_hints": ["timeline", "timers"],
+                "timers": [],
+                "counter": None,
+                "timeline": None,
+                "interval_plan": None,
+            },
+        ],
+        "questions": [
+            {
+                "id": "q_servings",
+                "prompt": "На сколько порций?",
+                "options": ["1", "2", "4"],
+            },
+            {
+                "id": "q_guanciale",
+                "prompt": "Гуанчиале или бекон?",
+                "options": ["гуанчиале", "бекон"],
+            },
+        ],
+        "resources": [],
+        "milestones": ["продукты куплены", "блюдо готово"],
+    }
+    state.update(overrides)
+    return state
+
+
+def sample_plugins_materialize(**overrides: Any) -> dict[str, Any]:
+    """Create #3 payload for carbonara cook action."""
+    payload: dict[str, Any] = {
+        "actions": [
+            {
+                "action_id": "cook",
                 "timers": [
                     {
                         "id": "guanciale",
@@ -111,25 +144,76 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
                     ],
                 },
                 "interval_plan": None,
-            },
-        ],
-        "questions": [
-            {
-                "id": "q_servings",
-                "prompt": "На сколько порций?",
-                "options": ["1", "2", "4"],
-            },
-            {
-                "id": "q_guanciale",
-                "prompt": "Гуанчиале или бекон?",
-                "options": ["гуанчиале", "бекон"],
-            },
-        ],
-        "resources": [],
-        "milestones": ["продукты куплены", "блюдо готово"],
+            }
+        ]
     }
-    state.update(overrides)
-    return state
+    payload.update(overrides)
+    return payload
+
+
+def sample_fitness_plugins_materialize(**overrides: Any) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "actions": [
+            {
+                "action_id": "d0",
+                "timers": [],
+                "counter": {
+                    "label": "повторы",
+                    "target": 24,
+                    "current": 0,
+                    "step": 1,
+                },
+                "timeline": None,
+                "interval_plan": {
+                    "segments": [
+                        {"sec": 40, "title": "Отжимания", "signal": "nudge"},
+                        {"sec": 20, "title": "Отдых", "signal": "nudge"},
+                        {"sec": 40, "title": "Отжимания", "signal": "nudge"},
+                        {"sec": 20, "title": "Отдых", "signal": "nudge"},
+                        {"sec": 40, "title": "Отжимания", "signal": "alert"},
+                    ],
+                },
+            },
+            {
+                "action_id": "d2",
+                "timers": [],
+                "counter": {
+                    "label": "повторы",
+                    "target": 24,
+                    "current": 0,
+                    "step": 1,
+                },
+                "timeline": None,
+                "interval_plan": None,
+            },
+            {
+                "action_id": "d4",
+                "timers": [],
+                "counter": {
+                    "label": "повторы",
+                    "target": 24,
+                    "current": 0,
+                    "step": 1,
+                },
+                "timeline": None,
+                "interval_plan": None,
+            },
+            {
+                "action_id": "d6",
+                "timers": [],
+                "counter": {
+                    "label": "повторы",
+                    "target": 24,
+                    "current": 0,
+                    "step": 1,
+                },
+                "timeline": None,
+                "interval_plan": None,
+            },
+        ]
+    }
+    payload.update(overrides)
+    return payload
 
 
 def sample_fitness_path_state(**overrides: Any) -> dict[str, Any]:
@@ -171,26 +255,14 @@ def sample_fitness_path_state(**overrides: Any) -> dict[str, Any]:
                 "sort": i,
                 "group_id": None,
                 "checklist_items": [],
+                "plugin_hints": (
+                    ["interval", "counter"] if i == 0 else ["counter"]
+                ),
                 "timers": [],
-                "counter": {
-                    "label": "повторы",
-                    "target": 24,
-                    "current": 0,
-                    "step": 1,
-                },
+                "counter": None,
                 "timeline": None,
                 "interval_plan": None,
             }
-            if i == 0:
-                action["interval_plan"] = {
-                    "segments": [
-                        {"sec": 40, "title": "Отжимания", "signal": "nudge"},
-                        {"sec": 20, "title": "Отдых", "signal": "nudge"},
-                        {"sec": 40, "title": "Отжимания", "signal": "nudge"},
-                        {"sec": 20, "title": "Отдых", "signal": "nudge"},
-                        {"sec": 40, "title": "Отжимания", "signal": "alert"},
-                    ],
-                }
             actions.append(action)
         else:
             actions.append(
@@ -204,6 +276,7 @@ def sample_fitness_path_state(**overrides: Any) -> dict[str, Any]:
                     "sort": i,
                     "group_id": None,
                     "checklist_items": [],
+                    "plugin_hints": [],
                     "timers": [],
                     "counter": None,
                     "timeline": None,

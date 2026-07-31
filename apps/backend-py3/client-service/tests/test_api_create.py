@@ -69,6 +69,10 @@ async def test_create_path_project(
     assert len(ready["actions"]) >= 1
     assert all(a["why"] for a in ready["actions"])
     assert ready["current_version"] == 2
+    cook = next(a for a in ready["actions"] if a["key"] == "cook")
+    assert "timeline" in cook["plugin_hints"]
+    assert cook.get("timeline") is None
+    assert ready.get("plugins_ready") is False
 
     events = (
         await db_session.execute(
@@ -187,8 +191,12 @@ async def test_create_retries_invalid_then_succeeds(
     assert len(llm.calls) == 3
 
 
-async def test_create_fails_after_two_invalid(client, auth_headers, llm):
+async def test_create_fails_after_two_invalid(client, auth_headers, llm, db_session):
     import asyncio
+
+    from sqlalchemy import select
+
+    from app.models import LlmCall
 
     bad = {"outcome": "incomplete"}
     llm.enqueue("create", _GATE_PATH)
@@ -203,11 +211,21 @@ async def test_create_fails_after_two_invalid(client, auth_headers, llm):
     assert response.status_code == 200
     project = response.json()["project"]
     assert project["path_ready"] is False
-    # Background exhausted retries; path stays not ready.
-    await asyncio.sleep(0.2)
+    # Background exhausted retries; path stays not ready + surfaces error.
+    await asyncio.sleep(0.3)
     detail = await client.get(
         f"/api/v1/projects/{project['id']}", headers=auth_headers
     )
     assert detail.status_code == 200
-    assert detail.json()["path_ready"] is False
+    body = detail.json()
+    assert body["path_ready"] is False
+    assert body.get("path_error")
     assert len(llm.calls) == 3
+    # Failed path llm_calls must remain in audit (not rolled back).
+    llm_rows = (
+        await db_session.execute(
+            select(LlmCall).where(LlmCall.project_id == project["id"])
+        )
+    ).scalars().all()
+    assert len(llm_rows) >= 2
+    assert any(not c.parsed_ok for c in llm_rows)

@@ -73,6 +73,38 @@ function dayKindLabel(
   }
 }
 
+function pluginHintLabel(
+  hint: string,
+  t: (key: string) => string,
+): string {
+  switch (hint) {
+    case 'timers':
+      return t('plugins.hintTimers');
+    case 'timeline':
+      return t('plugins.hintTimeline');
+    case 'interval':
+      return t('plugins.hintInterval');
+    case 'counter':
+      return t('plugins.hintCounter');
+    default:
+      return hint;
+  }
+}
+
+function actionHasLivePlugins(action: ActionResponse): boolean {
+  return (
+    (action.timers?.length ?? 0) > 0 ||
+    Boolean(action.counter) ||
+    Boolean(action.timeline) ||
+    Boolean(action.interval_plan)
+  );
+}
+
+function visiblePluginHints(action: ActionResponse): string[] {
+  if (actionHasLivePlugins(action)) return [];
+  return (action.plugin_hints ?? []).filter(Boolean);
+}
+
 function buildDaySections(
   days: DayResponse[],
   actions: ActionResponse[],
@@ -351,7 +383,8 @@ export function PathList({
                       (action.timers?.length ?? 0) > 0 ||
                       action.counter ||
                       action.timeline ||
-                      action.interval_plan,
+                      action.interval_plan ||
+                      visiblePluginHints(action).length > 0,
                   );
                 const prev = section.actions[index - 1];
                 const showGroup =
@@ -416,6 +449,31 @@ export function PathList({
                               count: action.estimate_min,
                             })}
                           </Text>
+                        ) : null}
+                        {visiblePluginHints(action).length > 0 ? (
+                          <View style={styles.hintRow}>
+                            {visiblePluginHints(action).map((hint) => (
+                              <View
+                                key={hint}
+                                style={[
+                                  styles.hintChip,
+                                  {
+                                    borderColor: colors.border,
+                                    backgroundColor: colors.surface,
+                                  },
+                                ]}
+                              >
+                                <Text
+                                  style={[
+                                    styles.hintText,
+                                    { color: colors.textSecondary },
+                                  ]}
+                                >
+                                  {pluginHintLabel(hint, t)}
+                                </Text>
+                              </View>
+                            ))}
+                          </View>
                         ) : null}
                         {canExpand ? (
                           <Text
@@ -595,6 +653,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   status: {
+    ...typography.caption,
+  },
+  hintRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginTop: 2,
+  },
+  hintChip: {
+    borderWidth: 1,
+    borderRadius: radii.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+  },
+  hintText: {
     ...typography.caption,
   },
   meta: {

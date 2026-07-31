@@ -25,14 +25,11 @@ def test_fewshots_parse_as_create_responses():
     assert carbonara.path.cycle.horizon_days == 1
     assert carbonara.path.days[0].kind == "cook_session"
     cook = next(a for a in carbonara.path.actions if a.id == "cook")
-    assert cook.timeline is not None
-    assert cook.timeline.duration_sec == 480
-    assert len(cook.timeline.markers) >= 3
-    signals = {m.signal for m in cook.timeline.markers}
-    assert "alert" in signals
-    assert "nudge" in signals
-    assert len(cook.timers) >= 1  # isolated guanciale timer
+    assert "timeline" in cook.plugin_hints
+    assert cook.timeline is None  # payloads come in #3
+    assert cook.timers == []
     buy = next(a for a in carbonara.path.actions if a.id == "buy")
+    assert buy.plugin_hints == []
     assert buy.timers == []
     assert buy.counter is None
     assert buy.timeline is None
@@ -45,12 +42,12 @@ def test_fewshots_parse_as_create_responses():
     kinds = {d.kind for d in fitness.path.days}
     assert kinds == {"train", "rest"}
     train = next(a for a in fitness.path.actions if a.day_offset == 0)
-    assert train.counter is not None
-    assert train.counter.target >= 1
-    assert train.counter.current == 0
-    assert train.interval_plan is not None
-    assert len(train.interval_plan.segments) >= 3
+    assert "interval" in train.plugin_hints
+    assert "counter" in train.plugin_hints
+    assert train.counter is None
+    assert train.interval_plan is None
     rest = next(a for a in fitness.path.actions if a.day_offset == 1)
+    assert rest.plugin_hints == []
     assert rest.counter is None
     assert rest.interval_plan is None
 

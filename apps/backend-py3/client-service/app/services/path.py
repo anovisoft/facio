@@ -55,17 +55,22 @@ from app.services.audit import AuditService, EventType
 from app.services.path_llm import (
     CREATE_GATE_SCHEMA,
     PATH_RESPONSE_SCHEMA,
+    PLUGINS_MATERIALIZE_SCHEMA,
     messages_for_create_gate,
     messages_for_create_path,
+    messages_for_materialize_plugins,
     messages_for_refine,
     messages_for_repair,
     parse_create_gate,
     parse_path_state,
+    parse_plugins_materialize,
 )
 from app.services.path_materialize import (
     apply_contract,
     ensure_action_keys,
     materialize_path,
+    merge_plugin_payloads,
+    path_plugins_ready,
 )
 from app.services.project import ProjectService
 
@@ -94,6 +99,14 @@ class PendingPathJob:
     gate_llm_call_id: UUID
 
 
+@dataclass(frozen=True)
+class PendingPluginsJob:
+    """Returned after commit so BackgroundTasks can finish phase-3."""
+
+    project_id: UUID
+    user_id: UUID
+
+
 def _assistant_content(raw_response: Any) -> str:
     if isinstance(raw_response, str):
         return raw_response
@@ -109,6 +122,63 @@ def _parse_path_payload(raw_response: Any) -> PathState:
     if not state.actions:
         raise ValueError("Path must include at least one action")
     return state
+
+
+def _parse_plugins_payload(raw_response: Any):
+    return parse_plugins_materialize(raw_response)
+
+
+def _hinted_actions_payload(state: PathState) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for index, action in enumerate(state.actions):
+        hints = list(action.plugin_hints or [])
+        if not hints:
+            continue
+        out.append(
+            {
+                "action_id": action.id or f"a{index}",
+                "title": action.title,
+                "detail": action.detail or "",
+                "plugin_hints": hints,
+                "day_offset": action.day_offset,
+            }
+        )
+    return out
+
+
+def _preserve_plugins(prior: PathState, new: PathState) -> PathState:
+    """Keep prior plugin payloads when refine/repair returns hints-only."""
+    prior_by_id = {
+        (a.id or f"a{i}"): a for i, a in enumerate(prior.actions)
+    }
+    actions = []
+    for index, item in enumerate(new.actions):
+        key = item.id or f"a{index}"
+        old = prior_by_id.get(key)
+        if old is None:
+            actions.append(item)
+            continue
+        empty_new = (
+            not item.timers
+            and item.counter is None
+            and item.timeline is None
+            and item.interval_plan is None
+        )
+        if not empty_new:
+            actions.append(item)
+            continue
+        actions.append(
+            item.model_copy(
+                update={
+                    "timers": old.timers,
+                    "counter": old.counter,
+                    "timeline": old.timeline,
+                    "interval_plan": old.interval_plan,
+                    "plugin_hints": item.plugin_hints or old.plugin_hints,
+                }
+            )
+        )
+    return new.model_copy(update={"actions": actions})
 
 
 def path_state_from_start(start: PathStartSurface) -> PathState:
@@ -170,7 +240,7 @@ async def complete_create_path_job(
     path_start: dict[str, Any],
     gate_llm_call_id: UUID,
 ) -> None:
-    """Background phase-2: full Path + plugins after slim start returned."""
+    """Background phase-2: Path skeleton + plugin_hints (no plugin objects)."""
     start = PathStartSurface.model_validate(path_start)
     async with async_session_maker() as db:
         try:
@@ -190,13 +260,75 @@ async def complete_create_path_job(
                 path_start=start,
                 gate_llm_call_id=gate_llm_call_id,
             )
-        except Exception:
+        except Exception as exc:
             logger.exception(
                 "complete_create_path_job failed project=%s user=%s",
                 project_id,
                 user_id,
             )
-            await db.rollback()
+            # Persist failed llm_calls / plan_failed / path_error — do not
+            # roll the audit away with the failed path write.
+            try:
+                await db.commit()
+            except Exception:
+                await db.rollback()
+                async with async_session_maker() as audit_db:
+                    audit = AuditService(audit_db)
+                    await audit.add_turn(
+                        user_id=user_id,
+                        project_id=project_id,
+                        role=ConversationRole.system,
+                        content="Path generation failed",
+                        meta={"kind": "path_error", "error": str(exc)},
+                    )
+                    await audit_db.commit()
+
+
+async def complete_materialize_plugins_job(
+    *,
+    project_id: UUID,
+    user_id: UUID,
+) -> None:
+    """Background phase-3: fill plugin payloads after Start."""
+    async with async_session_maker() as db:
+        try:
+            service = PathService(db, llm=get_llm_provider())
+            user = await db.get(User, user_id)
+            if user is None:
+                logger.error(
+                    "complete_materialize_plugins_job: user missing "
+                    "user=%s project=%s",
+                    user_id,
+                    project_id,
+                )
+                return
+            await service.complete_materialize_plugins(
+                user=user,
+                project_id=project_id,
+            )
+        except Exception as exc:
+            logger.exception(
+                "complete_materialize_plugins_job failed project=%s user=%s",
+                project_id,
+                user_id,
+            )
+            try:
+                await db.commit()
+            except Exception:
+                await db.rollback()
+                async with async_session_maker() as audit_db:
+                    audit = AuditService(audit_db)
+                    await audit.add_event(
+                        event_type=EventType.plan_failed,
+                        user_id=user_id,
+                        project_id=project_id,
+                        payload={
+                            "purpose": "plugins",
+                            "phase": 3,
+                            "error": str(exc),
+                        },
+                    )
+                    await audit_db.commit()
 
 
 class PathService:
@@ -331,7 +463,7 @@ class PathService:
         path_start: PathStartSurface,
         gate_llm_call_id: UUID,
     ) -> Project:
-        """Phase-2: generate full Path+plugins and append state version."""
+        """Phase-2: generate Path skeleton + plugin_hints; append state version."""
         project = await self.projects.get_project(
             user, project_id, for_update=True
         )
@@ -351,11 +483,21 @@ class PathService:
             )
             return project
 
-        state, _path_raw, path_llm_call_id = await self._generate_create_path(
-            user=user,
-            project_id=project.id,
-            messages=messages_for_create_path(intent, path_start=path_start),
-        )
+        try:
+            state, _path_raw, path_llm_call_id = await self._generate_create_path(
+                user=user,
+                project_id=project.id,
+                messages=messages_for_create_path(intent, path_start=path_start),
+            )
+        except Exception as exc:
+            await self.audit.add_turn(
+                user_id=user.id,
+                project_id=project.id,
+                role=ConversationRole.system,
+                content="Path generation failed",
+                meta={"kind": "path_error", "error": str(exc)},
+            )
+            raise
 
         llm_row = await self.db.get(LlmCall, path_llm_call_id)
         if llm_row is not None:
@@ -408,6 +550,108 @@ class PathService:
             path_llm_call_id,
         )
         return await self.projects.get_project(user, project.id)
+
+    async def complete_materialize_plugins(
+        self,
+        *,
+        user: User,
+        project_id: UUID,
+    ) -> Project:
+        """Phase-3: fill plugin payloads for hinted actions after Start."""
+        project = await self.projects.get_project(
+            user, project_id, for_update=True
+        )
+        if project.status != ProjectStatus.active:
+            logger.info(
+                "complete_materialize_plugins skip non-active project=%s "
+                "status=%s",
+                project_id,
+                project.status,
+            )
+            return project
+
+        version, current = await self.projects.get_latest_state(project.id)
+        if current is None:
+            raise ConflictError("Project has no Path state")
+        if path_plugins_ready(current):
+            logger.info(
+                "complete_materialize_plugins skip already ready project=%s",
+                project_id,
+            )
+            return project
+
+        hinted = _hinted_actions_payload(current)
+        if not hinted:
+            logger.info(
+                "complete_materialize_plugins skip no hints project=%s",
+                project_id,
+            )
+            return project
+
+        payloads, _raw, llm_call_id = await self._generate_plugins(
+            user=user,
+            project_id=project.id,
+            messages=messages_for_materialize_plugins(
+                current_state=current.model_dump(mode="json"),
+                hinted_actions=hinted,
+            ),
+        )
+
+        state = ensure_action_keys(
+            merge_plugin_payloads(current, payloads.actions)
+        )
+        new_version = await self._next_version(project.id)
+        await self.audit.add_state_version(
+            project_id=project.id,
+            version=new_version,
+            state_json=state.model_dump(mode="json"),
+            source=StateSource.llm_create,
+        )
+        apply_contract(project, state)
+        await materialize_path(
+            self.db, project, state, merge_progress=True
+        )
+
+        await self.audit.add_turn(
+            user_id=user.id,
+            project_id=project.id,
+            role=ConversationRole.assistant,
+            content="Plugins ready",
+            meta={
+                "kind": "plugins_ready",
+                "state_version": new_version,
+                "llm_call_id": str(llm_call_id),
+                "prior_version": version,
+            },
+        )
+        await self.audit.add_event(
+            event_type=EventType.draft_shown,
+            user_id=user.id,
+            project_id=project.id,
+            payload={
+                "version": new_version,
+                "plugins_ready": True,
+            },
+        )
+        await self.db.commit()
+        logger.info(
+            "plugins ready user=%s project=%s version=%s llm=%s",
+            user.id,
+            project.id,
+            new_version,
+            llm_call_id,
+        )
+        return await self.projects.get_project(user, project.id)
+
+    async def needs_plugin_materialize(
+        self, user: User, project_id: UUID
+    ) -> bool:
+        """True when active project still has unfilled plugin_hints."""
+        project = await self.projects.get_project(user, project_id)
+        if project.status != ProjectStatus.active:
+            return False
+        _, state = await self.projects.get_latest_state(project.id)
+        return state is not None and not path_plugins_ready(state)
 
     async def _finish_instant_answer(
         self,
@@ -488,7 +732,7 @@ class PathService:
         messages: list[dict[str, Any]],
         project_id: UUID | None = None,
     ) -> tuple[PathState, LLMRawResult, UUID]:
-        # PathState-only structured output (plugins included; no IA branch).
+        # Path skeleton + plugin_hints only (no plugin objects on wire).
         return await self._llm_generate_validated(
             user=user,
             project_id=project_id,
@@ -497,6 +741,23 @@ class PathService:
             response_schema=PATH_RESPONSE_SCHEMA,
             parse=_parse_path_payload,
             invalid_message="Invalid Path from LLM",
+        )
+
+    async def _generate_plugins(
+        self,
+        *,
+        user: User,
+        messages: list[dict[str, Any]],
+        project_id: UUID | None = None,
+    ):
+        return await self._llm_generate_validated(
+            user=user,
+            project_id=project_id,
+            purpose="plugins",
+            messages=messages,
+            response_schema=PLUGINS_MATERIALIZE_SCHEMA,
+            parse=_parse_plugins_payload,
+            invalid_message="Invalid plugins from LLM",
         )
 
     async def refine(
@@ -921,6 +1182,13 @@ class PathService:
             parse=_parse_path_payload,
             invalid_message="Invalid Path from LLM",
         )
+
+        # Preserve existing plugin payloads across refine/repair when the
+        # wire returns hints-only (same action id).
+        if purpose in {"refine", "repair"}:
+            _, prior = await self.projects.get_latest_state(project.id)
+            if prior is not None:
+                state = _preserve_plugins(prior, state)
 
         version = await self._next_version(project.id)
         await self.audit.add_state_version(

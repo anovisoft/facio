@@ -167,6 +167,8 @@ async def test_restore_state_appends_user_restore(
 async def test_commit_activates_and_materializes(
     client, auth_headers, enqueue_path, db_session
 ):
+    from tests.conftest import wait_plugins_ready
+
     project = await _create_draft(client, auth_headers, enqueue_path)
     response = await client.post(
         f"/api/v1/projects/{project['id']}/commit",
@@ -174,12 +176,15 @@ async def test_commit_activates_and_materializes(
         json={"first_step_when": "today"},
     )
     assert response.status_code == 200
-    body = response.json()
+    body = await wait_plugins_ready(client, auth_headers, response.json()["id"])
     assert body["status"] == "active"
     assert body["committed_at"] is not None
     assert len(body["actions"]) >= 1
     assert all(a["due_at"] is not None for a in body["actions"])
     assert any(a["checklist_items"] for a in body["actions"])
+    cook = next(a for a in body["actions"] if a["key"] == "cook")
+    assert cook["timeline"] is not None
+    assert len(cook["timers"]) >= 1
 
     events = (
         await db_session.execute(
@@ -285,7 +290,8 @@ async def test_repair_on_active(
         json={"reason": "нет гуанчиале, возьму бекон"},
     )
     assert response.status_code == 200
-    assert response.json()["current_version"] == 3
+    # Versions: start + path + plugins(#3) + repair
+    assert response.json()["current_version"] == 4
     assert "Сдвинули" in response.json()["paraphrase"]
 
 

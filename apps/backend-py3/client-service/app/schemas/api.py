@@ -231,6 +231,13 @@ class ActionResponse(BaseModel):
     group_key: str | None = None
     group_title: str | None = None
     checklist_items: list[ChecklistItemResponse] = Field(default_factory=list)
+    plugin_hints: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Create #2 announcements (timers|timeline|interval|counter). "
+            "Full plugin payloads arrive after Start (#3)."
+        ),
+    )
     timers: list[TimerResponse] = Field(default_factory=list)
     counter: CounterResponse | None = None
     timeline: ActionTimelineResponse | None = None
@@ -281,8 +288,22 @@ class ProjectDetail(ProjectSummary):
     path_ready: bool = Field(
         default=True,
         description=(
-            "False while progressive create phase-2 Path+plugins is still "
+            "False while progressive create phase-2 Path skeleton is still "
             "generating (start surface already available)."
+        ),
+    )
+    path_error: str | None = Field(
+        default=None,
+        description=(
+            "Set when phase-2 Path generation failed; client should stop "
+            "polling and show an error (not an infinite spinner)."
+        ),
+    )
+    plugins_ready: bool = Field(
+        default=True,
+        description=(
+            "False while phase-3 plugin materialize runs after Start "
+            "(actions may still show plugin_hints only)."
         ),
     )
 

@@ -27,6 +27,24 @@ CYCLE_STATUSES: frozenset[str] = frozenset(get_args(CycleStatus))
 TimerSignal = Literal["nudge", "alert"]
 TIMER_SIGNALS: frozenset[str] = frozenset(get_args(TimerSignal))
 
+# Light announcements on create #2 / refine wire (full payloads in #3).
+PluginHint = Literal["timers", "timeline", "interval", "counter"]
+PLUGIN_HINTS: frozenset[str] = frozenset(get_args(PluginHint))
+
+# Dropped from Path Anthropic wire (grammar size); still on PathAction app model.
+_PATH_WIRE_DROP_ACTION_KEYS = frozenset(
+    {"timers", "timeline", "interval_plan", "counter"}
+)
+_PATH_WIRE_DROP_DEFS = frozenset(
+    {
+        "PathTimer",
+        "PathCounter",
+        "PathTimeline",
+        "PathIntervalPlan",
+        "PathClockBeat",
+    }
+)
+
 
 class PathChecklistItem(BaseModel):
     id: str | None = Field(
@@ -200,37 +218,32 @@ class PathAction(BaseModel):
             "(prefer over many micro-actions for shopping)."
         ),
     )
+    plugin_hints: list[PluginHint] = Field(
+        default_factory=list,
+        description=(
+            "Create #2 / refine: announce tools without payloads. "
+            "Values: timers|timeline|interval|counter. Empty [] if none. "
+            "Full plugin objects come in materialize #3 after Start."
+        ),
+    )
+    # App / DB / materialize #3 only — NOT on Path Anthropic create/refine wire.
     timers: list[PathTimer] = Field(
         default_factory=list,
         description=(
-            "TimerStack for simple manual Start waits. "
-            "Empty [] when unused. Wire: always present."
+            "TimerStack for simple manual Start waits. Empty [] when unused."
         ),
     )
-    # App model allows None; Anthropic wire collapses null → always-present
-    # PathCounter object (target=-1 stub → None in normalize_plugin_stubs).
     counter: PathCounter | None = Field(
         default=None,
-        description=(
-            "Dose counter for train sets/reps. Wire: always emit object; "
-            "target=-1 means absent (normalized to null)."
-        ),
+        description="Dose counter for train sets/reps.",
     )
-    # Wire stub: duration_sec=-1, markers=[] → None.
     timeline: PathTimeline | None = Field(
         default=None,
-        description=(
-            "Session axis + markers (cook). Wire: always emit object; "
-            "duration_sec=-1 means absent."
-        ),
+        description="Session axis + markers (cook).",
     )
-    # Wire stub: segments=[] → None.
     interval_plan: PathIntervalPlan | None = Field(
         default=None,
-        description=(
-            "Sequential work/rest segments (fitness circuit). Wire: always "
-            "emit object; empty segments means absent."
-        ),
+        description="Sequential work/rest segments (fitness circuit).",
     )
 
     @model_validator(mode="before")
@@ -611,12 +624,83 @@ class PathState(BaseModel):
         return self
 
 
-def _path_llm_schema() -> dict:
-    """Structured-output schema for Anthropic Path create/refine/repair.
+class ActionPluginPayload(BaseModel):
+    """One action's executable plugins (materialize #3 wire)."""
 
-    Drop ``resources`` / ``milestones`` from the wire surface — they are cheap
-    string arrays but still add property fanout; parsers default to ``[]``.
-    Prompt guidance still covers them for free-form JSON fallbacks.
+    action_id: str = Field(
+        min_length=1,
+        description="Must match PathState actions[].id (stable key).",
+    )
+    timers: list[PathTimer] = Field(
+        default_factory=list,
+        description="TimerStack; empty [] when unused.",
+    )
+    # Wire stubs → None in normalize (same sentinels as legacy Path wire).
+    counter: PathCounter | None = Field(
+        default=None,
+        description=(
+            "Dose counter. Wire: always emit object; "
+            "target=-1 means absent."
+        ),
+    )
+    timeline: PathTimeline | None = Field(
+        default=None,
+        description=(
+            "Session axis. Wire: always emit; duration_sec=-1 means absent."
+        ),
+    )
+    interval_plan: PathIntervalPlan | None = Field(
+        default=None,
+        description=(
+            "Circuit segments. Wire: always emit; empty segments means absent."
+        ),
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_plugin_stubs(cls, data: object) -> object:
+        if not isinstance(data, dict):
+            return data
+        out = dict(data)
+        counter = out.get("counter")
+        if isinstance(counter, dict):
+            target = counter.get("target", -1)
+            if target is None or target == -1 or target == "":
+                out["counter"] = None
+        timeline = out.get("timeline")
+        if isinstance(timeline, dict):
+            duration = timeline.get("duration_sec", -1)
+            markers = timeline.get("markers") or []
+            if duration is None or duration == -1 or duration == "" or (
+                isinstance(duration, int) and duration < 1 and not markers
+            ):
+                out["timeline"] = None
+        interval = out.get("interval_plan")
+        if isinstance(interval, dict):
+            segments = interval.get("segments") or []
+            if not segments:
+                out["interval_plan"] = None
+        return out
+
+
+class ActionPluginsMaterialize(BaseModel):
+    """Create #3 response: fill plugins for hinted actions."""
+
+    actions: list[ActionPluginPayload] = Field(
+        default_factory=list,
+        description=(
+            "Plugin payloads for actions that had plugin_hints. "
+            "Prefer all hinted actions in the cycle (MVP)."
+        ),
+    )
+
+
+def _path_llm_schema() -> dict:
+    """Structured-output schema for Anthropic Path create #2 / refine / repair.
+
+    Drop ``resources`` / ``milestones`` and full plugin objects (timers /
+    timeline / interval_plan / counter) — grammar budget. Actions carry
+    ``plugin_hints`` only; payloads materialize in a separate #3 call.
     """
     schema = PathState.model_json_schema()
     props = schema.get("properties")
@@ -628,8 +712,33 @@ def _path_llm_schema() -> dict:
         schema["required"] = [
             key for key in required if key not in ("resources", "milestones")
         ]
+
+    defs = schema.get("$defs") or schema.get("definitions")
+    if isinstance(defs, dict):
+        action = defs.get("PathAction")
+        if isinstance(action, dict):
+            action_props = action.get("properties")
+            if isinstance(action_props, dict):
+                for key in _PATH_WIRE_DROP_ACTION_KEYS:
+                    action_props.pop(key, None)
+            action_req = action.get("required")
+            if isinstance(action_req, list):
+                action["required"] = [
+                    key
+                    for key in action_req
+                    if key not in _PATH_WIRE_DROP_ACTION_KEYS
+                ]
+        for def_name in _PATH_WIRE_DROP_DEFS:
+            defs.pop(def_name, None)
     return schema
+
+
+def _plugins_materialize_schema() -> dict:
+    """Tiny schema for create #3 — action_id → full plugin payloads."""
+    return ActionPluginsMaterialize.model_json_schema()
 
 
 # Used for Anthropic structured outputs (create path phase, refine, repair).
 PATH_RESPONSE_SCHEMA: dict = _path_llm_schema()
+# Create #3 after Start — full plugin objects, no Path skeleton.
+PLUGINS_MATERIALIZE_SCHEMA: dict = _plugins_materialize_schema()

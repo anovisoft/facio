@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.errors import ConflictError, NotFoundError, ValidationAppError
-from app.models import Action, Project, ProjectStatus, StateVersion, User
+from app.models import Action, ConversationTurn, Project, ProjectStatus, StateVersion, User
 from app.schemas.api import (
     ActionResponse,
     ProjectDetail,
@@ -19,7 +19,11 @@ from app.schemas.api import (
 )
 from app.schemas.path_state import PathState
 from app.services.audit import AuditService, EventType
-from app.services.path_materialize import ensure_action_keys, materialize_path
+from app.services.path_materialize import (
+    ensure_action_keys,
+    materialize_path,
+    path_plugins_ready,
+)
 from app.services.serializers import (
     action_queue_key,
     pick_next_action,
@@ -210,17 +214,54 @@ class ProjectService:
                 cycle = serialize_cycle_from_state(state)
             if not days and state is not None:
                 days = serialize_days_from_state(state)
+            # Overlay plugin_hints from PathState (ORM has no hints column).
+            if state is not None:
+                hints_by_key = {
+                    (a.id or f"a{i}"): list(a.plugin_hints or [])
+                    for i, a in enumerate(state.actions)
+                }
+                actions = [
+                    a.model_copy(
+                        update={"plugin_hints": hints_by_key.get(a.key or "", [])}
+                    )
+                    for a in actions
+                ]
 
         next_action = None
         if project.status == ProjectStatus.active:
             next_orm = pick_next_action(project)
             next_action = serialize_action(next_orm) if next_orm else None
+            if next_action is not None and state is not None:
+                for i, sa in enumerate(state.actions):
+                    key = sa.id or f"a{i}"
+                    if key == next_action.key:
+                        next_action = next_action.model_copy(
+                            update={"plugin_hints": list(sa.plugin_hints or [])}
+                        )
+                        break
         current_day = resolve_current_day(
             cycle=cycle,
             days=days,
             next_action=next_action,
             actions=actions,
         )
+
+        path_ready = (
+            bool(actions) if project.status == ProjectStatus.draft else True
+        )
+        path_error = None
+        if project.status == ProjectStatus.draft and not path_ready:
+            path_error = await self._latest_path_error(project.id)
+
+        plugins_ready = True
+        if state is not None:
+            plugins_ready = path_plugins_ready(state)
+            # Active project waiting on #3: state may still lack payloads.
+            if (
+                project.status == ProjectStatus.active
+                and not plugins_ready
+            ):
+                plugins_ready = False
 
         summary = ProjectSummary.model_validate(
             project, from_attributes=True
@@ -240,8 +281,26 @@ class ProjectService:
             resources=resources,
             milestones=milestones,
             current_version=version,
-            path_ready=bool(actions) if project.status == ProjectStatus.draft else True,
+            path_ready=path_ready,
+            path_error=path_error,
+            plugins_ready=plugins_ready,
         )
+
+    async def _latest_path_error(self, project_id: UUID) -> str | None:
+        result = await self.db.execute(
+            select(ConversationTurn)
+            .where(
+                ConversationTurn.project_id == project_id,
+            )
+            .order_by(ConversationTurn.created_at.desc())
+            .limit(20)
+        )
+        for turn in result.scalars().all():
+            meta = turn.meta or {}
+            if meta.get("kind") == "path_error":
+                err = meta.get("error")
+                return str(err) if err else turn.content
+        return None
 
     async def commit(
         self,

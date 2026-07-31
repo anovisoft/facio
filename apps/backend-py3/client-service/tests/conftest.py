@@ -52,7 +52,9 @@ from tests.factories import (
     refined_path_state,
     sample_create_path,
     sample_fitness_path_state,
+    sample_fitness_plugins_materialize,
     sample_path_state,
+    sample_plugins_materialize,
 )
 
 get_settings.cache_clear()
@@ -76,10 +78,33 @@ async def wait_path_ready(
         )
         assert response.status_code == 200
         last = response.json()
+        if last.get("path_error"):
+            raise AssertionError(f"path generation failed: {last['path_error']}")
         if last.get("path_ready"):
             return last
         await asyncio.sleep(0.05)
     raise AssertionError(f"path_ready never became true: {last}")
+
+
+async def wait_plugins_ready(
+    client: AsyncClient,
+    auth_headers: dict[str, str],
+    project_id: str,
+    *,
+    attempts: int = 40,
+) -> dict[str, Any]:
+    """Poll GET project until phase-3 plugin materialize finishes."""
+    last: dict[str, Any] | None = None
+    for _ in range(attempts):
+        response = await client.get(
+            f"/api/v1/projects/{project_id}", headers=auth_headers
+        )
+        assert response.status_code == 200
+        last = response.json()
+        if last.get("plugins_ready"):
+            return last
+        await asyncio.sleep(0.05)
+    raise AssertionError(f"plugins_ready never became true: {last}")
 
 
 class ScriptedLLMProvider(LLMProvider):
@@ -197,7 +222,7 @@ def auth_headers(device_id: str) -> dict[str, str]:
 @pytest.fixture
 def enqueue_path(llm: ScriptedLLMProvider) -> Callable[..., None]:
     def _enqueue(**overrides: Any) -> None:
-        # Phase 1 gate (start surface) + phase 2 PathState.
+        # Phase 1 gate (start surface) + phase 2 Path skeleton + hints.
         path = sample_create_path(**overrides)["path"]
         llm.enqueue(
             "create",
@@ -223,6 +248,8 @@ def enqueue_path(llm: ScriptedLLMProvider) -> Callable[..., None]:
             },
         )
         llm.enqueue("create", path)
+        # Phase 3 after commit — plugins for hinted actions.
+        llm.enqueue("plugins", sample_plugins_materialize())
 
     return _enqueue
 
@@ -255,6 +282,7 @@ def enqueue_fitness(llm: ScriptedLLMProvider) -> Callable[..., None]:
             },
         )
         llm.enqueue("create", path)
+        llm.enqueue("plugins", sample_fitness_plugins_materialize())
 
     return _enqueue
 

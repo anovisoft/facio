@@ -1,5 +1,6 @@
 import React, {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -97,6 +98,22 @@ export function ProjectHomeScreen({
       return () => abortRef.current?.abort();
     }, [load]),
   );
+
+  // Poll while phase-3 plugins are still materializing after Start.
+  useEffect(() => {
+    if (!project || project.plugins_ready !== false || busy) return;
+    const timer = setInterval(() => {
+      void (async () => {
+        try {
+          const detail = await getProject(projectId);
+          setProject(detail);
+        } catch {
+          // Keep showing skeleton; next tick retries.
+        }
+      })();
+    }, 1500);
+    return () => clearInterval(timer);
+  }, [project, busy, projectId]);
 
   const refreshAfterMutation = async () => {
     const detail = await getProject(projectId);

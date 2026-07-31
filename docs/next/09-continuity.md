@@ -22,7 +22,8 @@
 | 1 | Narrative (title/summary) + batch clarify + comment | **одобрен** (+ UX: custom answer, keyboard, header, back button) |
 | 2 | Cycle + days/kind + Home «день N» + Path day map | **одобрен** (+ hierarchy PathList, rest nesting) |
 | 3 | TimerStack + Counter | **dogfood ок** |
-| 3′ | Progressive create + clock UX (timeline/interval) + схлоп Accept | **код готов** (A+B); ждёт dogfood |
+| 3′ | Progressive create + clock UX + схлоп Accept | **в коде:** #2 Path+hints / #3 plugins after start |
+
 | 4 | Repair на живом плане | не начат |
 | 5 | Next cycle CTA | не начат |
 
@@ -44,23 +45,27 @@ Accept дублирует draft: карта уже полная на create (H1 
 
 Следствие для Среза 4: реализовать Repair уже как универсальную мутацию живого плана, не как заплатку на мёртвый draft-цикл.
 
-### B. Progressive create — slim первый кадр
+### B. Progressive create — 3 фазы (зафиксировано после hang dogfood)
 
-~20с до первого отклика убивает ощущение. Path = gate + полный PathState слишком поздно показывает пользу.
+Hang: slim кадр пришёл, «Собираю полный план…» навсегда. Причина: phase-2 Path+**все plugins** → Anthropic **400 grammar too large**. Failed llm_call откатывался вместе с job → в `llm_calls` виден только успешный gate.
 
-**Направление create:**
+**Канон create (path):**
 
-1. **Slim call (фаза 1)** — выбирает путь **и** даёт минимальную поверхность:
-   - `instant_answer` → ответ сразу
-   - `path` → paraphrase / title / summary-черновик + batch questions (+ опционально грубый outline дней, **без** plugins / полного PathState)
-2. Пользователь сразу видит «ведём к…» и может отвечать на уточнения.
-3. **Полный Path + plugins** — фаза 2 на фоне; UI мягко подменяется, когда готов.
+| # | Когда | Что | Schema |
+|---|--------|-----|--------|
+| **1** | сразу | Gate + start surface (paraphrase/title/summary/questions/outline) | маленькая (уже есть) |
+| **2** | фон после #1 | Полный Path **без** plugins; на action — короткие **plugin hints** | Path без timers/timeline/interval/counter objects |
+| **3** | после «Начать сегодня» | Materialize plugins (timeline/interval/timers/counter) по hints | крошечная, можно позже дробить на несколько #3 с разными форматами |
 
-Не путать с «прятать маршрут до Accept»: скрываем только **полноту исполняемого слоя**, не первый полезный сигнал.
+Instant = только #1.
 
-Slim-схема обязана остаться маленькой (grammar). Не тащить plugins/`days[]` целиком в фазу 1.
+**Hints на плане (не live UI):** например `plugin_hints: ["timeline"]` / `["counter","interval"]` — badge «будет таймлайн», не полный progress bar.
 
-Текущий gate (`kind` + instant only) — промежуточный шаг; расширить до «start surface».
+**Не делаем:** отдельную кнопку «Загрузить плагины» как главный жест (техдолг). Retry — только если #3 упал.
+
+**Позже:** если plugins разрастутся — несколько запросов #3 с разными response formats (clock отдельно от counter и т.д.).
+
+Планирование = смысл + дни + шаги (+ анонс tools). Использование = исполняемые plugins. «Начать сегодня» = граница preview→live (+ kick #3).
 
 ### C. Семейство clock-плагинов (не только плоский TimerStack)
 
@@ -72,9 +77,10 @@ Dogfood карбонары: плоский `timers[]` есть, но юзабе�
 | **Timeline** | Одна ось + markers `{at_sec, title, signal}` + progress | Карбонара: 0 → 2' помешать → 5' → 8' alert |
 | **Interval plan** | Последовательность сегментов + **pause/resume** | 40s упр. → 20s отдых → 40s упр. |
 
-Общий runtime-движок часов (elapsed, pause, complete segment/marker); LLM выбирает shape на шаге. Схему **не раздувать** тремя монстрами — заменить/дополнить peer-list timeline/interval там, где ось нужна.
+Общий runtime-движок часов (elapsed, pause, complete segment/marker).  
+**На wire create #2 plugins не тащить** — только hints; полные shapes в #3 после start (см. B).
 
-Slice 3 закрыл «plugins есть». Timeline / interval — следующий слой плагина (не блокер Repair, но must до объявления runtime wedge «готово»).
+Slice 3 закрыл «plugins есть в модели/UI». Slice 3′: progressive + clock UI; grammar → split #2/#3.
 
 ---
 
@@ -105,7 +111,13 @@ Slice 3 закрыл «plugins есть». Timeline / interval — следую�
    - Legacy `CREATE_RESPONSE_SCHEMA` **не** шлётся в Anthropic (только тесты / сборка)
 - Path-create → **2** строки в `llm_calls` (gate + path); клиент поллит GET до `path_ready`
 - `resources` / `milestones` убраны с Anthropic wire (сервер → `[]`); в модели API поля живы
-- Path wire после clock family (~4383 chars) — ещё под потолком 4500; Strategy C если снова 400
+
+4. **Решение B (Slice 3′ fix):** Path wire **без** plugin objects + `plugin_hints[]`; полный clock/counter — call **#3** после Start:
+   - `PATH_RESPONSE_SCHEMA` Anthropic wire ≈ **2996 chars** (было ~4383 с plugins → grammar 400; цель ≤~3k)
+   - `PLUGINS_MATERIALIZE_SCHEMA` ≈ **1853 chars** (action_id → timers/timeline/interval_plan/counter)
+   - Gate ≈ **1380 chars** (без изменений)
+   - Failed #2/#3: `llm_calls` + `path_error` turn **коммитятся** (не rollback audit)
+   - UI: Draft крутит spinner только пока нет `path_error`; Home поллит `plugins_ready`
 
 ### Запасной ход (ещё не включали)
 
@@ -158,13 +170,13 @@ title + summary плана
 - `interval_plan`: segments[] (`sec` on wire = segment `duration_sec`; API exposes `duration_sec`). Stub `{segments:[]}` → null
 - checklist как было
 
-Wire slim trick: shared `PathClockBeat` `{sec, title, signal}` for timeline markers and interval segments (Path wire ~4383 chars, under 4500 ceiling).
+Wire slim trick: shared `PathClockBeat` `{sec, title, signal}` for timeline markers and interval segments — used on **#3** materialize wire only (not on Path #2).
 
-UI: draft/accept — preview disabled; Home/Path live — Start таймеров, timeline progress + pause, interval play/pause, ± каунтера.  
+UI: draft — plugin **hint chips** when hints present and payloads empty; Home/Path live — Start таймеров, timeline progress + pause, interval play/pause, ± каунтера after #3.  
 Сигналы: nudge = короткая вибро; alert = сильнее + notification.  
-API: `POST .../counter`, `POST .../timers/{id}/complete`. Timeline/interval runtime — client-side (v1), plan data persisted on actions JSONB (`008_clock_plugins`).
+API: `POST .../counter`, `POST .../timers/{id}/complete`. Timeline/interval runtime — client-side (v1), plan data persisted on actions JSONB (`008_clock_plugins`). ProjectDetail: `path_ready`, `path_error`, `plugins_ready`.
 
-Эталоны: карбонара cook → **timeline** (+ optional simple timer for guanciale); отжимания day0 → **interval_plan** circuit + counter; other train → counters.
+Эталоны: карбонара cook → **hint timeline** (+ optional timers) → #3 timeline; отжимания day0 → **hints interval+counter** → #3 payloads; other train → counter hints.
 
 Миграции: `005` narrative → `006` cycle/schedule → `007` action plugins → `008` timeline/interval_plan.
 
@@ -174,9 +186,9 @@ API: `POST .../counter`, `POST .../timers/{id}/complete`. Timeline/interval runt
 
 | Тема | Заметка |
 |------|---------|
-| Progressive create | **done (часть A Среза 3′)**: slim `path_start` + background Path; Accept схлопнут в «Начать сегодня» на DraftStudio |
+| Progressive create | **done (Срез 3′)**: #1 gate → #2 Path+hints → #3 plugins after Start; Accept схлопнут в «Начать сегодня» |
 | Always-editable план | Accept-дубль PathList убран; Repair = общий edit (решение A) — рамка для Среза 4+ |
-| Timeline / Interval plugins | **в коде (Срез 3′ B)** — карбонара timeline; fitness day0 interval+pause; TimerStack сохранён |
+| Timeline / Interval plugins | **в коде** — #2 hints; #3 materialize; live UI after Start |
 | Clarify options отжиманий | Не мешать ось «сколько раз» и «с колен/стены» в одном ряду чипов |
 | Home перегружен | Много labels; declutter вместе с контролами / always-editable |
 | 8 недель vs cycle 7 дней | Narrative программы vs текущий cycle — явно на next cycle (Срез 5) |
@@ -184,23 +196,24 @@ API: `POST .../counter`, `POST .../timers/{id}/complete`. Timeline/interval runt
 | Latency path-фазы | Полный Path всё ещё ~десятки секунд — ок на фоне, если slim уже на экране; резать tokens_out / few-shots |
 | resources/milestones | Не в structured wire — вернуть иначе, если понадобятся |
 | Strategy C | Fallback без structured outputs, если снова grammar 400 |
+| Split #3 formats | Позже: несколько #3 с разными response formats (clock vs counter) |
 
 ---
 
 ## Следующий шаг
 
-Срез 3′ **A+B в коде**. Dogfood → одобрение → Срез 4.
+Срез 3′: #2 Path+hints / #3 plugins after start **в коде** (wire Path ≈2996).  
+**Dogfood** на эталонах → одобрение 3′ → Срез 4.
 
-### Dogfood 3′
+### Dogfood после фикса
 
-1. Restart backend + `alembic upgrade head` (через `008`)
-2. Create карбонара → slim кадр (title/summary/questions) быстро → «Собираю полный план…» → PathList с **timeline**; «Начать сегодня» → Home, Start timeline + pause; guanciale timer ещё работает
-3. Create отжимания → day0 **interval** + pause; counters на других днях
-4. Instant `2^100` → один LLM call
-5. Нет экрана Accept с дублем PathList
-6. Нет grammar 400; path-create: gate + background path (poll `path_ready`)
+1. Restart backend + миграции при необходимости
+2. Create карбонара → slim → план с timeline hint (**не hang**) → «Начать сегодня» → #3 plugins → timeline live
+3. Отжимания → hints → после start interval/counter
+4. Failed llm_calls остаются в audit; UI не крутит спиннер вечно (`path_error`)
+5. Instant `2^100` ок; нет Accept-дубля
 
-Риск: phase-2 fail оставляет `path_ready=false` без retry UI.
+Потом → одобрение 3′ → Срез 4.
 
 ---
 
@@ -215,9 +228,10 @@ API: `POST .../counter`, `POST .../timers/{id}/complete`. Timeline/interval runt
 | Область | Где |
 |---------|-----|
 | Gate / create split | `app/schemas/create_response.py`, `app/services/path.py` (`create_from_intent`) |
+| Path #2 / plugins #3 | `path_state.PATH_RESPONSE_SCHEMA`, `PLUGINS_MATERIALIZE_SCHEMA`; `complete_materialize_plugins_job` |
 | Промпты / sentinels / normalize | `app/services/path_llm.py` |
 | Wire transform Anthropic | `app/providers/anthropic_llm.py` |
-| PathState + plugins + wire drop resources | `app/schemas/path_state.py` |
-| Path UI hierarchy | `apps/mobapp-rn/src/shared/ui/PathList.tsx` |
-| Home plugins | `ProjectHomeScreen.tsx` + plugin components |
+| PathState + plugins + hints | `app/schemas/path_state.py` |
+| Path UI hierarchy + hint chips | `apps/mobapp-rn/src/shared/ui/PathList.tsx` |
+| Home plugins + plugins_ready poll | `ProjectHomeScreen.tsx` + plugin components |
 | План срезов | [08](./08-impl-plan.md) |

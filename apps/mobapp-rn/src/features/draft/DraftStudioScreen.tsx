@@ -111,11 +111,15 @@ export function DraftStudioScreen({
     }, [load, refreshBackAvailability, seed]),
   );
 
-  const pathReady = project?.path_ready !== false && (project?.actions.length ?? 0) > 0;
+  const pathError = project?.path_error ?? null;
+  const pathReady =
+    !pathError &&
+    project?.path_ready !== false &&
+    (project?.actions.length ?? 0) > 0;
 
   // Poll while full Path is still generating in the background.
   useEffect(() => {
-    if (!project || pathReady || busy || committing) return;
+    if (!project || pathReady || pathError || busy || committing) return;
     const timer = setInterval(() => {
       void (async () => {
         try {
@@ -127,7 +131,7 @@ export function DraftStudioScreen({
       })();
     }, PATH_POLL_MS);
     return () => clearInterval(timer);
-  }, [project, pathReady, busy, committing, projectId]);
+  }, [project, pathReady, pathError, busy, committing, projectId]);
 
   useEffect(() => {
     if (!pathReady || acceptTrackedRef.current) return;
@@ -301,10 +305,20 @@ export function DraftStudioScreen({
 
       {!pathReady ? (
         <View style={styles.pathLoading}>
-          <ActivityIndicator color={colors.primary} />
-          <Text style={[styles.muted, { color: colors.textSecondary, flex: 1 }]}>
-            {t('draft.pathLoading')}
-          </Text>
+          {pathError ? (
+            <Text style={[styles.error, { color: colors.error, flex: 1 }]}>
+              {t('draft.pathError')}
+            </Text>
+          ) : (
+            <>
+              <ActivityIndicator color={colors.primary} />
+              <Text
+                style={[styles.muted, { color: colors.textSecondary, flex: 1 }]}
+              >
+                {t('draft.pathLoading')}
+              </Text>
+            </>
+          )}
         </View>
       ) : (
         <PathList

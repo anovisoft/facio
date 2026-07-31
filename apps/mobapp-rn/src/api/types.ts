@@ -130,6 +130,8 @@ export interface ActionResponse {
   group_key?: string | null;
   group_title?: string | null;
   checklist_items: ChecklistItemResponse[];
+  /** Create #2 tool announcements; full plugins arrive after Start. */
+  plugin_hints?: string[];
   timers: TimerResponse[];
   counter?: CounterResponse | null;
   timeline?: ActionTimelineResponse | null;
@@ -164,8 +166,12 @@ export interface ProjectDetail extends ProjectSummary {
   resources: string[];
   milestones: string[];
   current_version?: number | null;
-  /** False while progressive create phase-2 Path+plugins is still generating. */
+  /** False while progressive create phase-2 Path skeleton is still generating. */
   path_ready?: boolean;
+  /** Set when phase-2 failed — stop polling, show error. */
+  path_error?: string | null;
+  /** False while phase-3 plugin materialize runs after Start. */
+  plugins_ready?: boolean;
 }
 
 export interface InstantAnswerResponse {

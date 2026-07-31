@@ -7,7 +7,7 @@ from typing import Any
 
 from app.providers.anthropic_llm import _anthropic_json_schema
 from app.schemas.create_response import CREATE_GATE_SCHEMA, CREATE_RESPONSE_SCHEMA
-from app.schemas.path_state import PATH_RESPONSE_SCHEMA
+from app.schemas.path_state import PATH_RESPONSE_SCHEMA, PLUGINS_MATERIALIZE_SCHEMA
 
 
 def _defs(schema: dict) -> dict:
@@ -123,21 +123,23 @@ def test_wire_schema_collapses_nullable_anyof() -> None:
 
 
 def test_wire_schema_size_smoke() -> None:
-    """Guard against grammar blow-ups (Slice 2 cycle/days + Slice 3 plugins).
+    """Guard against grammar blow-ups (Slice 2 cycle/days + Slice 3′ hints).
 
-    Create is split: gate (tiny) + PathState-only. Dual-branch CREATE_RESPONSE
-    must NOT be sent to Anthropic.
+    Create is split: gate (tiny) + PathState-without-plugins + hints.
+    Dual-branch CREATE_RESPONSE must NOT be sent to Anthropic.
     """
     path = _anthropic_json_schema(PATH_RESPONSE_SCHEMA)
     gate = _anthropic_json_schema(CREATE_GATE_SCHEMA)
+    plugins = _anthropic_json_schema(PLUGINS_MATERIALIZE_SCHEMA)
     path_m = _schema_metrics(path)
     gate_m = _schema_metrics(gate)
+    plugins_m = _schema_metrics(plugins)
 
     # Pre-split CREATE wire was ~4.5k and failed Anthropic grammar compile.
-    # Path-only after dropping resources/milestones should stay under ceiling.
-    # Gate includes slim path_start (narrative + questions) — keep << Path wire.
-    assert path_m["chars"] < 4500, path_m
+    # Path+full plugins (~4383) still failed; Path+hints must stay well under.
+    assert path_m["chars"] < 3200, path_m
     assert gate_m["chars"] < 1800, gate_m
+    assert plugins_m["chars"] < 2500, plugins_m
     assert path_m["anyOf_null"] == 0
     assert gate_m["anyOf_null"] == 0
     assert gate_m["descriptions"] == 0
@@ -158,34 +160,38 @@ def test_path_wire_omits_resources_milestones() -> None:
     assert "days" in props
 
 
-def test_wire_schema_includes_plugin_defs() -> None:
+def test_path_wire_has_hints_not_plugin_objects() -> None:
     out = _anthropic_json_schema(PATH_RESPONSE_SCHEMA)
     defs = _defs(out)
-    assert "PathTimer" in defs
-    assert "PathCounter" in defs
-    assert "PathClockBeat" in defs
-    assert "PathTimeline" in defs
-    assert "PathIntervalPlan" in defs
+    assert "PathTimer" not in defs
+    assert "PathCounter" not in defs
+    assert "PathClockBeat" not in defs
+    assert "PathTimeline" not in defs
+    assert "PathIntervalPlan" not in defs
     action = defs["PathAction"]["properties"]
-    assert "timers" in action
-    assert "counter" in action
-    assert "timeline" in action
-    assert "interval_plan" in action
-    # Counter is required object on wire (null collapsed); not anyOf-null.
-    assert action["counter"] == {"$ref": "#/$defs/PathCounter"}
-    assert action["timeline"] == {"$ref": "#/$defs/PathTimeline"}
-    assert action["interval_plan"] == {"$ref": "#/$defs/PathIntervalPlan"}
-    timer_props = defs["PathTimer"]["properties"]
-    assert timer_props["signal"]["enum"] == ["nudge", "alert"]
-    assert "parallel_group" in timer_props
-    assert timer_props["parallel_group"] == {"type": "string"}
-    counter_props = defs["PathCounter"]["properties"]
-    assert set(counter_props) == {"label", "target", "current", "step"}
-    for key in counter_props:
-        assert key in (defs["PathCounter"].get("required") or [])
-    beat_props = defs["PathClockBeat"]["properties"]
-    assert set(beat_props) == {"sec", "title", "signal"}
-    assert beat_props["signal"]["enum"] == ["nudge", "alert"]
+    assert "plugin_hints" in action
+    assert "timers" not in action
+    assert "counter" not in action
+    assert "timeline" not in action
+    assert "interval_plan" not in action
+
+
+def test_plugins_materialize_wire_has_plugin_defs() -> None:
+    out = _anthropic_json_schema(PLUGINS_MATERIALIZE_SCHEMA)
+    defs = _defs(out)
+    assert "PathTimer" in defs or "ActionPluginPayload" in defs
+    # Payload model embeds timer/counter/timeline defs.
+    payload = None
+    for name, node in defs.items():
+        props = (node or {}).get("properties") or {}
+        if "action_id" in props and "timers" in props:
+            payload = props
+            break
+    assert payload is not None
+    assert "timers" in payload
+    assert "counter" in payload
+    assert "timeline" in payload
+    assert "interval_plan" in payload
 
 
 def test_create_gate_wire_has_no_path_branch() -> None:

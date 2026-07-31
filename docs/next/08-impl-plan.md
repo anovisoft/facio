@@ -153,28 +153,32 @@ Plugins на create есть, но: (1) ~20с пустоты до первого
 
 ### Входит
 
-- Slim фаза 1 = ветка + минимальная поверхность (title/summary/paraphrase + questions; без полного Path/plugins)
-- Полный Path на фоне → подмена UI
-- Timeline (progress + markers) для cook; Interval plan + pause для тренировок; TimerStack сохранить где уместен
-- Убрать или сильно облегчить Accept-дубль PathList (жест «начать» на экране плана)
+- Slim фаза 1 = ветка + start surface
+- Фаза 2 = Path **без** plugins + **plugin hints** на actions (фон; UI подмена)
+- Фаза 3 = materialize plugins **после** «Начать сегодня» (маленькая schema; позже можно N×#3)
+- Timeline / Interval / TimerStack / Counter в модели+UI (live после #3)
+- Схлоп Accept → «Начать сегодня»
+- Failed phase-2/3: не вечный спиннер; llm_calls с error не rollback’ать
 
 ### Не входит
 
 - Полноценный Repair playbook (Срез 4)
 - Next cycle (Срез 5)
 - Chat-home
+- Кнопка «Загрузить плагины» как главный CTA
 
 ### DoD
 
-- [ ] Path-intent: полезный кадр заметно раньше полного Path (вопросы/смысл на экране)
-- [ ] Карбонара: timeline с маркерами, не только peer-таймеры
-- [ ] Хотя бы один fitness-кейс с interval + pause (или явный noop с обоснованием в dogfood)
-- [ ] Нет обязательного экрана с полным повторным PathList как «Accept»
+- [ ] Path-intent: полезный кадр раньше полного Path; план доезжает **без** grammar 400
+- [ ] На плане видны hints tools, не обязателен полный disabled clock UI
+- [ ] После Start: карбонара получает timeline (live); fitness — interval/counter где hint
+- [ ] Нет обязательного Accept с дублем PathList
+- [ ] Failed create path виден в llm_calls / UI не крутит спиннер вечно
 
 ### Контекст субагенту
 
-Прочитать: 02, 03 (C′), 04 (clock family), 05 (first-run направление), 09 (решения A–C).  
-Grammar: slim schema не раздувать; не возвращать dual-branch full Path+instant.
+Прочитать: 02, 03 (C′), 04 (clock family), 05, **09 решение B (3 фазы)**.  
+Grammar: #2 без plugin objects; #3 отдельно; не dual-branch Path+instant.
 
 ---
 
@@ -262,6 +266,7 @@ Multi-day без «не могу сегодня» умирает к дню 3. Sk
 | Срез 1 | одобрен (включая UX-фиксы draft) |
 | Срез 2 | одобрен |
 | Срез 3 | dogfood ок (plugins + split gate); UX clock / latency → 3′ |
-| Срез 3′ | **код готов** (A progressive+Accept + B timeline/interval) — ждёт dogfood |
+| Срез 3′ | **в коде:** #2 Path+hints / #3 after Start; ждёт dogfood / одобрение |
+
 | Срез 4 | ждёт после 3′ (рамка: живой план) |
 | Срез 5 | не начат |

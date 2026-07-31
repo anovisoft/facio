@@ -201,6 +201,7 @@ def serialize_action(action: Action) -> ActionResponse:
             ChecklistItemResponse.model_validate(item, from_attributes=True)
             for item in sorted(action.checklist_items, key=lambda i: i.sort)
         ],
+        plugin_hints=[],
         timers=_serialize_timers_from_orm(action.timers),
         counter=_serialize_counter_from_orm(action.counter),
         timeline=_serialize_timeline_from_orm(action.timeline),
@@ -370,6 +371,7 @@ def serialize_path_state(
                 group_key=group_key,
                 group_title=group_spec.title if group_spec else None,
                 checklist_items=checklist,
+                plugin_hints=list(item.plugin_hints),
                 timers=_serialize_timers_from_state(item.timers),
                 counter=_serialize_counter_from_state(item.counter),
                 timeline=_serialize_timeline_from_state(item.timeline),

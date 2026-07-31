@@ -13,20 +13,28 @@ from app.schemas.create_response import (
     InstantAnswerPayload,
     PathStartSurface,
 )
-from app.schemas.path_state import PATH_RESPONSE_SCHEMA, PathState
+from app.schemas.path_state import (
+    PATH_RESPONSE_SCHEMA,
+    PLUGINS_MATERIALIZE_SCHEMA,
+    ActionPluginsMaterialize,
+    PathState,
+)
 
 __all__ = [
     "CREATE_GATE_SCHEMA",
     "CREATE_RESPONSE_SCHEMA",
     "PATH_RESPONSE_SCHEMA",
+    "PLUGINS_MATERIALIZE_SCHEMA",
     "messages_for_create",
     "messages_for_create_gate",
     "messages_for_create_path",
+    "messages_for_materialize_plugins",
     "messages_for_refine",
     "messages_for_repair",
     "parse_create_gate",
     "parse_create_response",
     "parse_path_state",
+    "parse_plugins_materialize",
 ]
 
 _SAFETY = """\
@@ -49,15 +57,23 @@ _WIRE_SENTINELS = """\
 
 Structured output forbids null on optional path fields. Use:
 - missing optional string → "" (id, detail, group_id, goal_for_cycle, \
-  day title/summary, group description, checklist id, timer id, \
-  timer parallel_group, counter label)
+  day title/summary, group description, checklist id)
 - missing optional int → -1 (estimate_min, sort; never for a real day_offset)
-- no counter on a step → counter stub object \
+- unused create branch → empty stub object (not null): see Response shape
+
+Create #2 / refine Path wire does NOT include timers/timeline/interval_plan/\
+counter objects — only plugin_hints[]. Full plugins are a later call (#3).
+"""
+
+_PLUGIN_WIRE_SENTINELS = """\
+## Plugin wire sentinels (materialize #3 only)
+
+- no counters on a step → counter stub \
   {label:"", target:-1, current:0, step:1} (not null)
 - no timers → timers: []
 - no timeline → timeline stub {duration_sec:-1, markers:[]} (not null)
 - no interval_plan → interval_plan stub {segments:[]} (not null)
-- unused create branch → empty stub object (not null): see Response shape
+- timer id / parallel_group missing → ""
 """
 
 _PATH_FIELDS = """\
@@ -105,21 +121,15 @@ _PATH_FIELDS = """\
   - day_offset: REQUIRED when days[] present — must equal a days[].day_index
   - sort (≥0) or -1 if unspecified; group_id matching groups[].id, or ""
   - checklist_items[]: sub-checks (e.g. eggs ☐); done=false on create; id or ""
-  - Clock family (pick shape; prefer one primary per step):
-    * timers[]: simple TimerStack with manual Start. Each: id (or ""), title, \
-      duration_sec (≥1), signal ("nudge"|"alert"), parallel_group (or ""). \
-      Use for isolated waits (e.g. fry guanciale). Empty [] when unused.
-    * timeline: session axis object ALWAYS present. Real: duration_sec≥1 + \
-      markers[] of {sec, title, signal} where sec=absolute at_sec from start. \
-      Absent → stub {duration_sec:-1, markers:[]}. Carbonara cook MUST use \
-      timeline (0 put pasta → stir nudges → alert done) — not peer stir timers.
-    * interval_plan: ALWAYS present. Real: segments[] of {sec, title, signal} \
-      where sec=duration_sec of the segment. Absent → stub {segments:[]}. \
-      Use for circuit / HIIT (work→rest→work) with pause/resume.
-    * counter: dose object always present. Real: label, target≥1, current=0, \
-      step≥1. Absent → stub {label:"", target:-1, current:0, step:1}.
-  - Push-ups train: counter and/or interval_plan on circuit days; rest → stubs.
-  - Shopping / rest → empty timers, timeline stub, interval stub, counter stub.
+  - plugin_hints[]: short tool announcements ONLY (no plugin objects here):
+      * "timeline" — session axis (carbonara cook MUST hint this)
+      * "timers" — simple manual TimerStack (optional isolated wait)
+      * "interval" — work/rest circuit (fitness day0 circuit)
+      * "counter" — dose/reps target
+      * [] when no tools (shopping, rest)
+      Prefer one primary hint; cook may use ["timeline"] or ["timeline","timers"]; \
+      fitness circuit ["interval","counter"]; other train ["counter"].
+  - Do NOT emit timers[], timeline, interval_plan, or counter objects on Path.
 - questions[]: 0 or 2–4 (max 4) clarifies that change the path; not an interview. \
   Emit the full batch for one round — user answers all at once.
 - Do NOT emit resources[] or milestones[] (server defaults to []).
@@ -134,10 +144,10 @@ _PATH_QUALITY = """\
 - Push-ups / fitness week: days must mix train and rest — rest days are real \
   days with kind=rest (light mobility OK), not identical "do sets" days.
 - Carbonara: cycle.horizon_days=1, one cook_session day.
-- Carbonara cook step: timeline REQUIRED (markers on one axis); optional \
-  simple timers for isolated waits; shopping uses checklist, not clocks.
-- Push-ups: train steps need counter (reps/sets) and/or interval_plan for a \
-  circuit day; rest → stubs.
+- Carbonara cook step: plugin_hints MUST include "timeline" (optional "timers"); \
+  shopping → [].
+- Push-ups: train steps need "counter" and/or "interval" in plugin_hints; \
+  rest → [].
 - First action executable today; honest estimate_min, ideally ≤ 30–60 min.
 - Soft cap ≤ 8–12 actions; prefer checklist over many buy-micro-steps.
 - Cooking: shopping group + cook how-to in detail; not titles only.
@@ -213,7 +223,7 @@ Emit Path JSON only (root object — no kind / instant_answer wrapper).
 
 Align with the start surface the user already saw: keep title/summary/paraphrase \
 close; reuse question ids/prompts when still useful; expand into full cycle, \
-days, actions, and plugins.
+days, actions, and plugin_hints (NOT full plugin payloads).
 
 {_SAFETY}
 
@@ -401,10 +411,7 @@ _FEWSHOT_PATH: dict[str, Any] = {
                         "sort": 3,
                     },
                 ],
-                "timers": [],
-                "counter": dict(_EMPTY_COUNTER_STUB),
-                "timeline": dict(_EMPTY_TIMELINE_STUB),
-                "interval_plan": dict(_EMPTY_INTERVAL_STUB),
+                "plugin_hints": [],
             },
             {
                 "id": "cook",
@@ -420,42 +427,7 @@ _FEWSHOT_PATH: dict[str, Any] = {
                 "sort": 1,
                 "group_id": "cook",
                 "checklist_items": [],
-                "timers": [
-                    {
-                        "id": "guanciale",
-                        "title": "Обжарить гуанчиале",
-                        "duration_sec": 480,
-                        "signal": "nudge",
-                        "parallel_group": "",
-                    },
-                ],
-                "counter": dict(_EMPTY_COUNTER_STUB),
-                "timeline": {
-                    "duration_sec": 480,
-                    "markers": [
-                        {
-                            "sec": 0,
-                            "title": "Паста в воду",
-                            "signal": "nudge",
-                        },
-                        {
-                            "sec": 120,
-                            "title": "Помешать",
-                            "signal": "nudge",
-                        },
-                        {
-                            "sec": 300,
-                            "title": "Помешать ещё",
-                            "signal": "nudge",
-                        },
-                        {
-                            "sec": 480,
-                            "title": "Лапша al dente",
-                            "signal": "alert",
-                        },
-                    ],
-                },
-                "interval_plan": dict(_EMPTY_INTERVAL_STUB),
+                "plugin_hints": ["timeline", "timers"],
             },
         ],
         "questions": [
@@ -555,23 +527,7 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                 "sort": 0,
                 "group_id": "",
                 "checklist_items": [],
-                "timers": [],
-                "counter": {
-                    "label": "повторы",
-                    "target": 24,
-                    "current": 0,
-                    "step": 1,
-                },
-                "timeline": dict(_EMPTY_TIMELINE_STUB),
-                "interval_plan": {
-                    "segments": [
-                        {"sec": 40, "title": "Отжимания", "signal": "nudge"},
-                        {"sec": 20, "title": "Отдых", "signal": "nudge"},
-                        {"sec": 40, "title": "Отжимания", "signal": "nudge"},
-                        {"sec": 20, "title": "Отдых", "signal": "nudge"},
-                        {"sec": 40, "title": "Отжимания", "signal": "alert"},
-                    ],
-                },
+                "plugin_hints": ["interval", "counter"],
             },
             {
                 "id": "d1",
@@ -583,10 +539,7 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                 "sort": 1,
                 "group_id": "",
                 "checklist_items": [],
-                "timers": [],
-                "counter": dict(_EMPTY_COUNTER_STUB),
-                "timeline": dict(_EMPTY_TIMELINE_STUB),
-                "interval_plan": dict(_EMPTY_INTERVAL_STUB),
+                "plugin_hints": [],
             },
             {
                 "id": "d2",
@@ -598,15 +551,7 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                 "sort": 2,
                 "group_id": "",
                 "checklist_items": [],
-                "timers": [],
-                "counter": {
-                    "label": "повторы",
-                    "target": 24,
-                    "current": 0,
-                    "step": 1,
-                },
-                "timeline": dict(_EMPTY_TIMELINE_STUB),
-                "interval_plan": dict(_EMPTY_INTERVAL_STUB),
+                "plugin_hints": ["counter"],
             },
             {
                 "id": "d3",
@@ -618,10 +563,7 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                 "sort": 3,
                 "group_id": "",
                 "checklist_items": [],
-                "timers": [],
-                "counter": dict(_EMPTY_COUNTER_STUB),
-                "timeline": dict(_EMPTY_TIMELINE_STUB),
-                "interval_plan": dict(_EMPTY_INTERVAL_STUB),
+                "plugin_hints": [],
             },
             {
                 "id": "d4",
@@ -633,15 +575,7 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                 "sort": 4,
                 "group_id": "",
                 "checklist_items": [],
-                "timers": [],
-                "counter": {
-                    "label": "повторы",
-                    "target": 27,
-                    "current": 0,
-                    "step": 1,
-                },
-                "timeline": dict(_EMPTY_TIMELINE_STUB),
-                "interval_plan": dict(_EMPTY_INTERVAL_STUB),
+                "plugin_hints": ["counter"],
             },
             {
                 "id": "d5",
@@ -653,10 +587,7 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                 "sort": 5,
                 "group_id": "",
                 "checklist_items": [],
-                "timers": [],
-                "counter": dict(_EMPTY_COUNTER_STUB),
-                "timeline": dict(_EMPTY_TIMELINE_STUB),
-                "interval_plan": dict(_EMPTY_INTERVAL_STUB),
+                "plugin_hints": [],
             },
             {
                 "id": "d6",
@@ -668,15 +599,7 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                 "sort": 6,
                 "group_id": "",
                 "checklist_items": [],
-                "timers": [],
-                "counter": {
-                    "label": "повторы",
-                    "target": 30,
-                    "current": 0,
-                    "step": 1,
-                },
-                "timeline": dict(_EMPTY_TIMELINE_STUB),
-                "interval_plan": dict(_EMPTY_INTERVAL_STUB),
+                "plugin_hints": ["counter"],
             },
         ],
         "questions": [
@@ -754,6 +677,101 @@ _FEWSHOT_GATE_INSTANT: dict[str, Any] = {
     "path_start": dict(_EMPTY_PATH_START_STUB),
 }
 
+_MATERIALIZE_SYSTEM = f"""\
+You fill Facio action plugins after the user started the plan.
+Emit ONLY {{"actions":[...]}} — each item has action_id + plugin payloads.
+Do NOT rewrite the Path skeleton (no title/days/questions).
+
+{_SAFETY}
+
+{_PLUGIN_WIRE_SENTINELS}
+
+## Fields per action
+
+- action_id: MUST match an id from the hinted actions list
+- timers[]: simple TimerStack {{id|"", title, duration_sec≥1, signal, \
+  parallel_group|""}}. Empty [] when unused.
+- timeline: ALWAYS present. Real: duration_sec≥1 + markers[] of \
+  {{sec, title, signal}} (sec = absolute at_sec). Absent → \
+  {{duration_sec:-1, markers:[]}}. Carbonara cook: pasta axis with stir \
+  nudges + alert done — not peer stir timers as the primary shape.
+- interval_plan: ALWAYS present. Real: segments[] of {{sec, title, signal}} \
+  (sec = segment duration_sec). Absent → {{segments:[]}}. Circuits / HIIT.
+- counter: ALWAYS present. Real: label, target≥1, current=0, step≥1. \
+  Absent → {{label:"", target:-1, current:0, step:1}}.
+
+Honor plugin_hints: timeline → real timeline; timers → timers[]; \
+interval → interval_plan; counter → counter. Unused shapes → stubs / [].
+
+Emit one entry per hinted action (all hinted in the cycle for MVP).
+Match user language in titles. Do not chat. JSON only.
+"""
+
+_FEWSHOT_MATERIALIZE_CARBONARA: dict[str, Any] = {
+    "actions": [
+        {
+            "action_id": "cook",
+            "timers": [
+                {
+                    "id": "guanciale",
+                    "title": "Обжарить гуанчиале",
+                    "duration_sec": 480,
+                    "signal": "nudge",
+                    "parallel_group": "",
+                },
+            ],
+            "counter": dict(_EMPTY_COUNTER_STUB),
+            "timeline": {
+                "duration_sec": 480,
+                "markers": [
+                    {"sec": 0, "title": "Паста в воду", "signal": "nudge"},
+                    {"sec": 120, "title": "Помешать", "signal": "nudge"},
+                    {"sec": 300, "title": "Помешать ещё", "signal": "nudge"},
+                    {"sec": 480, "title": "Лапша al dente", "signal": "alert"},
+                ],
+            },
+            "interval_plan": dict(_EMPTY_INTERVAL_STUB),
+        }
+    ]
+}
+
+_FEWSHOT_MATERIALIZE_FITNESS: dict[str, Any] = {
+    "actions": [
+        {
+            "action_id": "d0",
+            "timers": [],
+            "counter": {
+                "label": "повторы",
+                "target": 24,
+                "current": 0,
+                "step": 1,
+            },
+            "timeline": dict(_EMPTY_TIMELINE_STUB),
+            "interval_plan": {
+                "segments": [
+                    {"sec": 40, "title": "Отжимания", "signal": "nudge"},
+                    {"sec": 20, "title": "Отдых", "signal": "nudge"},
+                    {"sec": 40, "title": "Отжимания", "signal": "nudge"},
+                    {"sec": 20, "title": "Отдых", "signal": "nudge"},
+                    {"sec": 40, "title": "Отжимания", "signal": "alert"},
+                ],
+            },
+        },
+        {
+            "action_id": "d2",
+            "timers": [],
+            "counter": {
+                "label": "повторы",
+                "target": 24,
+                "current": 0,
+                "step": 1,
+            },
+            "timeline": dict(_EMPTY_TIMELINE_STUB),
+            "interval_plan": dict(_EMPTY_INTERVAL_STUB),
+        },
+    ]
+}
+
 
 def messages_for_create_gate(intent: str) -> list[dict[str, Any]]:
     """Phase 1: slim schema — kind + instant_answer + path_start surface."""
@@ -822,6 +840,80 @@ def messages_for_create_path(
 def messages_for_create(intent: str) -> list[dict[str, Any]]:
     """Backward-compat alias — prefer messages_for_create_gate."""
     return messages_for_create_gate(intent)
+
+
+def messages_for_materialize_plugins(
+    *,
+    current_state: dict[str, Any],
+    hinted_actions: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Phase 3: fill plugin payloads for actions that have plugin_hints."""
+    return [
+        {"role": "system", "content": _MATERIALIZE_SYSTEM},
+        {
+            "role": "user",
+            "content": json.dumps(
+                {
+                    "hinted_actions": [
+                        {
+                            "action_id": "cook",
+                            "title": "Приготовить карбонару",
+                            "plugin_hints": ["timeline", "timers"],
+                            "detail": "Паста + гуанчиале",
+                        }
+                    ],
+                    "domain": "cooking",
+                },
+                ensure_ascii=False,
+            ),
+        },
+        {
+            "role": "assistant",
+            "content": json.dumps(
+                _FEWSHOT_MATERIALIZE_CARBONARA, ensure_ascii=False
+            ),
+        },
+        {
+            "role": "user",
+            "content": json.dumps(
+                {
+                    "hinted_actions": [
+                        {
+                            "action_id": "d0",
+                            "title": "Круговая сессия",
+                            "plugin_hints": ["interval", "counter"],
+                            "detail": "Работа / отдых",
+                        },
+                        {
+                            "action_id": "d2",
+                            "title": "Подходы отжиманий",
+                            "plugin_hints": ["counter"],
+                            "detail": "3 подхода",
+                        },
+                    ],
+                    "domain": "fitness",
+                },
+                ensure_ascii=False,
+            ),
+        },
+        {
+            "role": "assistant",
+            "content": json.dumps(
+                _FEWSHOT_MATERIALIZE_FITNESS, ensure_ascii=False
+            ),
+        },
+        {
+            "role": "user",
+            "content": json.dumps(
+                {
+                    "outcome": current_state.get("outcome"),
+                    "domain": current_state.get("domain"),
+                    "hinted_actions": hinted_actions,
+                },
+                ensure_ascii=False,
+            ),
+        },
+    ]
 
 
 def messages_for_refine(
@@ -929,6 +1021,15 @@ def normalize_path_wire_dict(data: dict[str, Any]) -> dict[str, Any]:
             action["estimate_min"] = _neg1_to_none(action.get("estimate_min"))
             action["day_offset"] = _neg1_to_none(action.get("day_offset"))
             action["sort"] = _neg1_to_none(action.get("sort"))
+            hints = action.get("plugin_hints")
+            if not isinstance(hints, list):
+                action["plugin_hints"] = []
+            else:
+                cleaned_hints: list[str] = []
+                for hint in hints:
+                    if isinstance(hint, str) and hint.strip():
+                        cleaned_hints.append(hint.strip())
+                action["plugin_hints"] = cleaned_hints
             items = action.get("checklist_items")
             if isinstance(items, list):
                 normalized_items: list[Any] = []
@@ -940,6 +1041,8 @@ def normalize_path_wire_dict(data: dict[str, Any]) -> dict[str, Any]:
                     item["id"] = _empty_to_none(item.get("id"))
                     normalized_items.append(item)
                 action["checklist_items"] = normalized_items
+            # Path #2 wire omits plugins — default empty. Legacy / #3 merge may
+            # still include them; normalize sentinels when present.
             timers = action.get("timers")
             if isinstance(timers, list):
                 normalized_timers: list[Any] = []
@@ -1013,6 +1116,78 @@ def normalize_path_wire_dict(data: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+def normalize_plugin_payload_dict(data: dict[str, Any]) -> dict[str, Any]:
+    """Normalize one ActionPluginPayload wire dict (sentinels → None)."""
+    out = dict(data)
+    timers = out.get("timers")
+    if isinstance(timers, list):
+        normalized_timers: list[Any] = []
+        for timer in timers:
+            if not isinstance(timer, dict):
+                normalized_timers.append(timer)
+                continue
+            timer = dict(timer)
+            timer["id"] = _empty_to_none(timer.get("id"))
+            timer["parallel_group"] = _empty_to_none(
+                timer.get("parallel_group")
+            )
+            normalized_timers.append(timer)
+        out["timers"] = normalized_timers
+    elif timers is None:
+        out["timers"] = []
+    counter = out.get("counter")
+    if isinstance(counter, dict):
+        counter = dict(counter)
+        counter["label"] = _empty_to_none(counter.get("label"))
+        target = counter.get("target", -1)
+        if target is None or target == -1:
+            out["counter"] = None
+        else:
+            out["counter"] = counter
+    timeline = out.get("timeline")
+    if isinstance(timeline, dict):
+        timeline = dict(timeline)
+        duration = timeline.get("duration_sec", -1)
+        markers = timeline.get("markers") or []
+        if not isinstance(markers, list):
+            markers = []
+        normalized_markers: list[Any] = []
+        for marker in markers:
+            if not isinstance(marker, dict):
+                continue
+            marker = dict(marker)
+            if "sec" not in marker and "at_sec" in marker:
+                marker["sec"] = marker.pop("at_sec")
+            normalized_markers.append(marker)
+        timeline["markers"] = normalized_markers
+        if duration is None or duration == -1 or (
+            isinstance(duration, int) and duration < 1
+        ):
+            out["timeline"] = None
+        else:
+            out["timeline"] = timeline
+    interval = out.get("interval_plan")
+    if isinstance(interval, dict):
+        interval = dict(interval)
+        segments = interval.get("segments") or []
+        if not isinstance(segments, list):
+            segments = []
+        normalized_segments: list[Any] = []
+        for segment in segments:
+            if not isinstance(segment, dict):
+                continue
+            segment = dict(segment)
+            if "sec" not in segment and "duration_sec" in segment:
+                segment["sec"] = segment.pop("duration_sec")
+            normalized_segments.append(segment)
+        if not normalized_segments:
+            out["interval_plan"] = None
+        else:
+            interval["segments"] = normalized_segments
+            out["interval_plan"] = interval
+    return out
+
+
 def _is_empty_path_stub(path: Any) -> bool:
     if path is None:
         return True
@@ -1051,6 +1226,32 @@ def parse_path_state(raw_response: Any) -> PathState:
         data.setdefault("resources", [])
         data.setdefault("milestones", [])
     return PathState.model_validate(data)
+
+
+def parse_plugins_materialize(raw_response: Any) -> ActionPluginsMaterialize:
+    if isinstance(raw_response, ActionPluginsMaterialize):
+        return raw_response
+    if isinstance(raw_response, str):
+        data = json.loads(raw_response)
+    elif isinstance(raw_response, dict):
+        data = raw_response
+    else:
+        raise TypeError(
+            f"Unexpected raw_response type: {type(raw_response)!r}"
+        )
+    if not isinstance(data, dict):
+        return ActionPluginsMaterialize.model_validate(data)
+    out = dict(data)
+    actions = out.get("actions")
+    if isinstance(actions, list):
+        normalized: list[Any] = []
+        for item in actions:
+            if isinstance(item, dict):
+                normalized.append(normalize_plugin_payload_dict(item))
+            else:
+                normalized.append(item)
+        out["actions"] = normalized
+    return ActionPluginsMaterialize.model_validate(out)
 
 
 def _is_empty_path_start_stub(payload: Any) -> bool:

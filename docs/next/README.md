@@ -41,9 +41,11 @@
 Зафиксировано:
 
 - Полный маршрут не прячется «до Accept»; **Draft → Accept → live как жёсткий конвейер устарел** — живой план + мутации.
-- Progressive create: slim первый кадр (ветка + смысл + вопросы) → полный Path на фоне.
+- Progressive create: **#1** start → **#2** Path+hints → **#3** plugins after Start (не все plugins на create).
+- На плане — hints; live plugins после старта.
 - Batch clarify + поле комментария.
-- Clock family: TimerStack + Timeline + Interval (pause); Counter; на плане видны, live в сессии.
+- Clock family: TimerStack + Timeline + Interval (pause); Counter; на плане — **hints**, live после Start (#3).
+- Позже: несколько #3 с разными formats, если plugins разрастутся.
 - Schedule / дни программы сразу.
 - Cycles + reuse → следующий цикл.
 - Repair must; тот же класс правок, что refine.
