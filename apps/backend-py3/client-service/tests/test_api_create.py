@@ -3,7 +3,20 @@
 from sqlalchemy import select
 
 from app.models import Event, LlmCall, Project, StateVersion
+from app.schemas.path_state import PATH_RESPONSE_SCHEMA
+from app.schemas.create_response import CREATE_GATE_SCHEMA
 from tests.factories import sample_create_path, sample_instant_answer
+
+
+_GATE_PATH = {
+    "kind": "path",
+    "instant_answer": {
+        "label": "",
+        "answer": "",
+        "goal_suggestions": [],
+        "domain": "other",
+    },
+}
 
 
 async def test_create_path_project(
@@ -54,16 +67,29 @@ async def test_create_path_project(
             select(LlmCall).where(LlmCall.project_id == project_id)
         )
     ).scalars().all()
-    assert len(llm_calls) == 1
-    assert llm_calls[0].parsed_ok is True
-    assert llm_calls[0].raw_response is not None
+    # Gate + path generation (both purpose=create, both attached to project).
+    assert len(llm_calls) == 2
+    assert all(c.parsed_ok is True for c in llm_calls)
+    assert all(c.raw_response is not None for c in llm_calls)
+    assert len(llm.calls) == 2
     assert llm.calls[0]["purpose"] == "create"
+    assert llm.calls[1]["purpose"] == "create"
+    assert llm.calls[0]["response_schema"] == CREATE_GATE_SCHEMA
+    assert llm.calls[1]["response_schema"] == PATH_RESPONSE_SCHEMA
 
 
 async def test_create_instant_answer_no_project(
     client, auth_headers, llm, db_session
 ):
-    llm.enqueue("create", sample_instant_answer())
+    # Gate-only: instant_answer payload without path branch.
+    ia = sample_instant_answer()
+    llm.enqueue(
+        "create",
+        {
+            "kind": "instant_answer",
+            "instant_answer": ia["instant_answer"],
+        },
+    )
     response = await client.post(
         "/api/v1/projects",
         headers=auth_headers,
@@ -86,6 +112,7 @@ async def test_create_instant_answer_no_project(
         )
     ).scalars().all()
     assert len(events) == 1
+    assert len(llm.calls) == 1
 
 
 async def test_create_without_llm_returns_501(client, auth_headers, llm):
@@ -111,8 +138,9 @@ async def test_create_without_llm_returns_501(client, auth_headers, llm):
 async def test_create_retries_invalid_then_succeeds(
     client, auth_headers, llm
 ):
-    llm.enqueue("create", {"kind": "path", "path": {"outcome": "bad"}})
-    llm.enqueue("create", sample_create_path())
+    llm.enqueue("create", _GATE_PATH)
+    llm.enqueue("create", {"outcome": "bad"})
+    llm.enqueue("create", sample_create_path()["path"])
     response = await client.post(
         "/api/v1/projects",
         headers=auth_headers,
@@ -120,11 +148,13 @@ async def test_create_retries_invalid_then_succeeds(
     )
     assert response.status_code == 200
     assert response.json()["kind"] == "path"
-    assert len(llm.calls) == 2
+    # gate + invalid path + retry path
+    assert len(llm.calls) == 3
 
 
 async def test_create_fails_after_two_invalid(client, auth_headers, llm):
-    bad = {"kind": "path", "path": {"outcome": "incomplete"}}
+    bad = {"outcome": "incomplete"}
+    llm.enqueue("create", _GATE_PATH)
     llm.enqueue("create", bad)
     llm.enqueue("create", bad)
     response = await client.post(

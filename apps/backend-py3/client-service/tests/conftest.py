@@ -175,7 +175,21 @@ def auth_headers(device_id: str) -> dict[str, str]:
 @pytest.fixture
 def enqueue_path(llm: ScriptedLLMProvider) -> Callable[..., None]:
     def _enqueue(**overrides: Any) -> None:
-        llm.enqueue("create", sample_create_path(**overrides))
+        # Phase 1 gate + phase 2 PathState (split create for Anthropic grammar).
+        llm.enqueue(
+            "create",
+            {
+                "kind": "path",
+                "instant_answer": {
+                    "label": "",
+                    "answer": "",
+                    "goal_suggestions": [],
+                    "domain": "other",
+                },
+            },
+        )
+        path = sample_create_path(**overrides)["path"]
+        llm.enqueue("create", path)
 
     return _enqueue
 
@@ -183,11 +197,19 @@ def enqueue_path(llm: ScriptedLLMProvider) -> Callable[..., None]:
 @pytest.fixture
 def enqueue_fitness(llm: ScriptedLLMProvider) -> Callable[..., None]:
     def _enqueue(**overrides: Any) -> None:
-        path = sample_fitness_path_state(**overrides)
         llm.enqueue(
             "create",
-            {"kind": "path", "path": path, "instant_answer": None},
+            {
+                "kind": "path",
+                "instant_answer": {
+                    "label": "",
+                    "answer": "",
+                    "goal_suggestions": [],
+                    "domain": "other",
+                },
+            },
         )
+        llm.enqueue("create", sample_fitness_path_state(**overrides))
 
     return _enqueue
 

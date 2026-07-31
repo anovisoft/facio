@@ -6,7 +6,7 @@ import json
 from typing import Any
 
 from app.providers.anthropic_llm import _anthropic_json_schema
-from app.schemas.create_response import CREATE_RESPONSE_SCHEMA
+from app.schemas.create_response import CREATE_GATE_SCHEMA, CREATE_RESPONSE_SCHEMA
 from app.schemas.path_state import PATH_RESPONSE_SCHEMA
 
 
@@ -59,17 +59,16 @@ def _schema_metrics(schema: dict) -> dict[str, int]:
     }
 
 
-def test_create_schema_keeps_title_properties() -> None:
-    out = _anthropic_json_schema(CREATE_RESPONSE_SCHEMA)
-    defs = _defs(out)
-
-    for name in ("PathGroup", "PathAction", "PathChecklistItem"):
-        assert name in defs, f"missing $defs.{name}"
-        props = defs[name].get("properties") or {}
-        assert "title" in props, f"{name}.properties.title was stripped"
-        assert "title" in (defs[name].get("required") or []), (
-            f"{name}.required missing title"
-        )
+def test_gate_schema_keeps_instant_answer_fields() -> None:
+    out = _anthropic_json_schema(CREATE_GATE_SCHEMA)
+    props = out["properties"]
+    assert set(props) == {"kind", "instant_answer"}
+    assert "path" not in props
+    assert "PathState" not in _defs(out)
+    assert "PathAction" not in _defs(out)
+    ia = props["instant_answer"]
+    # Collapsed to $ref or inline object — never PathState.
+    assert "$ref" in ia or ia.get("type") == "object"
 
 
 def test_path_schema_keeps_title_properties() -> None:
@@ -122,19 +121,37 @@ def test_wire_schema_collapses_nullable_anyof() -> None:
 
 
 def test_wire_schema_size_smoke() -> None:
-    """Guard against grammar blow-ups (Slice 2 cycle/days + Slice 3 plugins)."""
-    path = _anthropic_json_schema(PATH_RESPONSE_SCHEMA)
-    create = _anthropic_json_schema(CREATE_RESPONSE_SCHEMA)
-    path_m = _schema_metrics(path)
-    create_m = _schema_metrics(create)
+    """Guard against grammar blow-ups (Slice 2 cycle/days + Slice 3 plugins).
 
-    # Pre-fix Path wire was ~7.6k chars with 11 nullable anyOf + descriptions.
-    # Slice 3 adds PathTimer + PathCounter; keep under hard grammar ceiling.
-    assert path_m["chars"] < 5500, path_m
-    assert create_m["chars"] < 6500, create_m
+    Create is split: gate (tiny) + PathState-only. Dual-branch CREATE_RESPONSE
+    must NOT be sent to Anthropic.
+    """
+    path = _anthropic_json_schema(PATH_RESPONSE_SCHEMA)
+    gate = _anthropic_json_schema(CREATE_GATE_SCHEMA)
+    path_m = _schema_metrics(path)
+    gate_m = _schema_metrics(gate)
+
+    # Pre-split CREATE wire was ~4.5k and failed Anthropic grammar compile.
+    # Path-only after dropping resources/milestones should stay under ceiling.
+    assert path_m["chars"] < 4500, path_m
+    assert gate_m["chars"] < 1200, gate_m
     assert path_m["anyOf_null"] == 0
-    assert create_m["anyOf_null"] == 0
-    assert create_m["descriptions"] == 0
+    assert gate_m["anyOf_null"] == 0
+    assert gate_m["descriptions"] == 0
+    # Legacy dual-branch schema still exists for unit tests — must stay unused
+    # for Anthropic calls (too large with plugins).
+    legacy = _schema_metrics(_anthropic_json_schema(CREATE_RESPONSE_SCHEMA))
+    assert legacy["chars"] > path_m["chars"]
+
+
+def test_path_wire_omits_resources_milestones() -> None:
+    out = _anthropic_json_schema(PATH_RESPONSE_SCHEMA)
+    props = out["properties"]
+    assert "resources" not in props
+    assert "milestones" not in props
+    assert "actions" in props
+    assert "cycle" in props
+    assert "days" in props
 
 
 def test_wire_schema_includes_plugin_defs() -> None:
@@ -157,11 +174,10 @@ def test_wire_schema_includes_plugin_defs() -> None:
         assert key in (defs["PathCounter"].get("required") or [])
 
 
-def test_create_wire_requires_both_branches_as_objects() -> None:
-    out = _anthropic_json_schema(CREATE_RESPONSE_SCHEMA)
+def test_create_gate_wire_has_no_path_branch() -> None:
+    out = _anthropic_json_schema(CREATE_GATE_SCHEMA)
     props = out["properties"]
-    # Collapsed PathState | null → $ref / InstantAnswer | null → $ref
-    assert props["path"] == {"$ref": "#/$defs/PathState"}
-    assert props["instant_answer"] == {"$ref": "#/$defs/InstantAnswerPayload"}
-    assert "path" in out["required"]
+    assert "path" not in props
+    assert props["kind"]["enum"] == ["path", "instant_answer"]
     assert "instant_answer" in out["required"]
+    assert "kind" in out["required"]

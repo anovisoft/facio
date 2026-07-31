@@ -4,8 +4,11 @@ import pytest
 
 from app.services.path_llm import (
     messages_for_create,
+    messages_for_create_gate,
+    messages_for_create_path,
     messages_for_refine,
     messages_for_repair,
+    parse_create_gate,
     parse_create_response,
     parse_path_state,
 )
@@ -104,14 +107,49 @@ def test_parse_rejects_unknown_type():
         parse_path_state(123)
 
 
+def test_parse_create_gate_path():
+    parsed = parse_create_gate(
+        {
+            "kind": "path",
+            "instant_answer": {
+                "label": "",
+                "answer": "",
+                "goal_suggestions": [],
+                "domain": "other",
+            },
+        }
+    )
+    assert parsed.kind == "path"
+    assert parsed.instant_answer is None
+
+
+def test_parse_create_gate_instant():
+    ia = sample_instant_answer()["instant_answer"]
+    parsed = parse_create_gate({"kind": "instant_answer", "instant_answer": ia})
+    assert parsed.kind == "instant_answer"
+    assert parsed.instant_answer is not None
+    assert len(parsed.instant_answer.goal_suggestions) >= 2
+
+
 def test_messages_for_create_include_intent():
-    messages = messages_for_create("Приготовить карбонару")
-    assert messages[0]["role"] == "system"
-    assert "Приготовить карбонару" in messages[-1]["content"]
-    # Carbonara + push-ups fewshots + instant_answer + final intent
-    assert any("30 отжиманий" in m["content"] for m in messages if m["role"] == "user")
-    assert "cycle" in messages[0]["content"]
-    assert "days[]" in messages[0]["content"]
+    gate = messages_for_create_gate("Приготовить карбонару")
+    assert gate[0]["role"] == "system"
+    assert "Приготовить карбонару" in gate[-1]["content"]
+    assert "Gate" in gate[0]["content"] or "sequence" in gate[0]["content"].lower()
+    # Alias still works
+    assert messages_for_create("x")[-1]["content"] == "x"
+
+    path_msgs = messages_for_create_path("Приготовить карбонару")
+    assert path_msgs[0]["role"] == "system"
+    assert "cycle" in path_msgs[0]["content"]
+    assert "days[]" in path_msgs[0]["content"]
+    assert any("30 отжиманий" in m["content"] for m in path_msgs if m["role"] == "user")
+    # Path few-shots are Path JSON roots (no kind wrapper).
+    assistant = json.loads(
+        next(m["content"] for m in path_msgs if m["role"] == "assistant")
+    )
+    assert "title" in assistant
+    assert "kind" not in assistant
 
 
 def test_messages_for_refine_and_repair_shape():

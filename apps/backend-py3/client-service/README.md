@@ -32,7 +32,7 @@ Auth: send `X-Device-Id: <any-stable-id>` on protected routes.
 
 LLM: Claude Haiku 4.5 (`LLM_MODEL`, default `claude-haiku-4-5`). Without `ANTHROPIC_API_KEY`, create/refine/repair return **501**. Create/refine/repair retry once on schema validation failure (2 attempts total).
 
-Create prompts include a safety/policy block, grey-zone gate hints, FCT/volume caps, field glossary, and two few-shot JSON examples (path + instant_answer).
+Create is **two LLM calls** when the gate chooses a path: (1) tiny `{kind, instant_answer}` gate schema, (2) PathState-only schema (timers/counters included). Instant answers finish after the gate call. Dual-branch Path+IA structured output is not used — Anthropic grammar size. Gate/path prompts each carry focused few-shots.
 
 Prompt caching is on by default (`LLM_PROMPT_CACHE=true`): system + create few-shots get `cache_control` (TTL `LLM_PROMPT_CACHE_TTL`: `5m` or `1h`). Disable with `LLM_PROMPT_CACHE=false`.
 

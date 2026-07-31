@@ -165,6 +165,8 @@ class PathAction(BaseModel):
             "Empty [] when unused. Wire: always present."
         ),
     )
+    # App model allows None; Anthropic wire collapses null → always-present
+    # PathCounter object (target=-1 stub → None in normalize_counter_stub).
     counter: PathCounter | None = Field(
         default=None,
         description=(
@@ -511,4 +513,25 @@ class PathState(BaseModel):
         return self
 
 
-PATH_RESPONSE_SCHEMA: dict = PathState.model_json_schema()
+def _path_llm_schema() -> dict:
+    """Structured-output schema for Anthropic Path create/refine/repair.
+
+    Drop ``resources`` / ``milestones`` from the wire surface — they are cheap
+    string arrays but still add property fanout; parsers default to ``[]``.
+    Prompt guidance still covers them for free-form JSON fallbacks.
+    """
+    schema = PathState.model_json_schema()
+    props = schema.get("properties")
+    if isinstance(props, dict):
+        props.pop("resources", None)
+        props.pop("milestones", None)
+    required = schema.get("required")
+    if isinstance(required, list):
+        schema["required"] = [
+            key for key in required if key not in ("resources", "milestones")
+        ]
+    return schema
+
+
+# Used for Anthropic structured outputs (create path phase, refine, repair).
+PATH_RESPONSE_SCHEMA: dict = _path_llm_schema()

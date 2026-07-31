@@ -6,17 +6,24 @@ import json
 from typing import Any
 
 from app.schemas.create_response import (
+    CREATE_GATE_SCHEMA,
     CREATE_RESPONSE_SCHEMA,
+    CreateGateResponse,
     CreateLlmResponse,
+    InstantAnswerPayload,
 )
 from app.schemas.path_state import PATH_RESPONSE_SCHEMA, PathState
 
 __all__ = [
+    "CREATE_GATE_SCHEMA",
     "CREATE_RESPONSE_SCHEMA",
     "PATH_RESPONSE_SCHEMA",
     "messages_for_create",
+    "messages_for_create_gate",
+    "messages_for_create_path",
     "messages_for_refine",
     "messages_for_repair",
+    "parse_create_gate",
     "parse_create_response",
     "parse_path_state",
 ]
@@ -51,7 +58,7 @@ Structured output forbids null on optional path fields. Use:
 """
 
 _PATH_FIELDS = """\
-## Path fields (kind=path → fill `path`; unused `instant_answer` = empty stub)
+## Path fields (Path JSON root — no kind wrapper)
 
 - title: plan hero title (one short line, ≤ ~120 chars). Shown at the top of \
   the plan body. Examples: "Карбонара на ужин", "К 30 отжиманиям — неделя 1".
@@ -105,65 +112,15 @@ _PATH_FIELDS = """\
     a real counter (reps or sets). Rest / shopping → stub.
 - questions[]: 0 or 2–4 (max 4) clarifies that change the path; not an interview. \
   Emit the full batch for one round — user answers all at once.
-- resources[]: optional; never invent URLs
-- milestones[]: optional checkpoint labels
+- Do NOT emit resources[] or milestones[] (server defaults to []).
 """
 
-_CREATE_SYSTEM = f"""\
-You are the create-brain for Facio — an Outcome OS, not a chatbot.
-
-On each intent: (1) safety gate (2) path vs instant_answer (3) fill schema JSON only.
-
-{_SAFETY}
-
-{_WIRE_SENTINELS}
-
-## Gate — sequence over time?
-
-Ask: does this require a SEQUENCE OF ACTIONS OVER TIME?
-- NO → kind=instant_answer; fill instant_answer; path = empty stub \
-  (empty strings, empty arrays, cycle index=1 horizon_days=1 status=draft). \
-  Do not invent a real Path.
-- YES → kind=path; fill path; instant_answer = empty stub \
-  (label="", answer="", goal_suggestions=[], domain="other").
-
-Clear instant_answer: one-shot math/facts (2^100), FX rates, translate a word, \
-pure Q&A with no multi-step pursuit.
-Clear path: buy a car, learn Python, cook carbonara, write a thesis.
-
-### Grey zones
-
-- One-shot habit/reminder ("remind me to call") → instant_answer, or a tiny \
-  path of 1–2 steps — never a multi-week novel.
-- "What should I cook today?" if they want to make it → short one-dish path OK \
-  (not QA-only).
-- Career/life advice with no actionable sequence → instant_answer + \
-  goal_suggestions; no pseudo-therapy path.
-- Unsure whether a sequence-over-time exists → prefer instant_answer + \
-  suggestions, unless they clearly want to pursue an outcome.
-
-## Response shape
-
-Always emit both `path` and `instant_answer` objects (never JSON null). \
-Unused branch = empty stub. Match user language (RU/EN/…).
-
-### kind=instant_answer
-
-- label: short "question, not a goal" UI line (user language)
-- answer: useful direct answer — or short safe refusal/redirect under Safety
-- goal_suggestions: exactly 2–4 related Facio projects (sequences over time)
-- domain: same controlled vocab as path (cooking|…|other) for Q&A demand
-- path: empty stub (not a real plan)
-
-### kind=path
-
-{_PATH_FIELDS}
-
+_PATH_QUALITY = """\
 ## FCT / quality
 
-- Always fill title + summary on path create (reference intents: carbonara, \
-  push-ups → narrative must be visible immediately).
-- Always fill cycle + full days[] skeleton on create (reference defaults above).
+- Always fill title + summary (reference intents: carbonara, push-ups → \
+  narrative must be visible immediately).
+- Always fill cycle + full days[] skeleton (reference defaults above).
 - Push-ups / fitness week: days must mix train and rest — rest days are real \
   days with kind=rest (light mobility OK), not identical "do sets" days.
 - Carbonara: cycle.horizon_days=1, one cook_session day.
@@ -176,6 +133,66 @@ Unused branch = empty stub. Match user language (RU/EN/…).
 - Prefer a few strong steps over a long todo dump.
 - When days[] exist, action titles must not repeat day numbers \
   ("день 2", "day 3") — structure lives in days[] + day_offset.
+"""
+
+_CREATE_GATE_SYSTEM = f"""\
+You are the create-gate for Facio — an Outcome OS, not a chatbot.
+
+Decide ONLY: path vs instant_answer. Do not emit a Path plan.
+
+{_SAFETY}
+
+## Gate — sequence over time?
+
+Ask: does this require a SEQUENCE OF ACTIONS OVER TIME?
+- NO → kind=instant_answer; fill instant_answer fully.
+- YES → kind=path; instant_answer = empty stub \
+  (label="", answer="", goal_suggestions=[], domain="other").
+
+Clear instant_answer: one-shot math/facts (2^100), FX rates, translate a word, \
+pure Q&A with no multi-step pursuit.
+Clear path: buy a car, learn Python, cook carbonara, write a thesis.
+
+### Grey zones
+
+- One-shot habit/reminder ("remind me to call") → instant_answer, or a tiny \
+  path of 1–2 steps — never a multi-week novel (prefer kind=path only if they \
+  clearly want a short sequence).
+- "What should I cook today?" if they want to make it → kind=path.
+- Career/life advice with no actionable sequence → instant_answer + \
+  goal_suggestions; no pseudo-therapy path.
+- Unsure whether a sequence-over-time exists → prefer instant_answer + \
+  suggestions, unless they clearly want to pursue an outcome.
+
+## Response shape
+
+Always emit `kind` and `instant_answer` (never JSON null). Match user language.
+
+### kind=instant_answer
+
+- label: short "question, not a goal" UI line (user language)
+- answer: useful direct answer — or short safe refusal/redirect under Safety
+- goal_suggestions: exactly 2–4 related Facio projects (sequences over time)
+- domain: cooking|fitness|learning|home|errands|work|health|finance|social|other
+
+### kind=path
+
+- instant_answer must be the empty stub above (path body is a separate call)
+
+Do not chat. JSON fields only.
+"""
+
+_CREATE_PATH_SYSTEM = f"""\
+You are the create-path brain for Facio. The gate already decided kind=path.
+Emit Path JSON only (root object — no kind / instant_answer wrapper).
+
+{_SAFETY}
+
+{_WIRE_SENTINELS}
+
+{_PATH_FIELDS}
+
+{_PATH_QUALITY}
 
 Do not chat. JSON fields only.
 """
@@ -233,8 +250,8 @@ Also:
 {_PATH_FIELDS}
 """
 
-# Compact few-shots — validated by parse_create_response in messages_for_create.
-# Unused create branch is an empty stub (wire schema forbids JSON null).
+# Compact few-shots. Path bodies validated by parse_path_state; gate by
+# parse_create_gate. Combined _FEWSHOT_PATH / _FEWSHOT_FITNESS kept for tests.
 _EMPTY_INSTANT_STUB: dict[str, Any] = {
     "label": "",
     "answer": "",
@@ -629,27 +646,55 @@ _FEWSHOT_INSTANT: dict[str, Any] = {
     },
 }
 
+_FEWSHOT_GATE_PATH: dict[str, Any] = {
+    "kind": "path",
+    "instant_answer": dict(_EMPTY_INSTANT_STUB),
+}
+_FEWSHOT_GATE_INSTANT: dict[str, Any] = {
+    "kind": "instant_answer",
+    "instant_answer": dict(_FEWSHOT_INSTANT["instant_answer"]),
+}
 
-def messages_for_create(intent: str) -> list[dict[str, Any]]:
+
+def messages_for_create_gate(intent: str) -> list[dict[str, Any]]:
+    """Phase 1: tiny schema — kind + instant_answer only."""
     return [
-        {"role": "system", "content": _CREATE_SYSTEM},
+        {"role": "system", "content": _CREATE_GATE_SYSTEM},
         {"role": "user", "content": _FEWSHOT_PATH_INTENT},
         {
             "role": "assistant",
-            "content": json.dumps(_FEWSHOT_PATH, ensure_ascii=False),
-        },
-        {"role": "user", "content": _FEWSHOT_FITNESS_INTENT},
-        {
-            "role": "assistant",
-            "content": json.dumps(_FEWSHOT_FITNESS, ensure_ascii=False),
+            "content": json.dumps(_FEWSHOT_GATE_PATH, ensure_ascii=False),
         },
         {"role": "user", "content": _FEWSHOT_IA_INTENT},
         {
             "role": "assistant",
-            "content": json.dumps(_FEWSHOT_INSTANT, ensure_ascii=False),
+            "content": json.dumps(_FEWSHOT_GATE_INSTANT, ensure_ascii=False),
         },
         {"role": "user", "content": intent},
     ]
+
+
+def messages_for_create_path(intent: str) -> list[dict[str, Any]]:
+    """Phase 2: PathState-only schema after gate chose kind=path."""
+    return [
+        {"role": "system", "content": _CREATE_PATH_SYSTEM},
+        {"role": "user", "content": _FEWSHOT_PATH_INTENT},
+        {
+            "role": "assistant",
+            "content": json.dumps(_FEWSHOT_PATH["path"], ensure_ascii=False),
+        },
+        {"role": "user", "content": _FEWSHOT_FITNESS_INTENT},
+        {
+            "role": "assistant",
+            "content": json.dumps(_FEWSHOT_FITNESS["path"], ensure_ascii=False),
+        },
+        {"role": "user", "content": intent},
+    ]
+
+
+def messages_for_create(intent: str) -> list[dict[str, Any]]:
+    """Backward-compat alias — prefer messages_for_create_gate."""
+    return messages_for_create_gate(intent)
 
 
 def messages_for_refine(
@@ -833,7 +878,40 @@ def parse_path_state(raw_response: Any) -> PathState:
         )
     if isinstance(data, dict):
         data = normalize_path_wire_dict(data)
+        # Dropped from Anthropic Path wire schema (grammar size); default empty.
+        data.setdefault("resources", [])
+        data.setdefault("milestones", [])
     return PathState.model_validate(data)
+
+
+def parse_create_gate(raw_response: Any) -> CreateGateResponse:
+    """Parse phase-1 gate (kind + optional instant_answer)."""
+    if isinstance(raw_response, CreateGateResponse):
+        return raw_response
+    if isinstance(raw_response, str):
+        data = json.loads(raw_response)
+    elif isinstance(raw_response, dict):
+        data = raw_response
+    else:
+        raise TypeError(
+            f"Unexpected raw_response type: {type(raw_response)!r}"
+        )
+    if not isinstance(data, dict):
+        return CreateGateResponse.model_validate(data)
+
+    out = dict(data)
+    kind = out.get("kind")
+    ia = out.get("instant_answer")
+    if kind == "path":
+        return CreateGateResponse(kind="path", instant_answer=None)
+    if kind == "instant_answer":
+        if _is_empty_instant_stub(ia):
+            raise ValueError(
+                "instant_answer is required when kind=instant_answer"
+            )
+        payload = InstantAnswerPayload.model_validate(ia)
+        return CreateGateResponse(kind="instant_answer", instant_answer=payload)
+    raise ValueError(f"Unknown kind: {kind!r}")
 
 
 def parse_create_response(raw_response: Any) -> CreateLlmResponse:
@@ -859,6 +937,8 @@ def parse_create_response(raw_response: Any) -> CreateLlmResponse:
         path = out.get("path")
         if isinstance(path, dict):
             out["path"] = normalize_path_wire_dict(path)
+            out["path"].setdefault("resources", [])
+            out["path"].setdefault("milestones", [])
     elif kind == "instant_answer":
         out["path"] = None
     else:
@@ -866,6 +946,8 @@ def parse_create_response(raw_response: Any) -> CreateLlmResponse:
         path = out.get("path")
         if isinstance(path, dict) and not _is_empty_path_stub(path):
             out["path"] = normalize_path_wire_dict(path)
+            out["path"].setdefault("resources", [])
+            out["path"].setdefault("milestones", [])
         if _is_empty_instant_stub(out.get("instant_answer")):
             out["instant_answer"] = None
         if _is_empty_path_stub(out.get("path")):

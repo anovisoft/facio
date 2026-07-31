@@ -44,16 +44,20 @@ from app.schemas.api import (
     TimelineEntry,
     TimelineResponse,
 )
-from app.schemas.create_response import CreateLlmResponse, InstantAnswerPayload
+from app.schemas.create_response import (
+    CreateGateResponse,
+    InstantAnswerPayload,
+)
 from app.schemas.path_state import PathState
 from app.services.audit import AuditService, EventType
 from app.services.path_llm import (
-    CREATE_RESPONSE_SCHEMA,
+    CREATE_GATE_SCHEMA,
     PATH_RESPONSE_SCHEMA,
-    messages_for_create,
+    messages_for_create_gate,
+    messages_for_create_path,
     messages_for_refine,
     messages_for_repair,
-    parse_create_response,
+    parse_create_gate,
     parse_path_state,
 )
 from app.services.path_materialize import (
@@ -83,11 +87,8 @@ def _assistant_content(raw_response: Any) -> str:
     return json.dumps(raw_response, ensure_ascii=False)
 
 
-def _parse_create_payload(raw_response: Any) -> CreateLlmResponse:
-    parsed = parse_create_response(raw_response)
-    if parsed.kind == "path" and parsed.path is not None:
-        PathState.model_validate(parsed.path.model_dump(mode="json"))
-    return parsed
+def _parse_create_gate_payload(raw_response: Any) -> CreateGateResponse:
+    return parse_create_gate(raw_response)
 
 
 def _parse_path_payload(raw_response: Any) -> PathState:
@@ -122,23 +123,28 @@ class PathService:
             meta={"kind": "intent"},
         )
 
-        messages = messages_for_create(intent)
-        parsed, raw, llm_call_id = await self._generate_create_response(
+        messages = messages_for_create_gate(intent)
+        gate, _gate_raw, gate_llm_call_id = await self._generate_create_gate(
             user=user,
             messages=messages,
         )
 
-        if parsed.kind == "instant_answer":
-            assert parsed.instant_answer is not None
+        if gate.kind == "instant_answer":
+            assert gate.instant_answer is not None
             return await self._finish_instant_answer(
                 user=user,
                 intent=intent,
                 user_turn_id=user_turn.id,
-                payload=parsed.instant_answer,
-                llm_call_id=llm_call_id,
+                payload=gate.instant_answer,
+                llm_call_id=gate_llm_call_id,
             )
 
-        assert parsed.path is not None
+        # Phase 2: PathState-only schema (no dual-branch CreateLlmResponse).
+        state, _path_raw, path_llm_call_id = await self._generate_create_path(
+            user=user,
+            messages=messages_for_create_path(intent),
+        )
+
         project = Project(
             user_id=user.id,
             status=ProjectStatus.draft,
@@ -149,11 +155,12 @@ class PathService:
 
         intent_event.project_id = project.id
         user_turn.project_id = project.id
-        llm_row = await self.db.get(LlmCall, llm_call_id)
-        if llm_row is not None:
-            llm_row.project_id = project.id
+        for call_id in (gate_llm_call_id, path_llm_call_id):
+            llm_row = await self.db.get(LlmCall, call_id)
+            if llm_row is not None:
+                llm_row.project_id = project.id
 
-        state = ensure_action_keys(parsed.path)
+        state = ensure_action_keys(state)
         version = await self._next_version(project.id)
         await self.audit.add_state_version(
             project_id=project.id,
@@ -172,7 +179,8 @@ class PathService:
                 "kind": "soft_start",
                 "outcome": state.outcome,
                 "state_version": version,
-                "llm_call_id": str(llm_call_id),
+                "llm_call_id": str(path_llm_call_id),
+                "gate_llm_call_id": str(gate_llm_call_id),
                 "source": StateSource.llm_create.value,
             },
         )
@@ -198,11 +206,14 @@ class PathService:
         project = await self.projects.get_project(user, project.id)
         detail = await self.projects.to_detail(project)
         logger.info(
-            "create path user=%s project=%s version=%s outcome=%r",
+            "create path user=%s project=%s version=%s outcome=%r "
+            "gate_llm=%s path_llm=%s",
             user.id,
             project.id,
             version,
             state.outcome,
+            gate_llm_call_id,
+            path_llm_call_id,
         )
         return PathCreatedResponse(kind="path", project=detail)
 
@@ -261,20 +272,38 @@ class PathService:
             domain=payload.domain,
         )
 
-    async def _generate_create_response(
+    async def _generate_create_gate(
         self,
         *,
         user: User,
         messages: list[dict[str, Any]],
-    ) -> tuple[CreateLlmResponse, LLMRawResult, UUID]:
+    ) -> tuple[CreateGateResponse, LLMRawResult, UUID]:
+        # Tiny schema: {kind, instant_answer} — no PathState (grammar budget).
         return await self._llm_generate_validated(
             user=user,
             project_id=None,
             purpose="create",
             messages=messages,
-            response_schema=CREATE_RESPONSE_SCHEMA,
-            parse=_parse_create_payload,
-            invalid_message="Invalid create response from LLM",
+            response_schema=CREATE_GATE_SCHEMA,
+            parse=_parse_create_gate_payload,
+            invalid_message="Invalid create gate from LLM",
+        )
+
+    async def _generate_create_path(
+        self,
+        *,
+        user: User,
+        messages: list[dict[str, Any]],
+    ) -> tuple[PathState, LLMRawResult, UUID]:
+        # PathState-only structured output (plugins included; no IA branch).
+        return await self._llm_generate_validated(
+            user=user,
+            project_id=None,
+            purpose="create",
+            messages=messages,
+            response_schema=PATH_RESPONSE_SCHEMA,
+            parse=_parse_path_payload,
+            invalid_message="Invalid Path from LLM",
         )
 
     async def refine(

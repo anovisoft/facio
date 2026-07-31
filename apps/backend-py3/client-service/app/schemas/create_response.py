@@ -34,8 +34,51 @@ class InstantAnswerPayload(BaseModel):
     )
 
 
+class InstantAnswerWire(BaseModel):
+    """Gate wire shape — empty stub allowed when kind=path."""
+
+    label: str = ""
+    answer: str = ""
+    goal_suggestions: list[str] = Field(default_factory=list)
+    domain: PathDomain = "other"
+
+
+class CreateGateResponse(BaseModel):
+    """Tiny create gate: path vs instant_answer (no PathState).
+
+    Anthropic structured-output grammar cannot fit PathState + InstantAnswer
+    in one schema after Slice 3 plugins. Gate decides kind; path body is a
+    second call with PATH_RESPONSE_SCHEMA only.
+    """
+
+    kind: Literal["path", "instant_answer"]
+    instant_answer: InstantAnswerPayload | None = None
+
+    @model_validator(mode="after")
+    def validate_branch(self) -> "CreateGateResponse":
+        if self.kind == "instant_answer":
+            if self.instant_answer is None:
+                raise ValueError(
+                    "instant_answer is required when kind=instant_answer"
+                )
+        elif self.kind == "path":
+            # Drop accidental stubs; path body comes from the second LLM call.
+            if self.instant_answer is not None:
+                return self.model_copy(update={"instant_answer": None})
+        else:
+            raise ValueError(f"Unknown kind: {self.kind!r}")
+        return self
+
+
+class CreateGateWire(BaseModel):
+    """Anthropic wire for create gate — always emit instant_answer object."""
+
+    kind: Literal["path", "instant_answer"]
+    instant_answer: InstantAnswerWire
+
+
 class CreateLlmResponse(BaseModel):
-    """Structured LLM output for purpose=create (path | instant_answer)."""
+    """Assembled create result (gate + optional path). Not sent to Anthropic."""
 
     kind: Literal["path", "instant_answer"] = Field(
         description=(
@@ -68,4 +111,7 @@ class CreateLlmResponse(BaseModel):
         return self
 
 
+CREATE_GATE_SCHEMA: dict = CreateGateWire.model_json_schema()
+# Legacy dual-branch schema — kept for unit tests of CreateLlmResponse shape.
+# Not used for Anthropic calls (grammar too large with Path plugins).
 CREATE_RESPONSE_SCHEMA: dict = CreateLlmResponse.model_json_schema()
