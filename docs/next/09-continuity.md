@@ -22,8 +22,7 @@
 | 1 | Narrative (title/summary) + batch clarify + comment | **одобрен** (+ UX: custom answer, keyboard, header, back button) |
 | 2 | Cycle + days/kind + Home «день N» + Path day map | **одобрен** (+ hierarchy PathList, rest nesting) |
 | 3 | TimerStack + Counter | **dogfood ок** |
-| 3′ | Progressive create + clock UX + схлоп Accept | **в коде:** #2 Path+hints / #3 plugins after start |
-
+| 3′ | Progressive create + clock UX + схлоп Accept | **в коде** (#2/#3 + Draft UX D); **ждёт dogfood** |
 | 4 | Repair на живом плане | не начат |
 | 5 | Next cycle CTA | не начат |
 
@@ -65,7 +64,8 @@ Instant = только #1.
 
 **Позже:** если plugins разрастутся — несколько запросов #3 с разными response formats (clock отдельно от counter и т.д.).
 
-Планирование = смысл + дни + шаги (+ анонс tools). Использование = исполняемые plugins. «Начать сегодня» = граница preview→live (+ kick #3).
+Планирование = смысл + дни + шаги (+ анонс tools). Использование = исполняемые plugins.  
+CTA после commit: **«Сохранить и приступить»** (→ Home + #3) / вторичная **«Сохранить»** (→ Projects). Сегодня/завтра switcher **убран**.
 
 ### C. Семейство clock-плагинов (не только плоский TimerStack)
 
@@ -80,7 +80,42 @@ Dogfood карбонары: плоский `timers[]` есть, но юзабе�
 Общий runtime-движок часов (elapsed, pause, complete segment/marker).  
 **На wire create #2 plugins не тащить** — только hints; полные shapes в #3 после start (см. B).
 
+**Правило XOR:** на одном action не ставить real **timeline и timers вместе** — timeline владеет cook-сессией; timers только для изолированного ожидания без оси. Промпт + `merge_plugin_payloads` (если timeline.duration≥1 → timers=[]).
+
 Slice 3 закрыл «plugins есть в модели/UI». Slice 3′: progressive + clock UI; grammar → split #2/#3.
+
+### D. Draft studio UX (зафиксировано — **в коде**, ждёт dogfood)
+
+Dogfood после #2/#3 + схлоп Accept выявил:
+
+1. Пока отвечаешь на вопросы, приезжает полный PathList → **кнопка «Обновить путь» уезжает вниз** (палец промахивается).
+2. После refine часто `questions=[]` → блок clarify (включая comment) **пропадает**, а refine при 0 вопросов требует comment → **тупик**.
+3. Раньше: ответы сбрасывались при bump `current_version` когда доезжал path — **пофикшено** (сброс только при смене набора question id).
+4. Порядок «полный план до вопросов» ломал логику; «полный план после вопросов» чинит смысл, но усиливает (1).
+
+**Выбранный комбо (одобрено и реализовано):**
+
+```text
+title + summary
+компактный OUTLINE (дни)   ← «план есть», не толкает CTA
+вопросы (chips) — если есть
+«Ещё важно» (comment) — ВСЕГДА, даже при 0 вопросов
+[ STICKY FOOTER ]
+  Обновить путь | Назад(version)
+  Сохранить и приступить   (primary)
+  Сохранить                (secondary → Projects)
+полный PathList — по «Смотреть весь план» / развернуть
+```
+
+**В коде (Draft UX D):**
+- `SafeScreen` `footer` prop — sticky CTA вне ScrollView + KeyboardAvoidingView
+- `PlanOutline` из `project.days` (gate уже пишет outline в days через `path_state_from_start`)
+- PathList только при expand; comment всегда; `questionRoundKey` preserve
+- i18n: `outlineLabel` / `viewFullPlan` / `hideFullPlan`
+
+Мягкий хвост (не блокер): outline пока только дни, без 3–7 строк шагов — можно добить после dogfood, если не хватает.
+
+См. также [05](./05-ux-flows.md) Draft studio.
 
 ---
 
@@ -186,9 +221,9 @@ API: `POST .../counter`, `POST .../timers/{id}/complete`. Timeline/interval runt
 
 | Тема | Заметка |
 |------|---------|
-| Progressive create | **done (Срез 3′)**: #1 gate → #2 Path+hints → #3 plugins after Start; Accept схлопнут в «Начать сегодня» |
-| Always-editable план | Accept-дубль PathList убран; Repair = общий edit (решение A) — рамка для Среза 4+ |
-| Timeline / Interval plugins | **в коде** — #2 hints; #3 materialize; live UI after Start |
+| Progressive / Draft UX | **#1→#2→#3** + layout D в коде; **ждёт dogfood** |
+| Always-editable план | Accept-дубль убран (Save/Start); Repair = общий edit — Срез 4 |
+| Timeline / Interval | #2 hints; #3 materialize; XOR timeline/timers на одном шаге |
 | Clarify options отжиманий | Не мешать ось «сколько раз» и «с колен/стены» в одном ряду чипов |
 | Home перегружен | Много labels; declutter вместе с контролами / always-editable |
 | 8 недель vs cycle 7 дней | Narrative программы vs текущий cycle — явно на next cycle (Срез 5) |
@@ -202,18 +237,17 @@ API: `POST .../counter`, `POST .../timers/{id}/complete`. Timeline/interval runt
 
 ## Следующий шаг
 
-Срез 3′: #2 Path+hints / #3 plugins after start **в коде** (wire Path ≈2996).  
-**Dogfood** на эталонах → одобрение 3′ → Срез 4.
+1. **Dogfood 3′** (progressive + clock + Draft UX D) на карбонаре/отжиманиях — checklist ниже
+2. Одобрение 3′ → **Срез 4 Repair**
 
-### Dogfood после фикса
+### Dogfood checklist (после UX polish)
 
-1. Restart backend + миграции при необходимости
-2. Create карбонара → slim → план с timeline hint (**не hang**) → «Начать сегодня» → #3 plugins → timeline live
-3. Отжимания → hints → после start interval/counter
-4. Failed llm_calls остаются в audit; UI не крутит спиннер вечно (`path_error`)
-5. Instant `2^100` ок; нет Accept-дубля
-
-Потом → одобрение 3′ → Срез 4.
+1. Create → вопросы → ответы **не сбрасываются** когда план доезжает  
+2. Outline виден; полный Path не уводит «Обновить путь» из-под пальца (sticky)  
+3. «Ещё важно» есть при 0 questions; refine после раунда возможен  
+4. Сохранить и приступить → Home + plugins; Сохранить → Projects  
+5. Карбонара: timeline без лишнего peer-timer на том же шаге  
+6. Нет grammar 400; `path_error` вместо вечного спиннера  
 
 ---
 

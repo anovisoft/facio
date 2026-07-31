@@ -38,7 +38,6 @@ export default {
     saveOnly: 'Сохранить',
     startToday: 'Начать сегодня',
     startError: 'Не удалось сохранить план',
-    pathSection: 'План',
     pathLoading: 'Собираю полный план…',
     pathError: 'Не удалось собрать план. Попробуйте создать ещё раз.',
     refineWaitPath:
@@ -50,6 +49,9 @@ export default {
     tomorrow: 'Завтра',
     expandPath: 'Развернуть',
     collapsePath: 'Свернуть',
+    outlineLabel: 'Краткий план',
+    viewFullPlan: 'Смотреть весь план',
+    hideFullPlan: 'Свернуть план',
     loading: 'Загрузка черновика…',
     working: 'Обновляю путь…',
     error: 'Не удалось обновить черновик',

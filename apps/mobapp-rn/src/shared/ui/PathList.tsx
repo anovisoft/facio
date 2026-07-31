@@ -17,6 +17,7 @@ import {
   TimerStack,
 } from '@/shared/ui/ActionPlugins';
 import { ChecklistList } from '@/shared/ui/ChecklistList';
+import { capitalizeLabel, dayKindLabel } from '@/shared/ui/dayLabels';
 import { useTheme } from '@/theme/ThemeContext';
 import { radii, spacing, typography } from '@/theme';
 
@@ -47,31 +48,6 @@ type Section = {
   kind: DayKind | null;
   actions: ActionResponse[];
 };
-
-function capitalizeLabel(value: string): string {
-  if (!value) return value;
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
-function dayKindLabel(
-  kind: DayKind,
-  t: (key: string) => string,
-): string {
-  switch (kind) {
-    case 'train':
-      return t('dayKind.train');
-    case 'rest':
-      return t('dayKind.rest');
-    case 'cook_session':
-      return t('dayKind.cook_session');
-    case 'other':
-      return t('dayKind.other');
-    default: {
-      const _exhaustive: never = kind;
-      return _exhaustive;
-    }
-  }
-}
 
 function pluginHintLabel(
   hint: string,

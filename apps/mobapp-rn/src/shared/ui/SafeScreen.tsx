@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import {
   SafeAreaView,
+  useSafeAreaInsets,
   type Edge,
 } from 'react-native-safe-area-context';
 
@@ -26,6 +27,14 @@ type Props = {
    * should pass `['top', 'left', 'right']`.
    */
   edges?: Edge[];
+  /**
+   * Fixed content pinned below the scrollable area (e.g. sticky CTAs).
+   * Only `children` above it participate in scrolling — the footer never
+   * moves, and stays clear of the keyboard. Automatically padded for the
+   * bottom safe-area inset.
+   */
+  footer?: ReactNode;
+  footerStyle?: ViewStyle;
 };
 
 export function SafeScreen({
@@ -34,8 +43,53 @@ export function SafeScreen({
   style,
   contentStyle,
   edges = ['left', 'right'],
+  footer,
+  footerStyle,
 }: Props) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+
+  if (footer) {
+    return (
+      <SafeAreaView
+        style={[styles.safe, { backgroundColor: colors.background }, style]}
+        edges={edges}
+      >
+        <KeyboardAvoidingView
+          style={styles.flex}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          {scroll ? (
+            <ScrollView
+              style={styles.flex}
+              contentContainerStyle={[styles.scrollContent, contentStyle]}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
+            >
+              {children}
+            </ScrollView>
+          ) : (
+            <View style={[styles.content, contentStyle]}>{children}</View>
+          )}
+          <View
+            style={[
+              styles.footer,
+              {
+                borderTopColor: colors.border,
+                backgroundColor: colors.background,
+                paddingBottom: edges.includes('bottom')
+                  ? spacing.md
+                  : insets.bottom + spacing.md,
+              },
+              footerStyle,
+            ]}
+          >
+            {footer}
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView
@@ -79,5 +133,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.xxl,
+  },
+  footer: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    gap: spacing.sm,
   },
 });

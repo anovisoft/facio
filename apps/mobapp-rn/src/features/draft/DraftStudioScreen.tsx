@@ -30,6 +30,7 @@ import type { RootScreenProps } from '@/navigation/types';
 import { trackAcceptViewed } from '@/services/beacons';
 import { ClarifyChips } from '@/shared/ui/ClarifyChips';
 import { PathList } from '@/shared/ui/PathList';
+import { PlanOutline } from '@/shared/ui/PlanOutline';
 import { PrimaryButton } from '@/shared/ui/PrimaryButton';
 import { SafeScreen } from '@/shared/ui/SafeScreen';
 import { useSessionStore } from '@/store';
@@ -58,6 +59,7 @@ export function DraftStudioScreen({
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [comment, setComment] = useState('');
   const [canGoBack, setCanGoBack] = useState(false);
+  const [planExpanded, setPlanExpanded] = useState(false);
   const undoStackRef = useRef<number[]>([]);
   const abortRef = useRef<AbortController | null>(null);
   const acceptTrackedRef = useRef(false);
@@ -295,9 +297,45 @@ export function DraftStudioScreen({
     project.paraphrase || project.outcome || project.raw_intent;
   const planTitle = project.title || project.outcome;
   const planSummary = project.summary;
+  const showFullPlan = pathReady && planExpanded;
 
   return (
-    <SafeScreen scroll>
+    <SafeScreen
+      scroll
+      footer={
+        <>
+          <View style={styles.actions}>
+            <PrimaryButton
+              variant="secondary"
+              label={t('draft.back')}
+              disabled={!canGoBack || busy || committing != null}
+              onPress={() => void goBackVersion()}
+              style={styles.actionBtn}
+            />
+            <PrimaryButton
+              variant="secondary"
+              label={t('draft.refine')}
+              disabled={!canRefine}
+              onPress={() => void runRefine()}
+              style={styles.actionBtn}
+            />
+          </View>
+          <PrimaryButton
+            label={t('draft.saveAndStart')}
+            disabled={!pathReady || busy || committing != null}
+            loading={committing === 'start'}
+            onPress={() => void onCommit('start')}
+          />
+          <PrimaryButton
+            variant="secondary"
+            label={t('draft.saveOnly')}
+            disabled={!pathReady || busy || committing != null}
+            loading={committing === 'save'}
+            onPress={() => void onCommit('save')}
+          />
+        </>
+      }
+    >
       <Text style={[styles.softStart, { color: colors.text }]}>
         {t('draft.softStart', { paraphrase })}
       </Text>
@@ -311,6 +349,74 @@ export function DraftStudioScreen({
         <Text style={[styles.planSummary, { color: colors.textSecondary }]}>
           {planSummary}
         </Text>
+      ) : null}
+
+      <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
+        {t('draft.outlineLabel')}
+      </Text>
+      <PlanOutline days={project.days} />
+      {!pathReady ? (
+        <View style={styles.pathLoading}>
+          {pathError ? (
+            <Text style={[styles.error, { color: colors.error, flex: 1 }]}>
+              {t('draft.pathError')}
+            </Text>
+          ) : (
+            <>
+              <ActivityIndicator color={colors.primary} />
+              <Text
+                style={[styles.muted, { color: colors.textSecondary, flex: 1 }]}
+              >
+                {t('draft.pathLoading')}
+              </Text>
+            </>
+          )}
+        </View>
+      ) : (
+        <Pressable onPress={() => setPlanExpanded((v) => !v)} hitSlop={8}>
+          <Text style={[styles.toggle, { color: colors.primary }]}>
+            {showFullPlan ? t('draft.hideFullPlan') : t('draft.viewFullPlan')}
+          </Text>
+        </Pressable>
+      )}
+
+      {showFullPlan ? (
+        <View style={styles.fullPlan}>
+          <PathList
+            groups={project.groups}
+            actions={project.actions}
+            days={project.days}
+            cycle={project.cycle}
+          />
+          {project.success_criteria || project.horizon ? (
+            <View style={styles.contract}>
+              {project.success_criteria ? (
+                <>
+                  <Text
+                    style={[styles.metaLabel, { color: colors.textMuted }]}
+                  >
+                    {t('draft.success')}
+                  </Text>
+                  <Text style={[styles.meta, { color: colors.text }]}>
+                    {project.success_criteria}
+                  </Text>
+                </>
+              ) : null}
+              {project.horizon ? (
+                <>
+                  <Text
+                    style={[styles.metaLabel, { color: colors.textMuted }]}
+                  >
+                    {t('draft.horizon')}
+                  </Text>
+                  <Text style={[styles.meta, { color: colors.text }]}>
+                    {project.horizon}
+                  </Text>
+                </>
+              ) : null}
+            </View>
+          ) : null}
+        </View>
       ) : null}
 
       {questions.length > 0 ? (
@@ -333,30 +439,6 @@ export function DraftStudioScreen({
               />
             </View>
           ))}
-          <Text style={[styles.commentLabel, { color: colors.textMuted }]}>
-            {t('draft.commentLabel')}
-          </Text>
-          <TextInput
-            value={comment}
-            onChangeText={setComment}
-            editable={!busy && committing == null}
-            multiline
-            placeholder={t('draft.commentPlaceholder')}
-            placeholderTextColor={colors.textMuted}
-            style={[
-              styles.input,
-              {
-                color: colors.text,
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-              },
-            ]}
-          />
-          {!pathReady ? (
-            <Text style={[styles.muted, { color: colors.textSecondary }]}>
-              {t('draft.refineWaitPath')}
-            </Text>
-          ) : null}
         </View>
       ) : pathReady ? (
         <Text style={[styles.ready, { color: colors.textSecondary }]}>
@@ -364,59 +446,32 @@ export function DraftStudioScreen({
         </Text>
       ) : null}
 
-      <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
-        {t('draft.pathSection')}
-      </Text>
-      {!pathReady ? (
-        <View style={styles.pathLoading}>
-          {pathError ? (
-            <Text style={[styles.error, { color: colors.error, flex: 1 }]}>
-              {t('draft.pathError')}
-            </Text>
-          ) : (
-            <>
-              <ActivityIndicator color={colors.primary} />
-              <Text
-                style={[styles.muted, { color: colors.textSecondary, flex: 1 }]}
-              >
-                {t('draft.pathLoading')}
-              </Text>
-            </>
-          )}
-        </View>
-      ) : (
-        <PathList
-          groups={project.groups}
-          actions={project.actions}
-          days={project.days}
-          cycle={project.cycle}
+      <View style={styles.commentSection}>
+        <Text style={[styles.commentLabel, { color: colors.textMuted }]}>
+          {t('draft.commentLabel')}
+        </Text>
+        <TextInput
+          value={comment}
+          onChangeText={setComment}
+          editable={!busy && committing == null}
+          multiline
+          placeholder={t('draft.commentPlaceholder')}
+          placeholderTextColor={colors.textMuted}
+          style={[
+            styles.input,
+            {
+              color: colors.text,
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+            },
+          ]}
         />
-      )}
-
-      {pathReady && (project.success_criteria || project.horizon) ? (
-        <View style={styles.contract}>
-          {project.success_criteria ? (
-            <>
-              <Text style={[styles.metaLabel, { color: colors.textMuted }]}>
-                {t('draft.success')}
-              </Text>
-              <Text style={[styles.meta, { color: colors.text }]}>
-                {project.success_criteria}
-              </Text>
-            </>
-          ) : null}
-          {project.horizon ? (
-            <>
-              <Text style={[styles.metaLabel, { color: colors.textMuted }]}>
-                {t('draft.horizon')}
-              </Text>
-              <Text style={[styles.meta, { color: colors.text }]}>
-                {project.horizon}
-              </Text>
-            </>
-          ) : null}
-        </View>
-      ) : null}
+        {!pathReady ? (
+          <Text style={[styles.muted, { color: colors.textSecondary }]}>
+            {t('draft.refineWaitPath')}
+          </Text>
+        ) : null}
+      </View>
 
       {error ? (
         <Text style={[styles.error, { color: colors.error }]}>{error}</Text>
@@ -439,39 +494,6 @@ export function DraftStudioScreen({
           </Pressable>
         </View>
       ) : null}
-
-      <View style={styles.actions}>
-        <PrimaryButton
-          variant="secondary"
-          label={t('draft.back')}
-          disabled={!canGoBack || busy || committing != null}
-          onPress={() => void goBackVersion()}
-          style={styles.actionBtn}
-        />
-        <PrimaryButton
-          variant="secondary"
-          label={t('draft.refine')}
-          disabled={!canRefine}
-          onPress={() => void runRefine()}
-          style={styles.actionBtn}
-        />
-      </View>
-
-      <PrimaryButton
-        label={t('draft.saveAndStart')}
-        disabled={!pathReady || busy || committing != null}
-        loading={committing === 'start'}
-        onPress={() => void onCommit('start')}
-        style={styles.startToday}
-      />
-      <PrimaryButton
-        variant="secondary"
-        label={t('draft.saveOnly')}
-        disabled={!pathReady || busy || committing != null}
-        loading={committing === 'save'}
-        onPress={() => void onCommit('save')}
-        style={styles.saveOnly}
-      />
     </SafeScreen>
   );
 }
@@ -507,8 +529,16 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
     marginBottom: spacing.sm,
   },
-  clarify: {
+  toggle: {
+    ...typography.caption,
     marginTop: spacing.sm,
+    fontWeight: '600',
+  },
+  fullPlan: {
+    marginTop: spacing.md,
+  },
+  clarify: {
+    marginTop: spacing.lg,
     gap: spacing.md,
   },
   questionBlock: {
@@ -517,9 +547,12 @@ const styles = StyleSheet.create({
   question: {
     ...typography.subtitle,
   },
+  commentSection: {
+    marginTop: spacing.lg,
+    gap: spacing.sm,
+  },
   commentLabel: {
     ...typography.label,
-    marginTop: spacing.xs,
   },
   input: {
     ...typography.body,
@@ -561,15 +594,8 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: spacing.sm,
-    marginTop: spacing.lg,
   },
   actionBtn: {
     flex: 1,
-  },
-  startToday: {
-    marginTop: spacing.md,
-  },
-  saveOnly: {
-    marginTop: spacing.sm,
   },
 });

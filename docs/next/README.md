@@ -22,7 +22,7 @@
 6. [06 — Эталоны](./06-reference-scenarios.md) — карбонара и отжимания
 7. [07 — Тестирование](./07-testing-stance.md) — когда внешние юзеры, что до
 8. [08 — План реализации](./08-impl-plan.md) — срезы 1–5 для поэтапной передачи субагентам
-9. [09 — Continuity](./09-continuity.md) — статус кода, grammar/gate, решения после dogfood 3 (живой план, slim create, clock family)
+9. [09 — Continuity](./09-continuity.md) — статус кода, grammar/gate, решения A–D (живой план, slim create, clock, **Draft UX layout**) — читать после любой суммаризации чата
 
 ---
 
@@ -41,8 +41,11 @@
 Зафиксировано:
 
 - Полный маршрут не прячется «до Accept»; **Draft → Accept → live как жёсткий конвейер устарел** — живой план + мутации.
-- Progressive create: **#1** start → **#2** Path+hints → **#3** plugins after Start (не все plugins на create).
+- Progressive create: **#1** start → **#2** Path+hints → **#3** plugins after Start.
+- Draft UX (одобрено, см. [09 §D](./09-continuity.md)): compact outline + sticky CTA + comment always; полный Path по раскрытию.
 - На плане — hints; live plugins после старта.
+- CTA: «Сохранить и приступить» / «Сохранить»; без сегодня/завтра.
+- Timeline XOR timers на одном шаге.
 - Batch clarify + поле комментария.
 - Clock family: TimerStack + Timeline + Interval (pause); Counter; на плане — **hints**, live после Start (#3).
 - Позже: несколько #3 с разными formats, если plugins разрастутся.
