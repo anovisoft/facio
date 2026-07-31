@@ -22,7 +22,7 @@
 6. [06 — Эталоны](./06-reference-scenarios.md) — карбонара и отжимания
 7. [07 — Тестирование](./07-testing-stance.md) — когда внешние юзеры, что до
 8. [08 — План реализации](./08-impl-plan.md) — срезы 1–5 для поэтапной передачи субагентам
-9. [09 — Continuity](./09-continuity.md) — статус кода, grammar/gate, backlog (не потерять после суммаризации чата)
+9. [09 — Continuity](./09-continuity.md) — статус кода, grammar/gate, решения после dogfood 3 (живой план, slim create, clock family)
 
 ---
 
@@ -40,11 +40,13 @@
 
 Зафиксировано:
 
-- Полный маршрут виден на draft (не «откроем на Accept»).
+- Полный маршрут не прячется «до Accept»; **Draft → Accept → live как жёсткий конвейер устарел** — живой план + мутации.
+- Progressive create: slim первый кадр (ветка + смысл + вопросы) → полный Path на фоне.
 - Batch clarify + поле комментария.
-- Общие step-plugins для готовки и тренировок; на create — тот же UI, контролы disabled до Accept.
-- Schedule / дни программы сразу (не только голый `day_offset`).
-- Cycles (7/30 или иной horizon) + reuse → следующий цикл.
-- Repair не откладывать.
+- Clock family: TimerStack + Timeline + Interval (pause); Counter; на плане видны, live в сессии.
+- Schedule / дни программы сразу.
+- Cycles + reuse → следующий цикл.
+- Repair must; тот же класс правок, что refine.
 - Wedge-эталоны: карбонара + отжимания.
 - Внешний юзер-тест текущего билда — рано.
+- Рабочая память кода/инцидентов: [09 — Continuity](./09-continuity.md).

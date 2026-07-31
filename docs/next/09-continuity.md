@@ -21,13 +21,59 @@
 |------|------------|--------|
 | 1 | Narrative (title/summary) + batch clarify + comment | **одобрен** (+ UX: custom answer, keyboard, header, back button) |
 | 2 | Cycle + days/kind + Home «день N» + Path day map | **одобрен** (+ hierarchy PathList, rest nesting) |
-| 3 | TimerStack + Counter | **код есть**; grammar fix (split gate) есть — **ждёт dogfood** create карбонара/отжимания после restart backend |
-| 4 | Repair | не начат |
+| 3 | TimerStack + Counter | **dogfood ок** (plugins на create есть; grammar split gate ок). UX таймеров и create-latency — см. решения ниже |
+| 4 | Repair | не начат — делать уже в рамке «живой план» (см. ниже) |
 | 5 | Next cycle CTA | не начат |
 
-Миграции backend (по порядку): `005` narrative → `006` cycle/schedule → `007` action plugins. Нужен `alembic upgrade head`.
+Миграции backend (по порядку): `005` narrative → `006` cycle/schedule → `007` action plugins.
 
-Срез 3 на iOS: после plugins нужен **rebuild** (`expo-notifications`, `expo-haptics`).
+---
+
+## Продуктовые решения после dogfood Среза 3 (зафиксировано)
+
+### A. Draft → Accept → live — цикл устарел
+
+Accept дублирует draft: карта уже полная на create (H1 выполнена). Hard commit имел смысл, когда Accept = «впервые показали план».
+
+**Направление:** один **живой план**, всегда правится. Под капотом — явные операции (refine / repair / next cycle / comment), не свободный чат. Снаружи — план + жесты, не лента сообщений.
+
+- Accept схлопывается в лёгкий «начать сегодня» / контракт на том же экране, либо исчезает как отдельный дубль PathList.
+- Repair — не «режим после Accept», а тот же edit-loop на живом плане (срыв дня = мутация state).
+- Не возвращать chat-home; принцип «Plan as Runtime Artifact» сильнее, не слабее.
+
+Следствие для Среза 4: реализовать Repair уже как универсальную мутацию живого плана, не как заплатку на мёртвый draft-цикл.
+
+### B. Progressive create — slim первый кадр
+
+~20с до первого отклика убивает ощущение. Path = gate + полный PathState слишком поздно показывает пользу.
+
+**Направление create:**
+
+1. **Slim call (фаза 1)** — выбирает путь **и** даёт минимальную поверхность:
+   - `instant_answer` → ответ сразу
+   - `path` → paraphrase / title / summary-черновик + batch questions (+ опционально грубый outline дней, **без** plugins / полного PathState)
+2. Пользователь сразу видит «ведём к…» и может отвечать на уточнения.
+3. **Полный Path + plugins** — фаза 2 на фоне; UI мягко подменяется, когда готов.
+
+Не путать с «прятать маршрут до Accept»: скрываем только **полноту исполняемого слоя**, не первый полезный сигнал.
+
+Slim-схема обязана остаться маленькой (grammar). Не тащить plugins/`days[]` целиком в фазу 1.
+
+Текущий gate (`kind` + instant only) — промежуточный шаг; расширить до «start surface».
+
+### C. Семейство clock-плагинов (не только плоский TimerStack)
+
+Dogfood карбонары: плоский `timers[]` есть, но юзабельность слабая — нужна **ось времени сессии** (progress bar + маркеры). При этом простые таймеры **не выкидываем**.
+
+| Shape | Когда | Пример |
+|-------|--------|--------|
+| **Timer / TimerStack** | Отдельный отсчёт, ручной Start | «10 мин на расстойку» |
+| **Timeline** | Одна ось + markers `{at_sec, title, signal}` + progress | Карбонара: 0 → 2' помешать → 5' → 8' alert |
+| **Interval plan** | Последовательность сегментов + **pause/resume** | 40s упр. → 20s отдых → 40s упр. |
+
+Общий runtime-движок часов (elapsed, pause, complete segment/marker); LLM выбирает shape на шаге. Схему **не раздувать** тремя монстрами — заменить/дополнить peer-list timeline/interval там, где ось нужна.
+
+Slice 3 закрыл «plugins есть». Timeline / interval — следующий слой плагина (не блокер Repair, но must до объявления runtime wedge «готово»).
 
 ---
 
@@ -99,7 +145,7 @@ title + summary плана
 
 ---
 
-## Plugins (Срез 3)
+## Plugins (Срез 3 — что в коде сейчас)
 
 На action:
 
@@ -113,32 +159,36 @@ API: `POST .../counter`, `POST .../timers/{id}/complete`.
 
 Эталоны: карбонара → timers на cook; отжимания → counters на train (few-shots/промпты).
 
+**Следующий слой (ещё не в коде):** Timeline + Interval plan — см. решение C выше; модель в [04](./04-model.md).
+
 ---
 
 ## Известный backlog (не блокер среза, не забыть)
 
 | Тема | Заметка |
 |------|---------|
-| Clarify options отжиманий | Не мешать ось «сколько раз» и «с колен/стены» в одном ряду чипов — отдельный вопрос или убрать |
-| Home перегружен | Много labels (Сегодня / день / group / why); `detail` долго не показывался — в Срезе 3 частично добавили; полный declutter — с контролами / позже |
-| 8 недель vs cycle 7 дней | Narrative программы vs текущий cycle — явно развести в UI на next cycle (Срез 5) |
+| Progressive create | Расширить slim фазу 1 до start surface (решение B) — высокий ROI на ощущение |
+| Always-editable план | Схлопнуть Draft/Accept; Repair = общий edit (решение A) — рамка для Среза 4+ |
+| Timeline / Interval plugins | Карбонара progress bar; тренировки pause/playlist (решение C) |
+| Clarify options отжиманий | Не мешать ось «сколько раз» и «с колен/стены» в одном ряду чипов |
+| Home перегружен | Много labels; declutter вместе с контролами / always-editable |
+| 8 недель vs cycle 7 дней | Narrative программы vs текущий cycle — явно на next cycle (Срез 5) |
 | Strip «день N» из старых title | Промпт чинит новые create; старые draft могут содержать |
-| Latency create | Path = 2 LLM calls; ~30s+ на path-фазу — резать tokens_out / few-shots; Console не даёт «ускорить schema» |
-| resources/milestones | Не в structured wire — вернуть иначе, если понадобятся в продукте |
+| Latency path-фазы | Полный Path всё ещё ~десятки секунд — ок на фоне, если slim уже на экране; резать tokens_out / few-shots |
+| resources/milestones | Не в structured wire — вернуть иначе, если понадобятся |
 | Strategy C | Fallback без structured outputs, если снова grammar 400 |
 
 ---
 
-## Dogfood Срез 3 (следующий шаг человека)
+## Следующий шаг (после фиксации решений)
 
-1. Backend restart + `alembic upgrade head` (через 007)
-2. iOS rebuild если ещё не после plugins
-3. Create карбонара → draft с timers (disabled) → Accept → Home Start, nudge vs alert
-4. Create отжимания → counters → ± persist
-5. Instant `2^100` → один LLM call, без проекта-path
-6. Path-create: в audit **2** create llm_calls; **без** grammar 400
+Порядок согласовать явно (не автоматом «сразу Срез 4»):
 
-Если ок → одобрить Срез 3 → Срез 4 (Repair).
+1. **Progressive create** (slim start surface) — бьёт 20с пустоты  
+2. **Always-editable + Repair (Срез 4)** — в новой рамке, без дубля Accept  
+3. **Timeline / Interval** — углубление clock-плагинов  
+
+Можно 1 до или параллельно с подготовкой 4; 3 — не блокер Repair, но must до «runtime wedge готов».
 
 ---
 

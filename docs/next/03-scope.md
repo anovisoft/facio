@@ -2,7 +2,9 @@
 
 ## Формулировка одной строкой
 
-> Intent → полный Cycle/Path с narrative + plugins (preview) → batch clarify → Accept → live «Сегодня» по дням schedule → repair → конец цикла → детерминированный next cycle. Эталоны: карбонара, отжимания.
+> Intent → быстрый slim-старт (смысл + вопросы) → полный Cycle/Path с plugins доезжает → правки на живом плане (batch clarify / repair) → «Сегодня» по schedule → конец цикла → детерминированный next cycle. Эталоны: карбонара, отжимания.
+
+**Устаревает:** жёсткий конвейер Draft → Accept (дубль карты) → live. См. [05](./05-ux-flows.md), [09](./09-continuity.md).
 
 ---
 
@@ -10,19 +12,20 @@
 
 ### First-run / Path
 
-- Полный скелет плана на draft (секции/дни/шаги/плагины), не урезанная «дразнилка»
-- **Title** ответа/плана + **короткий summary** в начале тела плана (бюджет длины — см. модель)
+- Быстрый первый кадр (slim): paraphrase/title/summary + batch questions; полный Path+plugins может доезжать
+- Полный исполняемый скелет на плане (секции/дни/шаги/плагины), не «дразнилка до Accept»
+- **Title** ответа/плана + **короткий summary** в начале тела плана
 - Описания групп (зачем фаза) — по возможности; detail у шагов — must где how-to критичен
 - Batch clarify: все вопросы раунда на одном экране + optional free-text comment → один refine
-- Accept = контракт (успех, горизонт/нагрузка, старт) + включение live; не первое раскрытие карты
+- Один живой план: правка структуры всегда; «начать сегодня» вместо тяжёлого Accept-дубля
 
 ### Runtime plugins (общие для cooking + fitness)
 
 - **Checklist** (уже есть) — покупки / prep
-- **Timer / TimerStack** — фон, nudge vs alert
+- **Clock family:** Timer/TimerStack (есть) + **Timeline** (ось + markers, карбонара) + **Interval plan** (сегменты + pause, тренировки)
 - **Counter / Dose** — target/current, tap ± и/или swipe
-- На create/draft: те же плагины, **контроли disabled** (preview)
-- После Accept: live
+- На плане: плагины видны; live при старте сессии
+- Простые timers не выкидывать — нужны рядом с timeline/interval
 
 ### Schedule / Cycle
 
@@ -35,18 +38,19 @@
 ### Repair
 
 - Минимум: «не могу сегодня» / сдвиг / облегчённый день
+- Тот же класс мутаций, что refine — на живом плане, не отдельный «мир после Accept»
 - Не out of scope этого среза
 
 ### Эталоны качества
 
-- Карбонара (односессионный / короткий cycle)
-- Отжимания → ~30 (multi-day cycle)
+- Карбонара (односессионный / короткий cycle) — целевой clock: **timeline**
+- Отжимания → ~30 (multi-day cycle) — counters; interval_plan где круговая сессия
 
 ### Сохраняем из mvp/
 
-- Soft-start ≠ Hard Commit
+- Soft-start ≠ бесконечная пустота до ответа
 - «Сегодня» / «Сделано» / «Почему сейчас» (словарь)
-- Нет chat-home
+- Нет chat-home (операции под капотом ок)
 - Multi-active проекты
 - Audit / state versions на create/refine/repair/next-cycle
 
@@ -73,16 +77,15 @@
 
 ---
 
-## Приоритет внутри must (ориентир, не жёсткий waterfall)
-
-Оба трека ценности; порядок реализации можно параллелить:
+## Приоритет внутри must (ориентир)
 
 | Трек | Содержание | Зачем |
 |------|------------|-------|
-| A | Narrative + полный Path на draft + batch clarify + comment | First-run |
+| A | Narrative + полный Path + batch clarify + comment | First-run |
 | B | Schedule/Cycle model + дни kind + Home «день N» | Программа |
-| C | TimerStack + Counter (+ notifications) | Runtime ценность |
-| D | Repair | Чтобы цикл не умирал |
+| C | TimerStack + Counter (+ notifications) | Runtime база |
+| C′ | Progressive slim create; Timeline + Interval | Ощущение + юзабельность clock |
+| D | Repair на живом плане (без Draft/Accept-дубля) | Цикл не умирает |
 | E | Next cycle CTA + results → N+1 | Петля тренера |
 
-A+B+C+D+E все must для объявления среза «готово к dogfood»; внешние юзеры — после dogfood-бара.
+A–C в коде/dogfood; C′+D+E — следующие. Внешние юзеры — после dogfood-бара.
