@@ -2,7 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import type { CounterResponse, TimerResponse, TimerSignal } from '@/api/types';
+import type {
+  ActionTimelineResponse,
+  CounterResponse,
+  IntervalPlanResponse,
+  TimerResponse,
+  TimerSignal,
+} from '@/api/types';
 import {
   cancelScheduledNotification,
   scheduleTimerNotification,
@@ -200,6 +206,530 @@ export function TimerStack({
   );
 }
 
+type TimelineProgressProps = {
+  timeline: ActionTimelineResponse;
+  interactive?: boolean;
+  disabled?: boolean;
+};
+
+type TimelineRun = {
+  startedAt: number;
+  /** Accumulated ms while paused (wall clock adjustment). */
+  pausedTotalMs: number;
+  pauseStartedAt: number | null;
+  notificationId: string | null;
+};
+
+export function TimelineProgress({
+  timeline,
+  interactive = false,
+  disabled = false,
+}: TimelineProgressProps) {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  const [now, setNow] = useState(() => Date.now());
+  const [run, setRun] = useState<TimelineRun | null>(null);
+  const [done, setDone] = useState(false);
+  const firedMarkers = useRef<Set<number>>(new Set());
+
+  const markers = [...timeline.markers].sort((a, b) => a.at_sec - b.at_sec);
+  const durationSec = Math.max(1, timeline.duration_sec);
+
+  useEffect(() => {
+    if (!run || run.pauseStartedAt != null || done) return;
+    const id = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(id);
+  }, [run, done]);
+
+  const elapsedSec = (() => {
+    if (!run) return 0;
+    const pauseExtra =
+      run.pauseStartedAt != null ? now - run.pauseStartedAt : 0;
+    const ms = now - run.startedAt - run.pausedTotalMs - pauseExtra;
+    return Math.max(0, Math.min(durationSec, ms / 1000));
+  })();
+
+  const progress = elapsedSec / durationSec;
+  const isPaused = run != null && run.pauseStartedAt != null;
+  const isRunning = run != null && !isPaused && !done;
+
+  useEffect(() => {
+    if (!run || isPaused || done) return;
+    for (const marker of markers) {
+      if (elapsedSec < marker.at_sec) continue;
+      if (firedMarkers.current.has(marker.at_sec)) continue;
+      // Skip firing start marker (0) on session start — user already pressed Start.
+      if (marker.at_sec === 0 && elapsedSec < 0.5) {
+        firedMarkers.current.add(0);
+        continue;
+      }
+      firedMarkers.current.add(marker.at_sec);
+      void signalTimerComplete(marker.title, marker.signal);
+    }
+    if (elapsedSec >= durationSec) {
+      setDone(true);
+      void cancelScheduledNotification(run.notificationId);
+      setRun(null);
+    }
+  }, [elapsedSec, run, isPaused, done, markers, durationSec]);
+
+  if (markers.length === 0 && timeline.duration_sec < 1) return null;
+
+  const start = async () => {
+    if (!interactive || disabled || run) return;
+    firedMarkers.current = new Set();
+    setDone(false);
+    const endsAt = Date.now() + durationSec * 1000;
+    const lastAlert =
+      [...markers].reverse().find((m) => m.signal === 'alert') ??
+      markers[markers.length - 1];
+    const notificationId = lastAlert
+      ? await scheduleTimerNotification(
+          `timeline-${lastAlert.at_sec}`,
+          lastAlert.title,
+          lastAlert.signal,
+          endsAt,
+        )
+      : null;
+    setRun({
+      startedAt: Date.now(),
+      pausedTotalMs: 0,
+      pauseStartedAt: null,
+      notificationId,
+    });
+    setNow(Date.now());
+  };
+
+  const pause = async () => {
+    if (!run || run.pauseStartedAt != null) return;
+    await cancelScheduledNotification(run.notificationId);
+    setRun({
+      ...run,
+      pauseStartedAt: Date.now(),
+      notificationId: null,
+    });
+  };
+
+  const resume = async () => {
+    if (!run || run.pauseStartedAt == null) return;
+    const pausedTotalMs =
+      run.pausedTotalMs + (Date.now() - run.pauseStartedAt);
+    const remainingMs = Math.max(
+      1000,
+      (durationSec - (Date.now() - run.startedAt - pausedTotalMs) / 1000) *
+        1000,
+    );
+    const lastAlert =
+      [...markers].reverse().find((m) => m.signal === 'alert') ??
+      markers[markers.length - 1];
+    const notificationId = lastAlert
+      ? await scheduleTimerNotification(
+          `timeline-${lastAlert.at_sec}`,
+          lastAlert.title,
+          lastAlert.signal,
+          Date.now() + remainingMs,
+        )
+      : null;
+    setRun({
+      ...run,
+      pausedTotalMs,
+      pauseStartedAt: null,
+      notificationId,
+    });
+    setNow(Date.now());
+  };
+
+  const reset = async () => {
+    await cancelScheduledNotification(run?.notificationId);
+    setRun(null);
+    setDone(false);
+    firedMarkers.current = new Set();
+  };
+
+  return (
+    <View
+      style={[
+        styles.clockCard,
+        { borderColor: colors.border, backgroundColor: colors.surface },
+      ]}
+    >
+      <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
+        {t('plugins.timeline')}
+      </Text>
+      <View style={[styles.progressTrack, { backgroundColor: colors.border }]}>
+        <View
+          style={[
+            styles.progressFill,
+            {
+              backgroundColor: colors.primary,
+              width: `${Math.round(progress * 100)}%`,
+            },
+          ]}
+        />
+        {markers.map((marker) => {
+          const left = Math.min(
+            100,
+            Math.max(0, (marker.at_sec / durationSec) * 100),
+          );
+          const hit = elapsedSec >= marker.at_sec;
+          return (
+            <View
+              key={`${marker.at_sec}-${marker.title}`}
+              style={[
+                styles.markerDot,
+                {
+                  left: `${left}%`,
+                  backgroundColor: hit ? colors.primary : colors.textMuted,
+                  borderColor: colors.surface,
+                },
+              ]}
+            />
+          );
+        })}
+      </View>
+      <Text style={[styles.caption, { color: colors.textSecondary }]}>
+        {formatRemaining(done ? 0 : durationSec - elapsedSec)}
+        {' · '}
+        {formatDuration(durationSec)}
+        {done ? ` · ${t('plugins.timerDone')}` : ''}
+      </Text>
+      <View style={styles.markerList}>
+        {markers.map((marker) => {
+          const hit = elapsedSec >= marker.at_sec || done;
+          return (
+            <Text
+              key={`label-${marker.at_sec}-${marker.title}`}
+              style={[
+                styles.caption,
+                {
+                  color: hit ? colors.text : colors.textSecondary,
+                  opacity: hit ? 1 : 0.75,
+                },
+              ]}
+            >
+              {formatDuration(marker.at_sec)} · {marker.title}
+              {' · '}
+              {signalLabel(marker.signal, t)}
+            </Text>
+          );
+        })}
+      </View>
+      {interactive ? (
+        <View style={styles.controlsRow}>
+          {!run && !done ? (
+            <Pressable
+              disabled={disabled}
+              onPress={() => void start()}
+              style={[styles.btn, { borderColor: colors.primary }]}
+            >
+              <Text style={{ color: colors.primary }}>{t('plugins.start')}</Text>
+            </Pressable>
+          ) : null}
+          {isRunning ? (
+            <Pressable
+              disabled={disabled}
+              onPress={() => void pause()}
+              style={[styles.btn, { borderColor: colors.border }]}
+            >
+              <Text style={{ color: colors.text }}>{t('plugins.pause')}</Text>
+            </Pressable>
+          ) : null}
+          {isPaused ? (
+            <Pressable
+              disabled={disabled}
+              onPress={() => void resume()}
+              style={[styles.btn, { borderColor: colors.primary }]}
+            >
+              <Text style={{ color: colors.primary }}>
+                {t('plugins.resume')}
+              </Text>
+            </Pressable>
+          ) : null}
+          {run || done ? (
+            <Pressable
+              disabled={disabled}
+              onPress={() => void reset()}
+              style={[styles.btn, { borderColor: colors.border }]}
+            >
+              <Text style={{ color: colors.text }}>{t('plugins.reset')}</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : (
+        <Text style={[styles.previewBadge, { color: colors.textMuted }]}>
+          {t('plugins.preview')}
+        </Text>
+      )}
+    </View>
+  );
+}
+
+type IntervalPlayerProps = {
+  plan: IntervalPlanResponse;
+  interactive?: boolean;
+  disabled?: boolean;
+};
+
+type IntervalRun = {
+  segmentIndex: number;
+  segmentStartedAt: number;
+  pausedTotalMs: number;
+  pauseStartedAt: number | null;
+  notificationId: string | null;
+};
+
+export function IntervalPlayer({
+  plan,
+  interactive = false,
+  disabled = false,
+}: IntervalPlayerProps) {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  const [now, setNow] = useState(() => Date.now());
+  const [run, setRun] = useState<IntervalRun | null>(null);
+  const [done, setDone] = useState(false);
+  const segments = plan.segments;
+
+  useEffect(() => {
+    if (!run || run.pauseStartedAt != null || done) return;
+    const id = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(id);
+  }, [run, done]);
+
+  const current =
+    segments.length === 0
+      ? null
+      : run
+        ? segments[run.segmentIndex]
+        : segments[0];
+  const segmentElapsed = (() => {
+    if (!run || !current) return 0;
+    const pauseExtra =
+      run.pauseStartedAt != null ? now - run.pauseStartedAt : 0;
+    const ms = now - run.segmentStartedAt - run.pausedTotalMs - pauseExtra;
+    return Math.max(0, ms / 1000);
+  })();
+  const remaining = current
+    ? Math.max(0, current.duration_sec - segmentElapsed)
+    : 0;
+  const isPaused = run != null && run.pauseStartedAt != null;
+  const isRunning = run != null && !isPaused && !done;
+
+  useEffect(() => {
+    if (!run || isPaused || done || !current) return;
+    if (segmentElapsed < current.duration_sec) return;
+    void (async () => {
+      await cancelScheduledNotification(run.notificationId);
+      await signalTimerComplete(current.title, current.signal);
+      const nextIndex = run.segmentIndex + 1;
+      if (nextIndex >= segments.length) {
+        setDone(true);
+        setRun(null);
+        return;
+      }
+      const next = segments[nextIndex];
+      const endsAt = Date.now() + next.duration_sec * 1000;
+      const notificationId = await scheduleTimerNotification(
+        `interval-${nextIndex}`,
+        next.title,
+        next.signal,
+        endsAt,
+      );
+      setRun({
+        segmentIndex: nextIndex,
+        segmentStartedAt: Date.now(),
+        pausedTotalMs: 0,
+        pauseStartedAt: null,
+        notificationId,
+      });
+      setNow(Date.now());
+    })();
+  }, [segmentElapsed, run, isPaused, done, current, segments]);
+
+  if (segments.length === 0) return null;
+
+  const start = async () => {
+    if (!interactive || disabled || run) return;
+    setDone(false);
+    const first = segments[0];
+    const endsAt = Date.now() + first.duration_sec * 1000;
+    const notificationId = await scheduleTimerNotification(
+      'interval-0',
+      first.title,
+      first.signal,
+      endsAt,
+    );
+    setRun({
+      segmentIndex: 0,
+      segmentStartedAt: Date.now(),
+      pausedTotalMs: 0,
+      pauseStartedAt: null,
+      notificationId,
+    });
+    setNow(Date.now());
+  };
+
+  const pause = async () => {
+    if (!run || run.pauseStartedAt != null) return;
+    await cancelScheduledNotification(run.notificationId);
+    setRun({
+      ...run,
+      pauseStartedAt: Date.now(),
+      notificationId: null,
+    });
+  };
+
+  const resume = async () => {
+    if (!run || run.pauseStartedAt == null || !current) return;
+    const pausedTotalMs =
+      run.pausedTotalMs + (Date.now() - run.pauseStartedAt);
+    const remainingMs = Math.max(
+      1000,
+      (current.duration_sec -
+        (Date.now() - run.segmentStartedAt - pausedTotalMs) / 1000) *
+        1000,
+    );
+    const notificationId = await scheduleTimerNotification(
+      `interval-${run.segmentIndex}`,
+      current.title,
+      current.signal,
+      Date.now() + remainingMs,
+    );
+    setRun({
+      ...run,
+      pausedTotalMs,
+      pauseStartedAt: null,
+      notificationId,
+    });
+    setNow(Date.now());
+  };
+
+  const reset = async () => {
+    await cancelScheduledNotification(run?.notificationId);
+    setRun(null);
+    setDone(false);
+  };
+
+  const segmentProgress = current
+    ? Math.min(1, segmentElapsed / Math.max(1, current.duration_sec))
+    : 0;
+
+  return (
+    <View
+      style={[
+        styles.clockCard,
+        { borderColor: colors.border, backgroundColor: colors.surface },
+      ]}
+    >
+      <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
+        {t('plugins.interval')}
+      </Text>
+      <Text style={[styles.title, { color: colors.text }]}>
+        {done
+          ? t('plugins.timerDone')
+          : current
+            ? current.title
+            : t('plugins.interval')}
+      </Text>
+      <Text style={[styles.caption, { color: colors.textSecondary }]}>
+        {run
+          ? t('plugins.segmentOf', {
+              current: run.segmentIndex + 1,
+              total: segments.length,
+            })
+          : t('plugins.segmentOf', {
+              current: 1,
+              total: segments.length,
+            })}
+        {' · '}
+        {done
+          ? formatDuration(0)
+          : run
+            ? formatRemaining(remaining)
+            : formatDuration(current?.duration_sec ?? 0)}
+      </Text>
+      <View style={[styles.progressTrack, { backgroundColor: colors.border }]}>
+        <View
+          style={[
+            styles.progressFill,
+            {
+              backgroundColor: colors.primary,
+              width: `${Math.round((done ? 1 : segmentProgress) * 100)}%`,
+            },
+          ]}
+        />
+      </View>
+      <View style={styles.markerList}>
+        {segments.map((segment, index) => {
+          const past = done || (run != null && index < run.segmentIndex);
+          const active = run != null && index === run.segmentIndex && !done;
+          return (
+            <Text
+              key={`seg-${index}-${segment.title}`}
+              style={[
+                styles.caption,
+                {
+                  color: active || past ? colors.text : colors.textSecondary,
+                  fontWeight: active ? '600' : '400',
+                },
+              ]}
+            >
+              {index + 1}. {segment.title} ·{' '}
+              {formatDuration(segment.duration_sec)}
+            </Text>
+          );
+        })}
+      </View>
+      {interactive ? (
+        <View style={styles.controlsRow}>
+          {!run && !done ? (
+            <Pressable
+              disabled={disabled}
+              onPress={() => void start()}
+              style={[styles.btn, { borderColor: colors.primary }]}
+            >
+              <Text style={{ color: colors.primary }}>{t('plugins.start')}</Text>
+            </Pressable>
+          ) : null}
+          {isRunning ? (
+            <Pressable
+              disabled={disabled}
+              onPress={() => void pause()}
+              style={[styles.btn, { borderColor: colors.border }]}
+            >
+              <Text style={{ color: colors.text }}>{t('plugins.pause')}</Text>
+            </Pressable>
+          ) : null}
+          {isPaused ? (
+            <Pressable
+              disabled={disabled}
+              onPress={() => void resume()}
+              style={[styles.btn, { borderColor: colors.primary }]}
+            >
+              <Text style={{ color: colors.primary }}>
+                {t('plugins.resume')}
+              </Text>
+            </Pressable>
+          ) : null}
+          {run || done ? (
+            <Pressable
+              disabled={disabled}
+              onPress={() => void reset()}
+              style={[styles.btn, { borderColor: colors.border }]}
+            >
+              <Text style={{ color: colors.text }}>{t('plugins.reset')}</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : (
+        <Text style={[styles.previewBadge, { color: colors.textMuted }]}>
+          {t('plugins.preview')}
+        </Text>
+      )}
+    </View>
+  );
+}
+
 type CounterControlProps = {
   counter: CounterResponse;
   interactive?: boolean;
@@ -331,6 +861,39 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: radii.md,
     padding: spacing.md,
+    gap: spacing.sm,
+  },
+  clockCard: {
+    borderWidth: 1,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  progressTrack: {
+    height: 10,
+    borderRadius: 5,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 5,
+  },
+  markerDot: {
+    position: 'absolute',
+    top: -2,
+    width: 14,
+    height: 14,
+    marginLeft: -7,
+    borderRadius: 7,
+    borderWidth: 2,
+  },
+  markerList: {
+    gap: 2,
+  },
+  controlsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   counterRow: {

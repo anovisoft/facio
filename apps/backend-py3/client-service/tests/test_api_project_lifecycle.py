@@ -3,6 +3,7 @@
 from sqlalchemy import select
 
 from app.models import Event, Project, ProjectStatus, StateVersion
+from tests.conftest import wait_path_ready
 from tests.factories import refined_path_state, sample_path_state
 
 
@@ -14,7 +15,8 @@ async def _create_draft(client, auth_headers, enqueue_path) -> dict:
         json={"intent": "Приготовить карбонару"},
     )
     assert response.status_code == 200
-    return response.json()["project"]
+    project = response.json()["project"]
+    return await wait_path_ready(client, auth_headers, project["id"])
 
 
 async def test_list_status_filters(
@@ -59,7 +61,7 @@ async def test_refine_creates_new_state_version(
     )
     assert response.status_code == 200
     body = response.json()
-    assert body["current_version"] == 2
+    assert body["current_version"] == 3
     assert body["questions"] == []
     assert body["title"]
     assert body["summary"]
@@ -86,7 +88,7 @@ async def test_refine_legacy_single_answer_still_works(
         json={"answer": "2", "question_id": "q_servings"},
     )
     assert response.status_code == 200
-    assert response.json()["current_version"] == 2
+    assert response.json()["current_version"] == 3
 
 
 async def test_restore_state_appends_user_restore(
@@ -112,7 +114,8 @@ async def test_restore_state_appends_user_restore(
     assert versions.status_code == 200
     assert [(v["version"], v["source"]) for v in versions.json()] == [
         (1, "llm_create"),
-        (2, "llm_refine"),
+        (2, "llm_create"),
+        (3, "llm_refine"),
     ]
 
     response = await client.post(
@@ -122,7 +125,7 @@ async def test_restore_state_appends_user_restore(
     )
     assert response.status_code == 200
     body = response.json()
-    assert body["current_version"] == 3
+    assert body["current_version"] == 4
     assert len(body["questions"]) == 2
 
     versions_after = await client.get(
@@ -131,8 +134,9 @@ async def test_restore_state_appends_user_restore(
     )
     assert [(v["version"], v["source"]) for v in versions_after.json()] == [
         (1, "llm_create"),
-        (2, "llm_refine"),
-        (3, "user_restore"),
+        (2, "llm_create"),
+        (3, "llm_refine"),
+        (4, "user_restore"),
     ]
 
     sources = (
@@ -143,6 +147,7 @@ async def test_restore_state_appends_user_restore(
         )
     ).scalars().all()
     assert [s.value for s in sources] == [
+        "llm_create",
         "llm_create",
         "llm_refine",
         "user_restore",
@@ -280,7 +285,7 @@ async def test_repair_on_active(
         json={"reason": "нет гуанчиале, возьму бекон"},
     )
     assert response.status_code == 200
-    assert response.json()["current_version"] == 2
+    assert response.json()["current_version"] == 3
     assert "Сдвинули" in response.json()["paraphrase"]
 
 

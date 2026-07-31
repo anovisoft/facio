@@ -21,11 +21,12 @@
 |------|------------|--------|
 | 1 | Narrative (title/summary) + batch clarify + comment | **одобрен** (+ UX: custom answer, keyboard, header, back button) |
 | 2 | Cycle + days/kind + Home «день N» + Path day map | **одобрен** (+ hierarchy PathList, rest nesting) |
-| 3 | TimerStack + Counter | **dogfood ок** (plugins на create есть; grammar split gate ок). UX таймеров и create-latency — см. решения ниже |
-| 4 | Repair | не начат — делать уже в рамке «живой план» (см. ниже) |
+| 3 | TimerStack + Counter | **dogfood ок** |
+| 3′ | Progressive create + clock UX (timeline/interval) + схлоп Accept | **код готов** (A+B); ждёт dogfood |
+| 4 | Repair на живом плане | не начат |
 | 5 | Next cycle CTA | не начат |
 
-Миграции backend (по порядку): `005` narrative → `006` cycle/schedule → `007` action plugins.
+Миграции backend (по порядку): `005` narrative → `006` cycle/schedule → `007` action plugins → `008` timeline/interval.
 
 ---
 
@@ -97,12 +98,14 @@ Slice 3 закрыл «plugins есть». Timeline / interval — следую�
 2. **После Slice 3 снова 400** — dual-branch create (`path` + `instant_answer` в одной schema) + plugins не влезали.
 
 3. **Split create gate** (текущее решение):
-   - Фаза 1: `CREATE_GATE_SCHEMA` (~656 chars) → `{kind, instant_answer}`
+   - Фаза 1: `CREATE_GATE_SCHEMA` (~1380 chars wire) → `{kind, instant_answer, path_start}`
+     - `path_start`: paraphrase / title / summary / questions / outline_days (titles only)
    - Если `instant_answer` → готово (1 LLM call)
-   - Если `path` → Фаза 2: `PATH_RESPONSE_SCHEMA` only (~3591 chars)
+   - Если `path` → сразу persist project + return `path_ready=false`; Фаза 2 в BackgroundTasks: `PATH_RESPONSE_SCHEMA` only
    - Legacy `CREATE_RESPONSE_SCHEMA` **не** шлётся в Anthropic (только тесты / сборка)
-   - Path-create → **2** строки в `llm_calls`
-   - `resources` / `milestones` убраны с Anthropic wire (сервер → `[]`); в модели API поля живы
+- Path-create → **2** строки в `llm_calls` (gate + path); клиент поллит GET до `path_ready`
+- `resources` / `milestones` убраны с Anthropic wire (сервер → `[]`); в модели API поля живы
+- Path wire после clock family (~4383 chars) — ещё под потолком 4500; Strategy C если снова 400
 
 ### Запасной ход (ещё не включали)
 
@@ -145,21 +148,25 @@ title + summary плана
 
 ---
 
-## Plugins (Срез 3 — что в коде сейчас)
+## Plugins (Срез 3 / 3′ clock — что в коде сейчас)
 
 На action:
 
 - `timers[]`: id, title, duration_sec, signal (`nudge`|`alert`), parallel_group
 - `counter`: label, target, current, step (wire stub `target:-1` → null)
+- `timeline`: duration_sec + markers[] (`sec` on wire = absolute `at_sec`; API exposes `at_sec`). Stub `{duration_sec:-1, markers:[]}` → null
+- `interval_plan`: segments[] (`sec` on wire = segment `duration_sec`; API exposes `duration_sec`). Stub `{segments:[]}` → null
 - checklist как было
 
-UI: draft/accept — preview disabled; Home/Path live — Start таймеров, ± каунтера.  
+Wire slim trick: shared `PathClockBeat` `{sec, title, signal}` for timeline markers and interval segments (Path wire ~4383 chars, under 4500 ceiling).
+
+UI: draft/accept — preview disabled; Home/Path live — Start таймеров, timeline progress + pause, interval play/pause, ± каунтера.  
 Сигналы: nudge = короткая вибро; alert = сильнее + notification.  
-API: `POST .../counter`, `POST .../timers/{id}/complete`.
+API: `POST .../counter`, `POST .../timers/{id}/complete`. Timeline/interval runtime — client-side (v1), plan data persisted on actions JSONB (`008_clock_plugins`).
 
-Эталоны: карбонара → timers на cook; отжимания → counters на train (few-shots/промпты).
+Эталоны: карбонара cook → **timeline** (+ optional simple timer for guanciale); отжимания day0 → **interval_plan** circuit + counter; other train → counters.
 
-**Следующий слой (ещё не в коде):** Timeline + Interval plan — см. решение C выше; модель в [04](./04-model.md).
+Миграции: `005` narrative → `006` cycle/schedule → `007` action plugins → `008` timeline/interval_plan.
 
 ---
 
@@ -167,9 +174,9 @@ API: `POST .../counter`, `POST .../timers/{id}/complete`.
 
 | Тема | Заметка |
 |------|---------|
-| Progressive create | Расширить slim фазу 1 до start surface (решение B) — высокий ROI на ощущение |
-| Always-editable план | Схлопнуть Draft/Accept; Repair = общий edit (решение A) — рамка для Среза 4+ |
-| Timeline / Interval plugins | Карбонара progress bar; тренировки pause/playlist (решение C) |
+| Progressive create | **done (часть A Среза 3′)**: slim `path_start` + background Path; Accept схлопнут в «Начать сегодня» на DraftStudio |
+| Always-editable план | Accept-дубль PathList убран; Repair = общий edit (решение A) — рамка для Среза 4+ |
+| Timeline / Interval plugins | **в коде (Срез 3′ B)** — карбонара timeline; fitness day0 interval+pause; TimerStack сохранён |
 | Clarify options отжиманий | Не мешать ось «сколько раз» и «с колен/стены» в одном ряду чипов |
 | Home перегружен | Много labels; declutter вместе с контролами / always-editable |
 | 8 недель vs cycle 7 дней | Narrative программы vs текущий cycle — явно на next cycle (Срез 5) |
@@ -180,15 +187,20 @@ API: `POST .../counter`, `POST .../timers/{id}/complete`.
 
 ---
 
-## Следующий шаг (после фиксации решений)
+## Следующий шаг
 
-Порядок согласовать явно (не автоматом «сразу Срез 4»):
+Срез 3′ **A+B в коде**. Dogfood → одобрение → Срез 4.
 
-1. **Progressive create** (slim start surface) — бьёт 20с пустоты  
-2. **Always-editable + Repair (Срез 4)** — в новой рамке, без дубля Accept  
-3. **Timeline / Interval** — углубление clock-плагинов  
+### Dogfood 3′
 
-Можно 1 до или параллельно с подготовкой 4; 3 — не блокер Repair, но must до «runtime wedge готов».
+1. Restart backend + `alembic upgrade head` (через `008`)
+2. Create карбонара → slim кадр (title/summary/questions) быстро → «Собираю полный план…» → PathList с **timeline**; «Начать сегодня» → Home, Start timeline + pause; guanciale timer ещё работает
+3. Create отжимания → day0 **interval** + pause; counters на других днях
+4. Instant `2^100` → один LLM call
+5. Нет экрана Accept с дублем PathList
+6. Нет grammar 400; path-create: gate + background path (poll `path_ready`)
+
+Риск: phase-2 fail оставляет `path_ready=false` без retry UI.
 
 ---
 

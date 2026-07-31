@@ -155,6 +155,29 @@ class CounterResponse(BaseModel):
     step: int = 1
 
 
+class TimelineMarkerResponse(BaseModel):
+    at_sec: int
+    title: str
+    signal: TimerSignal
+
+
+class ActionTimelineResponse(BaseModel):
+    """Session axis + markers (cook). Named to avoid audit TimelineResponse."""
+
+    duration_sec: int
+    markers: list[TimelineMarkerResponse] = Field(default_factory=list)
+
+
+class IntervalSegmentResponse(BaseModel):
+    duration_sec: int
+    title: str
+    signal: TimerSignal = "nudge"
+
+
+class IntervalPlanResponse(BaseModel):
+    segments: list[IntervalSegmentResponse] = Field(default_factory=list)
+
+
 class GroupResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -210,6 +233,8 @@ class ActionResponse(BaseModel):
     checklist_items: list[ChecklistItemResponse] = Field(default_factory=list)
     timers: list[TimerResponse] = Field(default_factory=list)
     counter: CounterResponse | None = None
+    timeline: ActionTimelineResponse | None = None
+    interval_plan: IntervalPlanResponse | None = None
 
 
 class ProjectSummary(BaseModel):
@@ -253,6 +278,13 @@ class ProjectDetail(ProjectSummary):
     resources: list[str] = Field(default_factory=list)
     milestones: list[str] = Field(default_factory=list)
     current_version: int | None = None
+    path_ready: bool = Field(
+        default=True,
+        description=(
+            "False while progressive create phase-2 Path+plugins is still "
+            "generating (start surface already available)."
+        ),
+    )
 
 
 class AbandonProjectRequest(BaseModel):

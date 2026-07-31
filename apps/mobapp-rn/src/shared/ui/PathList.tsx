@@ -10,7 +10,12 @@ import type {
   DayResponse,
   GroupResponse,
 } from '@/api/types';
-import { CounterControl, TimerStack } from '@/shared/ui/ActionPlugins';
+import {
+  CounterControl,
+  IntervalPlayer,
+  TimelineProgress,
+  TimerStack,
+} from '@/shared/ui/ActionPlugins';
 import { ChecklistList } from '@/shared/ui/ChecklistList';
 import { useTheme } from '@/theme/ThemeContext';
 import { radii, spacing, typography } from '@/theme';
@@ -344,7 +349,9 @@ export function PathList({
                       action.why ||
                       action.checklist_items.length > 0 ||
                       (action.timers?.length ?? 0) > 0 ||
-                      action.counter,
+                      action.counter ||
+                      action.timeline ||
+                      action.interval_plan,
                   );
                 const prev = section.actions[index - 1];
                 const showGroup =
@@ -472,6 +479,26 @@ export function PathList({
                                       onCompleteTimer(action.id, timerId)
                                   : undefined
                               }
+                            />
+                          ) : null}
+                          {action.timeline ? (
+                            <TimelineProgress
+                              timeline={action.timeline}
+                              interactive={
+                                pluginsInteractive &&
+                                action.status === 'pending'
+                              }
+                              disabled={checklistDisabled}
+                            />
+                          ) : null}
+                          {action.interval_plan ? (
+                            <IntervalPlayer
+                              plan={action.interval_plan}
+                              interactive={
+                                pluginsInteractive &&
+                                action.status === 'pending'
+                              }
+                              disabled={checklistDisabled}
                             />
                           ) : null}
                           {action.counter ? (

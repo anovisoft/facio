@@ -240,6 +240,7 @@ class ProjectService:
             resources=resources,
             milestones=milestones,
             current_version=version,
+            path_ready=bool(actions) if project.status == ProjectStatus.draft else True,
         )
 
     async def commit(
@@ -257,6 +258,8 @@ class ProjectService:
         version, state = await self.get_latest_state(project.id)
         if state is None:
             raise ValidationAppError("Project has no Path state to commit")
+        if not state.actions:
+            raise ValidationAppError("Path is still generating — try again shortly")
         if not state.outcome or not state.success_criteria:
             raise ValidationAppError("Project contract incomplete")
 

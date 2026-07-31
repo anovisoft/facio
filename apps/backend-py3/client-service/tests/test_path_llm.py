@@ -58,6 +58,8 @@ def test_parse_path_normalizes_wire_sentinels():
         "current": 0,
         "step": 1,
     }
+    cook["timeline"] = {"duration_sec": -1, "markers": []}
+    cook["interval_plan"] = {"segments": []}
     cook["timers"] = [
         {
             "id": "",
@@ -79,6 +81,8 @@ def test_parse_path_normalizes_wire_sentinels():
     assert state.days[0].summary is None
     assert state.groups[0].description is None
     assert state.actions[1].counter is None
+    assert state.actions[1].timeline is None
+    assert state.actions[1].interval_plan is None
     assert len(state.actions[1].timers) == 1
     assert state.actions[1].timers[0].id is None
     assert state.actions[1].timers[0].parallel_group is None
@@ -117,18 +121,66 @@ def test_parse_create_gate_path():
                 "goal_suggestions": [],
                 "domain": "other",
             },
+            "path_start": {
+                "paraphrase": "Ок — ведём к: карбонара",
+                "title": "Карбонара",
+                "summary": "Купим и приготовим за вечер.",
+                "questions": [
+                    {
+                        "id": "meat",
+                        "prompt": "Какое мясо?",
+                        "options": ["гуанчиале", "панчетта"],
+                    },
+                    {
+                        "id": "servings",
+                        "prompt": "Порций?",
+                        "options": ["1", "2"],
+                    },
+                ],
+                "outline_days": ["Вечер готовки"],
+            },
         }
     )
     assert parsed.kind == "path"
     assert parsed.instant_answer is None
+    assert parsed.path_start is not None
+    assert parsed.path_start.title == "Карбонара"
+
+
+def test_parse_create_gate_path_requires_start():
+    with pytest.raises(ValueError, match="path_start"):
+        parse_create_gate(
+            {
+                "kind": "path",
+                "instant_answer": {
+                    "label": "",
+                    "answer": "",
+                    "goal_suggestions": [],
+                    "domain": "other",
+                },
+            }
+        )
 
 
 def test_parse_create_gate_instant():
     ia = sample_instant_answer()["instant_answer"]
-    parsed = parse_create_gate({"kind": "instant_answer", "instant_answer": ia})
+    parsed = parse_create_gate(
+        {
+            "kind": "instant_answer",
+            "instant_answer": ia,
+            "path_start": {
+                "paraphrase": "",
+                "title": "",
+                "summary": "",
+                "questions": [],
+                "outline_days": [],
+            },
+        }
+    )
     assert parsed.kind == "instant_answer"
     assert parsed.instant_answer is not None
     assert len(parsed.instant_answer.goal_suggestions) >= 2
+    assert parsed.path_start is None
 
 
 def test_messages_for_create_include_intent():

@@ -3,6 +3,7 @@
 from sqlalchemy import select
 
 from app.models import Event, Project, ProjectStatus
+from tests.conftest import wait_path_ready
 
 
 async def _create_and_commit(client, auth_headers, enqueue_path) -> dict:
@@ -13,6 +14,7 @@ async def _create_and_commit(client, auth_headers, enqueue_path) -> dict:
         json={"intent": "Приготовить карбонару"},
     )
     project = created.json()["project"]
+    await wait_path_ready(client, auth_headers, project["id"])
     committed = await client.post(
         f"/api/v1/projects/{project['id']}/commit",
         headers=auth_headers,
@@ -49,7 +51,9 @@ async def test_draft_next_action_is_null(client, auth_headers, enqueue_path):
         headers=auth_headers,
         json={"intent": "Приготовить карбонару"},
     )
-    project = created.json()["project"]
+    project = await wait_path_ready(
+        client, auth_headers, created.json()["project"]["id"]
+    )
     assert project["next_action"] is None
 
     listed = await client.get("/api/v1/projects", headers=auth_headers)
@@ -183,7 +187,9 @@ async def test_cannot_complete_on_draft(client, auth_headers, enqueue_path):
         headers=auth_headers,
         json={"intent": "Приготовить карбонару"},
     )
-    project = created.json()["project"]
+    project = await wait_path_ready(
+        client, auth_headers, created.json()["project"]["id"]
+    )
     # Draft actions use stable uuid5 ids in the response but are not ORM rows
     # for /actions/{id}/complete — those require committed ORM actions.
     action_id = project["actions"][0]["id"]
@@ -202,10 +208,18 @@ async def test_draft_exposes_timers_preview(client, auth_headers, enqueue_path):
         headers=auth_headers,
         json={"intent": "Приготовить карбонару"},
     )
-    project = created.json()["project"]
+    project = await wait_path_ready(
+        client, auth_headers, created.json()["project"]["id"]
+    )
     cook = next(a for a in project["actions"] if a["key"] == "cook")
-    assert len(cook["timers"]) >= 2
-    assert {t["signal"] for t in cook["timers"]} >= {"alert", "nudge"}
+    assert cook["timeline"] is not None
+    assert cook["timeline"]["duration_sec"] >= 1
+    assert len(cook["timeline"]["markers"]) >= 2
+    assert {m["signal"] for m in cook["timeline"]["markers"]} >= {
+        "alert",
+        "nudge",
+    }
+    assert len(cook["timers"]) >= 1
     assert all(t["completed"] is False for t in cook["timers"])
 
 
@@ -218,7 +232,9 @@ async def test_counter_update_and_timer_complete(
         headers=auth_headers,
         json={"intent": "Хочу научиться делать 30 отжиманий"},
     )
-    project = created.json()["project"]
+    project = await wait_path_ready(
+        client, auth_headers, created.json()["project"]["id"]
+    )
     committed = await client.post(
         f"/api/v1/projects/{project['id']}/commit",
         headers=auth_headers,

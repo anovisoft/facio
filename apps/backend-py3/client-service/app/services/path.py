@@ -36,6 +36,7 @@ from app.providers.llm import (
     LLMRawResult,
     get_llm_provider,
 )
+from app.database import async_session_maker
 from app.schemas.api import (
     ConversationTurnResponse,
     CreateIntentResponse,
@@ -47,6 +48,7 @@ from app.schemas.api import (
 from app.schemas.create_response import (
     CreateGateResponse,
     InstantAnswerPayload,
+    PathStartSurface,
 )
 from app.schemas.path_state import PathState
 from app.services.audit import AuditService, EventType
@@ -81,6 +83,17 @@ class ApplyResult:
     llm_call_id: UUID
 
 
+@dataclass(frozen=True)
+class PendingPathJob:
+    """Returned to the API layer so BackgroundTasks can finish phase-2."""
+
+    project_id: UUID
+    user_id: UUID
+    intent: str
+    path_start: PathStartSurface
+    gate_llm_call_id: UUID
+
+
 def _assistant_content(raw_response: Any) -> str:
     if isinstance(raw_response, str):
         return raw_response
@@ -92,7 +105,98 @@ def _parse_create_gate_payload(raw_response: Any) -> CreateGateResponse:
 
 
 def _parse_path_payload(raw_response: Any) -> PathState:
-    return ensure_action_keys(parse_path_state(raw_response))
+    state = ensure_action_keys(parse_path_state(raw_response))
+    if not state.actions:
+        raise ValueError("Path must include at least one action")
+    return state
+
+
+def path_state_from_start(start: PathStartSurface) -> PathState:
+    """Minimal PathState for progressive create phase-1 (no actions/plugins)."""
+    titles = [t.strip() for t in start.outline_days if t.strip()]
+    if not titles:
+        titles = [start.title.strip()[:120] or "Plan"]
+    horizon = max(1, len(titles))
+    days = [
+        {
+            "day_index": i,
+            "kind": "other",
+            "title": title[:120],
+            "summary": "",
+        }
+        for i, title in enumerate(titles)
+    ]
+    questions = [
+        {
+            "id": q.id.strip(),
+            "prompt": q.prompt.strip(),
+            "options": [o for o in q.options if o.strip()],
+        }
+        for q in start.questions
+    ]
+    # Build via dict so PathState before-validators see cycle as a mapping
+    # (PathCycle instances get wiped to {} by backfill_missing_fields).
+    return PathState.model_validate(
+        {
+            "title": start.title.strip()[:120],
+            "summary": start.summary.strip()[:600],
+            "outcome": start.title.strip()[:120],
+            "paraphrase": start.paraphrase.strip(),
+            "success_criteria": start.summary.strip()[:600],
+            "horizon": "…",
+            "domain": "other",
+            "tags": [],
+            "cycle": {
+                "index": 1,
+                "horizon_days": horizon,
+                "status": "draft",
+                "goal_for_cycle": "",
+            },
+            "days": days,
+            "groups": [],
+            "actions": [],
+            "questions": questions,
+            "resources": [],
+            "milestones": [],
+        }
+    )
+
+
+async def complete_create_path_job(
+    *,
+    project_id: UUID,
+    user_id: UUID,
+    intent: str,
+    path_start: dict[str, Any],
+    gate_llm_call_id: UUID,
+) -> None:
+    """Background phase-2: full Path + plugins after slim start returned."""
+    start = PathStartSurface.model_validate(path_start)
+    async with async_session_maker() as db:
+        try:
+            service = PathService(db, llm=get_llm_provider())
+            user = await db.get(User, user_id)
+            if user is None:
+                logger.error(
+                    "complete_create_path_job: user missing user=%s project=%s",
+                    user_id,
+                    project_id,
+                )
+                return
+            await service.complete_create_path(
+                user=user,
+                project_id=project_id,
+                intent=intent,
+                path_start=start,
+                gate_llm_call_id=gate_llm_call_id,
+            )
+        except Exception:
+            logger.exception(
+                "complete_create_path_job failed project=%s user=%s",
+                project_id,
+                user_id,
+            )
+            await db.rollback()
 
 
 class PathService:
@@ -108,7 +212,12 @@ class PathService:
 
     async def create_from_intent(
         self, user: User, intent: str
-    ) -> CreateIntentResponse:
+    ) -> tuple[CreateIntentResponse, PendingPathJob | None]:
+        """Phase-1 create: gate (+ start surface). Path body runs in background.
+
+        Returns ``(response, pending_job)``. Caller schedules ``pending_job``
+        via BackgroundTasks when not None.
+        """
         intent_event = await self.audit.add_event(
             event_type=EventType.intent_submitted,
             user_id=user.id,
@@ -131,19 +240,18 @@ class PathService:
 
         if gate.kind == "instant_answer":
             assert gate.instant_answer is not None
-            return await self._finish_instant_answer(
+            response = await self._finish_instant_answer(
                 user=user,
                 intent=intent,
                 user_turn_id=user_turn.id,
                 payload=gate.instant_answer,
                 llm_call_id=gate_llm_call_id,
             )
+            return response, None
 
-        # Phase 2: PathState-only schema (no dual-branch CreateLlmResponse).
-        state, _path_raw, path_llm_call_id = await self._generate_create_path(
-            user=user,
-            messages=messages_for_create_path(intent),
-        )
+        assert gate.path_start is not None
+        start = gate.path_start
+        state = path_state_from_start(start)
 
         project = Project(
             user_id=user.id,
@@ -155,12 +263,10 @@ class PathService:
 
         intent_event.project_id = project.id
         user_turn.project_id = project.id
-        for call_id in (gate_llm_call_id, path_llm_call_id):
-            llm_row = await self.db.get(LlmCall, call_id)
-            if llm_row is not None:
-                llm_row.project_id = project.id
+        llm_row = await self.db.get(LlmCall, gate_llm_call_id)
+        if llm_row is not None:
+            llm_row.project_id = project.id
 
-        state = ensure_action_keys(state)
         version = await self._next_version(project.id)
         await self.audit.add_state_version(
             project_id=project.id,
@@ -179,13 +285,11 @@ class PathService:
                 "kind": "soft_start",
                 "outcome": state.outcome,
                 "state_version": version,
-                "llm_call_id": str(path_llm_call_id),
                 "gate_llm_call_id": str(gate_llm_call_id),
+                "path_ready": False,
                 "source": StateSource.llm_create.value,
             },
         )
-        # Soft-start and draft share one create composition in MVP UI; both
-        # funnel events are written here so KPIs do not depend on client beacons.
         await self.audit.add_event(
             event_type=EventType.soft_start_shown,
             user_id=user.id,
@@ -194,19 +298,107 @@ class PathService:
                 "paraphrase": state.paraphrase,
                 "outcome": state.outcome,
                 "version": version,
+                "path_ready": False,
+            },
+        )
+        await self.db.commit()
+        project = await self.projects.get_project(user, project.id)
+        detail = await self.projects.to_detail(project)
+        logger.info(
+            "create path start user=%s project=%s version=%s outcome=%r "
+            "gate_llm=%s path_ready=false",
+            user.id,
+            project.id,
+            version,
+            state.outcome,
+            gate_llm_call_id,
+        )
+        job = PendingPathJob(
+            project_id=project.id,
+            user_id=user.id,
+            intent=intent,
+            path_start=start,
+            gate_llm_call_id=gate_llm_call_id,
+        )
+        return PathCreatedResponse(kind="path", project=detail), job
+
+    async def complete_create_path(
+        self,
+        *,
+        user: User,
+        project_id: UUID,
+        intent: str,
+        path_start: PathStartSurface,
+        gate_llm_call_id: UUID,
+    ) -> Project:
+        """Phase-2: generate full Path+plugins and append state version."""
+        project = await self.projects.get_project(
+            user, project_id, for_update=True
+        )
+        if project.status != ProjectStatus.draft:
+            logger.info(
+                "complete_create_path skip non-draft project=%s status=%s",
+                project_id,
+                project.status,
+            )
+            return project
+
+        _, current = await self.projects.get_latest_state(project.id)
+        if current is not None and current.actions:
+            logger.info(
+                "complete_create_path skip already ready project=%s",
+                project_id,
+            )
+            return project
+
+        state, _path_raw, path_llm_call_id = await self._generate_create_path(
+            user=user,
+            project_id=project.id,
+            messages=messages_for_create_path(intent, path_start=path_start),
+        )
+
+        llm_row = await self.db.get(LlmCall, path_llm_call_id)
+        if llm_row is not None:
+            llm_row.project_id = project.id
+
+        state = ensure_action_keys(state)
+        version = await self._next_version(project.id)
+        await self.audit.add_state_version(
+            project_id=project.id,
+            version=version,
+            state_json=state.model_dump(mode="json"),
+            source=StateSource.llm_create,
+        )
+        apply_contract(project, state)
+
+        await self.audit.add_turn(
+            user_id=user.id,
+            project_id=project.id,
+            role=ConversationRole.assistant,
+            content=state.paraphrase,
+            meta={
+                "kind": "path_ready",
+                "outcome": state.outcome,
+                "state_version": version,
+                "llm_call_id": str(path_llm_call_id),
+                "gate_llm_call_id": str(gate_llm_call_id),
+                "path_ready": True,
+                "source": StateSource.llm_create.value,
             },
         )
         await self.audit.add_event(
             event_type=EventType.draft_shown,
             user_id=user.id,
             project_id=project.id,
-            payload={"outcome": state.outcome, "version": version},
+            payload={
+                "outcome": state.outcome,
+                "version": version,
+                "path_ready": True,
+            },
         )
         await self.db.commit()
-        project = await self.projects.get_project(user, project.id)
-        detail = await self.projects.to_detail(project)
         logger.info(
-            "create path user=%s project=%s version=%s outcome=%r "
+            "create path ready user=%s project=%s version=%s outcome=%r "
             "gate_llm=%s path_llm=%s",
             user.id,
             project.id,
@@ -215,7 +407,7 @@ class PathService:
             gate_llm_call_id,
             path_llm_call_id,
         )
-        return PathCreatedResponse(kind="path", project=detail)
+        return await self.projects.get_project(user, project.id)
 
     async def _finish_instant_answer(
         self,
@@ -294,11 +486,12 @@ class PathService:
         *,
         user: User,
         messages: list[dict[str, Any]],
+        project_id: UUID | None = None,
     ) -> tuple[PathState, LLMRawResult, UUID]:
         # PathState-only structured output (plugins included; no IA branch).
         return await self._llm_generate_validated(
             user=user,
-            project_id=None,
+            project_id=project_id,
             purpose="create",
             messages=messages,
             response_schema=PATH_RESPONSE_SCHEMA,
@@ -348,6 +541,10 @@ class PathService:
         _, current = await self.projects.get_latest_state(project.id)
         if current is None:
             raise ConflictError("Project has no Path state to refine")
+        if not current.actions:
+            raise ConflictError(
+                "Path is still generating — wait until the plan is ready"
+            )
 
         result = await self._run_llm_mutation(
             user=user,

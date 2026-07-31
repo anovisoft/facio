@@ -62,6 +62,27 @@ export interface CounterResponse {
   step: number;
 }
 
+export interface TimelineMarkerResponse {
+  at_sec: number;
+  title: string;
+  signal: TimerSignal;
+}
+
+export interface ActionTimelineResponse {
+  duration_sec: number;
+  markers: TimelineMarkerResponse[];
+}
+
+export interface IntervalSegmentResponse {
+  duration_sec: number;
+  title: string;
+  signal: TimerSignal;
+}
+
+export interface IntervalPlanResponse {
+  segments: IntervalSegmentResponse[];
+}
+
 export interface GroupResponse {
   id: string;
   key: string;
@@ -111,6 +132,8 @@ export interface ActionResponse {
   checklist_items: ChecklistItemResponse[];
   timers: TimerResponse[];
   counter?: CounterResponse | null;
+  timeline?: ActionTimelineResponse | null;
+  interval_plan?: IntervalPlanResponse | null;
 }
 
 export interface ProjectSummary {
@@ -141,6 +164,8 @@ export interface ProjectDetail extends ProjectSummary {
   resources: string[];
   milestones: string[];
   current_version?: number | null;
+  /** False while progressive create phase-2 Path+plugins is still generating. */
+  path_ready?: boolean;
 }
 
 export interface InstantAnswerResponse {

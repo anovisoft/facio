@@ -11,6 +11,7 @@ from app.schemas.create_response import (
     CreateGateResponse,
     CreateLlmResponse,
     InstantAnswerPayload,
+    PathStartSurface,
 )
 from app.schemas.path_state import PATH_RESPONSE_SCHEMA, PathState
 
@@ -54,6 +55,8 @@ Structured output forbids null on optional path fields. Use:
 - no counter on a step → counter stub object \
   {label:"", target:-1, current:0, step:1} (not null)
 - no timers → timers: []
+- no timeline → timeline stub {duration_sec:-1, markers:[]} (not null)
+- no interval_plan → interval_plan stub {segments:[]} (not null)
 - unused create branch → empty stub object (not null): see Response shape
 """
 
@@ -102,14 +105,21 @@ _PATH_FIELDS = """\
   - day_offset: REQUIRED when days[] present — must equal a days[].day_index
   - sort (≥0) or -1 if unspecified; group_id matching groups[].id, or ""
   - checklist_items[]: sub-checks (e.g. eggs ☐); done=false on create; id or ""
-  - timers[]: TimerStack for cook/active waits. Each: id (or ""), title, \
-    duration_sec (≥1), signal ("nudge"|"alert"), parallel_group (or ""). \
-    Carbonara cook step MUST include timers (pasta=alert; stir/check=nudge). \
-    Shopping / rest → []. Never put timing only in detail prose when a timer fits.
-  - counter: dose object always present. Real counter: label, target≥1, \
-    current=0 on create, step≥1. No counter → stub \
-    {label:"", target:-1, current:0, step:1}. Push-ups train steps MUST have \
-    a real counter (reps or sets). Rest / shopping → stub.
+  - Clock family (pick shape; prefer one primary per step):
+    * timers[]: simple TimerStack with manual Start. Each: id (or ""), title, \
+      duration_sec (≥1), signal ("nudge"|"alert"), parallel_group (or ""). \
+      Use for isolated waits (e.g. fry guanciale). Empty [] when unused.
+    * timeline: session axis object ALWAYS present. Real: duration_sec≥1 + \
+      markers[] of {sec, title, signal} where sec=absolute at_sec from start. \
+      Absent → stub {duration_sec:-1, markers:[]}. Carbonara cook MUST use \
+      timeline (0 put pasta → stir nudges → alert done) — not peer stir timers.
+    * interval_plan: ALWAYS present. Real: segments[] of {sec, title, signal} \
+      where sec=duration_sec of the segment. Absent → stub {segments:[]}. \
+      Use for circuit / HIIT (work→rest→work) with pause/resume.
+    * counter: dose object always present. Real: label, target≥1, current=0, \
+      step≥1. Absent → stub {label:"", target:-1, current:0, step:1}.
+  - Push-ups train: counter and/or interval_plan on circuit days; rest → stubs.
+  - Shopping / rest → empty timers, timeline stub, interval stub, counter stub.
 - questions[]: 0 or 2–4 (max 4) clarifies that change the path; not an interview. \
   Emit the full batch for one round — user answers all at once.
 - Do NOT emit resources[] or milestones[] (server defaults to []).
@@ -124,9 +134,10 @@ _PATH_QUALITY = """\
 - Push-ups / fitness week: days must mix train and rest — rest days are real \
   days with kind=rest (light mobility OK), not identical "do sets" days.
 - Carbonara: cycle.horizon_days=1, one cook_session day.
-- Carbonara cook step: TimerStack required (pasta alert + stir/check nudges); \
-  shopping uses checklist, not timers.
-- Push-ups train steps: Counter required (reps/sets, current=0); rest → stub.
+- Carbonara cook step: timeline REQUIRED (markers on one axis); optional \
+  simple timers for isolated waits; shopping uses checklist, not clocks.
+- Push-ups: train steps need counter (reps/sets) and/or interval_plan for a \
+  circuit day; rest → stubs.
 - First action executable today; honest estimate_min, ideally ≤ 30–60 min.
 - Soft cap ≤ 8–12 actions; prefer checklist over many buy-micro-steps.
 - Cooking: shopping group + cook how-to in detail; not titles only.
@@ -138,15 +149,16 @@ _PATH_QUALITY = """\
 _CREATE_GATE_SYSTEM = f"""\
 You are the create-gate for Facio — an Outcome OS, not a chatbot.
 
-Decide ONLY: path vs instant_answer. Do not emit a Path plan.
+Decide path vs instant_answer. When path: also emit a slim START SURFACE \
+(meaning + questions) — NOT a full Path / plugins / actions.
 
 {_SAFETY}
 
 ## Gate — sequence over time?
 
 Ask: does this require a SEQUENCE OF ACTIONS OVER TIME?
-- NO → kind=instant_answer; fill instant_answer fully.
-- YES → kind=path; instant_answer = empty stub \
+- NO → kind=instant_answer; fill instant_answer fully; path_start = empty stub.
+- YES → kind=path; fill path_start; instant_answer = empty stub \
   (label="", answer="", goal_suggestions=[], domain="other").
 
 Clear instant_answer: one-shot math/facts (2^100), FX rates, translate a word, \
@@ -166,7 +178,8 @@ Clear path: buy a car, learn Python, cook carbonara, write a thesis.
 
 ## Response shape
 
-Always emit `kind` and `instant_answer` (never JSON null). Match user language.
+Always emit `kind`, `instant_answer`, and `path_start` (never JSON null). \
+Match user language.
 
 ### kind=instant_answer
 
@@ -174,17 +187,33 @@ Always emit `kind` and `instant_answer` (never JSON null). Match user language.
 - answer: useful direct answer — or short safe refusal/redirect under Safety
 - goal_suggestions: exactly 2–4 related Facio projects (sequences over time)
 - domain: cooking|fitness|learning|home|errands|work|health|finance|social|other
+- path_start: empty stub \
+  (paraphrase="", title="", summary="", questions=[], outline_days=[])
 
 ### kind=path
 
-- instant_answer must be the empty stub above (path body is a separate call)
+- instant_answer must be the empty stub above
+- path_start (shown to user immediately; full Path is a later call):
+  - paraphrase: soft-start line (e.g. "Ок — ведём к: …")
+  - title: short plan hero (≤ ~120 chars)
+  - summary: 1–3 sentences draft of what the cycle delivers (never empty)
+  - questions: 0 or 2–4 clarifies that change the plan (full batch; not interview)
+    Each: id, prompt, options[] (2–4 chips; user may still type free text)
+  - outline_days: optional rough day TITLES only (0–8 short strings), \
+    e.g. ["Вечер готовки"] or ["Силовая A","Отдых",…]. NO plugins, NO actions, \
+    NO kind enums — titles only. Empty [] if unsure.
 
 Do not chat. JSON fields only.
 """
 
 _CREATE_PATH_SYSTEM = f"""\
-You are the create-path brain for Facio. The gate already decided kind=path.
+You are the create-path brain for Facio. The gate already decided kind=path \
+and showed the user a slim start surface (paraphrase/title/summary/questions).
 Emit Path JSON only (root object — no kind / instant_answer wrapper).
+
+Align with the start surface the user already saw: keep title/summary/paraphrase \
+close; reuse question ids/prompts when still useful; expand into full cycle, \
+days, actions, and plugins.
 
 {_SAFETY}
 
@@ -288,6 +317,15 @@ _EMPTY_COUNTER_STUB: dict[str, Any] = {
     "step": 1,
 }
 
+_EMPTY_TIMELINE_STUB: dict[str, Any] = {
+    "duration_sec": -1,
+    "markers": [],
+}
+
+_EMPTY_INTERVAL_STUB: dict[str, Any] = {
+    "segments": [],
+}
+
 _FEWSHOT_PATH_INTENT = "Приготовить карбонару"
 _FEWSHOT_PATH: dict[str, Any] = {
     "kind": "path",
@@ -365,6 +403,8 @@ _FEWSHOT_PATH: dict[str, Any] = {
                 ],
                 "timers": [],
                 "counter": dict(_EMPTY_COUNTER_STUB),
+                "timeline": dict(_EMPTY_TIMELINE_STUB),
+                "interval_plan": dict(_EMPTY_INTERVAL_STUB),
             },
             {
                 "id": "cook",
@@ -388,29 +428,34 @@ _FEWSHOT_PATH: dict[str, Any] = {
                         "signal": "nudge",
                         "parallel_group": "",
                     },
-                    {
-                        "id": "pasta",
-                        "title": "Лапша al dente",
-                        "duration_sec": 540,
-                        "signal": "alert",
-                        "parallel_group": "boil",
-                    },
-                    {
-                        "id": "stir1",
-                        "title": "Помешать пасту",
-                        "duration_sec": 120,
-                        "signal": "nudge",
-                        "parallel_group": "boil",
-                    },
-                    {
-                        "id": "stir2",
-                        "title": "Помешать ещё раз",
-                        "duration_sec": 300,
-                        "signal": "nudge",
-                        "parallel_group": "boil",
-                    },
                 ],
                 "counter": dict(_EMPTY_COUNTER_STUB),
+                "timeline": {
+                    "duration_sec": 480,
+                    "markers": [
+                        {
+                            "sec": 0,
+                            "title": "Паста в воду",
+                            "signal": "nudge",
+                        },
+                        {
+                            "sec": 120,
+                            "title": "Помешать",
+                            "signal": "nudge",
+                        },
+                        {
+                            "sec": 300,
+                            "title": "Помешать ещё",
+                            "signal": "nudge",
+                        },
+                        {
+                            "sec": 480,
+                            "title": "Лапша al dente",
+                            "signal": "alert",
+                        },
+                    ],
+                },
+                "interval_plan": dict(_EMPTY_INTERVAL_STUB),
             },
         ],
         "questions": [
@@ -500,9 +545,11 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
         "actions": [
             {
                 "id": "d0",
-                "title": "Подходы отжиманий",
+                "title": "Круговая сессия",
                 "why": "Первый силовой день задаёт ритм недели",
-                "detail": "3 подхода по столько, сколько можете с хорошей формой.",
+                "detail": (
+                    "Работа / отдых по таймеру. Пауза между сегментами — ок."
+                ),
                 "estimate_min": 15,
                 "day_offset": 0,
                 "sort": 0,
@@ -514,6 +561,16 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                     "target": 24,
                     "current": 0,
                     "step": 1,
+                },
+                "timeline": dict(_EMPTY_TIMELINE_STUB),
+                "interval_plan": {
+                    "segments": [
+                        {"sec": 40, "title": "Отжимания", "signal": "nudge"},
+                        {"sec": 20, "title": "Отдых", "signal": "nudge"},
+                        {"sec": 40, "title": "Отжимания", "signal": "nudge"},
+                        {"sec": 20, "title": "Отдых", "signal": "nudge"},
+                        {"sec": 40, "title": "Отжимания", "signal": "alert"},
+                    ],
                 },
             },
             {
@@ -528,6 +585,8 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                 "checklist_items": [],
                 "timers": [],
                 "counter": dict(_EMPTY_COUNTER_STUB),
+                "timeline": dict(_EMPTY_TIMELINE_STUB),
+                "interval_plan": dict(_EMPTY_INTERVAL_STUB),
             },
             {
                 "id": "d2",
@@ -546,6 +605,8 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                     "current": 0,
                     "step": 1,
                 },
+                "timeline": dict(_EMPTY_TIMELINE_STUB),
+                "interval_plan": dict(_EMPTY_INTERVAL_STUB),
             },
             {
                 "id": "d3",
@@ -559,6 +620,8 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                 "checklist_items": [],
                 "timers": [],
                 "counter": dict(_EMPTY_COUNTER_STUB),
+                "timeline": dict(_EMPTY_TIMELINE_STUB),
+                "interval_plan": dict(_EMPTY_INTERVAL_STUB),
             },
             {
                 "id": "d4",
@@ -577,6 +640,8 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                     "current": 0,
                     "step": 1,
                 },
+                "timeline": dict(_EMPTY_TIMELINE_STUB),
+                "interval_plan": dict(_EMPTY_INTERVAL_STUB),
             },
             {
                 "id": "d5",
@@ -590,6 +655,8 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                 "checklist_items": [],
                 "timers": [],
                 "counter": dict(_EMPTY_COUNTER_STUB),
+                "timeline": dict(_EMPTY_TIMELINE_STUB),
+                "interval_plan": dict(_EMPTY_INTERVAL_STUB),
             },
             {
                 "id": "d6",
@@ -608,6 +675,8 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
                     "current": 0,
                     "step": 1,
                 },
+                "timeline": dict(_EMPTY_TIMELINE_STUB),
+                "interval_plan": dict(_EMPTY_INTERVAL_STUB),
             },
         ],
         "questions": [
@@ -646,18 +715,48 @@ _FEWSHOT_INSTANT: dict[str, Any] = {
     },
 }
 
+_EMPTY_PATH_START_STUB: dict[str, Any] = {
+    "paraphrase": "",
+    "title": "",
+    "summary": "",
+    "questions": [],
+    "outline_days": [],
+}
+
 _FEWSHOT_GATE_PATH: dict[str, Any] = {
     "kind": "path",
     "instant_answer": dict(_EMPTY_INSTANT_STUB),
+    "path_start": {
+        "paraphrase": "Ок — ведём к: карбонара на ужин",
+        "title": "Карбонара на ужин",
+        "summary": (
+            "За один вечер купим продукты и приготовим классическую "
+            "карбонару без сливок."
+        ),
+        "questions": [
+            {
+                "id": "meat",
+                "prompt": "Какое мясо возьмёте?",
+                "options": ["гуанчиале", "панчетта", "что найду"],
+            },
+            {
+                "id": "servings",
+                "prompt": "На сколько порций?",
+                "options": ["1", "2", "4"],
+            },
+        ],
+        "outline_days": ["Вечер готовки"],
+    },
 }
 _FEWSHOT_GATE_INSTANT: dict[str, Any] = {
     "kind": "instant_answer",
     "instant_answer": dict(_FEWSHOT_INSTANT["instant_answer"]),
+    "path_start": dict(_EMPTY_PATH_START_STUB),
 }
 
 
 def messages_for_create_gate(intent: str) -> list[dict[str, Any]]:
-    """Phase 1: tiny schema — kind + instant_answer only."""
+    """Phase 1: slim schema — kind + instant_answer + path_start surface."""
     return [
         {"role": "system", "content": _CREATE_GATE_SYSTEM},
         {"role": "user", "content": _FEWSHOT_PATH_INTENT},
@@ -674,9 +773,13 @@ def messages_for_create_gate(intent: str) -> list[dict[str, Any]]:
     ]
 
 
-def messages_for_create_path(intent: str) -> list[dict[str, Any]]:
+def messages_for_create_path(
+    intent: str,
+    *,
+    path_start: PathStartSurface | dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
     """Phase 2: PathState-only schema after gate chose kind=path."""
-    return [
+    messages: list[dict[str, Any]] = [
         {"role": "system", "content": _CREATE_PATH_SYSTEM},
         {"role": "user", "content": _FEWSHOT_PATH_INTENT},
         {
@@ -688,8 +791,32 @@ def messages_for_create_path(intent: str) -> list[dict[str, Any]]:
             "role": "assistant",
             "content": json.dumps(_FEWSHOT_FITNESS["path"], ensure_ascii=False),
         },
-        {"role": "user", "content": intent},
     ]
+    if path_start is not None:
+        start_payload = (
+            path_start.model_dump(mode="json")
+            if isinstance(path_start, PathStartSurface)
+            else path_start
+        )
+        messages.append(
+            {
+                "role": "user",
+                "content": json.dumps(
+                    {
+                        "intent": intent,
+                        "path_start": start_payload,
+                        "instruction": (
+                            "Build the full Path for this intent. Align with "
+                            "path_start the user already saw."
+                        ),
+                    },
+                    ensure_ascii=False,
+                ),
+            }
+        )
+    else:
+        messages.append({"role": "user", "content": intent})
+    return messages
 
 
 def messages_for_create(intent: str) -> list[dict[str, Any]]:
@@ -838,6 +965,48 @@ def normalize_path_wire_dict(data: dict[str, Any]) -> dict[str, Any]:
                     action["counter"] = None
                 else:
                     action["counter"] = counter
+            timeline = action.get("timeline")
+            if isinstance(timeline, dict):
+                timeline = dict(timeline)
+                duration = timeline.get("duration_sec", -1)
+                markers = timeline.get("markers") or []
+                if not isinstance(markers, list):
+                    markers = []
+                normalized_markers: list[Any] = []
+                for marker in markers:
+                    if not isinstance(marker, dict):
+                        continue
+                    marker = dict(marker)
+                    # Accept legacy at_sec from older drafts / API dumps.
+                    if "sec" not in marker and "at_sec" in marker:
+                        marker["sec"] = marker.pop("at_sec")
+                    normalized_markers.append(marker)
+                timeline["markers"] = normalized_markers
+                if duration is None or duration == -1 or (
+                    isinstance(duration, int) and duration < 1
+                ):
+                    action["timeline"] = None
+                else:
+                    action["timeline"] = timeline
+            interval = action.get("interval_plan")
+            if isinstance(interval, dict):
+                interval = dict(interval)
+                segments = interval.get("segments") or []
+                if not isinstance(segments, list):
+                    segments = []
+                normalized_segments: list[Any] = []
+                for segment in segments:
+                    if not isinstance(segment, dict):
+                        continue
+                    segment = dict(segment)
+                    if "sec" not in segment and "duration_sec" in segment:
+                        segment["sec"] = segment.pop("duration_sec")
+                    normalized_segments.append(segment)
+                if not normalized_segments:
+                    action["interval_plan"] = None
+                else:
+                    interval["segments"] = normalized_segments
+                    action["interval_plan"] = interval
             normalized_actions.append(action)
         out["actions"] = normalized_actions
 
@@ -884,8 +1053,25 @@ def parse_path_state(raw_response: Any) -> PathState:
     return PathState.model_validate(data)
 
 
+def _is_empty_path_start_stub(payload: Any) -> bool:
+    if payload is None:
+        return True
+    if not isinstance(payload, dict):
+        return False
+    paraphrase = payload.get("paraphrase")
+    title = payload.get("title")
+    summary = payload.get("summary")
+    questions = payload.get("questions") or []
+    return (
+        (not paraphrase)
+        and (not title)
+        and (not summary)
+        and len(questions) == 0
+    )
+
+
 def parse_create_gate(raw_response: Any) -> CreateGateResponse:
-    """Parse phase-1 gate (kind + optional instant_answer)."""
+    """Parse phase-1 gate (kind + optional instant_answer / path_start)."""
     if isinstance(raw_response, CreateGateResponse):
         return raw_response
     if isinstance(raw_response, str):
@@ -902,15 +1088,27 @@ def parse_create_gate(raw_response: Any) -> CreateGateResponse:
     out = dict(data)
     kind = out.get("kind")
     ia = out.get("instant_answer")
+    start = out.get("path_start")
     if kind == "path":
-        return CreateGateResponse(kind="path", instant_answer=None)
+        if _is_empty_path_start_stub(start):
+            raise ValueError("path_start is required when kind=path")
+        path_start = PathStartSurface.model_validate(start)
+        return CreateGateResponse(
+            kind="path",
+            instant_answer=None,
+            path_start=path_start,
+        )
     if kind == "instant_answer":
         if _is_empty_instant_stub(ia):
             raise ValueError(
                 "instant_answer is required when kind=instant_answer"
             )
         payload = InstantAnswerPayload.model_validate(ia)
-        return CreateGateResponse(kind="instant_answer", instant_answer=payload)
+        return CreateGateResponse(
+            kind="instant_answer",
+            instant_answer=payload,
+            path_start=None,
+        )
     raise ValueError(f"Unknown kind: {kind!r}")
 
 

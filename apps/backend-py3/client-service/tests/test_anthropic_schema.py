@@ -62,13 +62,15 @@ def _schema_metrics(schema: dict) -> dict[str, int]:
 def test_gate_schema_keeps_instant_answer_fields() -> None:
     out = _anthropic_json_schema(CREATE_GATE_SCHEMA)
     props = out["properties"]
-    assert set(props) == {"kind", "instant_answer"}
+    assert set(props) == {"kind", "instant_answer", "path_start"}
     assert "path" not in props
     assert "PathState" not in _defs(out)
     assert "PathAction" not in _defs(out)
     ia = props["instant_answer"]
     # Collapsed to $ref or inline object — never PathState.
     assert "$ref" in ia or ia.get("type") == "object"
+    start = props["path_start"]
+    assert "$ref" in start or start.get("type") == "object"
 
 
 def test_path_schema_keeps_title_properties() -> None:
@@ -133,11 +135,13 @@ def test_wire_schema_size_smoke() -> None:
 
     # Pre-split CREATE wire was ~4.5k and failed Anthropic grammar compile.
     # Path-only after dropping resources/milestones should stay under ceiling.
+    # Gate includes slim path_start (narrative + questions) — keep << Path wire.
     assert path_m["chars"] < 4500, path_m
-    assert gate_m["chars"] < 1200, gate_m
+    assert gate_m["chars"] < 1800, gate_m
     assert path_m["anyOf_null"] == 0
     assert gate_m["anyOf_null"] == 0
     assert gate_m["descriptions"] == 0
+    assert gate_m["chars"] < path_m["chars"]
     # Legacy dual-branch schema still exists for unit tests — must stay unused
     # for Anthropic calls (too large with plugins).
     legacy = _schema_metrics(_anthropic_json_schema(CREATE_RESPONSE_SCHEMA))
@@ -159,11 +163,18 @@ def test_wire_schema_includes_plugin_defs() -> None:
     defs = _defs(out)
     assert "PathTimer" in defs
     assert "PathCounter" in defs
+    assert "PathClockBeat" in defs
+    assert "PathTimeline" in defs
+    assert "PathIntervalPlan" in defs
     action = defs["PathAction"]["properties"]
     assert "timers" in action
     assert "counter" in action
+    assert "timeline" in action
+    assert "interval_plan" in action
     # Counter is required object on wire (null collapsed); not anyOf-null.
     assert action["counter"] == {"$ref": "#/$defs/PathCounter"}
+    assert action["timeline"] == {"$ref": "#/$defs/PathTimeline"}
+    assert action["interval_plan"] == {"$ref": "#/$defs/PathIntervalPlan"}
     timer_props = defs["PathTimer"]["properties"]
     assert timer_props["signal"]["enum"] == ["nudge", "alert"]
     assert "parallel_group" in timer_props
@@ -172,6 +183,9 @@ def test_wire_schema_includes_plugin_defs() -> None:
     assert set(counter_props) == {"label", "target", "current", "step"}
     for key in counter_props:
         assert key in (defs["PathCounter"].get("required") or [])
+    beat_props = defs["PathClockBeat"]["properties"]
+    assert set(beat_props) == {"sec", "title", "signal"}
+    assert beat_props["signal"]["enum"] == ["nudge", "alert"]
 
 
 def test_create_gate_wire_has_no_path_branch() -> None:
@@ -180,4 +194,16 @@ def test_create_gate_wire_has_no_path_branch() -> None:
     assert "path" not in props
     assert props["kind"]["enum"] == ["path", "instant_answer"]
     assert "instant_answer" in out["required"]
+    assert "path_start" in out["required"]
     assert "kind" in out["required"]
+    defs = _defs(out)
+    start = defs.get("PathStartSurfaceWire") or {}
+    start_props = start.get("properties") or {}
+    assert "paraphrase" in start_props
+    assert "title" in start_props
+    assert "summary" in start_props
+    assert "questions" in start_props
+    assert "outline_days" in start_props
+    assert "actions" not in start_props
+    assert "timers" not in start_props
+    assert "ClarifyQuestionWire" in defs

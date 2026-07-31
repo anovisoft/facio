@@ -65,10 +65,11 @@ def test_invalid_domain_rejected():
         PathState.model_validate(payload)
 
 
-def test_no_actions_rejected():
+def test_empty_actions_allowed_for_progressive_start():
+    """Phase-1 start surface may persist with actions=[] (path_ready=false)."""
     payload = sample_path_state(actions=[])
-    with pytest.raises(ValidationError):
-        PathState.model_validate(payload)
+    state = PathState.model_validate(payload)
+    assert state.actions == []
 
 
 def test_missing_title_summary_backfilled_from_contract():

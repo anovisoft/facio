@@ -94,6 +94,37 @@ def _counter_payload(
     }
 
 
+def _timeline_payload(timeline) -> dict | None:
+    if timeline is None:
+        return None
+    return {
+        "duration_sec": timeline.duration_sec,
+        "markers": [
+            {
+                "at_sec": marker.sec,
+                "title": marker.title,
+                "signal": marker.signal,
+            }
+            for marker in timeline.markers
+        ],
+    }
+
+
+def _interval_plan_payload(plan) -> dict | None:
+    if plan is None:
+        return None
+    return {
+        "segments": [
+            {
+                "duration_sec": segment.sec,
+                "title": segment.title,
+                "signal": segment.signal,
+            }
+            for segment in plan.segments
+        ],
+    }
+
+
 def apply_contract(project: Project, state: PathState) -> None:
     project.title = state.title
     project.summary = state.summary
@@ -194,6 +225,8 @@ async def materialize_path(
                 item.counter,
                 preserved_current=preserved_counter.get(key),
             ),
+            timeline=_timeline_payload(item.timeline),
+            interval_plan=_interval_plan_payload(item.interval_plan),
         )
         db.add(action)
         await db.flush()

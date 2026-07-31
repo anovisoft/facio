@@ -7,7 +7,6 @@ import {
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { AcceptScreen } from '@/features/accept/AcceptScreen';
 import { DraftStudioScreen } from '@/features/draft/DraftStudioScreen';
 import { ProjectHomeScreen } from '@/features/home/ProjectHomeScreen';
 import { InstantAnswerScreen } from '@/features/intent/InstantAnswerScreen';
@@ -70,7 +69,6 @@ export default function AppNavigator() {
         <Stack.Screen name="Intent" component={IntentScreen} />
         <Stack.Screen name="InstantAnswer" component={InstantAnswerScreen} />
         <Stack.Screen name="DraftStudio" component={DraftStudioScreen} />
-        <Stack.Screen name="Accept" component={AcceptScreen} />
         <Stack.Screen name="ProjectHome" component={ProjectHomeScreen} />
         <Stack.Screen name="Path" component={PathScreen} />
         <Stack.Screen name="History" component={HistoryScreen} />

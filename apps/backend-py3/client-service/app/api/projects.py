@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Query
+from fastapi import APIRouter, BackgroundTasks, Body, Query
 
 from app.deps import CurrentUser, DbSession, LLM
 from app.errors import AppError
@@ -17,7 +17,7 @@ from app.schemas.path import (
     RestoreStateRequest,
     StateVersionSummary,
 )
-from app.services.path import PathService
+from app.services.path import PathService, complete_create_path_job
 from app.services.project import ListStatusFilter, ProjectService
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -53,12 +53,23 @@ async def create_project(
     user: CurrentUser,
     db: DbSession,
     llm: LLM,
+    background_tasks: BackgroundTasks,
 ) -> CreateIntentResponse:
     service = PathService(db, llm=llm)
     try:
-        return await service.create_from_intent(user, body.intent)
+        result, pending = await service.create_from_intent(user, body.intent)
     except AppError as exc:
         await _commit_on_app_error(db, exc)
+    if pending is not None:
+        background_tasks.add_task(
+            complete_create_path_job,
+            project_id=pending.project_id,
+            user_id=pending.user_id,
+            intent=pending.intent,
+            path_start=pending.path_start.model_dump(mode="json"),
+            gate_llm_call_id=pending.gate_llm_call_id,
+        )
+    return result
 
 
 @router.get("/{project_id}", response_model=ProjectDetail)

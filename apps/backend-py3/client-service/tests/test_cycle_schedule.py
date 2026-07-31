@@ -25,13 +25,18 @@ def test_fewshots_parse_as_create_responses():
     assert carbonara.path.cycle.horizon_days == 1
     assert carbonara.path.days[0].kind == "cook_session"
     cook = next(a for a in carbonara.path.actions if a.id == "cook")
-    assert len(cook.timers) >= 2
-    signals = {t.signal for t in cook.timers}
+    assert cook.timeline is not None
+    assert cook.timeline.duration_sec == 480
+    assert len(cook.timeline.markers) >= 3
+    signals = {m.signal for m in cook.timeline.markers}
     assert "alert" in signals
     assert "nudge" in signals
+    assert len(cook.timers) >= 1  # isolated guanciale timer
     buy = next(a for a in carbonara.path.actions if a.id == "buy")
     assert buy.timers == []
     assert buy.counter is None
+    assert buy.timeline is None
+    assert buy.interval_plan is None
 
     fitness = parse_create_response(_FEWSHOT_FITNESS)
     assert fitness.kind == "path"
@@ -43,8 +48,11 @@ def test_fewshots_parse_as_create_responses():
     assert train.counter is not None
     assert train.counter.target >= 1
     assert train.counter.current == 0
+    assert train.interval_plan is not None
+    assert len(train.interval_plan.segments) >= 3
     rest = next(a for a in fitness.path.actions if a.day_offset == 1)
     assert rest.counter is None
+    assert rest.interval_plan is None
 
 
 def test_pick_next_action_prefers_earliest_day():

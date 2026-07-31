@@ -1,10 +1,11 @@
-"""Create intent gate: path | instant_answer + audit trail."""
+"""Create intent gate: path | instant_answer + progressive start surface."""
 
 from sqlalchemy import select
 
 from app.models import Event, LlmCall, Project, StateVersion
 from app.schemas.path_state import PATH_RESPONSE_SCHEMA
 from app.schemas.create_response import CREATE_GATE_SCHEMA
+from tests.conftest import wait_path_ready
 from tests.factories import sample_create_path, sample_instant_answer
 
 
@@ -15,6 +16,24 @@ _GATE_PATH = {
         "answer": "",
         "goal_suggestions": [],
         "domain": "other",
+    },
+    "path_start": {
+        "paraphrase": "Ок — ведём к: карбонара",
+        "title": "Карбонара на ужин",
+        "summary": "За вечер купим продукты и приготовим карбонару.",
+        "questions": [
+            {
+                "id": "meat",
+                "prompt": "Какое мясо возьмёте?",
+                "options": ["гуанчиале", "панчетта"],
+            },
+            {
+                "id": "servings",
+                "prompt": "На сколько порций?",
+                "options": ["1", "2"],
+            },
+        ],
+        "outline_days": ["Вечер готовки"],
     },
 }
 
@@ -34,17 +53,23 @@ async def test_create_path_project(
     project = body["project"]
     assert project["status"] == "draft"
     assert project["raw_intent"] == "Приготовить карбонару"
-    assert project["outcome"]
     assert project["paraphrase"]
     assert project["title"]
     assert project["summary"]
-    assert project["domain"] == "cooking"
+    assert project["path_ready"] is False
     assert project["current_version"] == 1
-    assert len(project["actions"]) >= 1
-    assert all(a["why"] for a in project["actions"])
+    assert len(project["actions"]) == 0
     assert len(project["questions"]) == 2
 
     project_id = project["id"]
+    ready = await wait_path_ready(client, auth_headers, project_id)
+    assert ready["path_ready"] is True
+    assert ready["outcome"]
+    assert ready["domain"] == "cooking"
+    assert len(ready["actions"]) >= 1
+    assert all(a["why"] for a in ready["actions"])
+    assert ready["current_version"] == 2
+
     events = (
         await db_session.execute(
             select(Event.type).where(Event.project_id == project_id)
@@ -59,8 +84,8 @@ async def test_create_path_project(
             select(StateVersion).where(StateVersion.project_id == project_id)
         )
     ).scalars().all()
-    assert len(versions) == 1
-    assert versions[0].source.value == "llm_create"
+    assert len(versions) == 2
+    assert all(v.source.value == "llm_create" for v in versions)
 
     llm_calls = (
         await db_session.execute(
@@ -88,6 +113,13 @@ async def test_create_instant_answer_no_project(
         {
             "kind": "instant_answer",
             "instant_answer": ia["instant_answer"],
+            "path_start": {
+                "paraphrase": "",
+                "title": "",
+                "summary": "",
+                "questions": [],
+                "outline_days": [],
+            },
         },
     )
     response = await client.post(
@@ -148,11 +180,16 @@ async def test_create_retries_invalid_then_succeeds(
     )
     assert response.status_code == 200
     assert response.json()["kind"] == "path"
+    project_id = response.json()["project"]["id"]
+    ready = await wait_path_ready(client, auth_headers, project_id)
+    assert ready["path_ready"] is True
     # gate + invalid path + retry path
     assert len(llm.calls) == 3
 
 
 async def test_create_fails_after_two_invalid(client, auth_headers, llm):
+    import asyncio
+
     bad = {"outcome": "incomplete"}
     llm.enqueue("create", _GATE_PATH)
     llm.enqueue("create", bad)
@@ -162,4 +199,15 @@ async def test_create_fails_after_two_invalid(client, auth_headers, llm):
         headers=auth_headers,
         json={"intent": "Приготовить карбонару"},
     )
-    assert response.status_code == 422
+    # Phase-1 succeeds; phase-2 fails in background — create still 200.
+    assert response.status_code == 200
+    project = response.json()["project"]
+    assert project["path_ready"] is False
+    # Background exhausted retries; path stays not ready.
+    await asyncio.sleep(0.2)
+    detail = await client.get(
+        f"/api/v1/projects/{project['id']}", headers=auth_headers
+    )
+    assert detail.status_code == 200
+    assert detail.json()["path_ready"] is False
+    assert len(llm.calls) == 3

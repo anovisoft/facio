@@ -7,7 +7,6 @@ export type RootStackParamList = {
   Intent: undefined;
   InstantAnswer: { payload: InstantAnswerResponse };
   DraftStudio: { projectId: string; seed?: ProjectDetail };
-  Accept: { projectId: string };
   ProjectHome: { projectId: string };
   Path: { projectId: string };
   History: undefined;

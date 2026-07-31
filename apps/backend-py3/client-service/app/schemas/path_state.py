@@ -87,6 +87,48 @@ class PathCounter(BaseModel):
     )
 
 
+class PathClockBeat(BaseModel):
+    """Shared beat for timeline markers and interval segments (slim wire).
+
+    Timeline: ``sec`` = absolute ``at_sec`` from session start.
+    Interval: ``sec`` = segment ``duration_sec``.
+    """
+
+    sec: int = Field(
+        ge=0,
+        le=86_400,
+        description="at_sec (timeline) or duration_sec (interval).",
+    )
+    title: str = Field(min_length=1, description="Beat label.")
+    signal: TimerSignal = Field(
+        description="nudge | alert.",
+    )
+
+
+class PathTimeline(BaseModel):
+    """One session clock axis + markers (docs/next/04 clock family)."""
+
+    duration_sec: int = Field(
+        ge=1,
+        le=86_400,
+        description="Axis length in seconds.",
+    )
+    markers: list[PathClockBeat] = Field(
+        default_factory=list,
+        description="Markers; beat.sec = at_sec from start.",
+    )
+
+
+class PathIntervalPlan(BaseModel):
+    """Sequential segments with pause/resume (docs/next/04 clock family)."""
+
+    segments: list[PathClockBeat] = Field(
+        default_factory=list,
+        min_length=1,
+        description="Ordered work/rest; beat.sec = duration_sec.",
+    )
+
+
 class PathGroup(BaseModel):
     id: str = Field(
         min_length=1,
@@ -161,12 +203,12 @@ class PathAction(BaseModel):
     timers: list[PathTimer] = Field(
         default_factory=list,
         description=(
-            "TimerStack for cook steps (pasta alert, stir nudges). "
+            "TimerStack for simple manual Start waits. "
             "Empty [] when unused. Wire: always present."
         ),
     )
     # App model allows None; Anthropic wire collapses null → always-present
-    # PathCounter object (target=-1 stub → None in normalize_counter_stub).
+    # PathCounter object (target=-1 stub → None in normalize_plugin_stubs).
     counter: PathCounter | None = Field(
         default=None,
         description=(
@@ -174,22 +216,50 @@ class PathAction(BaseModel):
             "target=-1 means absent (normalized to null)."
         ),
     )
+    # Wire stub: duration_sec=-1, markers=[] → None.
+    timeline: PathTimeline | None = Field(
+        default=None,
+        description=(
+            "Session axis + markers (cook). Wire: always emit object; "
+            "duration_sec=-1 means absent."
+        ),
+    )
+    # Wire stub: segments=[] → None.
+    interval_plan: PathIntervalPlan | None = Field(
+        default=None,
+        description=(
+            "Sequential work/rest segments (fitness circuit). Wire: always "
+            "emit object; empty segments means absent."
+        ),
+    )
 
     @model_validator(mode="before")
     @classmethod
-    def normalize_counter_stub(cls, data: object) -> object:
-        """Wire stub ``counter.target == -1`` (or empty) → no counter."""
+    def normalize_plugin_stubs(cls, data: object) -> object:
+        """Wire stubs for counter / timeline / interval_plan → None."""
         if not isinstance(data, dict):
             return data
         out = dict(data)
         counter = out.get("counter")
-        if counter is None:
-            return out
-        if not isinstance(counter, dict):
-            return out
-        target = counter.get("target", -1)
-        if target is None or target == -1 or target == "":
-            out["counter"] = None
+        if isinstance(counter, dict):
+            target = counter.get("target", -1)
+            if target is None or target == -1 or target == "":
+                out["counter"] = None
+        timeline = out.get("timeline")
+        if isinstance(timeline, dict):
+            duration = timeline.get("duration_sec", -1)
+            markers = timeline.get("markers") or []
+            if duration is None or duration == -1 or duration == "" or (
+                isinstance(duration, int) and duration < 1 and not markers
+            ):
+                out["timeline"] = None
+        elif timeline is None:
+            pass
+        interval = out.get("interval_plan")
+        if isinstance(interval, dict):
+            segments = interval.get("segments") or []
+            if not segments:
+                out["interval_plan"] = None
         return out
 
 
@@ -346,11 +416,12 @@ class PathState(BaseModel):
         description="Optional Path sections (Покупки, Готовка, …).",
     )
     actions: list[PathAction] = Field(
-        min_length=1,
+        default_factory=list,
         max_length=16,
         description=(
-            "Ordered steps (1–16 soft cap; prefer ≤12). Every action needs why. "
-            "First step doable today when possible. Attach to days via day_offset."
+            "Ordered steps (0 while progressive create loads; then 1–16 soft "
+            "cap; prefer ≤12). Every action needs why. First step doable today "
+            "when possible. Attach to days via day_offset."
         ),
     )
     questions: list[ClarifyQuestion] = Field(
@@ -391,7 +462,9 @@ class PathState(BaseModel):
         domain = out.get("domain") if isinstance(out.get("domain"), str) else None
 
         cycle = out.get("cycle")
-        if not isinstance(cycle, dict):
+        if isinstance(cycle, PathCycle):
+            cycle = cycle.model_dump()
+        elif not isinstance(cycle, dict):
             cycle = {}
         else:
             cycle = dict(cycle)
@@ -404,6 +477,11 @@ class PathState(BaseModel):
         out["cycle"] = cycle
 
         days = out.get("days")
+        if isinstance(days, list) and days and not isinstance(days[0], dict):
+            days = [
+                d.model_dump() if hasattr(d, "model_dump") else d for d in days
+            ]
+            out["days"] = days
         if not isinstance(days, list) or len(days) == 0:
             horizon = int(cycle["horizon_days"])
             offsets: set[int] = set()
@@ -510,6 +588,26 @@ class PathState(BaseModel):
                     raise ValueError("timers.title must be non-empty")
             if action.counter is not None and action.counter.current < 0:
                 raise ValueError("counter.current must be >= 0")
+            if action.timeline is not None:
+                for marker in action.timeline.markers:
+                    if not marker.title.strip():
+                        raise ValueError("timeline.markers.title must be non-empty")
+                    if marker.sec > action.timeline.duration_sec:
+                        raise ValueError(
+                            "timeline.markers.sec must be <= duration_sec"
+                        )
+            if action.interval_plan is not None:
+                if not action.interval_plan.segments:
+                    raise ValueError("interval_plan.segments must be non-empty")
+                for segment in action.interval_plan.segments:
+                    if not segment.title.strip():
+                        raise ValueError(
+                            "interval_plan.segments.title must be non-empty"
+                        )
+                    if segment.sec < 1:
+                        raise ValueError(
+                            "interval_plan.segments.sec must be >= 1"
+                        )
         return self
 
 

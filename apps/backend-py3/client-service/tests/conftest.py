@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 from collections import defaultdict, deque
 from collections.abc import AsyncIterator, Callable
@@ -58,6 +59,27 @@ get_settings.cache_clear()
 
 TEST_DATABASE_URL = os.environ["DATABASE_URL"]
 DEVICE_HEADER = {"X-Device-Id": "test-device"}
+
+
+async def wait_path_ready(
+    client: AsyncClient,
+    auth_headers: dict[str, str],
+    project_id: str,
+    *,
+    attempts: int = 40,
+) -> dict[str, Any]:
+    """Poll GET project until progressive create phase-2 finishes."""
+    last: dict[str, Any] | None = None
+    for _ in range(attempts):
+        response = await client.get(
+            f"/api/v1/projects/{project_id}", headers=auth_headers
+        )
+        assert response.status_code == 200
+        last = response.json()
+        if last.get("path_ready"):
+            return last
+        await asyncio.sleep(0.05)
+    raise AssertionError(f"path_ready never became true: {last}")
 
 
 class ScriptedLLMProvider(LLMProvider):
@@ -175,7 +197,8 @@ def auth_headers(device_id: str) -> dict[str, str]:
 @pytest.fixture
 def enqueue_path(llm: ScriptedLLMProvider) -> Callable[..., None]:
     def _enqueue(**overrides: Any) -> None:
-        # Phase 1 gate + phase 2 PathState (split create for Anthropic grammar).
+        # Phase 1 gate (start surface) + phase 2 PathState.
+        path = sample_create_path(**overrides)["path"]
         llm.enqueue(
             "create",
             {
@@ -186,9 +209,19 @@ def enqueue_path(llm: ScriptedLLMProvider) -> Callable[..., None]:
                     "goal_suggestions": [],
                     "domain": "other",
                 },
+                "path_start": {
+                    "paraphrase": path["paraphrase"],
+                    "title": path["title"],
+                    "summary": path["summary"],
+                    "questions": path.get("questions") or [],
+                    "outline_days": [
+                        d.get("title") or f"Day {d['day_index'] + 1}"
+                        for d in (path.get("days") or [])
+                        if isinstance(d, dict)
+                    ],
+                },
             },
         )
-        path = sample_create_path(**overrides)["path"]
         llm.enqueue("create", path)
 
     return _enqueue
@@ -197,6 +230,7 @@ def enqueue_path(llm: ScriptedLLMProvider) -> Callable[..., None]:
 @pytest.fixture
 def enqueue_fitness(llm: ScriptedLLMProvider) -> Callable[..., None]:
     def _enqueue(**overrides: Any) -> None:
+        path = sample_fitness_path_state(**overrides)
         llm.enqueue(
             "create",
             {
@@ -207,9 +241,20 @@ def enqueue_fitness(llm: ScriptedLLMProvider) -> Callable[..., None]:
                     "goal_suggestions": [],
                     "domain": "other",
                 },
+                "path_start": {
+                    "paraphrase": path["paraphrase"],
+                    "title": path["title"],
+                    "summary": path["summary"],
+                    "questions": path.get("questions") or [],
+                    "outline_days": [
+                        d.get("title") or f"Day {d['day_index'] + 1}"
+                        for d in (path.get("days") or [])
+                        if isinstance(d, dict)
+                    ],
+                },
             },
         )
-        llm.enqueue("create", sample_fitness_path_state(**overrides))
+        llm.enqueue("create", path)
 
     return _enqueue
 

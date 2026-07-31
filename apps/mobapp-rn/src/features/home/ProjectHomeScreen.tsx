@@ -27,7 +27,12 @@ import { FirstCompletionOverlay } from '@/features/home/FirstCompletionOverlay';
 import type { RootScreenProps } from '@/navigation/types';
 import { trackActionShown } from '@/services/beacons';
 import { AsyncState } from '@/shared/ui/AsyncState';
-import { CounterControl, TimerStack } from '@/shared/ui/ActionPlugins';
+import {
+  CounterControl,
+  IntervalPlayer,
+  TimelineProgress,
+  TimerStack,
+} from '@/shared/ui/ActionPlugins';
 import { ChecklistList } from '@/shared/ui/ChecklistList';
 import { PrimaryButton } from '@/shared/ui/PrimaryButton';
 import { SafeScreen } from '@/shared/ui/SafeScreen';
@@ -217,6 +222,8 @@ export function ProjectHomeScreen({
       patchNextAction({
         counter: updated.counter,
         timers: updated.timers,
+        timeline: updated.timeline,
+        interval_plan: updated.interval_plan,
       });
     } catch (e) {
       patchNextAction({
@@ -236,6 +243,8 @@ export function ProjectHomeScreen({
       patchNextAction({
         timers: updated.timers,
         counter: updated.counter,
+        timeline: updated.timeline,
+        interval_plan: updated.interval_plan,
       });
     } catch (e) {
       setError(e instanceof ApiError ? e.message : t('home.error'));
@@ -434,6 +443,26 @@ export function ProjectHomeScreen({
                   interactive
                   disabled={busy}
                   onCompleteTimer={(timerId) => void onCompleteTimer(timerId)}
+                />
+              </View>
+            ) : null}
+
+            {next.timeline ? (
+              <View style={styles.plugins}>
+                <TimelineProgress
+                  timeline={next.timeline}
+                  interactive
+                  disabled={busy}
+                />
+              </View>
+            ) : null}
+
+            {next.interval_plan ? (
+              <View style={styles.plugins}>
+                <IntervalPlayer
+                  plan={next.interval_plan}
+                  interactive
+                  disabled={busy}
                 />
               </View>
             ) : null}

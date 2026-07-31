@@ -113,6 +113,8 @@ export function PathScreen({ navigation, route }: RootScreenProps<'Path'>) {
                   ...action,
                   counter: updated.counter,
                   timers: updated.timers,
+                  timeline: updated.timeline,
+                  interval_plan: updated.interval_plan,
                 }
               : action,
           ),
@@ -122,6 +124,8 @@ export function PathScreen({ navigation, route }: RootScreenProps<'Path'>) {
                   ...prev.next_action,
                   counter: updated.counter,
                   timers: updated.timers,
+                  timeline: updated.timeline,
+                  interval_plan: updated.interval_plan,
                 }
               : prev.next_action,
         };
@@ -146,6 +150,8 @@ export function PathScreen({ navigation, route }: RootScreenProps<'Path'>) {
                   ...action,
                   timers: updated.timers,
                   counter: updated.counter,
+                  timeline: updated.timeline,
+                  interval_plan: updated.interval_plan,
                 }
               : action,
           ),
@@ -155,6 +161,8 @@ export function PathScreen({ navigation, route }: RootScreenProps<'Path'>) {
                   ...prev.next_action,
                   timers: updated.timers,
                   counter: updated.counter,
+                  timeline: updated.timeline,
+                  interval_plan: updated.interval_plan,
                 }
               : prev.next_action,
         };

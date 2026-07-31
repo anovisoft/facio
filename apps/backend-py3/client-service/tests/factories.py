@@ -74,6 +74,8 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
                 ],
                 "timers": [],
                 "counter": None,
+                "timeline": None,
+                "interval_plan": None,
             },
             {
                 "id": "cook",
@@ -87,21 +89,28 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
                 "checklist_items": [],
                 "timers": [
                     {
-                        "id": "pasta",
-                        "title": "Лапша",
-                        "duration_sec": 540,
-                        "signal": "alert",
-                        "parallel_group": None,
-                    },
-                    {
-                        "id": "stir",
-                        "title": "Помешать",
-                        "duration_sec": 120,
+                        "id": "guanciale",
+                        "title": "Обжарить гуанчиале",
+                        "duration_sec": 480,
                         "signal": "nudge",
                         "parallel_group": None,
                     },
                 ],
                 "counter": None,
+                "timeline": {
+                    "duration_sec": 480,
+                    "markers": [
+                        {"sec": 0, "title": "Паста в воду", "signal": "nudge"},
+                        {"sec": 120, "title": "Помешать", "signal": "nudge"},
+                        {"sec": 300, "title": "Помешать ещё", "signal": "nudge"},
+                        {
+                            "sec": 480,
+                            "title": "Лапша al dente",
+                            "signal": "alert",
+                        },
+                    ],
+                },
+                "interval_plan": None,
             },
         ],
         "questions": [
@@ -146,26 +155,43 @@ def sample_fitness_path_state(**overrides: Any) -> dict[str, Any]:
             }
         )
         if kind == "train":
-            actions.append(
-                {
-                    "id": f"d{i}",
-                    "title": "Подходы отжиманий",
-                    "why": f"Силовой день {i // 2 + 1} двигает к 30 отжиманиям",
-                    "detail": "3 коротких подхода с хорошей формой.",
-                    "estimate_min": 15,
-                    "day_offset": i,
-                    "sort": i,
-                    "group_id": None,
-                    "checklist_items": [],
-                    "timers": [],
-                    "counter": {
-                        "label": "повторы",
-                        "target": 24,
-                        "current": 0,
-                        "step": 1,
-                    },
+            action: dict[str, Any] = {
+                "id": f"d{i}",
+                "title": (
+                    "Круговая сессия" if i == 0 else "Подходы отжиманий"
+                ),
+                "why": f"Силовой день {i // 2 + 1} двигает к 30 отжиманиям",
+                "detail": (
+                    "Работа / отдых по таймеру."
+                    if i == 0
+                    else "3 коротких подхода с хорошей формой."
+                ),
+                "estimate_min": 15,
+                "day_offset": i,
+                "sort": i,
+                "group_id": None,
+                "checklist_items": [],
+                "timers": [],
+                "counter": {
+                    "label": "повторы",
+                    "target": 24,
+                    "current": 0,
+                    "step": 1,
+                },
+                "timeline": None,
+                "interval_plan": None,
+            }
+            if i == 0:
+                action["interval_plan"] = {
+                    "segments": [
+                        {"sec": 40, "title": "Отжимания", "signal": "nudge"},
+                        {"sec": 20, "title": "Отдых", "signal": "nudge"},
+                        {"sec": 40, "title": "Отжимания", "signal": "nudge"},
+                        {"sec": 20, "title": "Отдых", "signal": "nudge"},
+                        {"sec": 40, "title": "Отжимания", "signal": "alert"},
+                    ],
                 }
-            )
+            actions.append(action)
         else:
             actions.append(
                 {
@@ -180,6 +206,8 @@ def sample_fitness_path_state(**overrides: Any) -> dict[str, Any]:
                     "checklist_items": [],
                     "timers": [],
                     "counter": None,
+                    "timeline": None,
+                    "interval_plan": None,
                 }
             )
     state: dict[str, Any] = {

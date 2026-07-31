@@ -43,16 +43,59 @@ class InstantAnswerWire(BaseModel):
     domain: PathDomain = "other"
 
 
+class ClarifyQuestionWire(BaseModel):
+    """Slim clarify chip for create start surface (no PathState bloat)."""
+
+    id: str = ""
+    prompt: str = ""
+    options: list[str] = Field(default_factory=list)
+
+
+class PathStartSurface(BaseModel):
+    """Validated start surface when kind=path (phase 1)."""
+
+    paraphrase: str = Field(min_length=1)
+    title: str = Field(min_length=1, max_length=120)
+    summary: str = Field(min_length=1, max_length=600)
+    questions: list[ClarifyQuestionWire] = Field(default_factory=list, max_length=4)
+    # Short day titles only (e.g. "Силовая A") — NO plugins / full day schema.
+    outline_days: list[str] = Field(default_factory=list, max_length=8)
+
+    @model_validator(mode="after")
+    def validate_questions(self) -> "PathStartSurface":
+        n = len(self.questions)
+        if n == 1:
+            raise ValueError("questions must be empty or have 2–4 items (got 1)")
+        days = [d.strip() for d in self.outline_days if d.strip()]
+        questions = [
+            q
+            for q in self.questions
+            if q.id.strip() and q.prompt.strip()
+        ]
+        return self.model_copy(update={"outline_days": days, "questions": questions})
+
+
+class PathStartSurfaceWire(BaseModel):
+    """Anthropic wire for path start — always emit object (stub when IA)."""
+
+    paraphrase: str = ""
+    title: str = ""
+    summary: str = ""
+    questions: list[ClarifyQuestionWire] = Field(default_factory=list)
+    outline_days: list[str] = Field(default_factory=list)
+
+
 class CreateGateResponse(BaseModel):
-    """Tiny create gate: path vs instant_answer (no PathState).
+    """Create gate + optional start surface (no PathState / plugins).
 
     Anthropic structured-output grammar cannot fit PathState + InstantAnswer
-    in one schema after Slice 3 plugins. Gate decides kind; path body is a
-    second call with PATH_RESPONSE_SCHEMA only.
+    in one schema after Slice 3 plugins. Gate decides kind and, for path,
+    returns a slim start surface; full Path is a second call.
     """
 
     kind: Literal["path", "instant_answer"]
     instant_answer: InstantAnswerPayload | None = None
+    path_start: PathStartSurface | None = None
 
     @model_validator(mode="after")
     def validate_branch(self) -> "CreateGateResponse":
@@ -61,8 +104,11 @@ class CreateGateResponse(BaseModel):
                 raise ValueError(
                     "instant_answer is required when kind=instant_answer"
                 )
+            if self.path_start is not None:
+                return self.model_copy(update={"path_start": None})
         elif self.kind == "path":
-            # Drop accidental stubs; path body comes from the second LLM call.
+            if self.path_start is None:
+                raise ValueError("path_start is required when kind=path")
             if self.instant_answer is not None:
                 return self.model_copy(update={"instant_answer": None})
         else:
@@ -71,10 +117,11 @@ class CreateGateResponse(BaseModel):
 
 
 class CreateGateWire(BaseModel):
-    """Anthropic wire for create gate — always emit instant_answer object."""
+    """Anthropic wire for create gate — always emit both branch objects."""
 
     kind: Literal["path", "instant_answer"]
     instant_answer: InstantAnswerWire
+    path_start: PathStartSurfaceWire
 
 
 class CreateLlmResponse(BaseModel):

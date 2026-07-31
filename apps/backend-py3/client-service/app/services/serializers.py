@@ -5,15 +5,26 @@ from uuid import UUID
 from app.models import Action, ActionGroup, ActionStatus, Project, ProjectStatus
 from app.schemas.api import (
     ActionResponse,
+    ActionTimelineResponse,
     ChecklistItemResponse,
     CounterResponse,
     CurrentDayResponse,
     CycleResponse,
     DayResponse,
     GroupResponse,
+    IntervalPlanResponse,
+    IntervalSegmentResponse,
+    TimelineMarkerResponse,
     TimerResponse,
 )
-from app.schemas.path_state import DayKind, PathCounter, PathState, PathTimer
+from app.schemas.path_state import (
+    DayKind,
+    PathCounter,
+    PathIntervalPlan,
+    PathState,
+    PathTimeline,
+    PathTimer,
+)
 from app.services.path_materialize import action_key, stable_uuid
 
 
@@ -51,6 +62,57 @@ def _serialize_counter_from_orm(raw: dict | None) -> CounterResponse | None:
     )
 
 
+def _serialize_timeline_from_orm(
+    raw: dict | None,
+) -> ActionTimelineResponse | None:
+    if not isinstance(raw, dict):
+        return None
+    duration = raw.get("duration_sec")
+    if duration is None or int(duration) < 1:
+        return None
+    markers_raw = raw.get("markers") or []
+    markers: list[TimelineMarkerResponse] = []
+    if isinstance(markers_raw, list):
+        for item in markers_raw:
+            if not isinstance(item, dict):
+                continue
+            markers.append(
+                TimelineMarkerResponse(
+                    at_sec=int(item.get("at_sec") or item.get("sec") or 0),
+                    title=str(item.get("title") or ""),
+                    signal=item.get("signal") or "nudge",  # type: ignore[arg-type]
+                )
+            )
+    return ActionTimelineResponse(duration_sec=int(duration), markers=markers)
+
+
+def _serialize_interval_from_orm(
+    raw: dict | None,
+) -> IntervalPlanResponse | None:
+    if not isinstance(raw, dict):
+        return None
+    segments_raw = raw.get("segments") or []
+    if not isinstance(segments_raw, list) or not segments_raw:
+        return None
+    segments: list[IntervalSegmentResponse] = []
+    for item in segments_raw:
+        if not isinstance(item, dict):
+            continue
+        duration = int(item.get("duration_sec") or item.get("sec") or 0)
+        if duration < 1:
+            continue
+        segments.append(
+            IntervalSegmentResponse(
+                duration_sec=duration,
+                title=str(item.get("title") or ""),
+                signal=item.get("signal") or "nudge",  # type: ignore[arg-type]
+            )
+        )
+    if not segments:
+        return None
+    return IntervalPlanResponse(segments=segments)
+
+
 def _serialize_timers_from_state(
     timers: list[PathTimer],
 ) -> list[TimerResponse]:
@@ -83,6 +145,41 @@ def _serialize_counter_from_state(
     )
 
 
+def _serialize_timeline_from_state(
+    timeline: PathTimeline | None,
+) -> ActionTimelineResponse | None:
+    if timeline is None:
+        return None
+    return ActionTimelineResponse(
+        duration_sec=timeline.duration_sec,
+        markers=[
+            TimelineMarkerResponse(
+                at_sec=m.sec,
+                title=m.title,
+                signal=m.signal,
+            )
+            for m in timeline.markers
+        ],
+    )
+
+
+def _serialize_interval_from_state(
+    plan: PathIntervalPlan | None,
+) -> IntervalPlanResponse | None:
+    if plan is None:
+        return None
+    return IntervalPlanResponse(
+        segments=[
+            IntervalSegmentResponse(
+                duration_sec=s.sec,
+                title=s.title,
+                signal=s.signal,
+            )
+            for s in plan.segments
+        ],
+    )
+
+
 def serialize_action(action: Action) -> ActionResponse:
     group = action.group
     return ActionResponse(
@@ -106,6 +203,8 @@ def serialize_action(action: Action) -> ActionResponse:
         ],
         timers=_serialize_timers_from_orm(action.timers),
         counter=_serialize_counter_from_orm(action.counter),
+        timeline=_serialize_timeline_from_orm(action.timeline),
+        interval_plan=_serialize_interval_from_orm(action.interval_plan),
     )
 
 
@@ -273,6 +372,8 @@ def serialize_path_state(
                 checklist_items=checklist,
                 timers=_serialize_timers_from_state(item.timers),
                 counter=_serialize_counter_from_state(item.counter),
+                timeline=_serialize_timeline_from_state(item.timeline),
+                interval_plan=_serialize_interval_from_state(item.interval_plan),
             )
         )
     actions.sort(
