@@ -184,7 +184,9 @@ async def test_commit_activates_and_materializes(
     assert any(a["checklist_items"] for a in body["actions"])
     cook = next(a for a in body["actions"] if a["key"] == "cook")
     assert cook["timeline"] is not None
-    assert len(cook["timers"]) >= 1
+    assert cook["timers"] == []
+    sear = next(a for a in body["actions"] if a["key"] == "sear")
+    assert len(sear["timers"]) >= 1
 
     events = (
         await db_session.execute(

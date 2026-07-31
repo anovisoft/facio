@@ -57,12 +57,17 @@ def merge_plugin_payloads(
             timers.append(
                 timer.model_copy(update={"id": timer.id or f"t{t_index}"})
             )
+        timeline = payload.timeline
+        # Timeline owns the session clock — peer timers on the same step are
+        # redundant (grammar/UX); drop them when a real timeline is present.
+        if timeline is not None and timeline.duration_sec >= 1:
+            timers = []
         actions.append(
             item.model_copy(
                 update={
                     "timers": timers,
                     "counter": payload.counter,
-                    "timeline": payload.timeline,
+                    "timeline": timeline,
                     "interval_plan": payload.interval_plan,
                 }
             )

@@ -17,7 +17,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
 import { ApiError } from '@/api/types';
-import type { FirstStepWhen, ProjectDetail } from '@/api/types';
+import type { ProjectDetail } from '@/api/types';
 import {
   commitProject,
   getProject,
@@ -38,6 +38,8 @@ import { radii, spacing, typography } from '@/theme';
 
 const PATH_POLL_MS = 1500;
 
+type CommitIntent = 'start' | 'save';
+
 export function DraftStudioScreen({
   navigation,
   route,
@@ -51,12 +53,11 @@ export function DraftStudioScreen({
   );
   const [loading, setLoading] = useState(!seed);
   const [busy, setBusy] = useState(false);
-  const [committing, setCommitting] = useState(false);
+  const [committing, setCommitting] = useState<CommitIntent | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [comment, setComment] = useState('');
   const [canGoBack, setCanGoBack] = useState(false);
-  const [when, setWhen] = useState<FirstStepWhen>('today');
   const undoStackRef = useRef<number[]>([]);
   const abortRef = useRef<AbortController | null>(null);
   const acceptTrackedRef = useRef(false);
@@ -119,7 +120,7 @@ export function DraftStudioScreen({
 
   // Poll while full Path is still generating in the background.
   useEffect(() => {
-    if (!project || pathReady || pathError || busy || committing) return;
+    if (!project || pathReady || pathError || busy || committing != null) return;
     const timer = setInterval(() => {
       void (async () => {
         try {
@@ -139,12 +140,14 @@ export function DraftStudioScreen({
     trackAcceptViewed(projectId);
   }, [pathReady, projectId]);
 
+  // Only reset when the question *set* changes — not when path #2 bumps version
+  // (that was wiping answers the user already picked while the plan loaded).
   const questionRoundKey = project?.questions.map((q) => q.id).join('|') ?? '';
 
   useEffect(() => {
     setAnswers({});
     setComment('');
-  }, [questionRoundKey, project?.current_version]);
+  }, [questionRoundKey]);
 
   const selectAnswer = (questionId: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
@@ -158,7 +161,7 @@ export function DraftStudioScreen({
   const canRefine =
     pathReady &&
     !busy &&
-    !committing &&
+    committing == null &&
     (allAnswered || (questions.length === 0 && Boolean(comment.trim())));
 
   const runRefine = async () => {
@@ -202,7 +205,7 @@ export function DraftStudioScreen({
   };
 
   const goBackVersion = async () => {
-    if (busy || committing || !project) return;
+    if (busy || committing != null || !project) return;
 
     let target: number | null = null;
     if (undoStackRef.current.length > 0) {
@@ -235,23 +238,30 @@ export function DraftStudioScreen({
     }
   };
 
-  const onStartToday = async () => {
-    if (committing || !pathReady) return;
-    setCommitting(true);
+  const onCommit = async (intent: CommitIntent) => {
+    if (committing != null || !pathReady) return;
+    setCommitting(intent);
     setError(null);
     try {
-      const detail = await commitProject(projectId, when);
+      const detail = await commitProject(projectId, 'today');
       setLastProjectId(detail.id);
+      if (intent === 'start') {
+        navigation.reset({
+          index: 1,
+          routes: [
+            { name: 'Projects' },
+            { name: 'ProjectHome', params: { projectId: detail.id } },
+          ],
+        });
+        return;
+      }
       navigation.reset({
-        index: 1,
-        routes: [
-          { name: 'Projects' },
-          { name: 'ProjectHome', params: { projectId: detail.id } },
-        ],
+        index: 0,
+        routes: [{ name: 'Projects' }],
       });
     } catch (e) {
       setError(e instanceof ApiError ? e.message : t('draft.startError'));
-      setCommitting(false);
+      setCommitting(null);
     }
   };
 
@@ -303,6 +313,60 @@ export function DraftStudioScreen({
         </Text>
       ) : null}
 
+      {questions.length > 0 ? (
+        <View style={styles.clarify}>
+          <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
+            {t('draft.clarifyLabel')}
+          </Text>
+          {questions.map((question, index) => (
+            <View key={question.id} style={styles.questionBlock}>
+              <Text style={[styles.question, { color: colors.text }]}>
+                {index + 1}. {question.prompt}
+              </Text>
+              <ClarifyChips
+                options={question.options}
+                selected={answers[question.id] ?? null}
+                disabled={busy || committing != null}
+                allowCustom
+                customPlaceholder={t('draft.freeTextPlaceholder')}
+                onSelect={(option) => selectAnswer(question.id, option)}
+              />
+            </View>
+          ))}
+          <Text style={[styles.commentLabel, { color: colors.textMuted }]}>
+            {t('draft.commentLabel')}
+          </Text>
+          <TextInput
+            value={comment}
+            onChangeText={setComment}
+            editable={!busy && committing == null}
+            multiline
+            placeholder={t('draft.commentPlaceholder')}
+            placeholderTextColor={colors.textMuted}
+            style={[
+              styles.input,
+              {
+                color: colors.text,
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              },
+            ]}
+          />
+          {!pathReady ? (
+            <Text style={[styles.muted, { color: colors.textSecondary }]}>
+              {t('draft.refineWaitPath')}
+            </Text>
+          ) : null}
+        </View>
+      ) : pathReady ? (
+        <Text style={[styles.ready, { color: colors.textSecondary }]}>
+          {t('draft.readyHint')}
+        </Text>
+      ) : null}
+
+      <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
+        {t('draft.pathSection')}
+      </Text>
       {!pathReady ? (
         <View style={styles.pathLoading}>
           {pathError ? (
@@ -329,120 +393,29 @@ export function DraftStudioScreen({
         />
       )}
 
-      {questions.length > 0 ? (
-        <View style={styles.clarify}>
-          <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
-            {t('draft.clarifyLabel')}
-          </Text>
-          {questions.map((question, index) => (
-            <View key={question.id} style={styles.questionBlock}>
-              <Text style={[styles.question, { color: colors.text }]}>
-                {index + 1}. {question.prompt}
+      {pathReady && (project.success_criteria || project.horizon) ? (
+        <View style={styles.contract}>
+          {project.success_criteria ? (
+            <>
+              <Text style={[styles.metaLabel, { color: colors.textMuted }]}>
+                {t('draft.success')}
               </Text>
-              <ClarifyChips
-                options={question.options}
-                selected={answers[question.id] ?? null}
-                disabled={busy || committing}
-                allowCustom
-                customPlaceholder={t('draft.freeTextPlaceholder')}
-                onSelect={(option) => selectAnswer(question.id, option)}
-              />
-            </View>
-          ))}
-          <Text style={[styles.commentLabel, { color: colors.textMuted }]}>
-            {t('draft.commentLabel')}
-          </Text>
-          <TextInput
-            value={comment}
-            onChangeText={setComment}
-            editable={!busy && !committing}
-            multiline
-            placeholder={t('draft.commentPlaceholder')}
-            placeholderTextColor={colors.textMuted}
-            style={[
-              styles.input,
-              {
-                color: colors.text,
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-              },
-            ]}
-          />
-          {!pathReady ? (
-            <Text style={[styles.muted, { color: colors.textSecondary }]}>
-              {t('draft.refineWaitPath')}
-            </Text>
+              <Text style={[styles.meta, { color: colors.text }]}>
+                {project.success_criteria}
+              </Text>
+            </>
+          ) : null}
+          {project.horizon ? (
+            <>
+              <Text style={[styles.metaLabel, { color: colors.textMuted }]}>
+                {t('draft.horizon')}
+              </Text>
+              <Text style={[styles.meta, { color: colors.text }]}>
+                {project.horizon}
+              </Text>
+            </>
           ) : null}
         </View>
-      ) : pathReady ? (
-        <Text style={[styles.ready, { color: colors.textSecondary }]}>
-          {t('draft.readyHint')}
-        </Text>
-      ) : null}
-
-      {pathReady ? (
-        <>
-          {(project.success_criteria || project.horizon) && (
-            <View style={styles.contract}>
-              {project.success_criteria ? (
-                <>
-                  <Text style={[styles.metaLabel, { color: colors.textMuted }]}>
-                    {t('draft.success')}
-                  </Text>
-                  <Text style={[styles.meta, { color: colors.text }]}>
-                    {project.success_criteria}
-                  </Text>
-                </>
-              ) : null}
-              {project.horizon ? (
-                <>
-                  <Text style={[styles.metaLabel, { color: colors.textMuted }]}>
-                    {t('draft.horizon')}
-                  </Text>
-                  <Text style={[styles.meta, { color: colors.text }]}>
-                    {project.horizon}
-                  </Text>
-                </>
-              ) : null}
-            </View>
-          )}
-
-          <Text style={[styles.whenLabel, { color: colors.text }]}>
-            {t('draft.firstStepWhen')}
-          </Text>
-          <View style={styles.whenRow}>
-            {(['today', 'tomorrow'] as const).map((option) => {
-              const selected = when === option;
-              return (
-                <Pressable
-                  key={option}
-                  onPress={() => setWhen(option)}
-                  disabled={committing || busy}
-                  style={[
-                    styles.whenChip,
-                    {
-                      backgroundColor: selected
-                        ? colors.primary
-                        : colors.surface,
-                      borderColor: selected ? colors.primary : colors.border,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.whenText,
-                      { color: selected ? colors.white : colors.primary },
-                    ]}
-                  >
-                    {option === 'today'
-                      ? t('draft.today')
-                      : t('draft.tomorrow')}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </>
       ) : null}
 
       {error ? (
@@ -471,7 +444,7 @@ export function DraftStudioScreen({
         <PrimaryButton
           variant="secondary"
           label={t('draft.back')}
-          disabled={!canGoBack || busy || committing}
+          disabled={!canGoBack || busy || committing != null}
           onPress={() => void goBackVersion()}
           style={styles.actionBtn}
         />
@@ -485,11 +458,19 @@ export function DraftStudioScreen({
       </View>
 
       <PrimaryButton
-        label={t('draft.startToday')}
-        disabled={!pathReady || busy}
-        loading={committing}
-        onPress={() => void onStartToday()}
+        label={t('draft.saveAndStart')}
+        disabled={!pathReady || busy || committing != null}
+        loading={committing === 'start'}
+        onPress={() => void onCommit('start')}
         style={styles.startToday}
+      />
+      <PrimaryButton
+        variant="secondary"
+        label={t('draft.saveOnly')}
+        disabled={!pathReady || busy || committing != null}
+        loading={committing === 'save'}
+        onPress={() => void onCommit('save')}
+        style={styles.saveOnly}
       />
     </SafeScreen>
   );
@@ -563,25 +544,6 @@ const styles = StyleSheet.create({
   meta: {
     ...typography.body,
   },
-  whenLabel: {
-    ...typography.subtitle,
-    marginTop: spacing.xl,
-    marginBottom: spacing.sm,
-  },
-  whenRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  whenChip: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: radii.md,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  whenText: {
-    ...typography.subtitle,
-  },
   error: {
     ...typography.caption,
     marginTop: spacing.md,
@@ -606,5 +568,8 @@ const styles = StyleSheet.create({
   },
   startToday: {
     marginTop: spacing.md,
+  },
+  saveOnly: {
+    marginTop: spacing.sm,
   },
 });

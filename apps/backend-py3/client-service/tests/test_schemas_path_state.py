@@ -11,7 +11,7 @@ def test_valid_path_state():
     assert state.summary
     assert state.outcome
     assert state.domain == "cooking"
-    assert len(state.actions) == 2
+    assert len(state.actions) == 3
     assert all(a.why.strip() for a in state.actions)
 
 

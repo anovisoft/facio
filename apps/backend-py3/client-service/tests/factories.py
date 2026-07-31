@@ -79,16 +79,32 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
                 "interval_plan": None,
             },
             {
+                "id": "sear",
+                "title": "Обжарить гуанчиале",
+                "why": "Параллельная подготовка мяса",
+                "detail": "До золотистой корочки",
+                "estimate_min": 8,
+                "day_offset": 0,
+                "sort": 1,
+                "group_id": "cook",
+                "checklist_items": [],
+                "plugin_hints": ["timers"],
+                "timers": [],
+                "counter": None,
+                "timeline": None,
+                "interval_plan": None,
+            },
+            {
                 "id": "cook",
                 "title": "Сварить пасту и соус",
                 "why": "Это основной шаг к готовому блюду",
                 "detail": "Аль денте, соус на желтках и сыре",
                 "estimate_min": 25,
                 "day_offset": 0,
-                "sort": 1,
+                "sort": 2,
                 "group_id": "cook",
                 "checklist_items": [],
-                "plugin_hints": ["timeline", "timers"],
+                "plugin_hints": ["timeline"],
                 "timers": [],
                 "counter": None,
                 "timeline": None,
@@ -115,11 +131,11 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
 
 
 def sample_plugins_materialize(**overrides: Any) -> dict[str, Any]:
-    """Create #3 payload for carbonara cook action."""
+    """Create #3 payload for carbonara cook (timeline) + sear (timers only)."""
     payload: dict[str, Any] = {
         "actions": [
             {
-                "action_id": "cook",
+                "action_id": "sear",
                 "timers": [
                     {
                         "id": "guanciale",
@@ -129,6 +145,13 @@ def sample_plugins_materialize(**overrides: Any) -> dict[str, Any]:
                         "parallel_group": None,
                     },
                 ],
+                "counter": None,
+                "timeline": None,
+                "interval_plan": None,
+            },
+            {
+                "action_id": "cook",
+                "timers": [],
                 "counter": None,
                 "timeline": {
                     "duration_sec": 480,
@@ -144,7 +167,7 @@ def sample_plugins_materialize(**overrides: Any) -> dict[str, Any]:
                     ],
                 },
                 "interval_plan": None,
-            }
+            },
         ]
     }
     payload.update(overrides)

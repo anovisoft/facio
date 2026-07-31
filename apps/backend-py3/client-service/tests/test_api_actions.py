@@ -112,7 +112,7 @@ async def test_toggle_checklist_then_complete(
     detail = await client.get(
         f"/api/v1/projects/{project['id']}", headers=auth_headers
     )
-    assert detail.json()["next_action"]["key"] == "cook"
+    assert detail.json()["next_action"]["key"] == "sear"
 
 
 async def test_skip_action(client, auth_headers, enqueue_path, db_session):
@@ -150,6 +150,11 @@ async def test_completing_all_actions_completes_project(
         )
     await client.post(
         f"/api/v1/actions/{buy['id']}/complete", headers=auth_headers
+    )
+
+    sear = next(a for a in project["actions"] if a["key"] == "sear")
+    await client.post(
+        f"/api/v1/actions/{sear['id']}/complete", headers=auth_headers
     )
 
     cook = next(a for a in project["actions"] if a["key"] == "cook")
@@ -275,11 +280,11 @@ async def test_counter_update_and_timer_complete(
     assert "counter_updated" in events
 
 
-async def test_timer_complete_on_cook_step(
+async def test_timer_complete_on_sear_step(
     client, auth_headers, enqueue_path, db_session
 ):
     project = await _create_and_commit(client, auth_headers, enqueue_path)
-    # Skip buy to reach cook
+    # Skip buy to reach sear (timers-only step; cook has timeline without timers)
     buy = next(a for a in project["actions"] if a["key"] == "buy")
     await client.post(
         f"/api/v1/actions/{buy['id']}/skip", headers=auth_headers
@@ -287,13 +292,13 @@ async def test_timer_complete_on_cook_step(
     detail = await client.get(
         f"/api/v1/projects/{project['id']}", headers=auth_headers
     )
-    cook = detail.json()["next_action"]
-    assert cook["key"] == "cook"
-    assert cook["timers"]
-    timer_id = cook["timers"][0]["id"]
+    sear = detail.json()["next_action"]
+    assert sear["key"] == "sear"
+    assert sear["timers"]
+    timer_id = sear["timers"][0]["id"]
 
     done = await client.post(
-        f"/api/v1/actions/{cook['id']}/timers/{timer_id}/complete",
+        f"/api/v1/actions/{sear['id']}/timers/{timer_id}/complete",
         headers=auth_headers,
         json={"completed": True},
     )

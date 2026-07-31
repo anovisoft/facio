@@ -123,12 +123,14 @@ _PATH_FIELDS = """\
   - checklist_items[]: sub-checks (e.g. eggs ☐); done=false on create; id or ""
   - plugin_hints[]: short tool announcements ONLY (no plugin objects here):
       * "timeline" — session axis (carbonara cook MUST hint this)
-      * "timers" — simple manual TimerStack (optional isolated wait)
+      * "timers" — simple manual TimerStack for an ISOLATED wait on a step \
+        that has NO timeline (e.g. dough rest). Do NOT combine with timeline \
+        on the same action — timeline already covers the session clock.
       * "interval" — work/rest circuit (fitness day0 circuit)
       * "counter" — dose/reps target
       * [] when no tools (shopping, rest)
-      Prefer one primary hint; cook may use ["timeline"] or ["timeline","timers"]; \
-      fitness circuit ["interval","counter"]; other train ["counter"].
+      One primary clock per action: timeline XOR timers (never both). \
+      Fitness circuit: ["interval","counter"]; other train: ["counter"].
   - Do NOT emit timers[], timeline, interval_plan, or counter objects on Path.
 - questions[]: 0 or 2–4 (max 4) clarifies that change the path; not an interview. \
   Emit the full batch for one round — user answers all at once.
@@ -144,8 +146,8 @@ _PATH_QUALITY = """\
 - Push-ups / fitness week: days must mix train and rest — rest days are real \
   days with kind=rest (light mobility OK), not identical "do sets" days.
 - Carbonara: cycle.horizon_days=1, one cook_session day.
-- Carbonara cook step: plugin_hints MUST include "timeline" (optional "timers"); \
-  shopping → [].
+- Carbonara cook step: plugin_hints MUST be ["timeline"] only (no "timers" on \
+  the same step — redundant with the axis); shopping → [].
 - Push-ups: train steps need "counter" and/or "interval" in plugin_hints; \
   rest → [].
 - First action executable today; honest estimate_min, ideally ≤ 30–60 min.
@@ -427,7 +429,7 @@ _FEWSHOT_PATH: dict[str, Any] = {
                 "sort": 1,
                 "group_id": "cook",
                 "checklist_items": [],
-                "plugin_hints": ["timeline", "timers"],
+                "plugin_hints": ["timeline"],
             },
         ],
         "questions": [
@@ -700,8 +702,12 @@ Do NOT rewrite the Path skeleton (no title/days/questions).
 - counter: ALWAYS present. Real: label, target≥1, current=0, step≥1. \
   Absent → {{label:"", target:-1, current:0, step:1}}.
 
-Honor plugin_hints: timeline → real timeline; timers → timers[]; \
-interval → interval_plan; counter → counter. Unused shapes → stubs / [].
+Honor plugin_hints: timeline → real timeline + timers MUST be []; \
+timers → timers[] only when timeline is absent; interval → interval_plan; \
+counter → counter. Unused shapes → stubs / [].
+NEVER put a real timeline and non-empty timers on the same action — \
+timers are for isolated waits without a session axis; timeline owns cook \
+sessions (pasta markers etc.).
 
 Emit one entry per hinted action (all hinted in the cycle for MVP).
 Match user language in titles. Do not chat. JSON only.
@@ -711,15 +717,7 @@ _FEWSHOT_MATERIALIZE_CARBONARA: dict[str, Any] = {
     "actions": [
         {
             "action_id": "cook",
-            "timers": [
-                {
-                    "id": "guanciale",
-                    "title": "Обжарить гуанчиале",
-                    "duration_sec": 480,
-                    "signal": "nudge",
-                    "parallel_group": "",
-                },
-            ],
+            "timers": [],
             "counter": dict(_EMPTY_COUNTER_STUB),
             "timeline": {
                 "duration_sec": 480,
@@ -858,7 +856,7 @@ def messages_for_materialize_plugins(
                         {
                             "action_id": "cook",
                             "title": "Приготовить карбонару",
-                            "plugin_hints": ["timeline", "timers"],
+                            "plugin_hints": ["timeline"],
                             "detail": "Паста + гуанчиале",
                         }
                     ],
