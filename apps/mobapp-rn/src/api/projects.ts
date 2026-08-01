@@ -142,3 +142,52 @@ export function rematerializePlugins(
     signal,
   });
 }
+
+export function completeCycle(
+  projectId: string,
+  payload?: {
+    partial_notes?: string | null;
+    user_comment?: string | null;
+  },
+  signal?: AbortSignal,
+): Promise<ProjectDetail> {
+  const body: {
+    partial_notes?: string;
+    user_comment?: string;
+  } = {};
+  const notes = payload?.partial_notes?.trim();
+  if (notes) body.partial_notes = notes;
+  const comment = payload?.user_comment?.trim();
+  if (comment) body.user_comment = comment;
+  return apiRequest(`/projects/${projectId}/complete-cycle`, {
+    method: 'POST',
+    body,
+    query: { local_date: getLocalDate() },
+    signal,
+  });
+}
+
+export function startNextCycle(
+  projectId: string,
+  payload?: {
+    answers?: RefineAnswerItem[];
+    comment?: string | null;
+  },
+  signal?: AbortSignal,
+): Promise<ProjectDetail> {
+  const body: {
+    answers?: RefineAnswerItem[];
+    comment?: string;
+  } = {};
+  if (payload?.answers && payload.answers.length > 0) {
+    body.answers = payload.answers;
+  }
+  const comment = payload?.comment?.trim();
+  if (comment) body.comment = comment;
+  return apiRequest(`/projects/${projectId}/next-cycle`, {
+    method: 'POST',
+    body,
+    query: { local_date: getLocalDate() },
+    signal,
+  });
+}

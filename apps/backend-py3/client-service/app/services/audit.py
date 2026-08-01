@@ -48,6 +48,8 @@ class EventType(str, enum.Enum):
     timer_completed = "timer_completed"
     project_completed = "project_completed"
     project_abandoned = "project_abandoned"
+    cycle_completed = "cycle_completed"
+    next_cycle_started = "next_cycle_started"
 
 
 # UI beacons only — mutation facts (intent/commit/done/…) are server-emitted

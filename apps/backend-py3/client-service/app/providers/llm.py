@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-LLMPurpose = Literal["create", "refine", "repair", "plugins"]
+LLMPurpose = Literal["create", "refine", "repair", "next_cycle", "plugins"]
 
 
 class LLMNotConfiguredError(RuntimeError):

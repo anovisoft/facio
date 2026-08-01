@@ -30,6 +30,7 @@ __all__ = [
     "messages_for_create_gate",
     "messages_for_create_path",
     "messages_for_materialize_plugins",
+    "messages_for_next_cycle",
     "messages_for_refine",
     "messages_for_repair",
     "parse_create_gate",
@@ -328,6 +329,50 @@ Also:
   rest day") — it is shown to the user as a confirmation, not the plan intro.
 
 {_PATH_FIELDS}
+"""
+
+_NEXT_CYCLE_SYSTEM = f"""\
+You build the NEXT Facio cycle (N+1) from the prior cycle plan + structured \
+results. Return Path JSON only (same shape as create #2 — plugin_hints, \
+NO plugin objects).
+
+{_SAFETY}
+
+{_WIRE_SENTINELS}
+
+The user payload has:
+- prior_state: Path JSON of the cycle that just finished
+- cycle_result: structured summary \
+  (completed_steps, skipped_steps, partial, partial_notes, counters_snapshot, \
+  user_comment)
+- answers[] / comment: optional clarify batch for N+1 (may be empty)
+- next_index: integer cycle index to emit (MUST use this)
+- continue_kind: "next" (multi-day / fitness) or "repeat" (cook / horizon 1)
+
+Rules:
+- Emit a FULL new cycle Path for THIS short cycle only — not the whole \
+  multi-week aspiration. Narrative ("~6–8 weeks to 30") stays in summary; \
+  cycle.horizon_days stays short (fitness target 7, hard max 14; cook = 1).
+- cycle.index MUST equal next_index; cycle.status = "active".
+- Progress from results: if the user completed most train days → slightly \
+  increase volume / difficulty; if partial / many skips → hold or ease; \
+  respect counters_snapshot facts when present.
+- continue_kind=repeat (carbonara / horizon 1): build a sensible REPEAT \
+  session (same dish or light variation), horizon_days=1, cook_session day. \
+  Do not invent a multi-week cooking program.
+- continue_kind=next (fitness): week N+1 with train/rest mix; reuse stable \
+  structure; new action ids are fine (fresh cycle).
+- Apply answers + comment in ONE pass when present.
+- questions[]: 0 or 2–4 still-useful clarifies for later; often [] after \
+  a finished cycle.
+- Soft cap ≤ 8–12 actions; plugin_hints as on create \
+  (cook → timeline; strength → stepper; shopping → []).
+- title/summary/paraphrase non-empty; match user language.
+- Never grow past horizon caps; no hollow rest tails.
+
+{_PATH_FIELDS}
+
+{_PATH_QUALITY}
 """
 
 # Compact few-shots. Path bodies validated by parse_path_state; gate by
@@ -1137,6 +1182,34 @@ def messages_for_repair(
         {
             "role": "user",
             "content": json.dumps(payload, ensure_ascii=False),
+        },
+    ]
+
+
+def messages_for_next_cycle(
+    *,
+    prior_state: dict[str, Any],
+    cycle_result: dict[str, Any],
+    answers: list[dict[str, str]],
+    comment: str | None,
+    next_index: int,
+    continue_kind: str,
+) -> list[dict[str, Any]]:
+    return [
+        {"role": "system", "content": _NEXT_CYCLE_SYSTEM},
+        {
+            "role": "user",
+            "content": json.dumps(
+                {
+                    "prior_state": prior_state,
+                    "cycle_result": cycle_result,
+                    "answers": answers,
+                    "comment": comment,
+                    "next_index": next_index,
+                    "continue_kind": continue_kind,
+                },
+                ensure_ascii=False,
+            ),
         },
     ]
 

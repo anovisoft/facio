@@ -71,6 +71,56 @@ class RefineProjectRequest(BaseModel):
 
 RepairIntent = Literal["shift", "lighten", "rest"]
 
+ContinueKind = Literal["next", "repeat"]
+
+
+class CycleResultResponse(BaseModel):
+    """Structured cycle summary for Home / next-cycle prompt (docs/next/04 §7)."""
+
+    completed_steps: int = 0
+    skipped_steps: int = 0
+    pending_steps: int = 0
+    partial: bool = False
+    partial_notes: str | None = None
+    counters_snapshot: list[dict[str, Any]] = Field(default_factory=list)
+    user_comment: str | None = None
+    finished_at: datetime | None = None
+
+
+class CycleHistoryEntry(BaseModel):
+    """Lean archived cycle so the user can see «what was» (cycle 1…)."""
+
+    index: int
+    horizon_days: int
+    goal_for_cycle: str | None = None
+    title: str | None = None
+    summary: str | None = None
+    cycle_result: CycleResultResponse | None = None
+    path_snapshot: dict[str, Any] | None = Field(
+        default=None,
+        description="Lean prior Path (title/summary/days/actions titles).",
+    )
+    completed_at: datetime | None = None
+
+
+class CompleteCycleRequest(BaseModel):
+    """Explicit «Завершить цикл» with optional partial notes / comment."""
+
+    partial_notes: str | None = Field(default=None, max_length=4000)
+    user_comment: str | None = Field(default=None, max_length=4000)
+
+
+class NextCycleRequest(BaseModel):
+    """Start cycle N+1 (or cook «Повторить») with optional clarify batch."""
+
+    answers: list[RefineAnswerItem] = Field(default_factory=list)
+    comment: str | None = Field(default=None, max_length=4000)
+
+    @model_validator(mode="after")
+    def normalize_comment(self) -> "NextCycleRequest":
+        comment = (self.comment or "").strip() or None
+        return self.model_copy(update={"comment": comment})
+
 
 class RepairProjectRequest(BaseModel):
     """Structured «Не могу» gesture: pick an intent and/or free reason.
@@ -392,6 +442,36 @@ class ProjectDetail(ProjectSummary):
             "confirmation toast/banner. Not persisted / not present on "
             "plain GET."
         ),
+    )
+    cycle_result: CycleResultResponse | None = Field(
+        default=None,
+        description="Structured summary of the finished current cycle.",
+    )
+    cycles_history: list[CycleHistoryEntry] = Field(
+        default_factory=list,
+        description="Archived prior cycles (lean) — cycle 1 stays visible.",
+    )
+    next_cycle_available: bool = Field(
+        default=False,
+        description="True when the current cycle is finished and N+1 / Repeat CTA may show.",
+    )
+    can_finish_cycle: bool = Field(
+        default=False,
+        description=(
+            "True when the cycle is active with some progress and the user "
+            "may close early via «Завершить цикл»."
+        ),
+    )
+    continue_kind: ContinueKind | None = Field(
+        default=None,
+        description=(
+            "'repeat' for cook / horizon_days=1; 'next' for multi-day "
+            "programs. Null when next_cycle_available is false."
+        ),
+    )
+    continue_label: str | None = Field(
+        default=None,
+        description="Optional model-provided CTA subtitle (copy only).",
     )
 
 

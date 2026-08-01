@@ -45,6 +45,7 @@ class StateSource(str, enum.Enum):
     llm_create = "llm_create"
     llm_refine = "llm_refine"
     llm_repair = "llm_repair"
+    llm_next_cycle = "llm_next_cycle"
     user_restore = "user_restore"
 
 
@@ -105,6 +106,8 @@ class Project(Base):
         DateTime(timezone=True), nullable=True
     )
     cycle_anchor_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    cycle_result: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    cycles_history: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

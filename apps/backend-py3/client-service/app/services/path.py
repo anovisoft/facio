@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import UTC, datetime, timedelta
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Literal, TypeVar
@@ -19,6 +20,7 @@ from app.errors import (
     ValidationAppError,
 )
 from app.models import (
+    ActionStatus,
     ConversationRole,
     ConversationTurn,
     Event,
@@ -53,6 +55,14 @@ from app.schemas.create_response import (
 )
 from app.schemas.path_state import PathState
 from app.services.audit import AuditService, EventType
+from app.services.cycle import (
+    archive_cycle_entry,
+    build_cycle_result,
+    continue_kind_for_project,
+    lean_path_snapshot,
+    parse_cycle_result,
+    parse_cycles_history,
+)
 from app.services.path_llm import (
     CREATE_GATE_SCHEMA,
     PATH_RESPONSE_SCHEMA,
@@ -60,6 +70,7 @@ from app.services.path_llm import (
     messages_for_create_gate,
     messages_for_create_path,
     messages_for_materialize_plugins,
+    messages_for_next_cycle,
     messages_for_refine,
     messages_for_repair,
     parse_create_gate,
@@ -74,6 +85,8 @@ from app.services.path_materialize import (
     path_plugins_ready,
 )
 from app.services.project import ProjectService
+from app.services.schedule import parse_local_date
+from app.services.serializers import action_queue_key
 
 logger = logging.getLogger("app.path")
 
@@ -982,6 +995,247 @@ class PathService:
         repaired = await self.projects.get_project(user, project.id)
         return repaired, result.state.paraphrase or None
 
+    async def finish_cycle(
+        self,
+        user: User,
+        project_id: UUID,
+        *,
+        partial_notes: str | None = None,
+        user_comment: str | None = None,
+    ) -> Project:
+        """Explicit «Завершить цикл» (full or partial). Marks remaining pending skipped."""
+        project = await self.projects.get_project(
+            user, project_id, for_update=True
+        )
+        if project.status != ProjectStatus.active:
+            raise ConflictError("Only active projects can finish a cycle")
+        if (project.cycle_status or "").lower() == "completed":
+            raise ConflictError("Cycle is already completed")
+
+        for action in project.actions:
+            if action.status == ActionStatus.pending:
+                action.status = ActionStatus.skipped
+        await self.db.flush()
+
+        result = build_cycle_result(
+            project,
+            partial=True,
+            partial_notes=partial_notes,
+            user_comment=user_comment,
+        )
+        # If somehow nothing was left pending after skip, still mark partial
+        # when notes say so; otherwise if all were already done before
+        # finish_cycle, treat as full complete (caller should rarely hit this).
+        if result.completed_steps + result.skipped_steps == 0:
+            raise ConflictError("Nothing to finish — no steps in this cycle")
+
+        project.cycle_result = result.model_dump(mode="json")
+        project.cycle_status = "completed"
+        project.status = ProjectStatus.completed
+
+        await self.audit.add_turn(
+            user_id=user.id,
+            project_id=project.id,
+            role=ConversationRole.user,
+            content=partial_notes or user_comment or "Finish cycle",
+            meta={
+                "kind": "cycle_finish",
+                "partial_notes": partial_notes,
+                "user_comment": user_comment,
+            },
+        )
+        await self.audit.add_event(
+            event_type=EventType.cycle_completed,
+            user_id=user.id,
+            project_id=project.id,
+            payload={
+                "cycle_index": project.cycle_index,
+                "partial": True,
+                "cycle_result": project.cycle_result,
+                "continue_kind": continue_kind_for_project(project),
+            },
+        )
+        await self.audit.add_event(
+            event_type=EventType.project_completed,
+            user_id=user.id,
+            project_id=project.id,
+            payload={"via": "finish_cycle"},
+        )
+        await self.db.commit()
+        logger.info(
+            "finish_cycle project=%s cycle=%s partial=True",
+            project.id,
+            project.cycle_index,
+        )
+        return await self.projects.get_project(user, project.id)
+
+    async def next_cycle(
+        self,
+        user: User,
+        project_id: UUID,
+        *,
+        answers: list[dict[str, str]] | None = None,
+        comment: str | None = None,
+        local_date: str | None = None,
+    ) -> Project:
+        """Build cycle N+1 from prior plan + cycle_result; re-anchor physical day."""
+        answers = answers or []
+        project = await self.projects.get_project(
+            user, project_id, for_update=True
+        )
+        cycle_status = (project.cycle_status or "").lower()
+        if cycle_status != "completed" and project.status != ProjectStatus.completed:
+            raise ConflictError(
+                "Finish the current cycle before starting the next one"
+            )
+        if project.cycle_result is None:
+            # Auto-build from ORM if somehow missing (legacy completed).
+            project.cycle_result = build_cycle_result(
+                project, partial=False
+            ).model_dump(mode="json")
+
+        _, current = await self.projects.get_latest_state(project.id)
+        if current is None:
+            raise ConflictError("Project has no Path state for next cycle")
+
+        prior_index = int(project.cycle_index or current.cycle.index or 1)
+        cycle_result = parse_cycle_result(project.cycle_result)
+        path_snap = lean_path_snapshot(current.model_dump(mode="json"))
+
+        # Archive cycle N into history before replacing the live path.
+        history = parse_cycles_history(project.cycles_history)
+        if cycle_result is not None:
+            history.append(
+                archive_cycle_entry(
+                    project,
+                    cycle_result=cycle_result,
+                    path_snapshot=path_snap,
+                )
+            )
+        project.cycles_history = [h.model_dump(mode="json") for h in history]
+
+        answer_lines = [
+            f"{item['question_id']}: {item['value']}" for item in answers
+        ]
+        if comment:
+            answer_lines.append(f"comment: {comment}")
+        turn_content = (
+            "\n".join(answer_lines) if answer_lines else "Start next cycle"
+        )
+        await self.audit.add_turn(
+            user_id=user.id,
+            project_id=project.id,
+            role=ConversationRole.user,
+            content=turn_content,
+            meta={
+                "kind": "next_cycle_request",
+                "answers": answers,
+                "comment": comment,
+                "prior_cycle_index": prior_index,
+            },
+        )
+
+        result = await self._run_llm_mutation(
+            user=user,
+            project=project,
+            purpose="next_cycle",
+            messages=messages_for_next_cycle(
+                prior_state=current.model_dump(mode="json"),
+                cycle_result=(
+                    cycle_result.model_dump(mode="json") if cycle_result else {}
+                ),
+                answers=answers,
+                comment=comment,
+                next_index=prior_index + 1,
+                continue_kind=continue_kind_for_project(project),
+            ),
+            source=StateSource.llm_next_cycle,
+            materialize="none",
+        )
+
+        # Force cycle index / active status even if the model slips.
+        state = result.state.model_copy(
+            update={
+                "cycle": result.state.cycle.model_copy(
+                    update={
+                        "index": prior_index + 1,
+                        "status": "active",
+                    }
+                ),
+            }
+        )
+        # Patch the version we just wrote with corrected cycle metadata.
+        version_row = await self.db.execute(
+            select(StateVersion).where(
+                StateVersion.project_id == project.id,
+                StateVersion.version == result.version,
+            )
+        )
+        sv = version_row.scalar_one()
+        sv.state_json = state.model_dump(mode="json")
+        await materialize_path(
+            self.db, project, state, merge_progress=False
+        )
+
+        now = datetime.now(UTC)
+        local_today = parse_local_date(local_date)
+        project.status = ProjectStatus.active
+        project.cycle_status = "active"
+        project.cycle_index = prior_index + 1
+        project.cycle_result = None
+        project.committed_at = now
+        # New physical-day anchor for N+1 (docs/next/04 §4 / Slice 5).
+        project.cycle_anchor_date = local_today
+
+        ordered = sorted(project.actions, key=action_queue_key)
+        base = datetime.combine(local_today, datetime.min.time(), tzinfo=UTC)
+        first_offset = (
+            ordered[0].day_offset
+            if ordered and ordered[0].day_offset is not None
+            else 0
+        )
+        for action in ordered:
+            offset = (
+                action.day_offset
+                if action.day_offset is not None
+                else action.sort
+            )
+            action.due_at = base + timedelta(
+                days=max(0, offset - first_offset)
+            )
+
+        await self.audit.add_turn(
+            user_id=user.id,
+            project_id=project.id,
+            role=ConversationRole.assistant,
+            content=state.paraphrase,
+            meta={
+                "kind": "next_cycle_result",
+                "state_version": result.version,
+                "llm_call_id": str(result.llm_call_id),
+                "cycle_index": project.cycle_index,
+            },
+        )
+        await self.audit.add_event(
+            event_type=EventType.next_cycle_started,
+            user_id=user.id,
+            project_id=project.id,
+            payload={
+                "cycle_index": project.cycle_index,
+                "version": result.version,
+                "cycle_anchor_date": project.cycle_anchor_date.isoformat(),
+            },
+        )
+        await self.db.commit()
+        logger.info(
+            "next_cycle project=%s cycle=%s version=%s anchor=%s",
+            project.id,
+            project.cycle_index,
+            result.version,
+            project.cycle_anchor_date,
+        )
+        return await self.projects.get_project(user, project.id)
+
     async def get_transcript(
         self, user: User, project_id: UUID
     ) -> list[ConversationTurnResponse]:
@@ -1238,7 +1492,7 @@ class PathService:
         source: StateSource,
         materialize: MaterializeMode,
     ) -> ApplyResult:
-        """Refine/repair: validated Path → state version (+ optional merge)."""
+        """Refine/repair/next_cycle: validated Path → state version (+ optional merge)."""
         state, _raw, llm_call_id = await self._llm_generate_validated(
             user=user,
             project_id=project.id,
@@ -1250,7 +1504,8 @@ class PathService:
         )
 
         # Preserve existing plugin payloads across refine/repair when the
-        # wire returns hints-only (same action id).
+        # wire returns hints-only (same action id). Fresh next_cycle keeps
+        # hints-only until phase-3 materialize.
         if purpose in {"refine", "repair"}:
             _, prior = await self.projects.get_latest_state(project.id)
             if prior is not None:

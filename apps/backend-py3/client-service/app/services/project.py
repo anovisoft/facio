@@ -20,6 +20,11 @@ from app.schemas.api import (
 )
 from app.schemas.path_state import PathState
 from app.services.audit import AuditService, EventType
+from app.services.cycle import (
+    cycle_cta_flags,
+    parse_cycle_result,
+    parse_cycles_history,
+)
 from app.services.path_materialize import (
     ensure_action_keys,
     materialize_path,
@@ -371,6 +376,12 @@ class ProjectService:
         if project.status == ProjectStatus.active and not plugins_ready:
             plugins_error = await self._latest_plugins_error(project.id)
 
+        next_cycle_available, can_finish_cycle, continue_kind = cycle_cta_flags(
+            project
+        )
+        cycle_result = parse_cycle_result(project.cycle_result)
+        cycles_history = parse_cycles_history(project.cycles_history)
+
         summary = ProjectSummary.model_validate(
             project, from_attributes=True
         ).model_copy(
@@ -398,6 +409,12 @@ class ProjectService:
             path_error=path_error,
             plugins_ready=plugins_ready,
             plugins_error=plugins_error,
+            cycle_result=cycle_result,
+            cycles_history=cycles_history,
+            next_cycle_available=next_cycle_available,
+            can_finish_cycle=can_finish_cycle,
+            continue_kind=continue_kind,
+            continue_label=None,
         )
 
     async def _latest_turn_meta_error(

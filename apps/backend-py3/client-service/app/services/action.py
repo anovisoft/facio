@@ -18,6 +18,7 @@ from app.models import (
     User,
 )
 from app.services.audit import AuditService, EventType
+from app.services.cycle import build_cycle_result
 from app.services.project import ProjectService
 from app.services.schedule import parse_local_date
 from app.services.schedule import unlocked_day_index as compute_unlocked_day_index
@@ -100,7 +101,21 @@ class ActionService:
         )
         if pending.scalars().first() is not None:
             return
+        # Full cycle finish: structured result + cycle_status for next-cycle CTA.
+        result = build_cycle_result(project, partial=False)
+        project.cycle_result = result.model_dump(mode="json")
+        project.cycle_status = "completed"
         project.status = ProjectStatus.completed
+        await self.audit.add_event(
+            event_type=EventType.cycle_completed,
+            user_id=user.id,
+            project_id=project.id,
+            payload={
+                "cycle_index": project.cycle_index,
+                "partial": False,
+                "cycle_result": project.cycle_result,
+            },
+        )
         await self.audit.add_event(
             event_type=EventType.project_completed,
             user_id=user.id,

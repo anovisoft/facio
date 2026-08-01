@@ -23,11 +23,11 @@
 | 2 | Cycle + days/kind + Home «день N» + Path day map | **одобрен** (+ hierarchy PathList, rest nesting) |
 | 3 | TimerStack + Counter | **dogfood ок** |
 | 3′ | Progressive create + clock UX + схлоп Accept + Draft UX D | **одобрен** (polish later) |
-| 4 | Repair + **физический день** на живом плане | **в коде**; ждёт dogfood |
-| 4′ | Session Stage + Stepper + бургер→план | **в коде** (schema `stepper`, Home stage, prompts); ждёт dogfood |
-| 5 | Next cycle CTA | не начат |
+| 4 | Repair + **физический день** на живом плане | **принят** |
+| 4′ | Session Stage + Stepper + бургер→план | **принят** |
+| 5 | Next cycle CTA | **принят** (карбонара dogfood; fitness N+1 отложен) |
 
-Миграции backend (по порядку): `005` narrative → `006` cycle/schedule → `007` action plugins → `008` timeline/interval → `009` physical day → **`010` stepper JSONB**.
+Миграции backend (по порядку): `005` narrative → `006` cycle/schedule → `007` action plugins → `008` timeline/interval → `009` physical day → `010` stepper JSONB → **`011` cycle_result + cycles_history**.
 
 ---
 
@@ -295,11 +295,26 @@ API: `POST .../counter`, `POST .../stepper/beats/{id}/counter`, `POST .../timers
 
 ---
 
+## Приёмка этапа (2026-08-01)
+
+Срезы **1–5** принимаем как готовый этап `docs/next`.
+
+| Эталон | Статус |
+|--------|--------|
+| Карбонара (create → timeline stage → завершение → «Повторить») | dogfood ок |
+| Отжимания / fitness 7 дней (physical day + repair + next cycle) | **не прогнан end-to-end** |
+
+**Почему fitness отложен:** physical-day gate привязан к календарю — полный прогон цикла = ждать ~неделю или манипулировать временем. Dev tools (fake `local_date` / advance anchor) — backlog ниже, не блокер приёмки этапа.
+
+**Следствие:** этап закрыт по must-коду; полный dogfood-бар [07] и внешние юзеры — после time-travel или реального прогона недели.
+
+---
+
 ## Следующий шаг
 
-1. Dogfood **4 + 4′** (physical day, repair на fitness, stage Home, stepper, timeline)
-2. Одобрение → **Срез 5 — Next cycle**
-3. После финала списка: polish Draft/Home UX; backlog ниже (не блокер среза 5)
+1. Этап принят — не открывать новый срез «по инерции»
+2. По желанию: polish / backlog (Home stage, cook prep≠timeline, Repair comment+domain, **dev time travel**)
+3. Fitness dogfood-бар + next cycle — когда есть time travel или неделя calendar
 
 ### Dogfood checklist (актуальный)
 
@@ -315,10 +330,30 @@ API: `POST .../counter`, `POST .../stepper/beats/{id}/counter`, `POST .../timers
 10. Physical day: закрыл день N ≠ execute N+1 сегодня  
 11. Repair sheet shift/lighten/rest (**на fitness**; на cook — ожидаемо коряво, см. backlog)  
 12. Нет grammar 400; `path_error` / `plugins_error` вместо вечного спиннера  
+13. **Срез 5:** карбонара → итог + «Повторить» ✓; fitness «Следующий цикл» — отложен (нет time travel)  
+
+### Срез 5 — что в коде
+
+- `POST /projects/{id}/complete-cycle` — частичное/раннее завершение + `cycle_result`
+- Авто-finish при закрытии всех actions → `cycle_status=completed` + `cycle_result`
+- `POST /projects/{id}/next-cycle` — LLM `purpose=next_cycle`, archive в `cycles_history`, новый якорь, plugins #3
+- Detail: `cycle_result`, `cycles_history`, `next_cycle_available`, `can_finish_cycle`, `continue_kind` (`next`|`repeat`)
+- Home: summary + CTA; sheets finish / next+comment; i18n RU/EN
+- Миграция `011_cycle_result_history.py`  
 
 ---
 
-## Backlog (после текущего списка / не Срез 5)
+## Backlog (после приёмки этапа)
+
+### Dev: time travel для dogfood
+
+**Зачем:** physical day блокирует полный fitness/repair/next-cycle dogfood без ожидания недели.
+
+**Направление (на выбор):**
+- Debug/dev-only: override `local_date` на клиенте или `?local_date=` уже есть на API — UI picker / «+1 день»
+- Или admin: сдвинуть `cycle_anchor_date` назад
+
+Не для прод-пользователей.
 
 ### Repair: комментарий + domain intents
 
@@ -334,6 +369,10 @@ API: `POST .../counter`, `POST .../stepper/beats/{id}/counter`, `POST .../timers
 ### Cook timeline: prep ≠ clock axis
 
 Не два timeline / не табы на Home. Path: action «подготовка» (checklist) → action «сессия» (один timeline с t=0 от жара/воды). Mise (нарезать) не marker на оси. Промпт #2/#3 + few-shot карбонара.
+
+### Home Session Stage polish
+
+Stage ещё не ~2/3; support/буклет labels конкурируют; «Дальше» vs «Сделано» — иерархия CTA. После dogfood-бара / по желанию.
 
 ---
 
@@ -355,6 +394,7 @@ API: `POST .../counter`, `POST .../stepper/beats/{id}/counter`, `POST .../timers
 | Horizon clamp / rest trim | `normalize_cycle_horizon` in `path_state.py` |
 | Physical day | `app/services/schedule.py`, migration `009` |
 | Stepper column | migration `010_action_stepper.py` |
+| Next cycle | `app/services/cycle.py`, `path.py` finish/next; migration `011`; Home sheets |
 | Path UI + hints | `apps/mobapp-rn/src/shared/ui/PathList.tsx` |
 | Home Session Stage + plugins loader + burger | `ProjectHomeScreen.tsx`, `ActionPlugins.tsx` (`StepperPlayer`) |
 | Draft queued refine + abortError | `DraftStudioScreen.tsx` |

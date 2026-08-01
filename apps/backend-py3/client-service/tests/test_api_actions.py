@@ -168,6 +168,9 @@ async def test_completing_all_actions_completes_project(
     body = detail.json()
     assert body["status"] == "completed"
     assert body["next_action"] is None
+    assert body["cycle_result"] is not None
+    assert body["next_cycle_available"] is True
+    assert body["continue_kind"] == "repeat"
 
     row = (
         await db_session.execute(

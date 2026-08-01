@@ -502,3 +502,47 @@ def refined_path_state(base: dict[str, Any] | None = None) -> dict[str, Any]:
         {"id": "pecorino", "title": "Пекорино 80г", "done": False, "sort": 2},
     ]
     return state
+
+
+def sample_fitness_week2_path_state(**overrides: Any) -> dict[str, Any]:
+    """Next-cycle fitness week 2 — progressed from week-1 results."""
+    state = sample_fitness_path_state()
+    state["title"] = "К 30 отжиманиям — неделя 2"
+    state["summary"] = (
+        "Неделя 2: чуть больше объёма на силовых. "
+        "Программа всё ещё ~6–8 недель к цели."
+    )
+    state["paraphrase"] = "Ок — неделя 2, продолжаем к 30"
+    state["cycle"] = {
+        "index": 2,
+        "horizon_days": 7,
+        "status": "active",
+        "goal_for_cycle": "Неделя 2: нарастить объём",
+    }
+    state["questions"] = []
+    for action in state["actions"]:
+        if action.get("plugin_hints"):
+            action["title"] = "Силовая сессия (неделя 2)"
+    state.update(overrides)
+    return state
+
+
+def sample_carbonara_repeat_path_state(**overrides: Any) -> dict[str, Any]:
+    """Repeat cook session for carbonara (horizon 1, cycle index 2)."""
+    state = sample_path_state()
+    state["title"] = "Карбонара ещё раз"
+    state["summary"] = (
+        "Повторяем карбонару на двоих — тот же вечер: покупки и готовка."
+    )
+    state["paraphrase"] = "Ок — повторяем карбонару"
+    state["cycle"] = {
+        "index": 2,
+        "horizon_days": 1,
+        "status": "active",
+        "goal_for_cycle": "Ещё одна карбонара",
+    }
+    state["questions"] = []
+    for action in state["actions"]:
+        action["id"] = f"r_{action['id']}"
+    state.update(overrides)
+    return state

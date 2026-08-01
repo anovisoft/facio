@@ -10,7 +10,9 @@ from app.schemas.path import (
     AbandonProjectRequest,
     ActionResponse,
     CommitProjectRequest,
+    CompleteCycleRequest,
     CreateProjectRequest,
+    NextCycleRequest,
     ProjectDetail,
     ProjectSummary,
     RefineProjectRequest,
@@ -254,3 +256,63 @@ async def repair_project(
         await _commit_on_app_error(db, exc)
     detail = await ProjectService(db).to_detail(project, local_date=local_date)
     return detail.model_copy(update={"repair_summary": repair_summary})
+
+
+@router.post("/{project_id}/complete-cycle", response_model=ProjectDetail)
+async def complete_cycle(
+    project_id: UUID,
+    user: CurrentUser,
+    db: DbSession,
+    body: CompleteCycleRequest = Body(default_factory=CompleteCycleRequest),
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
+) -> ProjectDetail:
+    """Explicit «Завершить цикл» (partial or early close)."""
+    service = PathService(db)
+    try:
+        project = await service.finish_cycle(
+            user,
+            project_id,
+            partial_notes=body.partial_notes,
+            user_comment=body.user_comment,
+        )
+    except AppError as exc:
+        await _commit_on_app_error(db, exc)
+    return await ProjectService(db).to_detail(project, local_date=local_date)
+
+
+@router.post("/{project_id}/next-cycle", response_model=ProjectDetail)
+async def next_cycle(
+    project_id: UUID,
+    user: CurrentUser,
+    db: DbSession,
+    llm: LLM,
+    background_tasks: BackgroundTasks,
+    body: NextCycleRequest = Body(default_factory=NextCycleRequest),
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
+) -> ProjectDetail:
+    """Start cycle N+1 / «Повторить» from prior plan + cycle_result."""
+    service = PathService(db, llm=llm)
+    try:
+        project = await service.next_cycle(
+            user,
+            project_id,
+            answers=[
+                {"question_id": item.question_id, "value": item.value}
+                for item in body.answers
+            ],
+            comment=body.comment,
+            local_date=local_date,
+        )
+    except AppError as exc:
+        await _commit_on_app_error(db, exc)
+    detail = await ProjectService(db).to_detail(project, local_date=local_date)
+    path_service = PathService(db, llm=llm)
+    if await path_service.needs_plugin_materialize(user, project.id):
+        background_tasks.add_task(
+            complete_materialize_plugins_job,
+            project_id=project.id,
+            user_id=user.id,
+        )
+        # Fresh cycle: plugins not ready until #3 lands.
+        detail = detail.model_copy(update={"plugins_ready": False})
+    return detail

@@ -23,9 +23,11 @@ import {
   updateCounter,
   updateStepperBeatCounter,
 } from '@/api/actions';
-import { getProject, rematerializePlugins, repairProject } from '@/api/projects';
+import { getProject, rematerializePlugins, repairProject, completeCycle, startNextCycle } from '@/api/projects';
 import { ApiError, type DayKind, type ProjectDetail, type RepairIntent } from '@/api/types';
+import { FinishCycleSheet } from '@/features/home/FinishCycleSheet';
 import { FirstCompletionOverlay } from '@/features/home/FirstCompletionOverlay';
+import { NextCycleSheet } from '@/features/home/NextCycleSheet';
 import { RepairSheet } from '@/features/home/RepairSheet';
 import type { RootScreenProps } from '@/navigation/types';
 import { trackActionShown } from '@/services/beacons';
@@ -67,6 +69,8 @@ export function ProjectHomeScreen({
   const [showFirstCompletion, setShowFirstCompletion] = useState(false);
   const [repairSheetVisible, setRepairSheetVisible] = useState(false);
   const [repairSummary, setRepairSummary] = useState<string | null>(null);
+  const [nextCycleSheetVisible, setNextCycleSheetVisible] = useState(false);
+  const [finishCycleSheetVisible, setFinishCycleSheetVisible] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const shownActionIdRef = useRef<string | null>(null);
 
@@ -390,6 +394,62 @@ export function ProjectHomeScreen({
     }
   };
 
+  const onFinishCycle = async (partialNotes: string) => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setBusy(true);
+    setError(null);
+    try {
+      const detail = await completeCycle(
+        projectId,
+        { partial_notes: partialNotes || null },
+        controller.signal,
+      );
+      if (controller.signal.aborted) return;
+      setProject(detail);
+      setFinishCycleSheetVisible(false);
+    } catch (e) {
+      if (controller.signal.aborted) return;
+      setError(
+        e instanceof ApiError ? e.message : t('home.finishCycleError'),
+      );
+    } finally {
+      if (!controller.signal.aborted) setBusy(false);
+    }
+  };
+
+  const onStartNextCycle = async (comment: string) => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setBusy(true);
+    setError(null);
+    try {
+      const detail = await startNextCycle(
+        projectId,
+        { comment: comment || null },
+        controller.signal,
+      );
+      if (controller.signal.aborted) return;
+      setProject(detail);
+      setNextCycleSheetVisible(false);
+      shownActionIdRef.current = null;
+      const nextId = detail.next_action?.id ?? null;
+      if (nextId) {
+        shownActionIdRef.current = nextId;
+        trackActionShown(projectId, nextId);
+      }
+    } catch (e) {
+      if (controller.signal.aborted) return;
+      setError(
+        e instanceof ApiError ? e.message : t('home.nextCycleError'),
+      );
+    } finally {
+      if (!controller.signal.aborted) setBusy(false);
+    }
+  };
+
   const next = project?.next_action ?? null;
   const peek = project?.peek_action ?? null;
   const peekDay = project?.peek_day ?? null;
@@ -408,6 +468,10 @@ export function ProjectHomeScreen({
     project != null &&
     (project.status === 'completed' ||
       (next == null && peek == null));
+  const cycleFinished =
+    project?.next_cycle_available === true ||
+    (project?.cycle_result != null && project.status === 'completed');
+  const continueKind = project?.continue_kind ?? null;
   const unlockTiming = project?.next_unlock_date
     ? classifyUnlockDate(project.next_unlock_date)
     : null;
@@ -529,7 +593,66 @@ export function ProjectHomeScreen({
           </View>
         ) : null}
 
-        {projectDone ? (
+        {cycleFinished && project.cycle_result ? (
+          <View style={styles.doneBlock}>
+            <Text style={[styles.todayLabel, { color: colors.textMuted }]}>
+              {t('home.cycleDoneTitle')}
+            </Text>
+            {project.cycle_result.partial ? (
+              <Text
+                style={[styles.cyclePartial, { color: colors.textSecondary }]}
+              >
+                {t('home.cyclePartialBadge')}
+              </Text>
+            ) : null}
+            <Text style={[styles.doneTitle, { color: colors.text }]}>
+              {t('home.cycleResultDone', {
+                count: project.cycle_result.completed_steps,
+              })}
+            </Text>
+            <Text
+              style={[styles.waitingBody, { color: colors.textSecondary }]}
+            >
+              {t('home.cycleResultSkipped', {
+                count: project.cycle_result.skipped_steps,
+              })}
+            </Text>
+            {project.cycle_result.partial_notes ? (
+              <Text
+                style={[styles.waitingBody, { color: colors.textSecondary }]}
+              >
+                {project.cycle_result.partial_notes}
+              </Text>
+            ) : null}
+            {(project.cycles_history?.length ?? 0) > 0 ? (
+              <Text
+                style={[styles.historyHint, { color: colors.textMuted }]}
+              >
+                {t('home.cycleHistoryLabel', {
+                  n: project.cycles_history![
+                    project.cycles_history!.length - 1
+                  ].index,
+                })}
+              </Text>
+            ) : project.cycle?.index ? (
+              <Text
+                style={[styles.historyHint, { color: colors.textMuted }]}
+              >
+                {t('home.cycleHistoryLabel', { n: project.cycle.index })}
+              </Text>
+            ) : null}
+            <PrimaryButton
+              label={
+                continueKind === 'repeat'
+                  ? t('home.repeatCycle')
+                  : t('home.nextCycle')
+              }
+              loading={busy}
+              onPress={() => setNextCycleSheetVisible(true)}
+              style={styles.cycleCta}
+            />
+          </View>
+        ) : projectDone ? (
           <View style={styles.doneBlock}>
             <Text style={[styles.todayLabel, { color: colors.textMuted }]}>
               {t('home.today')}
@@ -790,12 +913,22 @@ export function ProjectHomeScreen({
           </>
         ) : null}
 
-        {!projectDone ? (
+        {!projectDone && !cycleFinished ? (
           <PrimaryButton
             variant="ghost"
             label={t('home.repair')}
             disabled={busy}
             onPress={onOpenRepair}
+            style={styles.pathBtn}
+          />
+        ) : null}
+
+        {project?.can_finish_cycle && !cycleFinished ? (
+          <PrimaryButton
+            variant="ghost"
+            label={t('home.finishCycle')}
+            disabled={busy}
+            onPress={() => setFinishCycleSheetVisible(true)}
             style={styles.pathBtn}
           />
         ) : null}
@@ -811,6 +944,22 @@ export function ProjectHomeScreen({
         busy={busy}
         onPick={(intent) => void onPickRepairIntent(intent)}
         onClose={() => setRepairSheetVisible(false)}
+      />
+
+      <FinishCycleSheet
+        visible={finishCycleSheetVisible}
+        busy={busy}
+        onConfirm={(notes) => void onFinishCycle(notes)}
+        onClose={() => setFinishCycleSheetVisible(false)}
+      />
+
+      <NextCycleSheet
+        visible={nextCycleSheetVisible}
+        busy={busy}
+        continueKind={continueKind ?? 'next'}
+        continueLabel={project?.continue_label}
+        onConfirm={(comment) => void onStartNextCycle(comment)}
+        onClose={() => setNextCycleSheetVisible(false)}
       />
     </>
   );
@@ -911,6 +1060,18 @@ const styles = StyleSheet.create({
   },
   doneTitle: {
     ...typography.title,
+  },
+  cyclePartial: {
+    ...typography.caption,
+    marginBottom: spacing.xs,
+  },
+  historyHint: {
+    ...typography.caption,
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  cycleCta: {
+    marginTop: spacing.md,
   },
   waitingBody: {
     ...typography.body,

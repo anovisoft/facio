@@ -305,3 +305,31 @@ def enqueue_repair(llm: ScriptedLLMProvider) -> Callable[..., None]:
         llm.enqueue("repair", state or sample_path_state(questions=[]))
 
     return _enqueue
+
+
+@pytest.fixture
+def enqueue_next_cycle(llm: ScriptedLLMProvider) -> Callable[..., None]:
+    def _enqueue(
+        state: dict[str, Any] | None = None,
+        *,
+        plugins: dict[str, Any] | None = None,
+    ) -> None:
+        from tests.factories import (
+            sample_carbonara_repeat_path_state,
+            sample_fitness_week2_path_state,
+            sample_fitness_plugins_materialize,
+            sample_plugins_materialize,
+        )
+
+        path = state
+        if path is None:
+            path = sample_fitness_week2_path_state()
+        llm.enqueue("next_cycle", path)
+        if plugins is not None:
+            llm.enqueue("plugins", plugins)
+        elif (path.get("domain") or "") == "fitness":
+            llm.enqueue("plugins", sample_fitness_plugins_materialize())
+        else:
+            llm.enqueue("plugins", sample_plugins_materialize())
+
+    return _enqueue

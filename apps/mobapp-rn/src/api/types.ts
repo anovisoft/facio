@@ -19,6 +19,30 @@ export type FirstStepWhen = 'today' | 'tomorrow';
 
 export type RepairIntent = 'shift' | 'lighten' | 'rest';
 
+export type ContinueKind = 'next' | 'repeat';
+
+export interface CycleResultResponse {
+  completed_steps: number;
+  skipped_steps: number;
+  pending_steps?: number;
+  partial?: boolean;
+  partial_notes?: string | null;
+  counters_snapshot?: Array<Record<string, unknown>>;
+  user_comment?: string | null;
+  finished_at?: string | null;
+}
+
+export interface CycleHistoryEntry {
+  index: number;
+  horizon_days: number;
+  goal_for_cycle?: string | null;
+  title?: string | null;
+  summary?: string | null;
+  cycle_result?: CycleResultResponse | null;
+  path_snapshot?: Record<string, unknown> | null;
+  completed_at?: string | null;
+}
+
 export type ClientBeaconType =
   | 'app_opened'
   | 'accept_viewed'
@@ -224,6 +248,18 @@ export interface ProjectDetail extends ProjectSummary {
    * changed" summary for a confirmation toast/banner. Not present on GET.
    */
   repair_summary?: string | null;
+  /** Structured summary when the current cycle is finished. */
+  cycle_result?: CycleResultResponse | null;
+  /** Archived prior cycles (lean) — cycle 1 stays visible. */
+  cycles_history?: CycleHistoryEntry[];
+  /** True when N+1 / Repeat CTA may show. */
+  next_cycle_available?: boolean;
+  /** True when user may close early via «Завершить цикл». */
+  can_finish_cycle?: boolean;
+  /** 'repeat' for cook/horizon=1; 'next' for multi-day. */
+  continue_kind?: ContinueKind | null;
+  /** Optional model-provided CTA subtitle (copy only). */
+  continue_label?: string | null;
 }
 
 export interface InstantAnswerResponse {
