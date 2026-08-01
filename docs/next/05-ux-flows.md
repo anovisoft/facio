@@ -168,6 +168,22 @@ Intent
 
 Минимум must; без этого multi-day dogfood ломается.
 
+### Future (после dogfood текущего минимума)
+
+См. backlog в [09](./09-continuity.md) — **Repair comment + domain intents**.
+
+Сейчас: sheet только выбирает `shift | lighten | rest`; `reason` на API есть, в UI — захардкоженная строка.
+
+Три intent заточены под **fitness multi-day**. На **cook/instant session** (карбонара) часто мимо:
+
+| Intent | Fitness | Cook session |
+|--------|---------|--------------|
+| shift | «перенести тренировку на завтра» | «ужин завтра» — ок, но не единственный срыв |
+| lighten | меньше подходов / объём | «упростить рецепт» — редко то, что нужно |
+| rest | день отдыха | бессмысленно для одноразовой готовки |
+
+Нужны domain-aware жесты + свободный комментарий (и/или reason-only без принудительного intent).
+
 ## Физический день (Home)
 
 ```text

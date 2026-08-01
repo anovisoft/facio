@@ -263,6 +263,9 @@ CTA: детерминированная кнопка «Следующий цик
 Все — versioned state; audit как в mvp.  
 Тот же класс мутаций, что refine на **живом** плане — не отдельный мир «только после Accept». См. [09](./09-continuity.md) решение A.
 
+**Сейчас в коде:** `RepairIntent = shift | lighten | rest` + optional `reason`.  
+**Future:** free-text comment в UI; intent set **по domain** (cook ≠ fitness). Подробности — [05 Repair future](./05-ux-flows.md) + backlog [09](./09-continuity.md).
+
 ---
 
 ## 9. Явный non-goal модели

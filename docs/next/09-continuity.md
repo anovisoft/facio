@@ -279,9 +279,7 @@ API: `POST .../counter`, `POST .../stepper/beats/{id}/counter`, `POST .../timers
 ### DOMException after «Сохранить и приступить»
 
 1. **Первый фикс (в коде):** `DraftStudioScreen.waitForPathReady` больше не использует `DOMException` — `abortError()` / `isAbortError()`. В `apps/mobapp-rn/src` строк `DOMException` нет.
-2. **Стек на скрине** указывает на `return () => abortRef.current?.abort()` в `useFocusEffect` cleanup — это момент unmount при `navigation.reset` после commit start.
-3. **Гипотеза если краш повторится после reload:** не наш код, а abort inflight `fetch` (`api/client.ts`) → polyfill `whatwg-fetch` (`node_modules/whatwg-fetch/fetch.js` ~L530) `reject(new DOMException('Aborted','AbortError'))` при отсутствии нормального global. Лечение: ранний polyfill в `index.ts` **или** на успешном commit не вызывать abort cleanup / глотать AbortError без LogBox.
-4. Скриншоты с одним timestamp могли быть до hot reload — сначала перепроверить с полным reload Metro.
+2. **Dogfood 2026-08-01:** после reload бандла — **ок**, краш не воспроизвёлся. Polyfill `whatwg-fetch` пока не нужен; держать в уме если вернётся на abort inflight fetch.
 
 ### Stepper validation brick Home (пофикшено)
 
@@ -299,10 +297,9 @@ API: `POST .../counter`, `POST .../stepper/beats/{id}/counter`, `POST .../timers
 
 ## Следующий шаг
 
-1. **Проверить DOMException** после reload бандла; если жив — субагент: polyfill + безопасный abort на commit
-2. Dogfood **4 + 4′** (physical day, repair, stage Home, stepper, timeline, plugins loader)
-3. Одобрение → **Срез 5 — Next cycle**
-4. После финала списка: polish Draft UX; compact sticky stage on scroll
+1. Dogfood **4 + 4′** (physical day, repair на fitness, stage Home, stepper, timeline)
+2. Одобрение → **Срез 5 — Next cycle**
+3. После финала списка: polish Draft/Home UX; backlog ниже (не блокер среза 5)
 
 ### Dogfood checklist (актуальный)
 
@@ -310,14 +307,33 @@ API: `POST .../counter`, `POST .../stepper/beats/{id}/counter`, `POST .../timers
 2. Queued refine: «Обновить» пока path грузится → ждёт → refine  
 3. Outline + sticky CTA; «Ещё важно» при 0 questions  
 4. Fitness cycle ≤7 дней; нет rest-хвоста 20–35  
-5. Сохранить и приступить → **loader plugins** → Home stage (не буклет / не DOMException)  
+5. Сохранить и приступить → **loader plugins** → Home stage (не буклет; DOMException ✓ после reload)  
 6. Сохранить → список → открытие → loader если plugins ещё нет  
 7. Бургер ☰ → весь план; locked days видны, execute нет  
 8. Силовая: stepper beats (не checklist подходов + 1 counter)  
-9. Карбонара: timeline stage; XOR timers  
+9. Карбонара: timeline stage; XOR timers; **prep вне оси** (нарезать ≠ marker) — см. backlog cook  
 10. Physical day: закрыл день N ≠ execute N+1 сегодня  
-11. Repair sheet shift/lighten/rest  
+11. Repair sheet shift/lighten/rest (**на fitness**; на cook — ожидаемо коряво, см. backlog)  
 12. Нет grammar 400; `path_error` / `plugins_error` вместо вечного спиннера  
+
+---
+
+## Backlog (после текущего списка / не Срез 5)
+
+### Repair: комментарий + domain intents
+
+**Статус:** отложено. API уже: `POST /repair { intent?, reason? }`. UI: только 3 кнопки + hardcoded `t('home.repairReason')`.
+
+1. **UI comment** — опциональное поле в `RepairSheet`; слать как `reason` (intent можно оставить или сделать optional если reason достаточный).
+2. **Три intent не универсальны** — `shift / lighten / rest` ок для fitness multi-day; для **cook/instant** (карбонара) часто мимо:
+   - `rest` бессмысленен для одноразовой сессии готовки
+   - `lighten` («меньше подходов») не про рецепт
+   - `shift` иногда ок («ужин завтра»), но срывы другие: нет ингредиента, мало времени, упростить блюдо, отменить вечер
+3. **Направление:** domain-aware repair options (по `domain` / day kind) **или** primary = free reason + LLM, structured intents — secondary shortcuts. Детали UX — [05](./05-ux-flows.md) Repair future.
+
+### Cook timeline: prep ≠ clock axis
+
+Не два timeline / не табы на Home. Path: action «подготовка» (checklist) → action «сессия» (один timeline с t=0 от жара/воды). Mise (нарезать) не marker на оси. Промпт #2/#3 + few-shot карбонара.
 
 ---
 
