@@ -237,6 +237,8 @@ API: `POST .../counter`, `POST .../timers/{id}/complete`. Timeline/interval runt
 |------|---------|
 | Progressive / Draft UX | **#1→#2→#3** + layout D — **одобрен**; polish later |
 | Always-editable план | Accept-дубль убран (Save/Start); Repair = общий edit — Срез 4 |
+| Queued refine while path #2 loads | **в коде**: CTA жмётся при `!path_error` (не ждёт `path_ready`); жмёт → busy «Жду план, затем обновлю…» → поллит до `path_ready`/`path_error` → refine тем же answers/comment (`DraftStudioScreen.runRefine` + `waitForPathReady`) |
+| Fitness long cycle + rest tail | **в коде**: `normalize_cycle_horizon` — trim hollow rest-tail + **hard truncate** fitness→7 / else→14 (лишние days+actions отбрасываются → следующий цикл); retry nudge; gate/prompt ≤7 outline |
 | Timeline / Interval | #2 hints; #3 materialize; XOR timeline/timers на одном шаге |
 | Clarify options отжиманий | Не мешать ось «сколько раз» и «с колен/стены» в одном ряду чипов |
 | Home перегружен | Много labels; declutter вместе с контролами / always-editable |
@@ -251,9 +253,10 @@ API: `POST .../counter`, `POST .../timers/{id}/complete`. Timeline/interval runt
 
 ## Следующий шаг
 
-1. **Dogfood Среза 4** (физический день + Repair) — checklist: закрыл день 1 ≠ день 2 execute; будущие видны/locked; «Не могу» → shift/lighten/rest
-2. Одобрение 4 → **Срез 5 — Next cycle**
-3. После финала списка: polish Draft UX
+1. **Hotfix после dogfood fitness — в коде, ждёт dogfood:** queued refine + horizon clamp/trim rest-tail + gate/prompt hardening (см. backlog выше + тесты `test_schemas_path_state.py`, `test_path_retry_hint.py`, `test_api_create.py`)
+2. Dogfood Среза 4 (physical day + Repair) параллельно / после
+3. Одобрение 4 → **Срез 5 — Next cycle**
+4. После финала списка: polish Draft UX
 
 ### Dogfood checklist (после UX polish)
 

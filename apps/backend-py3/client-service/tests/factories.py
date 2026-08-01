@@ -346,6 +346,77 @@ def sample_fitness_path_state(**overrides: Any) -> dict[str, Any]:
     return state
 
 
+def sample_fitness_overshoot_path_state(**overrides: Any) -> dict[str, Any]:
+    """Reproduces the fit_sample hotfix bug: gate framed a 4–6 week program,
+    the model emitted horizon_days=35 with actions only through day_offset
+    19 and a 15-day hollow rest tail (days 20–34, zero actions attached).
+    """
+    days: list[dict[str, Any]] = []
+    actions: list[dict[str, Any]] = []
+    for i in range(20):
+        kind = "train" if i % 2 == 0 else "rest"
+        days.append(
+            {
+                "day_index": i,
+                "kind": kind,
+                "title": "Силовая" if kind == "train" else "Отдых",
+                "summary": None,
+            }
+        )
+        if kind == "train" or i == 19:
+            actions.append(
+                {
+                    "id": f"d{i}",
+                    "title": "Подходы отжиманий",
+                    "why": "Силовой день двигает к 30 отжиманиям",
+                    "detail": "3 коротких подхода.",
+                    "estimate_min": 15,
+                    "day_offset": i,
+                    "sort": i,
+                    "group_id": None,
+                    "checklist_items": [],
+                    "plugin_hints": ["counter"],
+                    "timers": [],
+                    "counter": None,
+                    "timeline": None,
+                    "interval_plan": None,
+                }
+            )
+    for i in range(20, 35):
+        days.append(
+            {
+                "day_index": i,
+                "kind": "rest",
+                "title": "Отдых",
+                "summary": None,
+            }
+        )
+    state: dict[str, Any] = {
+        "title": "К 30 отжиманиям",
+        "summary": "За ~6–8 недель дойдём к 30 отжиманиям. Эта неделя — база.",
+        "outcome": "Заложить базу к 30 отжиманиям",
+        "paraphrase": "Ок — ведём к: 30 отжиманий",
+        "success_criteria": "Закрыты силовые дни",
+        "horizon": "4–6 недель, ~15 мин в силовые",
+        "domain": "fitness",
+        "tags": ["push-ups"],
+        "cycle": {
+            "index": 1,
+            "horizon_days": 35,
+            "status": "draft",
+            "goal_for_cycle": "",
+        },
+        "days": days,
+        "groups": [],
+        "actions": actions,
+        "questions": [],
+        "resources": [],
+        "milestones": [],
+    }
+    state.update(overrides)
+    return state
+
+
 def sample_create_path(**overrides: Any) -> dict[str, Any]:
     path = sample_path_state(**overrides.pop("path_overrides", {}))
     payload = {"kind": "path", "path": path, "instant_answer": None}

@@ -349,6 +349,138 @@ def _default_horizon_days(domain: str | None, actions: list) -> int:
     return 1
 
 
+# Hotfix (fit_sample dogfood): a single cycle must never sprawl into a
+# multi-week program. Fitness cycles target/truncate to 7 days; every domain
+# hard-caps at 14. Excess days AND actions beyond the cap are dropped — those
+# weeks belong in the next cycle, not in a hollow shell of this one.
+HORIZON_HARD_CAP = 14
+FITNESS_HORIZON_TARGET = 7
+_FITNESS_TAG_HINTS = frozenset(
+    {"pushup", "pushups", "push-up", "push-ups", "отжимания", "отжимание"}
+)
+
+
+def _is_fitness_like(domain: str | None, tags: list) -> bool:
+    if domain == "fitness":
+        return True
+    return any(
+        isinstance(tag, str) and tag.strip().lower() in _FITNESS_TAG_HINTS
+        for tag in tags or []
+    )
+
+
+def _acted_day_offsets(actions: list) -> set[int]:
+    offsets: set[int] = set()
+    for action in actions:
+        if not isinstance(action, dict):
+            continue
+        off = action.get("day_offset")
+        if off is None:
+            continue
+        try:
+            offsets.add(int(off))
+        except (TypeError, ValueError):
+            continue
+    return offsets
+
+
+def _trim_rest_tail(days: list[dict], acted_offsets: set[int]) -> list[dict]:
+    """Drop trailing days[] that have no action attached.
+
+    Only the tail is touched — a rest day sandwiched between trained days is
+    a deliberate rhythm, not the bug. A hollow run at the *end* (e.g. fit_sample:
+    horizon 35, actions only through day 19, days 20–34 empty rest) is the bug.
+    """
+    if not days or not acted_offsets:
+        return days
+    ordered = sorted(days, key=lambda d: d.get("day_index", 0))
+    while len(ordered) > 1 and ordered[-1].get("day_index") not in acted_offsets:
+        ordered.pop()
+    return ordered
+
+
+def _cycle_horizon_cap(domain: str | None, tags: list) -> int:
+    """Fitness → 7; everything else → 14. Absolute max is always 14."""
+    if _is_fitness_like(domain, tags):
+        return FITNESS_HORIZON_TARGET
+    return HORIZON_HARD_CAP
+
+
+def normalize_cycle_horizon(
+    domain: str | None,
+    tags: list,
+    cycle: dict,
+    days: list,
+    actions: list,
+) -> tuple[dict, list, list]:
+    """Trim hollow rest tail, then hard-truncate cycle to domain cap.
+
+    Runs on every create / refine / repair parse (see
+    ``PathState.backfill_missing_fields``). No-op when ``actions`` is empty
+    (progressive create phase-1 skeleton — nothing to trim against yet).
+
+    Returns ``(cycle, days, actions)`` — actions with ``day_offset >= cap``
+    are dropped so validators don't see orphan offsets past horizon.
+    """
+    if not actions or not isinstance(days, list) or not days:
+        return cycle, days, actions
+    if not all(isinstance(d, dict) for d in days):
+        return cycle, days, actions
+
+    acted_offsets = _acted_day_offsets(actions)
+    trimmed = _trim_rest_tail(list(days), acted_offsets)
+
+    cap = _cycle_horizon_cap(domain, tags)
+    kept_days = [d for d in trimmed if int(d.get("day_index", 0)) < cap]
+    if not kept_days:
+        kept_days = trimmed[:1]
+
+    kept_actions: list = []
+    for action in actions:
+        if not isinstance(action, dict):
+            kept_actions.append(action)
+            continue
+        off = action.get("day_offset")
+        if off is None:
+            kept_actions.append(action)
+            continue
+        try:
+            if int(off) < cap:
+                kept_actions.append(action)
+        except (TypeError, ValueError):
+            kept_actions.append(action)
+    if actions and not kept_actions:
+        # Extreme edge: every action was past the cap — keep the first so
+        # PathState doesn't end up actionless.
+        kept_actions = [actions[0]]
+        first = kept_actions[0]
+        if isinstance(first, dict):
+            first = dict(first)
+            first["day_offset"] = 0
+            kept_actions[0] = first
+            if not kept_days:
+                kept_days = [
+                    {
+                        "day_index": 0,
+                        "kind": _default_day_kind(domain, 0),
+                        "title": None,
+                        "summary": None,
+                    }
+                ]
+
+    cycle = dict(cycle)
+    last_day = max((int(d.get("day_index", 0)) for d in kept_days), default=0)
+    horizon_days = min(
+        int(cycle.get("horizon_days") or (last_day + 1)),
+        last_day + 1,
+        cap,
+    )
+    # Keep days[] contiguous 0..horizon-1 after truncate.
+    kept_days = [d for d in kept_days if int(d.get("day_index", 0)) < horizon_days]
+    cycle["horizon_days"] = max(horizon_days, 1)
+    return cycle, kept_days, kept_actions
+
+
 def _default_day_kind(domain: str | None, day_index: int) -> str:
     if domain == "cooking":
         return "cook_session"
@@ -527,6 +659,11 @@ class PathState(BaseModel):
                     }
                 )
             out["days"] = synthesized
+
+        tags = out.get("tags") if isinstance(out.get("tags"), list) else []
+        out["cycle"], out["days"], out["actions"] = normalize_cycle_horizon(
+            domain, tags, out["cycle"], out["days"], actions
+        )
 
         return out
 

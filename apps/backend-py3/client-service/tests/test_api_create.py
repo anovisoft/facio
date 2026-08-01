@@ -191,6 +191,49 @@ async def test_create_retries_invalid_then_succeeds(
     assert len(llm.calls) == 3
 
 
+async def test_create_retry_message_asks_to_shrink_horizon_too(
+    client, auth_headers, llm
+):
+    """fit_sample hotfix: the retry nudge for an over-long actions[] must
+    also tell the model to shrink cycle.horizon_days / days[] — not trim
+    actions alone into a still-hollow multi-week shell.
+
+    Use >16 actions all inside the fitness week (day_offset < 7) so the
+    horizon truncate cannot silently drop them under the actions cap.
+    """
+    from tests.factories import sample_fitness_path_state
+
+    base = sample_fitness_path_state()
+    seed = base["actions"][0]
+    too_many = [
+        dict(seed, id=f"overflow{i}", day_offset=i % 7, sort=i)
+        for i in range(17)
+    ]
+    too_long = dict(base, actions=too_many)
+    assert len(too_long["actions"]) > 16
+
+    llm.enqueue("create", _GATE_PATH)
+    llm.enqueue("create", too_long)
+    llm.enqueue("create", sample_create_path()["path"])
+
+    response = await client.post(
+        "/api/v1/projects",
+        headers=auth_headers,
+        json={"intent": "Хочу научиться делать 30 отжиманий"},
+    )
+    assert response.status_code == 200
+    project_id = response.json()["project"]["id"]
+    ready = await wait_path_ready(client, auth_headers, project_id)
+    assert ready["path_ready"] is True
+
+    # gate + invalid (too many actions) + retry path
+    assert len(llm.calls) == 3
+    retry_message = llm.calls[2]["messages"][-1]["content"]
+    assert "horizon_days" in retry_message
+    assert "actions" in retry_message
+    assert "pad" in retry_message.lower() or "hollow" in retry_message.lower()
+
+
 async def test_create_fails_after_two_invalid(client, auth_headers, llm, db_session):
     import asyncio
 

@@ -93,9 +93,14 @@ _PATH_FIELDS = """\
 - tags: 0–5 short slugs (e.g. pasta, dinner); optional finer clustering.
 - cycle: REQUIRED first-class cycle object:
   - index: usually 1 on create
-  - horizon_days: integer length of THIS cycle
+  - horizon_days: integer length of THIS cycle — HARD MAX 14, target 7 for \
+    fitness/push-ups (one training week)
       * cooking / one-dish (carbonara) → 1
-      * fitness / push-ups toward a rep goal → 7 (week)
+      * fitness / push-ups toward a rep goal → 7 (ONE week). NEVER emit a \
+        4–6 week / 30–45 day horizon as a single cycle — a multi-week \
+        aspiration belongs in `summary`/`outcome` ("~6–8 недель к цели, эта \
+        неделя — база"); the NEXT weeks are a later cycle, not padding on \
+        this one. A cycle over 14 days is invalid and will be rejected.
       * other domains: pick a short honest horizon (1–14 typical)
   - status: "draft" on create/refine; never invent completed
   - goal_for_cycle: short goal for this cycle, or "" if none
@@ -145,6 +150,9 @@ _PATH_QUALITY = """\
 - Always fill cycle + full days[] skeleton (reference defaults above).
 - Push-ups / fitness week: days must mix train and rest — rest days are real \
   days with kind=rest (light mobility OK), not identical "do sets" days.
+- Never emit a hollow tail: days[] must not run past the last day that has \
+  an action attached. Do not pad with empty rest days to make the cycle \
+  sound longer — a short honest horizon beats a hollow multi-week shell.
 - Carbonara: cycle.horizon_days=1, one cook_session day.
 - Carbonara cook step: plugin_hints MUST be ["timeline"] only (no "timers" on \
   the same step — redundant with the axis); shopping → [].
@@ -211,9 +219,13 @@ Match user language.
   - summary: 1–3 sentences draft of what the cycle delivers (never empty)
   - questions: 0 or 2–4 clarifies that change the plan (full batch; not interview)
     Each: id, prompt, options[] (2–4 chips; user may still type free text)
-  - outline_days: optional rough day TITLES only (0–8 short strings), \
-    e.g. ["Вечер готовки"] or ["Силовая A","Отдых",…]. NO plugins, NO actions, \
-    NO kind enums — titles only. Empty [] if unsure.
+  - outline_days: rough day TITLES for THIS cycle only — ≤7 short strings \
+    (fitness/push-ups week → exactly 7, one per day; carbonara → 1), \
+    e.g. ["Вечер готовки"] or ["Силовая A","Отдых",…]. If the goal spans \
+    many weeks, say so in `summary` ("неделя 1 из ~6–8"/"часть 6–8-недельной \
+    программы") — do NOT lengthen outline_days to cover multiple weeks; \
+    next weeks are a later cycle. NO plugins, NO actions, NO kind enums — \
+    titles only. Empty [] if unsure.
 
 Do not chat. JSON fields only.
 """
@@ -259,6 +271,9 @@ Rules:
 - Keep title + summary non-empty and useful after refine.
 - Keep cycle + days coherent: if horizon_days changes, rewrite days[] and \
   action day_offset to match; preserve train/rest mix for fitness weeks.
+- Never grow horizon_days past 14 for a single cycle (fitness target 7); a \
+  longer program is future cycles, not padding on this one. Do not leave a \
+  hollow tail of empty rest days past the last real action.
 - Preserve action/group ids when the step is the same; do not reshuffle \
   the whole path without cause. New/replaced steps may get new ids.
 - Keep every action.why non-empty and meaningful.

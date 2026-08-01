@@ -60,9 +60,13 @@ export function DraftStudioScreen({
   const [comment, setComment] = useState('');
   const [canGoBack, setCanGoBack] = useState(false);
   const [planExpanded, setPlanExpanded] = useState(false);
+  // True while a refine tap is queued behind the path #2 background load —
+  // CTA is pressable early; under the hood we wait, then refine.
+  const [queuedRefine, setQueuedRefine] = useState(false);
   const undoStackRef = useRef<number[]>([]);
   const abortRef = useRef<AbortController | null>(null);
   const acceptTrackedRef = useRef(false);
+  const queuedRefineRef = useRef(false);
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: t('draft.title') });
@@ -142,11 +146,18 @@ export function DraftStudioScreen({
     trackAcceptViewed(projectId);
   }, [pathReady, projectId]);
 
+  useEffect(() => {
+    queuedRefineRef.current = queuedRefine;
+  }, [queuedRefine]);
+
   // Only reset when the question *set* changes — not when path #2 bumps version
   // (that was wiping answers the user already picked while the plan loaded).
   const questionRoundKey = project?.questions.map((q) => q.id).join('|') ?? '';
 
   useEffect(() => {
+    // A queued refine is holding the user's answers while it waits for
+    // path #2 — don't let a question-set bump underneath it wipe them.
+    if (queuedRefineRef.current) return;
     setAnswers({});
     setComment('');
   }, [questionRoundKey]);
@@ -159,38 +170,91 @@ export function DraftStudioScreen({
   const allAnswered =
     questions.length > 0 &&
     questions.every((q) => Boolean(answers[q.id]?.trim()));
-  // Choice: user can pick answers while path loads, but refine waits for path_ready.
+  // Choice: user can pick answers (and press refine) while path #2 still
+  // loads in the background — we queue the refine and wait, rather than
+  // blocking the CTA on pathReady.
   const canRefine =
-    pathReady &&
+    !pathError &&
     !busy &&
     committing == null &&
     (allAnswered || (questions.length === 0 && Boolean(comment.trim())));
 
+  // Poll until path #2 lands (or errors / is aborted). Resolves with the
+  // ready project, or null when the wait ended without one (error already
+  // surfaced via setError; aborted callers check controller.signal).
+  const waitForPathReady = useCallback(
+    async (signal: AbortSignal): Promise<ProjectDetail | null> => {
+      for (;;) {
+        if (signal.aborted) return null;
+        const detail = await getProject(projectId, signal);
+        if (signal.aborted) return null;
+        setProject(detail);
+        if (detail.path_error) {
+          setError(t('draft.pathError'));
+          return null;
+        }
+        const ready =
+          detail.path_ready !== false && (detail.actions?.length ?? 0) > 0;
+        if (ready) return detail;
+        await new Promise<void>((resolve, reject) => {
+          const timer = setTimeout(resolve, PATH_POLL_MS);
+          const onAbort = () => {
+            clearTimeout(timer);
+            reject(new DOMException('Aborted', 'AbortError'));
+          };
+          if (signal.aborted) {
+            onAbort();
+            return;
+          }
+          signal.addEventListener('abort', onAbort, { once: true });
+        });
+      }
+    },
+    [projectId, t],
+  );
+
   const runRefine = async () => {
-    if (!project || busy || !pathReady) return;
+    if (!project || busy || pathError) return;
     if (questions.length > 0 && !allAnswered) return;
     if (questions.length === 0 && !comment.trim()) return;
+
+    // Freeze the answers/comment the user already entered — the wait below
+    // may bump project.questions (path #2 landing); the refine call must
+    // still go out with what the user actually picked, not a wiped state.
+    const answersPayload = questions.map((q) => ({
+      question_id: q.id,
+      value: answers[q.id].trim(),
+    }));
+    const commentPayload = comment.trim() || null;
 
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
 
-    if (project.current_version != null) {
-      undoStackRef.current.push(project.current_version);
-    }
-
+    const waitingForPath = !pathReady;
     setBusy(true);
+    setQueuedRefine(waitingForPath);
     setError(null);
+
+    let pushedVersion = false;
     try {
+      let target = project;
+      if (waitingForPath) {
+        const ready = await waitForPathReady(controller.signal);
+        if (controller.signal.aborted) return;
+        if (!ready) return;
+        target = ready;
+      }
+      setQueuedRefine(false);
+
+      if (target.current_version != null) {
+        undoStackRef.current.push(target.current_version);
+        pushedVersion = true;
+      }
+
       const detail = await refineProject(
         projectId,
-        {
-          answers: questions.map((q) => ({
-            question_id: q.id,
-            value: answers[q.id].trim(),
-          })),
-          comment: comment.trim() || null,
-        },
+        { answers: answersPayload, comment: commentPayload },
         controller.signal,
       );
       setProject(detail);
@@ -199,10 +263,13 @@ export function DraftStudioScreen({
       await refreshBackAvailability(detail, controller.signal);
     } catch (e) {
       if (controller.signal.aborted) return;
-      undoStackRef.current.pop();
+      if (pushedVersion) undoStackRef.current.pop();
       setError(e instanceof ApiError ? e.message : t('draft.error'));
     } finally {
-      if (!controller.signal.aborted) setBusy(false);
+      if (!controller.signal.aborted) {
+        setBusy(false);
+        setQueuedRefine(false);
+      }
     }
   };
 
@@ -481,12 +548,13 @@ export function DraftStudioScreen({
         <View style={styles.busyRow}>
           <ActivityIndicator color={colors.primary} />
           <Text style={[styles.muted, { color: colors.textSecondary, flex: 1 }]}>
-            {t('draft.working')}
+            {queuedRefine ? t('draft.refineQueued') : t('draft.working')}
           </Text>
           <Pressable
             onPress={() => {
               abortRef.current?.abort();
               setBusy(false);
+              setQueuedRefine(false);
             }}
             hitSlop={8}
           >

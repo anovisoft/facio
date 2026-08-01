@@ -120,6 +120,31 @@ def _assistant_content(raw_response: Any) -> str:
     return json.dumps(raw_response, ensure_ascii=False)
 
 
+def _retry_hint(exc: Exception) -> str:
+    """Extra nudge when the failure looks like an over-long Path.
+
+    fit_sample dogfood: actions[] over the 16 cap got retried, but the
+    retry only trimmed actions while keeping a 42-day horizon — the result
+    was a hollow multi-week shell. Tell the model to shrink both together.
+    """
+    text = str(exc)
+    actions_overflow = "actions" in text and (
+        "at most" in text or "too_long" in text or "16 item" in text
+    )
+    days_overflow = ("days" in text or "horizon_days" in text) and (
+        "at most" in text or "too_long" in text or "exceeds" in text
+    )
+    if not (actions_overflow or days_overflow):
+        return ""
+    return (
+        " Shrink BOTH actions[] (soft cap ≤8–12, hard max 16) AND "
+        "cycle.horizon_days / days[] length together — a long multi-week "
+        "horizon with only a few real actions is invalid. Trim the cycle "
+        "down to a short honest length (fitness target 7, hard max 14); "
+        "never pad with empty rest days at the tail to keep it long."
+    )
+
+
 def _parse_create_gate_payload(raw_response: Any) -> CreateGateResponse:
     return parse_create_gate(raw_response)
 
@@ -1148,7 +1173,7 @@ class PathService:
                             "content": (
                                 "Previous response failed validation: "
                                 f"{exc}. Return corrected JSON matching "
-                                "the schema."
+                                f"the schema.{_retry_hint(exc)}"
                             ),
                         },
                     ]

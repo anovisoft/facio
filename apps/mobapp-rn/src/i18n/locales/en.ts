@@ -40,7 +40,9 @@ export default {
     startError: 'Could not save the plan',
     pathLoading: 'Building the full plan…',
     pathError: 'Could not build the plan. Try creating again.',
-    refineWaitPath: 'You can pick answers now — Update path unlocks when the plan is ready.',
+    refineWaitPath:
+      'You can answer now — if the plan isn’t ready yet, Update path will wait for it and refine automatically.',
+    refineQueued: 'Waiting for the plan, then updating…',
     success: 'Success',
     horizon: 'Horizon',
     firstStepWhen: 'When is the first day',

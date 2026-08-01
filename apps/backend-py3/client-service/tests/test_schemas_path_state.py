@@ -140,3 +140,127 @@ def test_duplicate_day_index_rejected():
     ]
     with pytest.raises(ValidationError, match="day_index"):
         PathState.model_validate(payload)
+
+
+# --- Hotfix: horizon clamp + rest-tail trim (fit_sample dogfood) ----------
+
+
+def test_carbonara_horizon_one_not_regressed():
+    """Cooking / horizon=1 must not regress from the new normalize step."""
+    state = PathState.model_validate(sample_path_state())
+    assert state.cycle.horizon_days == 1
+    assert len(state.days) == 1
+
+
+def test_fitness_week_seven_not_regressed():
+    from tests.factories import sample_fitness_path_state
+
+    state = PathState.model_validate(sample_fitness_path_state())
+    assert state.cycle.horizon_days == 7
+    assert len(state.days) == 7
+    assert max(a.day_offset for a in state.actions) == 6
+
+
+def test_fitness_overshoot_trims_hollow_rest_tail():
+    """fit_sample bug: horizon 35, actions only through day 19, days 20-34
+    empty rest. Trim drops the hollow tail; fitness hard-truncate then keeps
+    only the first week (days 0–6) — later weeks belong in the next cycle."""
+    from tests.factories import sample_fitness_overshoot_path_state
+
+    payload = sample_fitness_overshoot_path_state()
+    assert payload["cycle"]["horizon_days"] == 35
+    assert len(payload["days"]) == 35
+
+    state = PathState.model_validate(payload)
+
+    assert state.cycle.horizon_days == 7
+    assert len(state.days) == 7
+    assert max(d.day_index for d in state.days) == 6
+    assert max(a.day_offset for a in state.actions if a.day_offset is not None) == 6
+    assert all(
+        a.day_offset is None or a.day_offset < 7 for a in state.actions
+    )
+
+
+def test_generic_domain_hard_cap_trims_declared_horizon():
+    """Non-fitness domain: model declares horizon_days=30 but the days[] map
+    it actually emitted only spans 14 days (last one has a real action) —
+    the global hard cap reins the inflated number back to match, instead of
+    persisting a hollow month-long horizon."""
+    payload = sample_path_state(domain="learning")
+    payload["cycle"]["horizon_days"] = 30
+    payload["days"] = [
+        {"day_index": i, "kind": "other", "title": None, "summary": None}
+        for i in range(14)
+    ]
+    for action in payload["actions"]:
+        action["day_offset"] = 13
+
+    state = PathState.model_validate(payload)
+
+    assert state.cycle.horizon_days == 14
+    assert len(state.days) == 14
+
+
+def test_fitness_domain_truncates_actions_past_week():
+    """Fitness overshoot with real actions on days 7–9 is truncated to week 1
+    (horizon 7) — excess actions belong in the next cycle."""
+    from tests.factories import sample_fitness_path_state
+
+    payload = sample_fitness_path_state()
+    extra_days = [
+        {
+            "day_index": i,
+            "kind": "train" if i % 2 == 0 else "rest",
+            "title": None,
+            "summary": None,
+        }
+        for i in range(7, 10)
+    ]
+    payload["days"] = payload["days"] + extra_days
+    payload["cycle"]["horizon_days"] = 10
+    extra_actions = [
+        {
+            "id": f"extra{i}",
+            "title": "Подходы отжиманий",
+            "why": "Продолжаем неделю",
+            "detail": None,
+            "estimate_min": 15,
+            "day_offset": i,
+            "sort": i,
+            "group_id": None,
+            "checklist_items": [],
+            "plugin_hints": [],
+            "timers": [],
+            "counter": None,
+            "timeline": None,
+            "interval_plan": None,
+        }
+        for i in range(7, 10)
+    ]
+    payload["actions"] = payload["actions"] + extra_actions
+
+    state = PathState.model_validate(payload)
+
+    assert state.cycle.horizon_days == 7
+    assert len(state.days) == 7
+    assert all(
+        a.day_offset is None or a.day_offset < 7 for a in state.actions
+    )
+    assert not any(a.id.startswith("extra") for a in state.actions)
+
+
+def test_progressive_start_skeleton_untouched_with_no_actions():
+    """Phase-1 draft (actions=[]) must not be trimmed/clamped — nothing to
+    trim against yet, and the outline should render as-is."""
+    payload = sample_path_state(actions=[])
+    payload["cycle"]["horizon_days"] = 8
+    payload["days"] = [
+        {"day_index": i, "kind": "other", "title": None, "summary": None}
+        for i in range(8)
+    ]
+
+    state = PathState.model_validate(payload)
+
+    assert state.cycle.horizon_days == 8
+    assert len(state.days) == 8
