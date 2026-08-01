@@ -77,7 +77,7 @@ Defaults (ориентир):
 
 ## 4. Schedule
 
-Лёгкий schedule сразу (не Google Calendar). Нужен для reuse циклов.
+Лёгкий schedule (не Google Calendar sync). Нужен для reuse циклов **и** для физического ритма.
 
 ```text
 days[]
@@ -91,10 +91,32 @@ days[]
 
 Связь с прежним `day_offset`:
 
-- `day_offset` / `day_index` остаются совместимой идеей «день от старта цикла».
+- `day_offset` / `day_index` = слот программы внутри цикла.
 - Kind и session делают поведение дней **разным** в UI.
 
-«N раз в неделю в любые дни» — should later; для среза важна **явная карта дней**.
+### Физический день (must, Срез 4)
+
+Программный день ≠ «можно прокликать весь цикл за вечер».
+
+```text
+cycle_anchor_date     # calendar date старта: commit today → D0; first_step_when=tomorrow → D0 завтра
+local_today           # календарная дата пользователя (клиент → API; fallback UTC date)
+unlocked_day_index    # local < anchor → -1 (ничего); else min(delta, horizon-1)
+
+focus_day:
+  earliest pending day_index <= unlocked_day_index   # catch-up ок; при -1 focus пуст
+  иначе waiting / peek на Home                       # нельзя забежать вперёд по действиям
+```
+
+- Закрыл день 0 утром → день 1 **не** становится исполняемым «Сегодня» до следующего calendar day.
+- `first_step_when=tomorrow`: в день commit execute закрыт (unlocked=-1), день 0 только peek до anchor.
+- Отставание: focus остаётся на незакрытом прошлом дне (не прыгаем на unlocked).
+- **Preview будущих дней — must:** карта плана и «Весь план» показывают дни `> unlocked` (titles, kind, steps, plugin hints). Контролы complete/skip/timer/counter/interval **disabled**; нельзя закрыть/выполнить locked day.
+- Home: focus = unlocked/catch-up день; будущие / pre-anchor — peek, не execute.
+- Карбонара `horizon_days=1` + commit today: unlocked=0 — поведение как сейчас.
+- Repair («не могу сегодня») сдвигает/облегчает **относительно физического сегодня**, иначе жест пустой.
+
+«N раз в неделю в любые дни» — should later; для среза важна **явная карта дней + calendar unlock + preview-locked**.
 
 ---
 

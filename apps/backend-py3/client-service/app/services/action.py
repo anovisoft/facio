@@ -19,9 +19,15 @@ from app.models import (
 )
 from app.services.audit import AuditService, EventType
 from app.services.project import ProjectService
+from app.services.schedule import parse_local_date
+from app.services.schedule import unlocked_day_index as compute_unlocked_day_index
 from app.services.serializers import action_queue_key
 
 _COMMIT_REQUIRED = "Commit the project before executing steps"
+_DAY_LOCKED = (
+    "This day isn't open yet — it unlocks on the calendar date shown on "
+    "the path."
+)
 
 
 class ActionService:
@@ -34,6 +40,24 @@ class ActionService:
     def _require_active(project: Project) -> None:
         if project.status != ProjectStatus.active:
             raise ConflictError(_COMMIT_REQUIRED)
+
+    @staticmethod
+    def _require_unlocked(
+        action: Action, project: Project, local_date: str | None
+    ) -> None:
+        """Physical-day gate (docs/next/04 §4): reject execute mutations on
+        actions whose day is still in the future for the caller's calendar.
+        Preview (read) is unaffected — this only guards write endpoints.
+        """
+        if action.day_offset is None:
+            return
+        unlocked = compute_unlocked_day_index(
+            anchor=project.cycle_anchor_date,
+            horizon_days=project.cycle_horizon_days or 1,
+            local_today=parse_local_date(local_date),
+        )
+        if action.day_offset > unlocked:
+            raise ConflictError(_DAY_LOCKED)
 
     async def _get_owned_action(
         self, user: User, action_id: UUID
@@ -84,11 +108,14 @@ class ActionService:
             payload={},
         )
 
-    async def complete(self, user: User, action_id: UUID) -> Action:
+    async def complete(
+        self, user: User, action_id: UUID, *, local_date: str | None = None
+    ) -> Action:
         action, project = await self._get_owned_action(user, action_id)
         self._require_active(project)
         if action.status != ActionStatus.pending:
             raise ConflictError(f"Action is already {action.status.value}")
+        self._require_unlocked(action, project, local_date)
 
         incomplete = [i for i in action.checklist_items if not i.done]
         if incomplete:
@@ -133,11 +160,14 @@ class ActionService:
         await self.db.commit()
         return (await self._get_owned_action(user, action_id))[0]
 
-    async def skip(self, user: User, action_id: UUID) -> Action:
+    async def skip(
+        self, user: User, action_id: UUID, *, local_date: str | None = None
+    ) -> Action:
         action, project = await self._get_owned_action(user, action_id)
         self._require_active(project)
         if action.status != ActionStatus.pending:
             raise ConflictError(f"Action is already {action.status.value}")
+        self._require_unlocked(action, project, local_date)
 
         previous = action.status.value
         action.status = ActionStatus.skipped
@@ -163,6 +193,7 @@ class ActionService:
         item_id: UUID,
         *,
         done: bool | None = None,
+        local_date: str | None = None,
     ) -> ChecklistItem:
         result = await self.db.execute(
             select(ChecklistItem)
@@ -181,6 +212,7 @@ class ActionService:
         self._require_active(action.project)
         if action.status != ActionStatus.pending:
             raise ConflictError("Cannot toggle checklist on a closed action")
+        self._require_unlocked(action, action.project, local_date)
 
         previous = item.done
         item.done = (not item.done) if done is None else done
@@ -209,11 +241,13 @@ class ActionService:
         *,
         current: int | None = None,
         delta: int | None = None,
+        local_date: str | None = None,
     ) -> Action:
         action, project = await self._get_owned_action(user, action_id)
         self._require_active(project)
         if action.status != ActionStatus.pending:
             raise ConflictError("Cannot update counter on a closed action")
+        self._require_unlocked(action, project, local_date)
         if not isinstance(action.counter, dict):
             raise ConflictError("Action has no counter")
 
@@ -254,11 +288,13 @@ class ActionService:
         timer_id: str,
         *,
         completed: bool = True,
+        local_date: str | None = None,
     ) -> Action:
         action, project = await self._get_owned_action(user, action_id)
         self._require_active(project)
         if action.status != ActionStatus.pending:
             raise ConflictError("Cannot update timer on a closed action")
+        self._require_unlocked(action, project, local_date)
         timers = action.timers if isinstance(action.timers, list) else []
         if not timers:
             raise ConflictError("Action has no timers")

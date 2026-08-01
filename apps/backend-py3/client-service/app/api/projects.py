@@ -26,6 +26,11 @@ from app.services.project import ListStatusFilter, ProjectService
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
+_LOCAL_DATE_DESC = (
+    "Caller's local calendar date (YYYY-MM-DD), used for the physical-day "
+    "unlock gate (docs/next/04 §4). Falls back to UTC today when omitted."
+)
+
 
 async def _commit_on_app_error(db: DbSession, exc: AppError) -> None:
     """Persist audit rows written before a domain failure, then re-raise."""
@@ -45,10 +50,11 @@ async def list_projects(
             "or draft|active|completed"
         ),
     ),
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
 ) -> list[ProjectSummary]:
     service = ProjectService(db)
     projects = await service.list_projects(user, status=status)
-    return [service.to_summary(p) for p in projects]
+    return [service.to_summary(p, local_date=local_date) for p in projects]
 
 
 @router.post("", response_model=CreateIntentResponse)
@@ -81,10 +87,11 @@ async def get_project(
     project_id: UUID,
     user: CurrentUser,
     db: DbSession,
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
 ) -> ProjectDetail:
     service = ProjectService(db)
     project = await service.get_project(user, project_id)
-    return await service.to_detail(project)
+    return await service.to_detail(project, local_date=local_date)
 
 
 @router.get("/{project_id}/actions", response_model=list[ActionResponse])
@@ -116,6 +123,7 @@ async def refine_project(
     user: CurrentUser,
     db: DbSession,
     llm: LLM,
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
 ) -> ProjectDetail:
     service = PathService(db, llm=llm)
     try:
@@ -130,7 +138,7 @@ async def refine_project(
         )
     except AppError as exc:
         await _commit_on_app_error(db, exc)
-    return await ProjectService(db).to_detail(project)
+    return await ProjectService(db).to_detail(project, local_date=local_date)
 
 
 @router.post("/{project_id}/commit", response_model=ProjectDetail)
@@ -141,6 +149,7 @@ async def commit_project(
     db: DbSession,
     llm: LLM,
     background_tasks: BackgroundTasks,
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
 ) -> ProjectDetail:
     service = ProjectService(db)
     project = await service.commit(
@@ -148,7 +157,7 @@ async def commit_project(
         project_id,
         first_step_when=body.first_step_when,
     )
-    detail = await service.to_detail(project)
+    detail = await service.to_detail(project, local_date=local_date)
     # Phase-3: materialize plugins in background when hints still unfilled.
     path_service = PathService(db, llm=llm)
     if await path_service.needs_plugin_materialize(user, project.id):
@@ -166,6 +175,7 @@ async def abandon_project(
     user: CurrentUser,
     db: DbSession,
     body: AbandonProjectRequest = Body(default_factory=AbandonProjectRequest),
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
 ) -> ProjectDetail:
     service = ProjectService(db)
     project = await service.abandon(
@@ -173,7 +183,7 @@ async def abandon_project(
         project_id,
         reason=body.reason,
     )
-    return await service.to_detail(project)
+    return await service.to_detail(project, local_date=local_date)
 
 
 @router.post("/{project_id}/restore-state", response_model=ProjectDetail)
@@ -182,11 +192,12 @@ async def restore_state(
     body: RestoreStateRequest,
     user: CurrentUser,
     db: DbSession,
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
 ) -> ProjectDetail:
     project = await PathService(db).restore_state(
         user, project_id, version=body.version
     )
-    return await ProjectService(db).to_detail(project)
+    return await ProjectService(db).to_detail(project, local_date=local_date)
 
 
 @router.post("/{project_id}/repair", response_model=ProjectDetail)
@@ -196,10 +207,17 @@ async def repair_project(
     user: CurrentUser,
     db: DbSession,
     llm: LLM,
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
 ) -> ProjectDetail:
     service = PathService(db, llm=llm)
     try:
-        project = await service.repair(user, project_id, reason=body.reason)
+        project, repair_summary = await service.repair(
+            user,
+            project_id,
+            reason=body.reason,
+            intent=body.intent,
+        )
     except AppError as exc:
         await _commit_on_app_error(db, exc)
-    return await ProjectService(db).to_detail(project)
+    detail = await ProjectService(db).to_detail(project, local_date=local_date)
+    return detail.model_copy(update={"repair_summary": repair_summary})

@@ -1,5 +1,6 @@
 import { apiRequest } from '@/api/client';
 import type { ActionResponse, ChecklistItemResponse } from '@/api/types';
+import { getLocalDate } from '@/services/localDate';
 
 export function completeAction(
   actionId: string,
@@ -7,6 +8,7 @@ export function completeAction(
 ): Promise<ActionResponse> {
   return apiRequest(`/actions/${actionId}/complete`, {
     method: 'POST',
+    query: { local_date: getLocalDate() },
     signal,
   });
 }
@@ -17,6 +19,7 @@ export function skipAction(
 ): Promise<ActionResponse> {
   return apiRequest(`/actions/${actionId}/skip`, {
     method: 'POST',
+    query: { local_date: getLocalDate() },
     signal,
   });
 }
@@ -29,6 +32,7 @@ export function toggleChecklistItem(
   return apiRequest(`/checklist-items/${itemId}/toggle`, {
     method: 'POST',
     body: done == null ? {} : { done },
+    query: { local_date: getLocalDate() },
     signal,
   });
 }
@@ -41,6 +45,7 @@ export function updateCounter(
   return apiRequest(`/actions/${actionId}/counter`, {
     method: 'POST',
     body,
+    query: { local_date: getLocalDate() },
     signal,
   });
 }
@@ -54,6 +59,7 @@ export function completeTimer(
   return apiRequest(`/actions/${actionId}/timers/${timerId}/complete`, {
     method: 'POST',
     body: { completed },
+    query: { local_date: getLocalDate() },
     signal,
   });
 }

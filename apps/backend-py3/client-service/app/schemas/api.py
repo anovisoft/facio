@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
@@ -69,8 +69,25 @@ class RefineProjectRequest(BaseModel):
         )
 
 
+RepairIntent = Literal["shift", "lighten", "rest"]
+
+
 class RepairProjectRequest(BaseModel):
-    reason: str = Field(min_length=1, max_length=4000)
+    """Structured «Не могу» gesture: pick an intent and/or free reason.
+
+    At least one of ``intent`` / ``reason`` is required. ``intent`` maps to
+    a repair playbook (shift the blocked day / lighten load / swap for rest);
+    ``reason`` is optional free text appended for the LLM.
+    """
+
+    intent: RepairIntent | None = None
+    reason: str | None = Field(default=None, max_length=4000)
+
+    @model_validator(mode="after")
+    def require_one(self) -> "RepairProjectRequest":
+        if self.intent is None and not (self.reason or "").strip():
+            raise ValueError("Provide intent and/or reason")
+        return self
 
 
 class CommitProjectRequest(BaseModel):
@@ -227,6 +244,14 @@ class ActionResponse(BaseModel):
     sort: int
     status: str
     day_offset: int | None = None
+    day_locked: bool = Field(
+        default=False,
+        description=(
+            "True when day_offset is beyond the physical-day unlock window "
+            "(docs/next/04 §4). Preview only — complete/skip/plugin "
+            "mutations are rejected server-side (409) while locked."
+        ),
+    )
     group_id: UUID | None = None
     group_key: str | None = None
     group_title: str | None = None
@@ -266,9 +291,40 @@ class ProjectSummary(BaseModel):
     next_action: ActionResponse | None = Field(
         default=None,
         description=(
-            "Current «Сегодня» step for active projects; null for draft / "
-            "completed / abandoned or when no pending actions remain."
+            "Current «Сегодня» step: earliest pending action with "
+            "day_offset <= unlocked_day_index (physical-day focus). Null "
+            "for draft / completed / abandoned, or while waiting for the "
+            "next calendar day (see peek_action)."
         ),
+    )
+    unlocked_day_index: int | None = Field(
+        default=None,
+        description=(
+            "Execute ceiling: -1 before cycle_anchor_date (nothing unlocked); "
+            "else min(local_today - anchor, horizon_days-1). "
+            "Null for non-active projects."
+        ),
+    )
+    cycle_anchor_date: date | None = Field(
+        default=None,
+        description="Calendar date day_offset=0 unlocked (commit date, "
+        "+1 when first_step_when=tomorrow).",
+    )
+    peek_action: ActionResponse | None = Field(
+        default=None,
+        description=(
+            "Read-only preview of the next locked action when there is no "
+            "executable next_action today (day done early / waiting on "
+            "calendar). Never completable — day_locked is always true."
+        ),
+    )
+    peek_day: CurrentDayResponse | None = Field(
+        default=None,
+        description="Day framing for peek_action, when present.",
+    )
+    next_unlock_date: date | None = Field(
+        default=None,
+        description="Calendar date peek_action becomes executable, when waiting.",
     )
 
     @field_validator("tags", mode="before")
@@ -304,6 +360,15 @@ class ProjectDetail(ProjectSummary):
         description=(
             "False while phase-3 plugin materialize runs after Start "
             "(actions may still show plugin_hints only)."
+        ),
+    )
+    repair_summary: str | None = Field(
+        default=None,
+        description=(
+            "Set only on the response to POST .../repair: short one-line "
+            "«what changed» summary (repair-flavored paraphrase) for a "
+            "confirmation toast/banner. Not persisted / not present on "
+            "plain GET."
         ),
     )
 

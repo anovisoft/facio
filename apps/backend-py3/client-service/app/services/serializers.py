@@ -180,7 +180,7 @@ def _serialize_interval_from_state(
     )
 
 
-def serialize_action(action: Action) -> ActionResponse:
+def serialize_action(action: Action, *, day_locked: bool = False) -> ActionResponse:
     group = action.group
     return ActionResponse(
         id=action.id,
@@ -194,6 +194,7 @@ def serialize_action(action: Action) -> ActionResponse:
         sort=action.sort,
         status=action.status.value,
         day_offset=action.day_offset,
+        day_locked=day_locked,
         group_id=action.group_id,
         group_key=group.key if group else None,
         group_title=group.title if group else None,
@@ -274,24 +275,21 @@ def resolve_current_day(
     cycle: CycleResponse | None,
     days: list[DayResponse],
     next_action: ActionResponse | None,
-    actions: list[ActionResponse] | None = None,
+    unlocked_day_index: int | None = None,
 ) -> CurrentDayResponse | None:
-    """Pick the cycle day for Home from next focus action (schedule-aware)."""
+    """Pick the cycle day for Home: focus action's day, else the unlocked
+    (physical-today) day — never an arbitrary later pending day (see
+    docs/next/09 §E: "today = next pending action only" was wrong for the
+    physical-day gate).
+    """
     if cycle is None:
         return None
     day_map = _day_by_index(days)
     day_index: int | None = None
     if next_action is not None and next_action.day_offset is not None:
         day_index = next_action.day_offset
-    elif actions:
-        pending = [
-            a
-            for a in actions
-            if a.status == ActionStatus.pending.value
-            and a.day_offset is not None
-        ]
-        if pending:
-            day_index = min(a.day_offset for a in pending if a.day_offset is not None)
+    elif unlocked_day_index is not None and unlocked_day_index >= 0:
+        day_index = unlocked_day_index
     if day_index is None:
         day_index = 0 if days else None
     if day_index is None:
@@ -396,10 +394,32 @@ def action_queue_key(action: Action) -> tuple[int, int, int]:
 
 
 def pick_next_action(project: Project) -> Action | None:
-    """First pending action for an active project (day → group → sort)."""
+    """First pending action for an active project (day → group → sort),
+    regardless of the physical-day unlock. Used for the read-only «peek».
+    """
     if project.status != ProjectStatus.active:
         return None
     pending = [a for a in project.actions if a.status == ActionStatus.pending]
     if not pending:
         return None
     return sorted(pending, key=action_queue_key)[0]
+
+
+def pick_focus_action(project: Project, unlocked_day_index: int) -> Action | None:
+    """Earliest pending action executable today (day_offset <= unlocked).
+
+    Catch-up: an unclosed earlier day stays focus even once later days
+    unlock. Returns None when the user is caught up and waiting for the
+    next calendar day (see peek via ``pick_next_action``).
+    """
+    if project.status != ProjectStatus.active:
+        return None
+    candidates = [
+        a
+        for a in project.actions
+        if a.status == ActionStatus.pending
+        and (a.day_offset is None or a.day_offset <= unlocked_day_index)
+    ]
+    if not candidates:
+        return None
+    return sorted(candidates, key=action_queue_key)[0]

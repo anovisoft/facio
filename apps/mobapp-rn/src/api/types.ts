@@ -17,6 +17,8 @@ export type ListStatusFilter =
 
 export type FirstStepWhen = 'today' | 'tomorrow';
 
+export type RepairIntent = 'shift' | 'lighten' | 'rest';
+
 export type ClientBeaconType =
   | 'app_opened'
   | 'accept_viewed'
@@ -126,6 +128,12 @@ export interface ActionResponse {
   sort: number;
   status: ActionStatus;
   day_offset?: number | null;
+  /**
+   * True when day_offset is beyond the physical-day unlock window
+   * (docs/next/04 §4). Preview only — complete/skip/plugin mutations are
+   * rejected server-side (409) while locked.
+   */
+  day_locked?: boolean;
   group_id?: string | null;
   group_key?: string | null;
   group_title?: string | null;
@@ -155,7 +163,28 @@ export interface ProjectSummary {
   committed_at?: string | null;
   created_at: string;
   updated_at: string;
+  /**
+   * Current «Сегодня» step: earliest pending action with
+   * day_offset <= unlocked_day_index (physical-day focus). Null for
+   * draft / completed / abandoned, or while waiting for the next
+   * calendar day (see peek_action).
+   */
   next_action?: ActionResponse | null;
+  /** clamp(local_today - cycle_anchor_date, 0..horizon_days-1). Null for non-active projects. */
+  /** Execute ceiling: -1 before cycle_anchor_date; else min(delta, horizon-1). */
+  unlocked_day_index?: number | null;
+  /** Calendar date day_offset=0 unlocked (commit date, +1 when first_step_when=tomorrow). */
+  cycle_anchor_date?: string | null;
+  /**
+   * Read-only preview of the next locked action when there is no
+   * executable next_action today (day done early / waiting on calendar).
+   * Never completable — day_locked is always true.
+   */
+  peek_action?: ActionResponse | null;
+  /** Day framing for peek_action, when present. */
+  peek_day?: CurrentDayResponse | null;
+  /** Calendar date peek_action becomes executable, when waiting. */
+  next_unlock_date?: string | null;
 }
 
 export interface ProjectDetail extends ProjectSummary {
@@ -172,6 +201,11 @@ export interface ProjectDetail extends ProjectSummary {
   path_error?: string | null;
   /** False while phase-3 plugin materialize runs after Start. */
   plugins_ready?: boolean;
+  /**
+   * Set only on the response to POST .../repair: short one-line "what
+   * changed" summary for a confirmation toast/banner. Not present on GET.
+   */
+  repair_summary?: string | null;
 }
 
 export interface InstantAnswerResponse {

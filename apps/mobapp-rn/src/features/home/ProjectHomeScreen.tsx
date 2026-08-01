@@ -23,10 +23,12 @@ import {
   updateCounter,
 } from '@/api/actions';
 import { getProject, repairProject } from '@/api/projects';
-import { ApiError, type DayKind, type ProjectDetail } from '@/api/types';
+import { ApiError, type DayKind, type ProjectDetail, type RepairIntent } from '@/api/types';
 import { FirstCompletionOverlay } from '@/features/home/FirstCompletionOverlay';
+import { RepairSheet } from '@/features/home/RepairSheet';
 import type { RootScreenProps } from '@/navigation/types';
 import { trackActionShown } from '@/services/beacons';
+import { classifyUnlockDate } from '@/services/localDate';
 import { AsyncState } from '@/shared/ui/AsyncState';
 import {
   CounterControl,
@@ -40,7 +42,7 @@ import { SafeScreen } from '@/shared/ui/SafeScreen';
 import { WhyHero } from '@/shared/ui/WhyHero';
 import { useSessionStore } from '@/store';
 import { useTheme } from '@/theme/ThemeContext';
-import { spacing, typography } from '@/theme';
+import { radii, spacing, typography } from '@/theme';
 
 export function ProjectHomeScreen({
   navigation,
@@ -61,6 +63,8 @@ export function ProjectHomeScreen({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showFirstCompletion, setShowFirstCompletion] = useState(false);
+  const [repairSheetVisible, setRepairSheetVisible] = useState(false);
+  const [repairSummary, setRepairSummary] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const shownActionIdRef = useRef<string | null>(null);
 
@@ -268,20 +272,31 @@ export function ProjectHomeScreen({
     }
   };
 
-  const onRepair = async () => {
+  const onOpenRepair = () => {
+    if (busy) return;
+    setError(null);
+    setRepairSheetVisible(true);
+  };
+
+  const onPickRepairIntent = async (intent: RepairIntent) => {
     if (busy) return;
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
     setBusy(true);
     setError(null);
+    setRepairSummary(null);
     try {
       const detail = await repairProject(
         projectId,
-        t('home.repairReason'),
+        { intent, reason: t('home.repairReason') },
         controller.signal,
       );
       setProject(detail);
+      setRepairSheetVisible(false);
+      if (detail.repair_summary) {
+        setRepairSummary(detail.repair_summary);
+      }
       const nextId = detail.next_action?.id ?? null;
       if (nextId) {
         shownActionIdRef.current = nextId;
@@ -296,13 +311,26 @@ export function ProjectHomeScreen({
   };
 
   const next = project?.next_action ?? null;
+  const peek = project?.peek_action ?? null;
+  const peekDay = project?.peek_day ?? null;
   const currentDay = project?.current_day ?? null;
   const dayKind = currentDay?.kind ?? null;
   const isRestDay = dayKind === 'rest';
   const groupLabel = next?.group_title ?? null;
+  // Waiting: today's executable work is done, but the plan continues
+  // tomorrow — distinct from a fully finished project (docs/next/05).
+  const waitingForNextDay =
+    project != null &&
+    project.status === 'active' &&
+    next == null &&
+    peek != null;
   const projectDone =
     project != null &&
-    (project.status === 'completed' || next == null);
+    (project.status === 'completed' ||
+      (next == null && peek == null));
+  const unlockTiming = project?.next_unlock_date
+    ? classifyUnlockDate(project.next_unlock_date)
+    : null;
 
   const kindLabel = (kind: DayKind): string => {
     switch (kind) {
@@ -371,6 +399,24 @@ export function ProjectHomeScreen({
   return (
     <>
       <SafeScreen scroll>
+        {repairSummary ? (
+          <View
+            style={[
+              styles.repairBanner,
+              { backgroundColor: colors.surfaceMuted, borderColor: colors.border },
+            ]}
+          >
+            <Text style={[styles.repairBannerText, { color: colors.text }]}>
+              {repairSummary}
+            </Text>
+            <Pressable onPress={() => setRepairSummary(null)} hitSlop={8}>
+              <Text style={[styles.repairBannerClose, { color: colors.primary }]}>
+                {t('common.dismiss')}
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
+
         {projectDone ? (
           <View style={styles.doneBlock}>
             <Text style={[styles.todayLabel, { color: colors.textMuted }]}>
@@ -379,6 +425,50 @@ export function ProjectHomeScreen({
             <Text style={[styles.doneTitle, { color: colors.text }]}>
               {t('home.allDone')}
             </Text>
+          </View>
+        ) : waitingForNextDay && peek ? (
+          <View style={styles.doneBlock}>
+            <Text style={[styles.todayLabel, { color: colors.textMuted }]}>
+              {t('home.today')}
+            </Text>
+            <Text style={[styles.doneTitle, { color: colors.text }]}>
+              {t('home.waitingTitle')}
+            </Text>
+            <Text style={[styles.waitingBody, { color: colors.textSecondary }]}>
+              {unlockTiming === 'today'
+                ? t('home.opensToday')
+                : unlockTiming === 'tomorrow'
+                  ? t('home.opensTomorrow')
+                  : project?.next_unlock_date
+                    ? t('home.opensOn', { date: project.next_unlock_date })
+                    : t('home.opensLater')}
+            </Text>
+            <View
+              style={[
+                styles.peekCard,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+            >
+              <Text style={[styles.peekLabel, { color: colors.textMuted }]}>
+                {peekDay
+                  ? t('home.dayOf', {
+                      n: peekDay.day_number,
+                      m: peekDay.horizon_days,
+                      kind: kindLabel(peekDay.kind),
+                    })
+                  : t('home.peekLabel')}
+              </Text>
+              <Text style={[styles.peekTitle, { color: colors.text }]}>
+                {peek.title}
+              </Text>
+              {peek.why ? (
+                <Text
+                  style={[styles.peekWhy, { color: colors.textSecondary }]}
+                >
+                  {peek.why}
+                </Text>
+              ) : null}
+            </View>
           </View>
         ) : next ? (
           <>
@@ -554,7 +644,7 @@ export function ProjectHomeScreen({
             variant="ghost"
             label={t('home.repair')}
             disabled={busy}
-            onPress={() => void onRepair()}
+            onPress={onOpenRepair}
           />
         ) : null}
       </SafeScreen>
@@ -562,6 +652,13 @@ export function ProjectHomeScreen({
       <FirstCompletionOverlay
         visible={showFirstCompletion}
         onContinue={() => setShowFirstCompletion(false)}
+      />
+
+      <RepairSheet
+        visible={repairSheetVisible}
+        busy={busy}
+        onPick={(intent) => void onPickRepairIntent(intent)}
+        onClose={() => setRepairSheetVisible(false)}
       />
     </>
   );
@@ -645,5 +742,44 @@ const styles = StyleSheet.create({
   },
   doneTitle: {
     ...typography.title,
+  },
+  waitingBody: {
+    ...typography.body,
+    marginTop: spacing.xs,
+  },
+  peekCard: {
+    borderWidth: 1,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    marginTop: spacing.lg,
+    opacity: 0.85,
+  },
+  peekLabel: {
+    ...typography.label,
+    textTransform: 'uppercase',
+    marginBottom: spacing.xs,
+  },
+  peekTitle: {
+    ...typography.subtitle,
+  },
+  peekWhy: {
+    ...typography.body,
+    marginTop: spacing.xs,
+  },
+  repairBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderRadius: radii.md,
+    padding: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  repairBannerText: {
+    ...typography.body,
+    flex: 1,
+  },
+  repairBannerClose: {
+    ...typography.caption,
   },
 });

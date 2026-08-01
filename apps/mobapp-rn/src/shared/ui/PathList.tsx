@@ -198,18 +198,18 @@ function buildGroupSections(
 }
 
 function statusLabel(
-  status: ActionResponse['status'],
+  action: ActionResponse,
   t: (key: string) => string,
 ): string | null {
-  switch (status) {
+  switch (action.status) {
     case 'done':
       return t('path.statusDone');
     case 'skipped':
       return t('path.statusSkipped');
     case 'pending':
-      return null;
+      return action.day_locked ? t('path.statusLocked') : null;
     default: {
-      const _exhaustive: never = status;
+      const _exhaustive: never = action.status;
       return _exhaustive;
     }
   }
@@ -299,6 +299,12 @@ export function PathList({
         sections.map((section) => {
           const isDaySection = useDays && section.kind != null;
           const isRestDay = section.kind === 'rest';
+          const isDayLocked =
+            isDaySection &&
+            section.actions.length > 0 &&
+            section.actions.every(
+              (a) => a.day_locked && a.status === 'pending',
+            );
           return (
             <View
               key={section.key}
@@ -315,20 +321,42 @@ export function PathList({
               ]}
             >
               {section.title ? (
-                <Text
-                  style={[
-                    isDaySection ? styles.dayTitle : styles.groupTitle,
-                    {
-                      color: isDaySection
-                        ? isRestDay
-                          ? colors.textSecondary
-                          : colors.text
-                        : colors.textMuted,
-                    },
-                  ]}
-                >
-                  {section.title}
-                </Text>
+                <View style={styles.dayTitleRow}>
+                  <Text
+                    style={[
+                      isDaySection ? styles.dayTitle : styles.groupTitle,
+                      {
+                        color: isDaySection
+                          ? isRestDay
+                            ? colors.textSecondary
+                            : colors.text
+                          : colors.textMuted,
+                      },
+                    ]}
+                  >
+                    {section.title}
+                  </Text>
+                  {isDayLocked ? (
+                    <View
+                      style={[
+                        styles.hintChip,
+                        {
+                          borderColor: colors.border,
+                          backgroundColor: colors.surface,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.hintText,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        {t('path.statusLocked')}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
               ) : null}
               {section.description ? (
                 <Text
@@ -346,7 +374,8 @@ export function PathList({
                 </Text>
               ) : null}
               {section.actions.map((action, index) => {
-                const status = statusLabel(action.status, t);
+                const status = statusLabel(action, t);
+                const isLocked = Boolean(action.day_locked);
                 const isOpen = expandable
                   ? Boolean(openIds[action.id])
                   : true;
@@ -386,7 +415,10 @@ export function PathList({
                         {
                           backgroundColor: colors.surface,
                           borderColor: colors.border,
-                          opacity: action.status === 'pending' ? 1 : 0.72,
+                          opacity:
+                            action.status === 'pending' && !isLocked
+                              ? 1
+                              : 0.72,
                         },
                       ]}
                     >
@@ -489,11 +521,13 @@ export function PathList({
                               items={action.checklist_items}
                               disabled={
                                 checklistDisabled ||
-                                action.status !== 'pending'
+                                action.status !== 'pending' ||
+                                isLocked
                               }
                               onToggle={
                                 onToggleChecklist &&
-                                action.status === 'pending'
+                                action.status === 'pending' &&
+                                !isLocked
                                   ? onToggleChecklist
                                   : undefined
                               }
@@ -504,7 +538,8 @@ export function PathList({
                               timers={action.timers ?? []}
                               interactive={
                                 pluginsInteractive &&
-                                action.status === 'pending'
+                                action.status === 'pending' &&
+                                !isLocked
                               }
                               disabled={checklistDisabled}
                               onCompleteTimer={
@@ -520,7 +555,8 @@ export function PathList({
                               timeline={action.timeline}
                               interactive={
                                 pluginsInteractive &&
-                                action.status === 'pending'
+                                action.status === 'pending' &&
+                                !isLocked
                               }
                               disabled={checklistDisabled}
                             />
@@ -530,7 +566,8 @@ export function PathList({
                               plan={action.interval_plan}
                               interactive={
                                 pluginsInteractive &&
-                                action.status === 'pending'
+                                action.status === 'pending' &&
+                                !isLocked
                               }
                               disabled={checklistDisabled}
                             />
@@ -540,7 +577,8 @@ export function PathList({
                               counter={action.counter}
                               interactive={
                                 pluginsInteractive &&
-                                action.status === 'pending'
+                                action.status === 'pending' &&
+                                !isLocked
                               }
                               disabled={checklistDisabled}
                               onChange={
@@ -594,10 +632,15 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.sm,
   },
+  dayTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
   dayTitle: {
     ...typography.subtitle,
     fontWeight: '700',
-    marginBottom: spacing.xs,
   },
   groupTitle: {
     ...typography.label,

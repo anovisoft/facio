@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from app.deps import CurrentUser, DbSession
 from app.schemas.path import (
@@ -15,14 +15,22 @@ from app.services.serializers import serialize_action
 
 router = APIRouter(tags=["actions"])
 
+_LOCAL_DATE_DESC = (
+    "Caller's local calendar date (YYYY-MM-DD), used for the physical-day "
+    "unlock gate. Falls back to UTC today when omitted."
+)
+
 
 @router.post("/actions/{action_id}/complete", response_model=ActionResponse)
 async def complete_action(
     action_id: UUID,
     user: CurrentUser,
     db: DbSession,
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
 ) -> ActionResponse:
-    action = await ActionService(db).complete(user, action_id)
+    action = await ActionService(db).complete(
+        user, action_id, local_date=local_date
+    )
     return serialize_action(action)
 
 
@@ -31,8 +39,9 @@ async def skip_action(
     action_id: UUID,
     user: CurrentUser,
     db: DbSession,
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
 ) -> ActionResponse:
-    action = await ActionService(db).skip(user, action_id)
+    action = await ActionService(db).skip(user, action_id, local_date=local_date)
     return serialize_action(action)
 
 
@@ -45,9 +54,10 @@ async def toggle_checklist_item(
     body: ToggleChecklistItemRequest,
     user: CurrentUser,
     db: DbSession,
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
 ) -> ChecklistItemResponse:
     item = await ActionService(db).toggle_checklist_item(
-        user, item_id, done=body.done
+        user, item_id, done=body.done, local_date=local_date
     )
     return ChecklistItemResponse.model_validate(item, from_attributes=True)
 
@@ -61,12 +71,14 @@ async def update_counter(
     body: UpdateCounterRequest,
     user: CurrentUser,
     db: DbSession,
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
 ) -> ActionResponse:
     action = await ActionService(db).update_counter(
         user,
         action_id,
         current=body.current,
         delta=body.delta,
+        local_date=local_date,
     )
     return serialize_action(action)
 
@@ -81,11 +93,13 @@ async def complete_timer(
     body: CompleteTimerRequest,
     user: CurrentUser,
     db: DbSession,
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
 ) -> ActionResponse:
     action = await ActionService(db).complete_timer(
         user,
         action_id,
         timer_id,
         completed=body.completed,
+        local_date=local_date,
     )
     return serialize_action(action)

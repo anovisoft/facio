@@ -24,8 +24,16 @@ from app.services.path_materialize import (
     materialize_path,
     path_plugins_ready,
 )
+from app.services.schedule import (
+    day_unlock_date,
+    is_day_locked,
+    parse_local_date,
+    resolve_cycle_anchor,
+    unlocked_day_index as compute_unlocked_day_index,
+)
 from app.services.serializers import (
     action_queue_key,
+    pick_focus_action,
     pick_next_action,
     resolve_current_day,
     serialize_action,
@@ -168,21 +176,49 @@ class ProjectService:
         ordered = sorted(project.actions, key=action_queue_key)
         return [serialize_action(a) for a in ordered]
 
-    def to_summary(self, project: Project) -> ProjectSummary:
-        next_orm = pick_next_action(project)
-        next_action = serialize_action(next_orm) if next_orm else None
+    def to_summary(
+        self, project: Project, *, local_date: str | None = None
+    ) -> ProjectSummary:
         cycle = serialize_cycle_from_project(project)
         days = serialize_days_from_project(project)
-        action_responses = (
-            [serialize_action(a) for a in project.actions]
-            if project.status == ProjectStatus.active
-            else None
-        )
+
+        unlocked: int | None = None
+        next_action: ActionResponse | None = None
+        peek_action: ActionResponse | None = None
+        next_unlock_date = None
+        if project.status == ProjectStatus.active:
+            local_today = parse_local_date(local_date)
+            unlocked = compute_unlocked_day_index(
+                anchor=project.cycle_anchor_date,
+                horizon_days=project.cycle_horizon_days or 1,
+                local_today=local_today,
+            )
+            focus_orm = pick_focus_action(project, unlocked)
+            if focus_orm is not None:
+                next_action = serialize_action(focus_orm, day_locked=False)
+            else:
+                peek_orm = pick_next_action(project)
+                if peek_orm is not None:
+                    peek_action = serialize_action(peek_orm, day_locked=True)
+                    next_unlock_date = day_unlock_date(
+                        project.cycle_anchor_date, peek_orm.day_offset
+                    )
+
         current_day = resolve_current_day(
             cycle=cycle,
             days=days,
             next_action=next_action,
-            actions=action_responses,
+            unlocked_day_index=unlocked,
+        )
+        peek_day = (
+            resolve_current_day(
+                cycle=cycle,
+                days=days,
+                next_action=peek_action,
+                unlocked_day_index=unlocked,
+            )
+            if peek_action is not None
+            else None
         )
         return ProjectSummary.model_validate(
             project, from_attributes=True
@@ -191,10 +227,17 @@ class ProjectService:
                 "next_action": next_action,
                 "cycle": cycle,
                 "current_day": current_day,
+                "unlocked_day_index": unlocked,
+                "cycle_anchor_date": project.cycle_anchor_date,
+                "peek_action": peek_action,
+                "peek_day": peek_day,
+                "next_unlock_date": next_unlock_date,
             }
         )
 
-    async def to_detail(self, project: Project) -> ProjectDetail:
+    async def to_detail(
+        self, project: Project, *, local_date: str | None = None
+    ) -> ProjectDetail:
         version, state = await self.get_latest_state(project.id)
         questions = list(state.questions) if state else []
         resources = list(state.resources) if state else []
@@ -227,23 +270,59 @@ class ProjectService:
                     for a in actions
                 ]
 
-        next_action = None
+        unlocked: int | None = None
+        next_action: ActionResponse | None = None
+        peek_action: ActionResponse | None = None
+        next_unlock_date = None
         if project.status == ProjectStatus.active:
-            next_orm = pick_next_action(project)
-            next_action = serialize_action(next_orm) if next_orm else None
-            if next_action is not None and state is not None:
-                for i, sa in enumerate(state.actions):
-                    key = sa.id or f"a{i}"
-                    if key == next_action.key:
-                        next_action = next_action.model_copy(
-                            update={"plugin_hints": list(sa.plugin_hints or [])}
-                        )
-                        break
+            local_today = parse_local_date(local_date)
+            unlocked = compute_unlocked_day_index(
+                anchor=project.cycle_anchor_date,
+                horizon_days=project.cycle_horizon_days or 1,
+                local_today=local_today,
+            )
+            # Preview locked days (must, docs/next/04 §4): future days stay
+            # visible on Path / «Весь план»; only mark them non-executable.
+            actions = [
+                a.model_copy(
+                    update={"day_locked": is_day_locked(a.day_offset, unlocked)}
+                )
+                for a in actions
+            ]
+            focus_orm = pick_focus_action(project, unlocked)
+            if focus_orm is not None:
+                next_action = serialize_action(focus_orm, day_locked=False)
+                if state is not None:
+                    for i, sa in enumerate(state.actions):
+                        key = sa.id or f"a{i}"
+                        if key == next_action.key:
+                            next_action = next_action.model_copy(
+                                update={"plugin_hints": list(sa.plugin_hints or [])}
+                            )
+                            break
+            else:
+                peek_orm = pick_next_action(project)
+                if peek_orm is not None:
+                    peek_action = serialize_action(peek_orm, day_locked=True)
+                    next_unlock_date = day_unlock_date(
+                        project.cycle_anchor_date, peek_orm.day_offset
+                    )
+
         current_day = resolve_current_day(
             cycle=cycle,
             days=days,
             next_action=next_action,
-            actions=actions,
+            unlocked_day_index=unlocked,
+        )
+        peek_day = (
+            resolve_current_day(
+                cycle=cycle,
+                days=days,
+                next_action=peek_action,
+                unlocked_day_index=unlocked,
+            )
+            if peek_action is not None
+            else None
         )
 
         path_ready = (
@@ -270,6 +349,11 @@ class ProjectService:
                 "next_action": next_action,
                 "cycle": cycle,
                 "current_day": current_day,
+                "unlocked_day_index": unlocked,
+                "cycle_anchor_date": project.cycle_anchor_date,
+                "peek_action": peek_action,
+                "peek_day": peek_day,
+                "next_unlock_date": next_unlock_date,
             }
         )
         return ProjectDetail(
@@ -338,6 +422,9 @@ class ProjectService:
         project.status = ProjectStatus.active
         project.committed_at = now
         project.cycle_status = "active"
+        project.cycle_anchor_date = resolve_cycle_anchor(
+            committed_at=now, first_step_when=first_step_when
+        )
 
         ordered = sorted(project.actions, key=action_queue_key)
         base = self._resolve_first_due(first_step_when, now)

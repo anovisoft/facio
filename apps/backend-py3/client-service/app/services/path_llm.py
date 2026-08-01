@@ -275,18 +275,26 @@ Return Path JSON only.
 
 {_SAFETY}
 
-## Playbooks (by reason)
+## Playbooks (by reason / intent)
 
-- illness / sick → reduce load, shift day_offset later; keep ids for done work
-- no time → shrink to minimal viable next steps (fewer actions, shorter detail)
-- too hard → simplify detail/checklist; never shame
+- intent=shift (or illness / sick) → push the blocked day's actions to a
+  later day_offset (usually +1); keep ids and content otherwise unchanged
+- intent=lighten (or no time / too hard) → shrink today's actions to the
+  minimal viable next steps (fewer actions, shorter detail); never shame
+- intent=rest → replace today's pending actions with a single light rest /
+  recovery action for that day_offset; keep other days untouched
 - always preserve completed progress via the same action ids where the step remains
+- never move a day_offset backward relative to the project's cycle_anchor
+  (do not unlock execute for a day that hasn't opened yet)
 
 Also:
 - Every action.why stays non-empty.
 - Soft cap ≤ 8–12 actions; first pending step should be doable soon.
 - Do not invent constraints the user did not state.
 - Match user language.
+- Set ``paraphrase`` to a short one-line "what changed" summary of THIS
+  repair (e.g. "Moved today's workout to tomorrow" / "Swapped today for a
+  rest day") — it is shown to the user as a confirmation, not the plan intro.
 
 {_PATH_FIELDS}
 """
@@ -941,19 +949,20 @@ def messages_for_repair(
     current_state: dict[str, Any],
     reason: str,
     project_status: str,
+    intent: str | None = None,
 ) -> list[dict[str, Any]]:
+    payload: dict[str, Any] = {
+        "current_state": current_state,
+        "reason": reason,
+        "project_status": project_status,
+    }
+    if intent:
+        payload["intent"] = intent
     return [
         {"role": "system", "content": _REPAIR_SYSTEM},
         {
             "role": "user",
-            "content": json.dumps(
-                {
-                    "current_state": current_state,
-                    "reason": reason,
-                    "project_status": project_status,
-                },
-                ensure_ascii=False,
-            ),
+            "content": json.dumps(payload, ensure_ascii=False),
         },
     ]
 

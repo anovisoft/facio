@@ -1,0 +1,2456 @@
+[
+   {
+      "id":"5fe69e0d-4ef5-405d-a8d4-1e384f5e5c8c",
+      "project_id":"9c59249f-d1aa-46c3-980b-bbc21d7cdd07",
+      "purpose":"create",
+      "model":"claude-haiku-4-5",
+      "prompt_messages":[
+         {
+            "role":"system",
+            "content":"You are the create-gate for Facio — an Outcome OS, not a chatbot.\n\nDecide path vs instant_answer. When path: also emit a slim START SURFACE (meaning + questions) — NOT a full Path / plugins / actions.\n\n## Safety / policy (hard)\n\n- No medical diagnosis, treatment plans, extreme weight-loss, or ED-adjacent coaching.\n- Self-harm, violence, or illegal harm → do NOT build a path. For create:   kind=instant_answer with a short refusal / redirect to professionals or   crisis resources — never give harm instructions.\n- Never invent URLs in resources[]; omit or use clearly generic names only   if the user already named a source.\n- Never promise guaranteed health or finance outcomes.\n- When unsure about safety → refuse / instant_answer; never a \"helpful\" path.\n\n\n## Gate — sequence over time?\n\nAsk: does this require a SEQUENCE OF ACTIONS OVER TIME?\n- NO → kind=instant_answer; fill instant_answer fully; path_start = empty stub.\n- YES → kind=path; fill path_start; instant_answer = empty stub   (label=\"\", answer=\"\", goal_suggestions=[], domain=\"other\").\n\nClear instant_answer: one-shot math/facts (2^100), FX rates, translate a word, pure Q&A with no multi-step pursuit.\nClear path: buy a car, learn Python, cook carbonara, write a thesis.\n\n### Grey zones\n\n- One-shot habit/reminder (\"remind me to call\") → instant_answer, or a tiny   path of 1–2 steps — never a multi-week novel (prefer kind=path only if they   clearly want a short sequence).\n- \"What should I cook today?\" if they want to make it → kind=path.\n- Career/life advice with no actionable sequence → instant_answer +   goal_suggestions; no pseudo-therapy path.\n- Unsure whether a sequence-over-time exists → prefer instant_answer +   suggestions, unless they clearly want to pursue an outcome.\n\n## Response shape\n\nAlways emit `kind`, `instant_answer`, and `path_start` (never JSON null). Match user language.\n\n### kind=instant_answer\n\n- label: short \"question, not a goal\" UI line (user language)\n- answer: useful direct answer — or short safe refusal/redirect under Safety\n- goal_suggestions: exactly 2–4 related Facio projects (sequences over time)\n- domain: cooking|fitness|learning|home|errands|work|health|finance|social|other\n- path_start: empty stub   (paraphrase=\"\", title=\"\", summary=\"\", questions=[], outline_days=[])\n\n### kind=path\n\n- instant_answer must be the empty stub above\n- path_start (shown to user immediately; full Path is a later call):\n  - paraphrase: soft-start line (e.g. \"Ок — ведём к: …\")\n  - title: short plan hero (≤ ~120 chars)\n  - summary: 1–3 sentences draft of what the cycle delivers (never empty)\n  - questions: 0 or 2–4 clarifies that change the plan (full batch; not interview)\n    Each: id, prompt, options[] (2–4 chips; user may still type free text)\n  - outline_days: optional rough day TITLES only (0–8 short strings),     e.g. [\"Вечер готовки\"] or [\"Силовая A\",\"Отдых\",…]. NO plugins, NO actions,     NO kind enums — titles only. Empty [] if unsure.\n\nDo not chat. JSON fields only.\n"
+         },
+         {
+            "role":"user",
+            "content":"Приготовить карбонару"
+         },
+         {
+            "role":"assistant",
+            "content":"{\"kind\": \"path\", \"instant_answer\": {\"label\": \"\", \"answer\": \"\", \"goal_suggestions\": [], \"domain\": \"other\"}, \"path_start\": {\"paraphrase\": \"Ок — ведём к: карбонара на ужин\", \"title\": \"Карбонара на ужин\", \"summary\": \"За один вечер купим продукты и приготовим классическую карбонару без сливок.\", \"questions\": [{\"id\": \"meat\", \"prompt\": \"Какое мясо возьмёте?\", \"options\": [\"гуанчиале\", \"панчетта\", \"что найду\"]}, {\"id\": \"servings\", \"prompt\": \"На сколько порций?\", \"options\": [\"1\", \"2\", \"4\"]}], \"outline_days\": [\"Вечер готовки\"]}}"
+         },
+         {
+            "role":"user",
+            "content":"Сколько будет 2 в 100 степени?"
+         },
+         {
+            "role":"assistant",
+            "content":"{\"kind\": \"instant_answer\", \"instant_answer\": {\"label\": \"Это похоже на вопрос, а не на цель.\", \"answer\": \"2¹⁰⁰ = 1267650600228229401496703205376\", \"goal_suggestions\": [\"Научиться считать степени\", \"Изучить бинарную арифметику\", \"Разобрать большие числа в Python\"], \"domain\": \"learning\"}, \"path_start\": {\"paraphrase\": \"\", \"title\": \"\", \"summary\": \"\", \"questions\": [], \"outline_days\": []}}"
+         },
+         {
+            "role":"user",
+            "content":"Научиться отжиматься 30 раз"
+         }
+      ],
+      "raw_response":{
+         "kind":"path",
+         "path_start":{
+            "title":"От текущего уровня к 30 отжиманиям",
+            "summary":"Программа прогрессивной тренировки отжиманий на 4–6 недель. Будем увеличивать объём и интенсивность, адаптируясь к вашему текущему уровню.",
+            "questions":[
+               {
+                  "id":"current_level",
+                  "prompt":"Сколько отжиманий вы делаете сейчас?",
+                  "options":[
+                     "0–5",
+                     "6–15",
+                     "16–25",
+                     "больше 25"
+                  ]
+               },
+               {
+                  "id":"frequency",
+                  "prompt":"Как часто вы готовы тренироваться?",
+                  "options":[
+                     "3 раза в неделю",
+                     "4 раза в неделю",
+                     "5–6 раз в неделю"
+                  ]
+               }
+            ],
+            "paraphrase":"Ок — ведём к: 30 отжиманий подряд",
+            "outline_days":[
+               "Базовая техника",
+               "Неделя 1–2: объём",
+               "Неделя 3–4: интенсивность",
+               "Неделя 5–6: финиш"
+            ]
+         },
+         "instant_answer":{
+            "label":"",
+            "answer":"",
+            "domain":"other",
+            "goal_suggestions":[
+               
+            ]
+         }
+      },
+      "parsed_ok":true,
+      "tokens_in":2047,
+      "tokens_out":335,
+      "latency_ms":3574,
+      "error":null,
+      "created_at":"2026-07-31 14:25:20.113209 +00:00",
+      "user_id":"a81b3885-558d-4ac8-bff3-5f85995c43c0"
+   },
+   {
+      "id":"c4db5605-80d6-43bd-b30d-85127020d345",
+      "project_id":"9c59249f-d1aa-46c3-980b-bbc21d7cdd07",
+      "purpose":"create",
+      "model":"claude-haiku-4-5",
+      "prompt_messages":[
+         {
+            "role":"system",
+            "content":"You are the create-path brain for Facio. The gate already decided kind=path and showed the user a slim start surface (paraphrase/title/summary/questions).\nEmit Path JSON only (root object — no kind / instant_answer wrapper).\n\nAlign with the start surface the user already saw: keep title/summary/paraphrase close; reuse question ids/prompts when still useful; expand into full cycle, days, actions, and plugin_hints (NOT full plugin payloads).\n\n## Safety / policy (hard)\n\n- No medical diagnosis, treatment plans, extreme weight-loss, or ED-adjacent coaching.\n- Self-harm, violence, or illegal harm → do NOT build a path. For create:   kind=instant_answer with a short refusal / redirect to professionals or   crisis resources — never give harm instructions.\n- Never invent URLs in resources[]; omit or use clearly generic names only   if the user already named a source.\n- Never promise guaranteed health or finance outcomes.\n- When unsure about safety → refuse / instant_answer; never a \"helpful\" path.\n\n\n## Wire sentinels (no JSON null on path fields)\n\nStructured output forbids null on optional path fields. Use:\n- missing optional string → \"\" (id, detail, group_id, goal_for_cycle,   day title/summary, group description, checklist id)\n- missing optional int → -1 (estimate_min, sort; never for a real day_offset)\n- unused create branch → empty stub object (not null): see Response shape\n\nCreate #2 / refine Path wire does NOT include timers/timeline/interval_plan/counter objects — only plugin_hints[]. Full plugins are a later call (#3).\n\n\n## Path fields (Path JSON root — no kind wrapper)\n\n- title: plan hero title (one short line, ≤ ~120 chars). Shown at the top of   the plan body. Examples: \"Карбонара на ужин\", \"К 30 отжиманиям — неделя 1\".\n- summary: 1–3 sentences at the start of the plan body (≤ ~600 chars). What   this cycle delivers and the logic of stages — not a bullet dump. Never empty.\n- outcome: clear goal (1 short sentence).\n- paraphrase: soft-start UI line confirming understanding   (e.g. \"Ок — ведём к: …\"); warmer than outcome; match user language.\n- success_criteria: verifiable done condition (no guaranteed health/finance claims).\n- horizon: rough span/load (e.g. \"1 evening\", \"7 days, ~20 min/session\").\n- domain: ONE of cooking|fitness|learning|home|errands|work|health|finance|  social|other (primary demand cluster). Unsure / safety grey → other.\n- tags: 0–5 short slugs (e.g. pasta, dinner); optional finer clustering.\n- cycle: REQUIRED first-class cycle object:\n  - index: usually 1 on create\n  - horizon_days: integer length of THIS cycle\n      * cooking / one-dish (carbonara) → 1\n      * fitness / push-ups toward a rep goal → 7 (week)\n      * other domains: pick a short honest horizon (1–14 typical)\n  - status: \"draft\" on create/refine; never invent completed\n  - goal_for_cycle: short goal for this cycle, or \"\" if none\n- days[]: REQUIRED explicit day map for the cycle (not only day_offset):\n  - day_index: 0 .. horizon_days-1 (include every day in the skeleton)\n  - kind: train | rest | cook_session | other\n      * carbonara / cooking session → one day kind=cook_session\n      * push-ups week → mix train and rest (NOT 7 identical train days)\n  - title / summary: short labels or \"\" (e.g. \"Силовая A\", \"Отдых + мобилити\")\n- groups[]: optional sections (Покупки, Готовка). Stable `id`, `title`,   description (1–2 sentences or \"\"), `sort`.\n- actions[]: ordered steps, soft cap ≤ 8–12 (never a 40-step dump; multi-day   may use up to ~16 with one focus per day). Each:\n  - id: stable key (or \"\"); reuse on refine/repair when the step is the same\n  - title: verb + object («Сегодня» / path step). When days[] present,     do NOT put \"день N\" / \"day N\" / \"(день N)\" in titles — day affiliation     is via day_offset + UI days[] headers\n  - why: REQUIRED — hero «Почему сейчас»; why THIS step matters; never filler\n  - detail: concrete how-to (or \"\"). Cooking: method/timing.     Shopping: use checklist_items instead of many micro-actions\n  - estimate_min: honest minutes, or -1 if unknown. First action: doable today,     ideally ≤ 30–60 min\n  - day_offset: REQUIRED when days[] present — must equal a days[].day_index\n  - sort (≥0) or -1 if unspecified; group_id matching groups[].id, or \"\"\n  - checklist_items[]: sub-checks (e.g. eggs ☐); done=false on create; id or \"\"\n  - plugin_hints[]: short tool announcements ONLY (no plugin objects here):\n      * \"timeline\" — session axis (carbonara cook MUST hint this)\n      * \"timers\" — simple manual TimerStack for an ISOLATED wait on a step         that has NO timeline (e.g. dough rest). Do NOT combine with timeline         on the same action — timeline already covers the session clock.\n      * \"interval\" — work/rest circuit (fitness day0 circuit)\n      * \"counter\" — dose/reps target\n      * [] when no tools (shopping, rest)\n      One primary clock per action: timeline XOR timers (never both).       Fitness circuit: [\"interval\",\"counter\"]; other train: [\"counter\"].\n  - Do NOT emit timers[], timeline, interval_plan, or counter objects on Path.\n- questions[]: 0 or 2–4 (max 4) clarifies that change the path; not an interview.   Emit the full batch for one round — user answers all at once.\n- Do NOT emit resources[] or milestones[] (server defaults to []).\n\n\n## FCT / quality\n\n- Always fill title + summary (reference intents: carbonara, push-ups →   narrative must be visible immediately).\n- Always fill cycle + full days[] skeleton (reference defaults above).\n- Push-ups / fitness week: days must mix train and rest — rest days are real   days with kind=rest (light mobility OK), not identical \"do sets\" days.\n- Carbonara: cycle.horizon_days=1, one cook_session day.\n- Carbonara cook step: plugin_hints MUST be [\"timeline\"] only (no \"timers\" on   the same step — redundant with the axis); shopping → [].\n- Push-ups: train steps need \"counter\" and/or \"interval\" in plugin_hints;   rest → [].\n- First action executable today; honest estimate_min, ideally ≤ 30–60 min.\n- Soft cap ≤ 8–12 actions; prefer checklist over many buy-micro-steps.\n- Cooking: shopping group + cook how-to in detail; not titles only.\n- Prefer a few strong steps over a long todo dump.\n- When days[] exist, action titles must not repeat day numbers   (\"день 2\", \"day 3\") — structure lives in days[] + day_offset.\n\n\nDo not chat. JSON fields only.\n"
+         },
+         {
+            "role":"user",
+            "content":"Приготовить карбонару"
+         },
+         {
+            "role":"assistant",
+            "content":"{\"title\": \"Карбонара на ужин\", \"summary\": \"За один вечер купим продукты и приготовим классическую карбонару без сливок. Сначала покупки, потом готовка по шагам — около часа с магазином.\", \"outcome\": \"Приготовить карбонару дома\", \"paraphrase\": \"Ок — ведём к: карбонара на ужин\", \"success_criteria\": \"Тарелка карбонары съедена сегодня вечером\", \"horizon\": \"1 вечер, ~60–90 мин с покупками\", \"domain\": \"cooking\", \"tags\": [\"pasta\", \"dinner\", \"carbonara\"], \"cycle\": {\"index\": 1, \"horizon_days\": 1, \"status\": \"draft\", \"goal_for_cycle\": \"Карбонара на столе сегодня вечером\"}, \"days\": [{\"day_index\": 0, \"kind\": \"cook_session\", \"title\": \"Вечер готовки\", \"summary\": \"Покупки и классическая карбонара за один заход.\"}], \"groups\": [{\"id\": \"shop\", \"title\": \"Покупки\", \"description\": \"Собрать ингредиенты до готовки.\", \"sort\": 0}, {\"id\": \"cook\", \"title\": \"Готовка\", \"description\": \"Собрать блюдо по классическому методу.\", \"sort\": 1}], \"actions\": [{\"id\": \"buy\", \"title\": \"Купить продукты\", \"why\": \"Без гуанчиале, яиц и сыра блюдо не собрать\", \"detail\": \"Магазин рядом; бери гуанчиале или панчетту, не бекон.\", \"estimate_min\": 30, \"day_offset\": 0, \"sort\": 0, \"group_id\": \"shop\", \"checklist_items\": [{\"id\": \"eggs\", \"title\": \"яйца\", \"done\": false, \"sort\": 0}, {\"id\": \"guanciale\", \"title\": \"гуанчиале / панчетта\", \"done\": false, \"sort\": 1}, {\"id\": \"pecorino\", \"title\": \"пекорино или пармезан\", \"done\": false, \"sort\": 2}, {\"id\": \"pasta\", \"title\": \"спагетти\", \"done\": false, \"sort\": 3}], \"plugin_hints\": []}, {\"id\": \"cook\", \"title\": \"Приготовить карбонару\", \"why\": \"Это и есть цель вечера — довести блюдо до тарелки\", \"detail\": \"Обжарь гуанчиале. Свари пасту al dente. Смешай желтки с тёртым сыром. Сними с огня, соедини пасту с жиром, добавь яично-сырную смесь, быстро мешай. Без сливок.\", \"estimate_min\": 40, \"day_offset\": 0, \"sort\": 1, \"group_id\": \"cook\", \"checklist_items\": [], \"plugin_hints\": [\"timeline\"]}], \"questions\": [{\"id\": \"meat\", \"prompt\": \"Какое мясо возьмёте?\", \"options\": [\"гуанчиале\", \"панчетта\", \"что найду\"]}, {\"id\": \"servings\", \"prompt\": \"На сколько порций?\", \"options\": [\"1\", \"2\", \"4\"]}], \"resources\": [], \"milestones\": []}"
+         },
+         {
+            "role":"user",
+            "content":"Хочу научиться делать 30 отжиманий"
+         },
+         {
+            "role":"assistant",
+            "content":"{\"title\": \"К 30 отжиманиям — неделя 1\", \"summary\": \"За ~6–8 недель дойдём к 30 отжиманиям. Эта неделя — база: четыре короткие силовые и три дня отдыха с лёгкой мобилити.\", \"outcome\": \"Заложить базу к 30 отжиманиям\", \"paraphrase\": \"Ок — ведём к: 30 отжиманий, неделя базы\", \"success_criteria\": \"Закрыты 4 силовых дня недели без срыва программы\", \"horizon\": \"7 дней, ~15–20 мин в силовые\", \"domain\": \"fitness\", \"tags\": [\"push-ups\", \"strength\"], \"cycle\": {\"index\": 1, \"horizon_days\": 7, \"status\": \"draft\", \"goal_for_cycle\": \"Неделя базы: привыкнуть к объёму\"}, \"days\": [{\"day_index\": 0, \"kind\": \"train\", \"title\": \"Силовая A\", \"summary\": \"Короткие подходы отжиманий.\"}, {\"day_index\": 1, \"kind\": \"rest\", \"title\": \"Отдых + мобилити\", \"summary\": \"Восстановление, без силовых подходов.\"}, {\"day_index\": 2, \"kind\": \"train\", \"title\": \"Силовая B\", \"summary\": \"Повторяем объём спокойно.\"}, {\"day_index\": 3, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"Лёгкая мобилити, мышцы восстанавливаются.\"}, {\"day_index\": 4, \"kind\": \"train\", \"title\": \"Силовая C\", \"summary\": \"Третья силовая недели.\"}, {\"day_index\": 5, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"Спокойный день без нагрузки.\"}, {\"day_index\": 6, \"kind\": \"train\", \"title\": \"Силовая D\", \"summary\": \"Закрываем неделю короткими подходами.\"}], \"groups\": [], \"actions\": [{\"id\": \"d0\", \"title\": \"Круговая сессия\", \"why\": \"Первый силовой день задаёт ритм недели\", \"detail\": \"Работа / отдых по таймеру. Пауза между сегментами — ок.\", \"estimate_min\": 15, \"day_offset\": 0, \"sort\": 0, \"group_id\": \"\", \"checklist_items\": [], \"plugin_hints\": [\"interval\", \"counter\"]}, {\"id\": \"d1\", \"title\": \"Лёгкая мобилити плеч\", \"why\": \"Отдых — часть программы, не пропуск тренировки\", \"detail\": \"5–10 минут мягких кругов руками и растяжки груди.\", \"estimate_min\": 10, \"day_offset\": 1, \"sort\": 1, \"group_id\": \"\", \"checklist_items\": [], \"plugin_hints\": []}, {\"id\": \"d2\", \"title\": \"Подходы отжиманий\", \"why\": \"Второй силовой день закрепляет объём\", \"detail\": \"Снова 3 коротких подхода, без гонки за максимумом.\", \"estimate_min\": 15, \"day_offset\": 2, \"sort\": 2, \"group_id\": \"\", \"checklist_items\": [], \"plugin_hints\": [\"counter\"]}, {\"id\": \"d3\", \"title\": \"Прогулка или дыхание\", \"why\": \"Восстановление даёт следующий силовой день\", \"detail\": \"Короткая прогулка или 5 минут спокойного дыхания.\", \"estimate_min\": 10, \"day_offset\": 3, \"sort\": 3, \"group_id\": \"\", \"checklist_items\": [], \"plugin_hints\": []}, {\"id\": \"d4\", \"title\": \"Подходы отжиманий\", \"why\": \"Держим ритм недели\", \"detail\": \"3 подхода; остановитесь, если форма ломается.\", \"estimate_min\": 15, \"day_offset\": 4, \"sort\": 4, \"group_id\": \"\", \"checklist_items\": [], \"plugin_hints\": [\"counter\"]}, {\"id\": \"d5\", \"title\": \"Мягкая мобилити\", \"why\": \"Отдых перед финальной силовой\", \"detail\": \"Без отжиманий — только лёгкая подвижность.\", \"estimate_min\": 8, \"day_offset\": 5, \"sort\": 5, \"group_id\": \"\", \"checklist_items\": [], \"plugin_hints\": []}, {\"id\": \"d6\", \"title\": \"Подходы отжиманий\", \"why\": \"Закрываем цикл базы\", \"detail\": \"Последняя силовая недели — спокойный объём.\", \"estimate_min\": 15, \"day_offset\": 6, \"sort\": 6, \"group_id\": \"\", \"checklist_items\": [], \"plugin_hints\": [\"counter\"]}], \"questions\": [{\"id\": \"level\", \"prompt\": \"Сколько отжиманий сейчас получается подряд?\", \"options\": [\"0–5\", \"6–15\", \"16–25\", \"с колен\"]}, {\"id\": \"days\", \"prompt\": \"Сколько дней в неделю реально можете?\", \"options\": [\"3\", \"4\", \"5+\"]}], \"resources\": [], \"milestones\": []}"
+         },
+         {
+            "role":"user",
+            "content":"{\"intent\": \"Научиться отжиматься 30 раз\", \"path_start\": {\"paraphrase\": \"Ок — ведём к: 30 отжиманий подряд\", \"title\": \"От текущего уровня к 30 отжиманиям\", \"summary\": \"Программа прогрессивной тренировки отжиманий на 4–6 недель. Будем увеличивать объём и интенсивность, адаптируясь к вашему текущему уровню.\", \"questions\": [{\"id\": \"current_level\", \"prompt\": \"Сколько отжиманий вы делаете сейчас?\", \"options\": [\"0–5\", \"6–15\", \"16–25\", \"больше 25\"]}, {\"id\": \"frequency\", \"prompt\": \"Как часто вы готовы тренироваться?\", \"options\": [\"3 раза в неделю\", \"4 раза в неделю\", \"5–6 раз в неделю\"]}], \"outline_days\": [\"Базовая техника\", \"Неделя 1–2: объём\", \"Неделя 3–4: интенсивность\", \"Неделя 5–6: финиш\"]}, \"instruction\": \"Build the full Path for this intent. Align with path_start the user already saw.\"}"
+         }
+      ],
+      "raw_response":{
+         "days":[
+            {
+               "kind":"train",
+               "title":"День 1: Техника и разминка",
+               "summary":"Первая тренировка — освоение формы.",
+               "day_index":0
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":1
+            },
+            {
+               "kind":"train",
+               "title":"День 2: Объём",
+               "summary":"Короткие подходы, суммарный объём.",
+               "day_index":2
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":3
+            },
+            {
+               "kind":"train",
+               "title":"День 3: Вариативность",
+               "summary":"Отжимания с разной расстановкой рук.",
+               "day_index":4
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":5
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 1–2: День 4",
+               "summary":"Увеличение объёма.",
+               "day_index":6
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":7
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 1–2: День 5",
+               "summary":"Объём растёт.",
+               "day_index":8
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":9
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 1–2: День 6",
+               "summary":"Завершение цикла объёма.",
+               "day_index":10
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":11
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 1–2: День 7",
+               "summary":"Тест текущего максимума.",
+               "day_index":12
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых + восстановление",
+               "summary":"",
+               "day_index":13
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 3–4: День 1",
+               "summary":"Интенсивность — работа на максимум подходов.",
+               "day_index":14
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":15
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 3–4: День 2",
+               "summary":"Суперсеты с отжиманиями.",
+               "day_index":16
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":17
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 3–4: День 3",
+               "summary":"Пирамида подходов.",
+               "day_index":18
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":19
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 3–4: День 4",
+               "summary":"Работа с утомлением.",
+               "day_index":20
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":21
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 3–4: День 5",
+               "summary":"Близко к максимуму.",
+               "day_index":22
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых + восстановление",
+               "summary":"",
+               "day_index":23
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 5–6: День 1",
+               "summary":"Финишная фаза — работа к 30.",
+               "day_index":24
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":25
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 5–6: День 2",
+               "summary":"Максимальные подходы.",
+               "day_index":26
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":27
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 5–6: День 3",
+               "summary":"Техника под нагрузкой.",
+               "day_index":28
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":29
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 5–6: День 4",
+               "summary":"Близко к финалу.",
+               "day_index":30
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":31
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 5–6: День 5",
+               "summary":"Последняя боевая тренировка.",
+               "day_index":32
+            },
+            {
+               "kind":"rest",
+               "title":"Полный отдых",
+               "summary":"",
+               "day_index":33
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 5–6: День 6",
+               "summary":"Попытка 30 отжиманий.",
+               "day_index":34
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":35
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 5–6: День 7",
+               "summary":"Финальная попытка или уточнение.",
+               "day_index":36
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":37
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":38
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":39
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":40
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":41
+            }
+         ],
+         "tags":[
+            "push-ups",
+            "strength",
+            "progression"
+         ],
+         "cycle":{
+            "index":1,
+            "status":"draft",
+            "horizon_days":42,
+            "goal_for_cycle":"Построить базу объёма и техники, подойти к промежуточной цели"
+         },
+         "title":"От текущего уровня к 30 отжиманиям",
+         "domain":"fitness",
+         "groups":[
+            {
+               "id":"base",
+               "sort":0,
+               "title":"Базовая техника",
+               "description":"Освоение правильной формы отжиманий."
+            },
+            {
+               "id":"volume",
+               "sort":1,
+               "title":"Объём (недели 1–2)",
+               "description":"Увеличение общего количества повторений через короткие подходы."
+            },
+            {
+               "id":"intensity",
+               "sort":2,
+               "title":"Интенсивность (недели 3–4)",
+               "description":"Работа на максимум, суперсеты, пирамиды."
+            },
+            {
+               "id":"finish",
+               "sort":3,
+               "title":"Финиш (недели 5–6)",
+               "description":"Приближение к 30 повторениям, финальные попытки."
+            }
+         ],
+         "actions":[
+            {
+               "id":"tech_intro",
+               "why":"Неправильная форма замедляет прогресс и увеличивает риск травмы",
+               "sort":0,
+               "title":"Освоить правильную технику",
+               "detail":"Исходная: руки на ширине плеч, локти прижаты к корпусу, спина прямая. Вниз медленнее, чем вверх. Лишь когда техника уверенна, добавляем объём.",
+               "group_id":"base",
+               "day_offset":0,
+               "estimate_min":20,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"t1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка: вращение рук, планка 20 сек"
+                  },
+                  {
+                     "id":"t2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Отжимания с колен или от стены для ощущения формы"
+                  },
+                  {
+                     "id":"t3",
+                     "done":false,
+                     "sort":2,
+                     "title":"3 подхода по 3–5 отжиманий максимум с отдыхом"
+                  }
+               ]
+            },
+            {
+               "id":"vol_1",
+               "why":"На неделях 1–2 лепим количество, комфортно и без спешки",
+               "sort":1,
+               "title":"Подходы отжиманий — объём",
+               "detail":"5–6 подходов в день, каждый на 50–70% от текущего максимума. Между подходами — 60–90 сек. Цель: суммарно 50–80 повторений в день.",
+               "group_id":"volume",
+               "day_offset":2,
+               "estimate_min":20,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"v1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка: планка 30 сек, вращение"
+                  },
+                  {
+                     "id":"v2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Основная серия: 5–6 подходов"
+                  },
+                  {
+                     "id":"v3",
+                     "done":false,
+                     "sort":2,
+                     "title":"Завершение: растяжка груди и плеч"
+                  }
+               ]
+            },
+            {
+               "id":"var_1",
+               "why":"Разные углы нагрузки = лучший баланс мышц и адаптация",
+               "sort":2,
+               "title":"Вариативность: узкие и широкие хваты",
+               "detail":"1–2 подхода узких (локти ближе), 1–2 подхода широких (локти дальше), 1–2 стандартных. Все на комфортное количество.",
+               "group_id":"volume",
+               "day_offset":4,
+               "estimate_min":20,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"va1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка"
+                  },
+                  {
+                     "id":"va2",
+                     "done":false,
+                     "sort":1,
+                     "title":"2 подхода узких отжиманий"
+                  },
+                  {
+                     "id":"va3",
+                     "done":false,
+                     "sort":2,
+                     "title":"2 подхода широких отжиманий"
+                  },
+                  {
+                     "id":"va4",
+                     "done":false,
+                     "sort":3,
+                     "title":"2 подхода стандартных"
+                  }
+               ]
+            },
+            {
+               "id":"vol_growth",
+               "why":"Адаптация — организм уже привык, нужен толчок",
+               "sort":3,
+               "title":"Объём растёт: суммарно 100+ за день",
+               "detail":"Увеличиваем количество подходов или повторений на 10–15%. Если вчера было 80 рэпов, сегодня — 90–100. По ощущениям.",
+               "group_id":"volume",
+               "day_offset":6,
+               "estimate_min":22,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"vg1",
+                     "done":false,
+                     "sort":0,
+                     "title":"6–7 подходов"
+                  },
+                  {
+                     "id":"vg2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Суммарно 100+ повторений"
+                  }
+               ]
+            },
+            {
+               "id":"vol_acc",
+               "why":"Накопление объёма — основа выносливости",
+               "sort":4,
+               "title":"Объём: аккумуляция",
+               "detail":"Снова 5–6 подходов, но каждый подход чуть больше. Отдых между подходами 45–60 сек.",
+               "group_id":"volume",
+               "day_offset":8,
+               "estimate_min":23,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"va1",
+                     "done":false,
+                     "sort":0,
+                     "title":"5–6 подходов, растущий объём"
+                  }
+               ]
+            },
+            {
+               "id":"vol_close",
+               "why":"Финал фазы объёма перед переходом на интенсивность",
+               "sort":5,
+               "title":"Объём: закрытие цикла",
+               "detail":"Спокойный день, 4–5 подходов по 8–12 рэпов. Техника в фокусе.",
+               "group_id":"volume",
+               "day_offset":10,
+               "estimate_min":20,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"vc1",
+                     "done":false,
+                     "sort":0,
+                     "title":"4–5 подходов"
+                  }
+               ]
+            },
+            {
+               "id":"vol_test",
+               "why":"Убедиться в прогрессе и задать новый ориентир",
+               "sort":6,
+               "title":"Тест максимума",
+               "detail":"После 5 мин разминки и 2–3 подходов дошагивания — один максимальный подход. Записать результат. Примерно +5–10 рэпов от стартовой точки.",
+               "group_id":"volume",
+               "day_offset":12,
+               "estimate_min":20,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"vt1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка и дошагивание"
+                  },
+                  {
+                     "id":"vt2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Максимальный подход на счёт"
+                  }
+               ]
+            },
+            {
+               "id":"int_max",
+               "why":"Переходим с объёма на интенсивность — меньше подходов, выше качество",
+               "sort":7,
+               "title":"Интенсивность: работа на максимум подходов",
+               "detail":"3–4 подхода по 80–90% от текущего максимума. Отдых 2–3 мин между подходами. Цель: увеличить макс подход.",
+               "group_id":"intensity",
+               "day_offset":14,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"im1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка + дошагивание"
+                  },
+                  {
+                     "id":"im2",
+                     "done":false,
+                     "sort":1,
+                     "title":"3–4 подхода на максимум"
+                  }
+               ]
+            },
+            {
+               "id":"int_super",
+               "why":"Суперсеты утомляют мышцы быстрее и поднимают выносливость",
+               "sort":8,
+               "title":"Суперсеты: отжимания + вспомогательное упр.",
+               "detail":"Подход отжиманий + сразу отжимания с колен (лёгкий вариант) или разведение рук. 3 суперсета, отдых 90 сек между ними.",
+               "group_id":"intensity",
+               "day_offset":16,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"is1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка"
+                  },
+                  {
+                     "id":"is2",
+                     "done":false,
+                     "sort":1,
+                     "title":"3 суперсета: отжимания + вспомогательное"
+                  }
+               ]
+            },
+            {
+               "id":"int_pyr",
+               "why":"Пирамида развивает мышечную выносливость и силу одновременно",
+               "sort":9,
+               "title":"Пирамида: 5–4–3–2–1 + 1–2–3–4–5",
+               "detail":"Первый подход 5 рэпов, второй 4, третий 3, четвёртый 2, пятый 1 (ваш максимум). Затем в обратном порядке вниз. Отдых 90 сек.",
+               "group_id":"intensity",
+               "day_offset":18,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"ip1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка"
+                  },
+                  {
+                     "id":"ip2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Пирамида вверх: 5–4–3–2–1"
+                  },
+                  {
+                     "id":"ip3",
+                     "done":false,
+                     "sort":2,
+                     "title":"Пирамида вниз: 1–2–3–4–5"
+                  }
+               ]
+            },
+            {
+               "id":"int_fatigue",
+               "why":"Тренировка способности делать отжимания на усталость",
+               "sort":10,
+               "title":"Работа с утомлением: цепочка подходов",
+               "detail":"6 подходов подряд с минимальным отдыхом (30–45 сек): каждый на 60–70% от максимума. Последний подход часто самый тяжёлый — главное, не сдавать форму.",
+               "group_id":"intensity",
+               "day_offset":20,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"if1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка"
+                  },
+                  {
+                     "id":"if2",
+                     "done":false,
+                     "sort":1,
+                     "title":"6 подходов с коротким отдыхом"
+                  }
+               ]
+            },
+            {
+               "id":"int_peak",
+               "why":"Укрепление нервной системы в работе с высокими нагрузками",
+               "sort":11,
+               "title":"Близко к максимуму: 2–3 подхода на 90%+",
+               "detail":"2–3 подхода по 80–90% от максимума с отдыхом 3 мин между ними. Упор на качество каждого повтора.",
+               "group_id":"intensity",
+               "day_offset":22,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"ip1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка + дошагивание"
+                  },
+                  {
+                     "id":"ip2",
+                     "done":false,
+                     "sort":1,
+                     "title":"2–3 подхода на 90%+"
+                  }
+               ]
+            },
+            {
+               "id":"fin_start",
+               "why":"Прямой путь к цели — каждый подход приближает к 30",
+               "sort":12,
+               "title":"Финиш: работа к 30 повторениям",
+               "detail":"4–5 подходов, каждый на 70–80% от максимума. Отдых 2 мин. Если текущий максимум близок к 25–27, уже можно пробовать 30 в одном подходе.",
+               "group_id":"finish",
+               "day_offset":24,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"fs1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка"
+                  },
+                  {
+                     "id":"fs2",
+                     "done":false,
+                     "sort":1,
+                     "title":"4–5 подходов на 70–80%"
+                  }
+               ]
+            },
+            {
+               "id":"fin_max",
+               "why":"На финише максимум количества повторений в свежем виде",
+               "sort":13,
+               "title":"Максимальные подходы: выкладываемся",
+               "detail":"2–3 подхода на максимум (80–95%), отдых 3–4 мин. Один из них может быть близок к 30 или даже превысить.",
+               "group_id":"finish",
+               "day_offset":26,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"fm1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка"
+                  },
+                  {
+                     "id":"fm2",
+                     "done":false,
+                     "sort":1,
+                     "title":"2–3 максимальных подхода"
+                  }
+               ]
+            },
+            {
+               "id":"fin_tech",
+               "why":"На 30-м повторении техника часто ломается — нужно учиться её держать",
+               "sort":14,
+               "title":"Техника под нагрузкой: качество на усталости",
+               "detail":"3–4 подхода на 60–75% с акцентом на медленное опускание (3–4 сек вниз). Форма в приоритете, даже если меньше рэпов.",
+               "group_id":"finish",
+               "day_offset":28,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"ft1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка"
+                  },
+                  {
+                     "id":"ft2",
+                     "done":false,
+                     "sort":1,
+                     "title":"3–4 подхода с акцентом на эксцентрик"
+                  }
+               ]
+            },
+            {
+               "id":"fin_near",
+               "why":"Последняя интенсивная тренировка перед попыткой 30",
+               "sort":15,
+               "title":"Близко к финалу: 2 подхода на максимум",
+               "detail":"2 подхода на максимум с отдыхом 4–5 мин. Чистая попытка на счёт для каждого.",
+               "group_id":"finish",
+               "day_offset":30,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"fn1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка"
+                  },
+                  {
+                     "id":"fn2",
+                     "done":false,
+                     "sort":1,
+                     "title":"2 максимальных подхода"
+                  }
+               ]
+            },
+            {
+               "id":"fin_last",
+               "why":"Финальный шанс прочувствовать нагрузку перед попыткой",
+               "sort":16,
+               "title":"Последняя боевая тренировка: уточнение",
+               "detail":"3 подхода: первый на 75%, второй на 85%, третий максимальный (на счёт). Отдых 3 мин.",
+               "group_id":"finish",
+               "day_offset":32,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"fl1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка"
+                  },
+                  {
+                     "id":"fl2",
+                     "done":false,
+                     "sort":1,
+                     "title":"3 подхода восходящей нагрузки"
+                  }
+               ]
+            },
+            {
+               "id":"attempt_1",
+               "why":"Основной день для кульминации программы",
+               "sort":17,
+               "title":"Попытка 30 отжиманий",
+               "detail":"После 10 мин разминки (планка, вращение, 2–3 дошаг) — один максимальный подход на счёт до 30. Если не вышло, отдыхаем 5–10 мин и ещё одна попытка.",
+               "group_id":"finish",
+               "day_offset":34,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"a1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка 10 мин"
+                  },
+                  {
+                     "id":"a2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Максимальный подход на счёт до 30"
+                  }
+               ]
+            },
+            {
+               "id":"attempt_2",
+               "why":"Если с первой попытки не получилось, это последний шанс на этом цикле",
+               "sort":18,
+               "title":"Финальная попытка или уточнение",
+               "detail":"После 3–4 часов отдыха (полный восстановление) или на следующий день — финальная попытка. Если получилось 30 — цель достигнута!",
+               "group_id":"finish",
+               "day_offset":36,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"a1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка"
+                  },
+                  {
+                     "id":"a2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Максимальный подход"
+                  }
+               ]
+            }
+         ],
+         "horizon":"4–6 недель, 3–6 тренировок в неделю по 15–25 мин",
+         "outcome":"Сделать 30 отжиманий подряд",
+         "summary":"Программа прогрессивной тренировки отжиманий на 4–6 недель. Будем увеличивать объём и интенсивность, адаптируясь к вашему текущему уровню.",
+         "questions":[
+            {
+               "id":"current_level",
+               "prompt":"Сколько отжиманий вы делаете сейчас?",
+               "options":[
+                  "0–5",
+                  "6–15",
+                  "16–25",
+                  "больше 25"
+               ]
+            },
+            {
+               "id":"frequency",
+               "prompt":"Как часто вы готовы тренироваться?",
+               "options":[
+                  "3 раза в неделю",
+                  "4 раза в неделю",
+                  "5–6 раз в неделю"
+               ]
+            }
+         ],
+         "paraphrase":"Ок — ведём к: 30 отжиманий подряд",
+         "success_criteria":"Выполнить 30 отжиманий одним подходом без остановки с правильной техникой"
+      },
+      "parsed_ok":false,
+      "tokens_in":349,
+      "tokens_out":6600,
+      "latency_ms":41138,
+      "error":"1 validation error for PathState\nactions\n  List should have at most 16 items after validation, not 19 [type=too_long, input_value=[{'id': 'tech_intro', 'ti...ounter'], 'timers': []}], input_type=list]\n    For further information visit https://errors.pydantic.dev/2.13/v/too_long",
+      "created_at":"2026-07-31 14:25:23.738699 +00:00",
+      "user_id":"a81b3885-558d-4ac8-bff3-5f85995c43c0"
+   },
+   {
+      "id":"d3d04ca0-7866-42f7-8134-2c2b149e12a0",
+      "project_id":"9c59249f-d1aa-46c3-980b-bbc21d7cdd07",
+      "purpose":"create",
+      "model":"claude-haiku-4-5",
+      "prompt_messages":[
+         {
+            "role":"system",
+            "content":"You are the create-path brain for Facio. The gate already decided kind=path and showed the user a slim start surface (paraphrase/title/summary/questions).\nEmit Path JSON only (root object — no kind / instant_answer wrapper).\n\nAlign with the start surface the user already saw: keep title/summary/paraphrase close; reuse question ids/prompts when still useful; expand into full cycle, days, actions, and plugin_hints (NOT full plugin payloads).\n\n## Safety / policy (hard)\n\n- No medical diagnosis, treatment plans, extreme weight-loss, or ED-adjacent coaching.\n- Self-harm, violence, or illegal harm → do NOT build a path. For create:   kind=instant_answer with a short refusal / redirect to professionals or   crisis resources — never give harm instructions.\n- Never invent URLs in resources[]; omit or use clearly generic names only   if the user already named a source.\n- Never promise guaranteed health or finance outcomes.\n- When unsure about safety → refuse / instant_answer; never a \"helpful\" path.\n\n\n## Wire sentinels (no JSON null on path fields)\n\nStructured output forbids null on optional path fields. Use:\n- missing optional string → \"\" (id, detail, group_id, goal_for_cycle,   day title/summary, group description, checklist id)\n- missing optional int → -1 (estimate_min, sort; never for a real day_offset)\n- unused create branch → empty stub object (not null): see Response shape\n\nCreate #2 / refine Path wire does NOT include timers/timeline/interval_plan/counter objects — only plugin_hints[]. Full plugins are a later call (#3).\n\n\n## Path fields (Path JSON root — no kind wrapper)\n\n- title: plan hero title (one short line, ≤ ~120 chars). Shown at the top of   the plan body. Examples: \"Карбонара на ужин\", \"К 30 отжиманиям — неделя 1\".\n- summary: 1–3 sentences at the start of the plan body (≤ ~600 chars). What   this cycle delivers and the logic of stages — not a bullet dump. Never empty.\n- outcome: clear goal (1 short sentence).\n- paraphrase: soft-start UI line confirming understanding   (e.g. \"Ок — ведём к: …\"); warmer than outcome; match user language.\n- success_criteria: verifiable done condition (no guaranteed health/finance claims).\n- horizon: rough span/load (e.g. \"1 evening\", \"7 days, ~20 min/session\").\n- domain: ONE of cooking|fitness|learning|home|errands|work|health|finance|  social|other (primary demand cluster). Unsure / safety grey → other.\n- tags: 0–5 short slugs (e.g. pasta, dinner); optional finer clustering.\n- cycle: REQUIRED first-class cycle object:\n  - index: usually 1 on create\n  - horizon_days: integer length of THIS cycle\n      * cooking / one-dish (carbonara) → 1\n      * fitness / push-ups toward a rep goal → 7 (week)\n      * other domains: pick a short honest horizon (1–14 typical)\n  - status: \"draft\" on create/refine; never invent completed\n  - goal_for_cycle: short goal for this cycle, or \"\" if none\n- days[]: REQUIRED explicit day map for the cycle (not only day_offset):\n  - day_index: 0 .. horizon_days-1 (include every day in the skeleton)\n  - kind: train | rest | cook_session | other\n      * carbonara / cooking session → one day kind=cook_session\n      * push-ups week → mix train and rest (NOT 7 identical train days)\n  - title / summary: short labels or \"\" (e.g. \"Силовая A\", \"Отдых + мобилити\")\n- groups[]: optional sections (Покупки, Готовка). Stable `id`, `title`,   description (1–2 sentences or \"\"), `sort`.\n- actions[]: ordered steps, soft cap ≤ 8–12 (never a 40-step dump; multi-day   may use up to ~16 with one focus per day). Each:\n  - id: stable key (or \"\"); reuse on refine/repair when the step is the same\n  - title: verb + object («Сегодня» / path step). When days[] present,     do NOT put \"день N\" / \"day N\" / \"(день N)\" in titles — day affiliation     is via day_offset + UI days[] headers\n  - why: REQUIRED — hero «Почему сейчас»; why THIS step matters; never filler\n  - detail: concrete how-to (or \"\"). Cooking: method/timing.     Shopping: use checklist_items instead of many micro-actions\n  - estimate_min: honest minutes, or -1 if unknown. First action: doable today,     ideally ≤ 30–60 min\n  - day_offset: REQUIRED when days[] present — must equal a days[].day_index\n  - sort (≥0) or -1 if unspecified; group_id matching groups[].id, or \"\"\n  - checklist_items[]: sub-checks (e.g. eggs ☐); done=false on create; id or \"\"\n  - plugin_hints[]: short tool announcements ONLY (no plugin objects here):\n      * \"timeline\" — session axis (carbonara cook MUST hint this)\n      * \"timers\" — simple manual TimerStack for an ISOLATED wait on a step         that has NO timeline (e.g. dough rest). Do NOT combine with timeline         on the same action — timeline already covers the session clock.\n      * \"interval\" — work/rest circuit (fitness day0 circuit)\n      * \"counter\" — dose/reps target\n      * [] when no tools (shopping, rest)\n      One primary clock per action: timeline XOR timers (never both).       Fitness circuit: [\"interval\",\"counter\"]; other train: [\"counter\"].\n  - Do NOT emit timers[], timeline, interval_plan, or counter objects on Path.\n- questions[]: 0 or 2–4 (max 4) clarifies that change the path; not an interview.   Emit the full batch for one round — user answers all at once.\n- Do NOT emit resources[] or milestones[] (server defaults to []).\n\n\n## FCT / quality\n\n- Always fill title + summary (reference intents: carbonara, push-ups →   narrative must be visible immediately).\n- Always fill cycle + full days[] skeleton (reference defaults above).\n- Push-ups / fitness week: days must mix train and rest — rest days are real   days with kind=rest (light mobility OK), not identical \"do sets\" days.\n- Carbonara: cycle.horizon_days=1, one cook_session day.\n- Carbonara cook step: plugin_hints MUST be [\"timeline\"] only (no \"timers\" on   the same step — redundant with the axis); shopping → [].\n- Push-ups: train steps need \"counter\" and/or \"interval\" in plugin_hints;   rest → [].\n- First action executable today; honest estimate_min, ideally ≤ 30–60 min.\n- Soft cap ≤ 8–12 actions; prefer checklist over many buy-micro-steps.\n- Cooking: shopping group + cook how-to in detail; not titles only.\n- Prefer a few strong steps over a long todo dump.\n- When days[] exist, action titles must not repeat day numbers   (\"день 2\", \"day 3\") — structure lives in days[] + day_offset.\n\n\nDo not chat. JSON fields only.\n"
+         },
+         {
+            "role":"user",
+            "content":"Приготовить карбонару"
+         },
+         {
+            "role":"assistant",
+            "content":"{\"title\": \"Карбонара на ужин\", \"summary\": \"За один вечер купим продукты и приготовим классическую карбонару без сливок. Сначала покупки, потом готовка по шагам — около часа с магазином.\", \"outcome\": \"Приготовить карбонару дома\", \"paraphrase\": \"Ок — ведём к: карбонара на ужин\", \"success_criteria\": \"Тарелка карбонары съедена сегодня вечером\", \"horizon\": \"1 вечер, ~60–90 мин с покупками\", \"domain\": \"cooking\", \"tags\": [\"pasta\", \"dinner\", \"carbonara\"], \"cycle\": {\"index\": 1, \"horizon_days\": 1, \"status\": \"draft\", \"goal_for_cycle\": \"Карбонара на столе сегодня вечером\"}, \"days\": [{\"day_index\": 0, \"kind\": \"cook_session\", \"title\": \"Вечер готовки\", \"summary\": \"Покупки и классическая карбонара за один заход.\"}], \"groups\": [{\"id\": \"shop\", \"title\": \"Покупки\", \"description\": \"Собрать ингредиенты до готовки.\", \"sort\": 0}, {\"id\": \"cook\", \"title\": \"Готовка\", \"description\": \"Собрать блюдо по классическому методу.\", \"sort\": 1}], \"actions\": [{\"id\": \"buy\", \"title\": \"Купить продукты\", \"why\": \"Без гуанчиале, яиц и сыра блюдо не собрать\", \"detail\": \"Магазин рядом; бери гуанчиале или панчетту, не бекон.\", \"estimate_min\": 30, \"day_offset\": 0, \"sort\": 0, \"group_id\": \"shop\", \"checklist_items\": [{\"id\": \"eggs\", \"title\": \"яйца\", \"done\": false, \"sort\": 0}, {\"id\": \"guanciale\", \"title\": \"гуанчиале / панчетта\", \"done\": false, \"sort\": 1}, {\"id\": \"pecorino\", \"title\": \"пекорино или пармезан\", \"done\": false, \"sort\": 2}, {\"id\": \"pasta\", \"title\": \"спагетти\", \"done\": false, \"sort\": 3}], \"plugin_hints\": []}, {\"id\": \"cook\", \"title\": \"Приготовить карбонару\", \"why\": \"Это и есть цель вечера — довести блюдо до тарелки\", \"detail\": \"Обжарь гуанчиале. Свари пасту al dente. Смешай желтки с тёртым сыром. Сними с огня, соедини пасту с жиром, добавь яично-сырную смесь, быстро мешай. Без сливок.\", \"estimate_min\": 40, \"day_offset\": 0, \"sort\": 1, \"group_id\": \"cook\", \"checklist_items\": [], \"plugin_hints\": [\"timeline\"]}], \"questions\": [{\"id\": \"meat\", \"prompt\": \"Какое мясо возьмёте?\", \"options\": [\"гуанчиале\", \"панчетта\", \"что найду\"]}, {\"id\": \"servings\", \"prompt\": \"На сколько порций?\", \"options\": [\"1\", \"2\", \"4\"]}], \"resources\": [], \"milestones\": []}"
+         },
+         {
+            "role":"user",
+            "content":"Хочу научиться делать 30 отжиманий"
+         },
+         {
+            "role":"assistant",
+            "content":"{\"title\": \"К 30 отжиманиям — неделя 1\", \"summary\": \"За ~6–8 недель дойдём к 30 отжиманиям. Эта неделя — база: четыре короткие силовые и три дня отдыха с лёгкой мобилити.\", \"outcome\": \"Заложить базу к 30 отжиманиям\", \"paraphrase\": \"Ок — ведём к: 30 отжиманий, неделя базы\", \"success_criteria\": \"Закрыты 4 силовых дня недели без срыва программы\", \"horizon\": \"7 дней, ~15–20 мин в силовые\", \"domain\": \"fitness\", \"tags\": [\"push-ups\", \"strength\"], \"cycle\": {\"index\": 1, \"horizon_days\": 7, \"status\": \"draft\", \"goal_for_cycle\": \"Неделя базы: привыкнуть к объёму\"}, \"days\": [{\"day_index\": 0, \"kind\": \"train\", \"title\": \"Силовая A\", \"summary\": \"Короткие подходы отжиманий.\"}, {\"day_index\": 1, \"kind\": \"rest\", \"title\": \"Отдых + мобилити\", \"summary\": \"Восстановление, без силовых подходов.\"}, {\"day_index\": 2, \"kind\": \"train\", \"title\": \"Силовая B\", \"summary\": \"Повторяем объём спокойно.\"}, {\"day_index\": 3, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"Лёгкая мобилити, мышцы восстанавливаются.\"}, {\"day_index\": 4, \"kind\": \"train\", \"title\": \"Силовая C\", \"summary\": \"Третья силовая недели.\"}, {\"day_index\": 5, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"Спокойный день без нагрузки.\"}, {\"day_index\": 6, \"kind\": \"train\", \"title\": \"Силовая D\", \"summary\": \"Закрываем неделю короткими подходами.\"}], \"groups\": [], \"actions\": [{\"id\": \"d0\", \"title\": \"Круговая сессия\", \"why\": \"Первый силовой день задаёт ритм недели\", \"detail\": \"Работа / отдых по таймеру. Пауза между сегментами — ок.\", \"estimate_min\": 15, \"day_offset\": 0, \"sort\": 0, \"group_id\": \"\", \"checklist_items\": [], \"plugin_hints\": [\"interval\", \"counter\"]}, {\"id\": \"d1\", \"title\": \"Лёгкая мобилити плеч\", \"why\": \"Отдых — часть программы, не пропуск тренировки\", \"detail\": \"5–10 минут мягких кругов руками и растяжки груди.\", \"estimate_min\": 10, \"day_offset\": 1, \"sort\": 1, \"group_id\": \"\", \"checklist_items\": [], \"plugin_hints\": []}, {\"id\": \"d2\", \"title\": \"Подходы отжиманий\", \"why\": \"Второй силовой день закрепляет объём\", \"detail\": \"Снова 3 коротких подхода, без гонки за максимумом.\", \"estimate_min\": 15, \"day_offset\": 2, \"sort\": 2, \"group_id\": \"\", \"checklist_items\": [], \"plugin_hints\": [\"counter\"]}, {\"id\": \"d3\", \"title\": \"Прогулка или дыхание\", \"why\": \"Восстановление даёт следующий силовой день\", \"detail\": \"Короткая прогулка или 5 минут спокойного дыхания.\", \"estimate_min\": 10, \"day_offset\": 3, \"sort\": 3, \"group_id\": \"\", \"checklist_items\": [], \"plugin_hints\": []}, {\"id\": \"d4\", \"title\": \"Подходы отжиманий\", \"why\": \"Держим ритм недели\", \"detail\": \"3 подхода; остановитесь, если форма ломается.\", \"estimate_min\": 15, \"day_offset\": 4, \"sort\": 4, \"group_id\": \"\", \"checklist_items\": [], \"plugin_hints\": [\"counter\"]}, {\"id\": \"d5\", \"title\": \"Мягкая мобилити\", \"why\": \"Отдых перед финальной силовой\", \"detail\": \"Без отжиманий — только лёгкая подвижность.\", \"estimate_min\": 8, \"day_offset\": 5, \"sort\": 5, \"group_id\": \"\", \"checklist_items\": [], \"plugin_hints\": []}, {\"id\": \"d6\", \"title\": \"Подходы отжиманий\", \"why\": \"Закрываем цикл базы\", \"detail\": \"Последняя силовая недели — спокойный объём.\", \"estimate_min\": 15, \"day_offset\": 6, \"sort\": 6, \"group_id\": \"\", \"checklist_items\": [], \"plugin_hints\": [\"counter\"]}], \"questions\": [{\"id\": \"level\", \"prompt\": \"Сколько отжиманий сейчас получается подряд?\", \"options\": [\"0–5\", \"6–15\", \"16–25\", \"с колен\"]}, {\"id\": \"days\", \"prompt\": \"Сколько дней в неделю реально можете?\", \"options\": [\"3\", \"4\", \"5+\"]}], \"resources\": [], \"milestones\": []}"
+         },
+         {
+            "role":"user",
+            "content":"{\"intent\": \"Научиться отжиматься 30 раз\", \"path_start\": {\"paraphrase\": \"Ок — ведём к: 30 отжиманий подряд\", \"title\": \"От текущего уровня к 30 отжиманиям\", \"summary\": \"Программа прогрессивной тренировки отжиманий на 4–6 недель. Будем увеличивать объём и интенсивность, адаптируясь к вашему текущему уровню.\", \"questions\": [{\"id\": \"current_level\", \"prompt\": \"Сколько отжиманий вы делаете сейчас?\", \"options\": [\"0–5\", \"6–15\", \"16–25\", \"больше 25\"]}, {\"id\": \"frequency\", \"prompt\": \"Как часто вы готовы тренироваться?\", \"options\": [\"3 раза в неделю\", \"4 раза в неделю\", \"5–6 раз в неделю\"]}], \"outline_days\": [\"Базовая техника\", \"Неделя 1–2: объём\", \"Неделя 3–4: интенсивность\", \"Неделя 5–6: финиш\"]}, \"instruction\": \"Build the full Path for this intent. Align with path_start the user already saw.\"}"
+         },
+         {
+            "role":"assistant",
+            "content":"{\"title\": \"От текущего уровня к 30 отжиманиям\", \"summary\": \"Программа прогрессивной тренировки отжиманий на 4–6 недель. Будем увеличивать объём и интенсивность, адаптируясь к вашему текущему уровню.\", \"outcome\": \"Сделать 30 отжиманий подряд\", \"paraphrase\": \"Ок — ведём к: 30 отжиманий подряд\", \"success_criteria\": \"Выполнить 30 отжиманий одним подходом без остановки с правильной техникой\", \"horizon\": \"4–6 недель, 3–6 тренировок в неделю по 15–25 мин\", \"domain\": \"fitness\", \"tags\": [\"push-ups\", \"strength\", \"progression\"], \"cycle\": {\"index\": 1, \"horizon_days\": 42, \"status\": \"draft\", \"goal_for_cycle\": \"Построить базу объёма и техники, подойти к промежуточной цели\"}, \"days\": [{\"day_index\": 0, \"kind\": \"train\", \"title\": \"День 1: Техника и разминка\", \"summary\": \"Первая тренировка — освоение формы.\"}, {\"day_index\": 1, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 2, \"kind\": \"train\", \"title\": \"День 2: Объём\", \"summary\": \"Короткие подходы, суммарный объём.\"}, {\"day_index\": 3, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 4, \"kind\": \"train\", \"title\": \"День 3: Вариативность\", \"summary\": \"Отжимания с разной расстановкой рук.\"}, {\"day_index\": 5, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 6, \"kind\": \"train\", \"title\": \"Неделя 1–2: День 4\", \"summary\": \"Увеличение объёма.\"}, {\"day_index\": 7, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 8, \"kind\": \"train\", \"title\": \"Неделя 1–2: День 5\", \"summary\": \"Объём растёт.\"}, {\"day_index\": 9, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 10, \"kind\": \"train\", \"title\": \"Неделя 1–2: День 6\", \"summary\": \"Завершение цикла объёма.\"}, {\"day_index\": 11, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 12, \"kind\": \"train\", \"title\": \"Неделя 1–2: День 7\", \"summary\": \"Тест текущего максимума.\"}, {\"day_index\": 13, \"kind\": \"rest\", \"title\": \"Отдых + восстановление\", \"summary\": \"\"}, {\"day_index\": 14, \"kind\": \"train\", \"title\": \"Неделя 3–4: День 1\", \"summary\": \"Интенсивность — работа на максимум подходов.\"}, {\"day_index\": 15, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 16, \"kind\": \"train\", \"title\": \"Неделя 3–4: День 2\", \"summary\": \"Суперсеты с отжиманиями.\"}, {\"day_index\": 17, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 18, \"kind\": \"train\", \"title\": \"Неделя 3–4: День 3\", \"summary\": \"Пирамида подходов.\"}, {\"day_index\": 19, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 20, \"kind\": \"train\", \"title\": \"Неделя 3–4: День 4\", \"summary\": \"Работа с утомлением.\"}, {\"day_index\": 21, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 22, \"kind\": \"train\", \"title\": \"Неделя 3–4: День 5\", \"summary\": \"Близко к максимуму.\"}, {\"day_index\": 23, \"kind\": \"rest\", \"title\": \"Отдых + восстановление\", \"summary\": \"\"}, {\"day_index\": 24, \"kind\": \"train\", \"title\": \"Неделя 5–6: День 1\", \"summary\": \"Финишная фаза — работа к 30.\"}, {\"day_index\": 25, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 26, \"kind\": \"train\", \"title\": \"Неделя 5–6: День 2\", \"summary\": \"Максимальные подходы.\"}, {\"day_index\": 27, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 28, \"kind\": \"train\", \"title\": \"Неделя 5–6: День 3\", \"summary\": \"Техника под нагрузкой.\"}, {\"day_index\": 29, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 30, \"kind\": \"train\", \"title\": \"Неделя 5–6: День 4\", \"summary\": \"Близко к финалу.\"}, {\"day_index\": 31, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 32, \"kind\": \"train\", \"title\": \"Неделя 5–6: День 5\", \"summary\": \"Последняя боевая тренировка.\"}, {\"day_index\": 33, \"kind\": \"rest\", \"title\": \"Полный отдых\", \"summary\": \"\"}, {\"day_index\": 34, \"kind\": \"train\", \"title\": \"Неделя 5–6: День 6\", \"summary\": \"Попытка 30 отжиманий.\"}, {\"day_index\": 35, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 36, \"kind\": \"train\", \"title\": \"Неделя 5–6: День 7\", \"summary\": \"Финальная попытка или уточнение.\"}, {\"day_index\": 37, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 38, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 39, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 40, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}, {\"day_index\": 41, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": \"\"}], \"groups\": [{\"id\": \"base\", \"title\": \"Базовая техника\", \"description\": \"Освоение правильной формы отжиманий.\", \"sort\": 0}, {\"id\": \"volume\", \"title\": \"Объём (недели 1–2)\", \"description\": \"Увеличение общего количества повторений через короткие подходы.\", \"sort\": 1}, {\"id\": \"intensity\", \"title\": \"Интенсивность (недели 3–4)\", \"description\": \"Работа на максимум, суперсеты, пирамиды.\", \"sort\": 2}, {\"id\": \"finish\", \"title\": \"Финиш (недели 5–6)\", \"description\": \"Приближение к 30 повторениям, финальные попытки.\", \"sort\": 3}], \"actions\": [{\"id\": \"tech_intro\", \"title\": \"Освоить правильную технику\", \"why\": \"Неправильная форма замедляет прогресс и увеличивает риск травмы\", \"detail\": \"Исходная: руки на ширине плеч, локти прижаты к корпусу, спина прямая. Вниз медленнее, чем вверх. Лишь когда техника уверенна, добавляем объём.\", \"estimate_min\": 20, \"day_offset\": 0, \"sort\": 0, \"group_id\": \"base\", \"checklist_items\": [{\"id\": \"t1\", \"title\": \"Разминка: вращение рук, планка 20 сек\", \"done\": false, \"sort\": 0}, {\"id\": \"t2\", \"title\": \"Отжимания с колен или от стены для ощущения формы\", \"done\": false, \"sort\": 1}, {\"id\": \"t3\", \"title\": \"3 подхода по 3–5 отжиманий максимум с отдыхом\", \"done\": false, \"sort\": 2}], \"plugin_hints\": [\"counter\"]}, {\"id\": \"vol_1\", \"title\": \"Подходы отжиманий — объём\", \"why\": \"На неделях 1–2 лепим количество, комфортно и без спешки\", \"detail\": \"5–6 подходов в день, каждый на 50–70% от текущего максимума. Между подходами — 60–90 сек. Цель: суммарно 50–80 повторений в день.\", \"estimate_min\": 20, \"day_offset\": 2, \"sort\": 1, \"group_id\": \"volume\", \"checklist_items\": [{\"id\": \"v1\", \"title\": \"Разминка: планка 30 сек, вращение\", \"done\": false, \"sort\": 0}, {\"id\": \"v2\", \"title\": \"Основная серия: 5–6 подходов\", \"done\": false, \"sort\": 1}, {\"id\": \"v3\", \"title\": \"Завершение: растяжка груди и плеч\", \"done\": false, \"sort\": 2}], \"plugin_hints\": [\"counter\"]}, {\"id\": \"var_1\", \"title\": \"Вариативность: узкие и широкие хваты\", \"why\": \"Разные углы нагрузки = лучший баланс мышц и адаптация\", \"detail\": \"1–2 подхода узких (локти ближе), 1–2 подхода широких (локти дальше), 1–2 стандартных. Все на комфортное количество.\", \"estimate_min\": 20, \"day_offset\": 4, \"sort\": 2, \"group_id\": \"volume\", \"checklist_items\": [{\"id\": \"va1\", \"title\": \"Разминка\", \"done\": false, \"sort\": 0}, {\"id\": \"va2\", \"title\": \"2 подхода узких отжиманий\", \"done\": false, \"sort\": 1}, {\"id\": \"va3\", \"title\": \"2 подхода широких отжиманий\", \"done\": false, \"sort\": 2}, {\"id\": \"va4\", \"title\": \"2 подхода стандартных\", \"done\": false, \"sort\": 3}], \"plugin_hints\": [\"counter\"]}, {\"id\": \"vol_growth\", \"title\": \"Объём растёт: суммарно 100+ за день\", \"why\": \"Адаптация — организм уже привык, нужен толчок\", \"detail\": \"Увеличиваем количество подходов или повторений на 10–15%. Если вчера было 80 рэпов, сегодня — 90–100. По ощущениям.\", \"estimate_min\": 22, \"day_offset\": 6, \"sort\": 3, \"group_id\": \"volume\", \"checklist_items\": [{\"id\": \"vg1\", \"title\": \"6–7 подходов\", \"done\": false, \"sort\": 0}, {\"id\": \"vg2\", \"title\": \"Суммарно 100+ повторений\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"]}, {\"id\": \"vol_acc\", \"title\": \"Объём: аккумуляция\", \"why\": \"Накопление объёма — основа выносливости\", \"detail\": \"Снова 5–6 подходов, но каждый подход чуть больше. Отдых между подходами 45–60 сек.\", \"estimate_min\": 23, \"day_offset\": 8, \"sort\": 4, \"group_id\": \"volume\", \"checklist_items\": [{\"id\": \"va1\", \"title\": \"5–6 подходов, растущий объём\", \"done\": false, \"sort\": 0}], \"plugin_hints\": [\"counter\"]}, {\"id\": \"vol_close\", \"title\": \"Объём: закрытие цикла\", \"why\": \"Финал фазы объёма перед переходом на интенсивность\", \"detail\": \"Спокойный день, 4–5 подходов по 8–12 рэпов. Техника в фокусе.\", \"estimate_min\": 20, \"day_offset\": 10, \"sort\": 5, \"group_id\": \"volume\", \"checklist_items\": [{\"id\": \"vc1\", \"title\": \"4–5 подходов\", \"done\": false, \"sort\": 0}], \"plugin_hints\": [\"counter\"]}, {\"id\": \"vol_test\", \"title\": \"Тест максимума\", \"why\": \"Убедиться в прогрессе и задать новый ориентир\", \"detail\": \"После 5 мин разминки и 2–3 подходов дошагивания — один максимальный подход. Записать результат. Примерно +5–10 рэпов от стартовой точки.\", \"estimate_min\": 20, \"day_offset\": 12, \"sort\": 6, \"group_id\": \"volume\", \"checklist_items\": [{\"id\": \"vt1\", \"title\": \"Разминка и дошагивание\", \"done\": false, \"sort\": 0}, {\"id\": \"vt2\", \"title\": \"Максимальный подход на счёт\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"]}, {\"id\": \"int_max\", \"title\": \"Интенсивность: работа на максимум подходов\", \"why\": \"Переходим с объёма на интенсивность — меньше подходов, выше качество\", \"detail\": \"3–4 подхода по 80–90% от текущего максимума. Отдых 2–3 мин между подходами. Цель: увеличить макс подход.\", \"estimate_min\": 25, \"day_offset\": 14, \"sort\": 7, \"group_id\": \"intensity\", \"checklist_items\": [{\"id\": \"im1\", \"title\": \"Разминка + дошагивание\", \"done\": false, \"sort\": 0}, {\"id\": \"im2\", \"title\": \"3–4 подхода на максимум\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"]}, {\"id\": \"int_super\", \"title\": \"Суперсеты: отжимания + вспомогательное упр.\", \"why\": \"Суперсеты утомляют мышцы быстрее и поднимают выносливость\", \"detail\": \"Подход отжиманий + сразу отжимания с колен (лёгкий вариант) или разведение рук. 3 суперсета, отдых 90 сек между ними.\", \"estimate_min\": 25, \"day_offset\": 16, \"sort\": 8, \"group_id\": \"intensity\", \"checklist_items\": [{\"id\": \"is1\", \"title\": \"Разминка\", \"done\": false, \"sort\": 0}, {\"id\": \"is2\", \"title\": \"3 суперсета: отжимания + вспомогательное\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"]}, {\"id\": \"int_pyr\", \"title\": \"Пирамида: 5–4–3–2–1 + 1–2–3–4–5\", \"why\": \"Пирамида развивает мышечную выносливость и силу одновременно\", \"detail\": \"Первый подход 5 рэпов, второй 4, третий 3, четвёртый 2, пятый 1 (ваш максимум). Затем в обратном порядке вниз. Отдых 90 сек.\", \"estimate_min\": 25, \"day_offset\": 18, \"sort\": 9, \"group_id\": \"intensity\", \"checklist_items\": [{\"id\": \"ip1\", \"title\": \"Разминка\", \"done\": false, \"sort\": 0}, {\"id\": \"ip2\", \"title\": \"Пирамида вверх: 5–4–3–2–1\", \"done\": false, \"sort\": 1}, {\"id\": \"ip3\", \"title\": \"Пирамида вниз: 1–2–3–4–5\", \"done\": false, \"sort\": 2}], \"plugin_hints\": [\"counter\"]}, {\"id\": \"int_fatigue\", \"title\": \"Работа с утомлением: цепочка подходов\", \"why\": \"Тренировка способности делать отжимания на усталость\", \"detail\": \"6 подходов подряд с минимальным отдыхом (30–45 сек): каждый на 60–70% от максимума. Последний подход часто самый тяжёлый — главное, не сдавать форму.\", \"estimate_min\": 25, \"day_offset\": 20, \"sort\": 10, \"group_id\": \"intensity\", \"checklist_items\": [{\"id\": \"if1\", \"title\": \"Разминка\", \"done\": false, \"sort\": 0}, {\"id\": \"if2\", \"title\": \"6 подходов с коротким отдыхом\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"]}, {\"id\": \"int_peak\", \"title\": \"Близко к максимуму: 2–3 подхода на 90%+\", \"why\": \"Укрепление нервной системы в работе с высокими нагрузками\", \"detail\": \"2–3 подхода по 80–90% от максимума с отдыхом 3 мин между ними. Упор на качество каждого повтора.\", \"estimate_min\": 25, \"day_offset\": 22, \"sort\": 11, \"group_id\": \"intensity\", \"checklist_items\": [{\"id\": \"ip1\", \"title\": \"Разминка + дошагивание\", \"done\": false, \"sort\": 0}, {\"id\": \"ip2\", \"title\": \"2–3 подхода на 90%+\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"]}, {\"id\": \"fin_start\", \"title\": \"Финиш: работа к 30 повторениям\", \"why\": \"Прямой путь к цели — каждый подход приближает к 30\", \"detail\": \"4–5 подходов, каждый на 70–80% от максимума. Отдых 2 мин. Если текущий максимум близок к 25–27, уже можно пробовать 30 в одном подходе.\", \"estimate_min\": 25, \"day_offset\": 24, \"sort\": 12, \"group_id\": \"finish\", \"checklist_items\": [{\"id\": \"fs1\", \"title\": \"Разминка\", \"done\": false, \"sort\": 0}, {\"id\": \"fs2\", \"title\": \"4–5 подходов на 70–80%\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"]}, {\"id\": \"fin_max\", \"title\": \"Максимальные подходы: выкладываемся\", \"why\": \"На финише максимум количества повторений в свежем виде\", \"detail\": \"2–3 подхода на максимум (80–95%), отдых 3–4 мин. Один из них может быть близок к 30 или даже превысить.\", \"estimate_min\": 25, \"day_offset\": 26, \"sort\": 13, \"group_id\": \"finish\", \"checklist_items\": [{\"id\": \"fm1\", \"title\": \"Разминка\", \"done\": false, \"sort\": 0}, {\"id\": \"fm2\", \"title\": \"2–3 максимальных подхода\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"]}, {\"id\": \"fin_tech\", \"title\": \"Техника под нагрузкой: качество на усталости\", \"why\": \"На 30-м повторении техника часто ломается — нужно учиться её держать\", \"detail\": \"3–4 подхода на 60–75% с акцентом на медленное опускание (3–4 сек вниз). Форма в приоритете, даже если меньше рэпов.\", \"estimate_min\": 25, \"day_offset\": 28, \"sort\": 14, \"group_id\": \"finish\", \"checklist_items\": [{\"id\": \"ft1\", \"title\": \"Разминка\", \"done\": false, \"sort\": 0}, {\"id\": \"ft2\", \"title\": \"3–4 подхода с акцентом на эксцентрик\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"]}, {\"id\": \"fin_near\", \"title\": \"Близко к финалу: 2 подхода на максимум\", \"why\": \"Последняя интенсивная тренировка перед попыткой 30\", \"detail\": \"2 подхода на максимум с отдыхом 4–5 мин. Чистая попытка на счёт для каждого.\", \"estimate_min\": 25, \"day_offset\": 30, \"sort\": 15, \"group_id\": \"finish\", \"checklist_items\": [{\"id\": \"fn1\", \"title\": \"Разминка\", \"done\": false, \"sort\": 0}, {\"id\": \"fn2\", \"title\": \"2 максимальных подхода\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"]}, {\"id\": \"fin_last\", \"title\": \"Последняя боевая тренировка: уточнение\", \"why\": \"Финальный шанс прочувствовать нагрузку перед попыткой\", \"detail\": \"3 подхода: первый на 75%, второй на 85%, третий максимальный (на счёт). Отдых 3 мин.\", \"estimate_min\": 25, \"day_offset\": 32, \"sort\": 16, \"group_id\": \"finish\", \"checklist_items\": [{\"id\": \"fl1\", \"title\": \"Разминка\", \"done\": false, \"sort\": 0}, {\"id\": \"fl2\", \"title\": \"3 подхода восходящей нагрузки\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"]}, {\"id\": \"attempt_1\", \"title\": \"Попытка 30 отжиманий\", \"why\": \"Основной день для кульминации программы\", \"detail\": \"После 10 мин разминки (планка, вращение, 2–3 дошаг) — один максимальный подход на счёт до 30. Если не вышло, отдыхаем 5–10 мин и ещё одна попытка.\", \"estimate_min\": 25, \"day_offset\": 34, \"sort\": 17, \"group_id\": \"finish\", \"checklist_items\": [{\"id\": \"a1\", \"title\": \"Разминка 10 мин\", \"done\": false, \"sort\": 0}, {\"id\": \"a2\", \"title\": \"Максимальный подход на счёт до 30\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"]}, {\"id\": \"attempt_2\", \"title\": \"Финальная попытка или уточнение\", \"why\": \"Если с первой попытки не получилось, это последний шанс на этом цикле\", \"detail\": \"После 3–4 часов отдыха (полный восстановление) или на следующий день — финальная попытка. Если получилось 30 — цель достигнута!\", \"estimate_min\": 25, \"day_offset\": 36, \"sort\": 18, \"group_id\": \"finish\", \"checklist_items\": [{\"id\": \"a1\", \"title\": \"Разминка\", \"done\": false, \"sort\": 0}, {\"id\": \"a2\", \"title\": \"Максимальный подход\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"]}], \"questions\": [{\"id\": \"current_level\", \"prompt\": \"Сколько отжиманий вы делаете сейчас?\", \"options\": [\"0–5\", \"6–15\", \"16–25\", \"больше 25\"]}, {\"id\": \"frequency\", \"prompt\": \"Как часто вы готовы тренироваться?\", \"options\": [\"3 раза в неделю\", \"4 раза в неделю\", \"5–6 раз в неделю\"]}]}"
+         },
+         {
+            "role":"user",
+            "content":"Previous response failed validation: 1 validation error for PathState\nactions\n  List should have at most 16 items after validation, not 19 [type=too_long, input_value=[{'id': 'tech_intro', 'ti...ounter'], 'timers': []}], input_type=list]\n    For further information visit https://errors.pydantic.dev/2.13/v/too_long. Return corrected JSON matching the schema."
+         }
+      ],
+      "raw_response":{
+         "days":[
+            {
+               "kind":"train",
+               "title":"День 1: Техника и разминка",
+               "summary":"Первая тренировка — освоение формы.",
+               "day_index":0
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":1
+            },
+            {
+               "kind":"train",
+               "title":"День 2: Объём",
+               "summary":"Короткие подходы, суммарный объём.",
+               "day_index":2
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":3
+            },
+            {
+               "kind":"train",
+               "title":"День 3: Вариативность",
+               "summary":"Отжимания с разной расстановкой рук.",
+               "day_index":4
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":5
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 1–2: Объём растёт",
+               "summary":"Увеличение объёма.",
+               "day_index":6
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":7
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 1–2: Аккумуляция",
+               "summary":"Накопление объёма.",
+               "day_index":8
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":9
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 1–2: Тест максимума",
+               "summary":"Проверка прогресса.",
+               "day_index":10
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":11
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 3–4: Интенсивность",
+               "summary":"Работа на максимум, суперсеты, пирамиды.",
+               "day_index":12
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":13
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 3–4: Максимальные подходы",
+               "summary":"Пирамида и интенсив.",
+               "day_index":14
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":15
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 3–4: Утомление и пик",
+               "summary":"Работа с усталостью, близко к максимуму.",
+               "day_index":16
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":17
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 5–6: К 30 повторениям",
+               "summary":"Работа к целевой цифре.",
+               "day_index":18
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":19
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 5–6: Максимальные подходы",
+               "summary":"Выкладываемся на максимум.",
+               "day_index":20
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":21
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 5–6: Техника под нагрузкой",
+               "summary":"Качество на усталости.",
+               "day_index":22
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":23
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 5–6: Финальная интенсивная",
+               "summary":"Уточнение перед попыткой.",
+               "day_index":24
+            },
+            {
+               "kind":"rest",
+               "title":"Полный отдых",
+               "summary":"",
+               "day_index":25
+            },
+            {
+               "kind":"train",
+               "title":"Неделя 5–6: Попытка 30",
+               "summary":"Максимальный подход.",
+               "day_index":26
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых или финальная попытка",
+               "summary":"",
+               "day_index":27
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":28
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":29
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":30
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":31
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":32
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":33
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":34
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":35
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":36
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":37
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":38
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":39
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":40
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":41
+            }
+         ],
+         "tags":[
+            "push-ups",
+            "strength",
+            "progression"
+         ],
+         "cycle":{
+            "index":1,
+            "status":"draft",
+            "horizon_days":42,
+            "goal_for_cycle":"Построить базу объёма и техники, подойти к промежуточной цели"
+         },
+         "title":"От текущего уровня к 30 отжиманиям",
+         "domain":"fitness",
+         "groups":[
+            {
+               "id":"base",
+               "sort":0,
+               "title":"Базовая техника",
+               "description":"Освоение правильной формы отжиманий."
+            },
+            {
+               "id":"volume",
+               "sort":1,
+               "title":"Объём (недели 1–2)",
+               "description":"Увеличение общего количества повторений через короткие подходы."
+            },
+            {
+               "id":"intensity",
+               "sort":2,
+               "title":"Интенсивность (недели 3–4)",
+               "description":"Работа на максимум, суперсеты, пирамиды."
+            },
+            {
+               "id":"finish",
+               "sort":3,
+               "title":"Финиш (недели 5–6)",
+               "description":"Приближение к 30 повторениям, финальные попытки."
+            }
+         ],
+         "actions":[
+            {
+               "id":"tech_intro",
+               "why":"Неправильная форма замедляет прогресс и увеличивает риск травмы",
+               "sort":0,
+               "title":"Освоить правильную технику",
+               "detail":"Исходная: руки на ширине плеч, локти прижаты к корпусу, спина прямая. Вниз медленнее, чем вверх. Лишь когда техника уверенна, добавляем объём.",
+               "group_id":"base",
+               "day_offset":0,
+               "estimate_min":20,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"t1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка: вращение рук, планка 20 сек"
+                  },
+                  {
+                     "id":"t2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Отжимания с колен или от стены для ощущения формы"
+                  },
+                  {
+                     "id":"t3",
+                     "done":false,
+                     "sort":2,
+                     "title":"3 подхода по 3–5 отжиманий максимум с отдыхом"
+                  }
+               ]
+            },
+            {
+               "id":"vol_1",
+               "why":"На неделях 1–2 лепим количество, комфортно и без спешки",
+               "sort":1,
+               "title":"Объём: подходы и суммарные повторения",
+               "detail":"5–6 подходов в день, каждый на 50–70% от текущего максимума. Между подходами — 60–90 сек. Цель: суммарно 50–80 повторений в день. Вариативность: узкие и широкие хваты.",
+               "group_id":"volume",
+               "day_offset":2,
+               "estimate_min":22,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"v1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка: планка 30 сек, вращение"
+                  },
+                  {
+                     "id":"v2",
+                     "done":false,
+                     "sort":1,
+                     "title":"5–6 подходов разными хватами"
+                  },
+                  {
+                     "id":"v3",
+                     "done":false,
+                     "sort":2,
+                     "title":"Суммарно 50–80 повторений"
+                  }
+               ]
+            },
+            {
+               "id":"var_1",
+               "why":"Разные углы нагрузки = лучший баланс мышц и адаптация",
+               "sort":2,
+               "title":"Вариативность: узкие, стандартные, широкие",
+               "detail":"1–2 подхода узких (локти ближе), 1–2 подхода стандартных, 1–2 подхода широких (локти дальше). Все на комфортное количество. Отдых между подходами 60–90 сек.",
+               "group_id":"volume",
+               "day_offset":4,
+               "estimate_min":23,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"va1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка"
+                  },
+                  {
+                     "id":"va2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Узкие, стандартные, широкие хваты"
+                  },
+                  {
+                     "id":"va3",
+                     "done":false,
+                     "sort":2,
+                     "title":"Суммарно 70–100 повторений"
+                  }
+               ]
+            },
+            {
+               "id":"vol_growth",
+               "why":"Адаптация — организм привык, нужен толчок объёма",
+               "sort":3,
+               "title":"Объём растёт: 100+ повторений за день",
+               "detail":"Увеличиваем количество подходов или повторений на 10–15%. 6–7 подходов, каждый на 60–75% от максимума. Отдых 45–60 сек между подходами.",
+               "group_id":"volume",
+               "day_offset":6,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"vg1",
+                     "done":false,
+                     "sort":0,
+                     "title":"6–7 подходов"
+                  },
+                  {
+                     "id":"vg2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Суммарно 100–120 повторений"
+                  }
+               ]
+            },
+            {
+               "id":"vol_acc",
+               "why":"Накопление объёма — основа выносливости и базы для интенсивности",
+               "sort":4,
+               "title":"Аккумуляция: суммарный объём на максимум",
+               "detail":"5–6 подходов, но каждый подход растёт (пирамида вверх). Первый 6 рэпов, второй 7, третий 8, четвёртый 9 и т.д. Или просто 5–6 подходов по 8–12 рэпов. Отдых 60 сек.",
+               "group_id":"volume",
+               "day_offset":8,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"va1",
+                     "done":false,
+                     "sort":0,
+                     "title":"5–6 подходов растущего объёма"
+                  },
+                  {
+                     "id":"va2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Отдых 60 сек между подходами"
+                  }
+               ]
+            },
+            {
+               "id":"vol_test",
+               "why":"Убедиться в прогрессе и задать новый ориентир для интенсивной фазы",
+               "sort":5,
+               "title":"Тест максимума: проверка прогресса",
+               "detail":"После 5 мин разминки и 2–3 подходов дошагивания — один максимальный подход на счёт. Примерно +5–10 рэпов от стартовой точки. Записать результат.",
+               "group_id":"volume",
+               "day_offset":10,
+               "estimate_min":20,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"vt1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка и дошагивание"
+                  },
+                  {
+                     "id":"vt2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Максимальный подход на счёт"
+                  }
+               ]
+            },
+            {
+               "id":"int_super_pyr",
+               "why":"Переходим на интенсивность — меньше подходов, выше качество и нагрузка",
+               "sort":6,
+               "title":"Интенсивность: суперсеты и пирамида",
+               "detail":"День 1: 3 суперсета (отжимания + вспомогательное упр) с отдыхом 90 сек. День 2: Пирамида 5–4–3–2–1 вверх, затем 1–2–3–4–5 вниз, отдых 90 сек. 3–4 подхода по 80–90% от текущего максимума (День 3).",
+               "group_id":"intensity",
+               "day_offset":12,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"is1",
+                     "done":false,
+                     "sort":0,
+                     "title":"День 1: Разминка + 3 суперсета"
+                  },
+                  {
+                     "id":"is2",
+                     "done":false,
+                     "sort":1,
+                     "title":"День 2: Пирамида полная"
+                  },
+                  {
+                     "id":"is3",
+                     "done":false,
+                     "sort":2,
+                     "title":"День 3: 3–4 максимальных подхода"
+                  }
+               ]
+            },
+            {
+               "id":"int_fatigue_max",
+               "why":"Укрепление нервной системы и работа с высокими нагрузками, адаптация к усталости",
+               "sort":7,
+               "title":"Интенсивность: утомление и максимум",
+               "detail":"День 4: 6 подходов подряд с минимальным отдыхом (30–45 сек) на 60–70% от максимума, последний самый тяжёлый. День 5: 2–3 подхода по 80–90% от максимума с отдыхом 3 мин, упор на качество каждого повтора.",
+               "group_id":"intensity",
+               "day_offset":14,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"if1",
+                     "done":false,
+                     "sort":0,
+                     "title":"День 4: 6 подходов с коротким отдыхом"
+                  },
+                  {
+                     "id":"if2",
+                     "done":false,
+                     "sort":1,
+                     "title":"День 5: 2–3 подхода на 90%+"
+                  }
+               ]
+            },
+            {
+               "id":"fin_combined",
+               "why":"На финише совмещаем объём и качество для приближения к 30",
+               "sort":8,
+               "title":"Финиш: объём и максимум к 30 повторениям",
+               "detail":"День 1: 4–5 подходов на 70–80%, отдых 2 мин. День 2: 2–3 максимальных подхода, отдых 3–4 мин, один может быть близок к 30. День 3: 3–4 подхода с акцентом на медленное опускание (3–4 сек), 60–75% от максимума.",
+               "group_id":"finish",
+               "day_offset":18,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"fs1",
+                     "done":false,
+                     "sort":0,
+                     "title":"День 1: 4–5 подходов на 70–80%"
+                  },
+                  {
+                     "id":"fs2",
+                     "done":false,
+                     "sort":1,
+                     "title":"День 2: 2–3 максимальных подхода"
+                  },
+                  {
+                     "id":"fs3",
+                     "done":false,
+                     "sort":2,
+                     "title":"День 3: Техника под нагрузкой"
+                  }
+               ]
+            },
+            {
+               "id":"fin_peak",
+               "why":"Последняя тренировка перед кульминацией и финальная попытка цели",
+               "sort":9,
+               "title":"Финальная интенсивная и попытка 30",
+               "detail":"День 4: 2 максимальных подхода с отдыхом 4–5 мин. День 5: После 10 мин разминки — один максимальный подход на счёт до 30. Если не вышло, отдыхаем 5–10 мин и ещё одна попытка.",
+               "group_id":"finish",
+               "day_offset":20,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"fn1",
+                     "done":false,
+                     "sort":0,
+                     "title":"День 4: 2 максимальных подхода"
+                  },
+                  {
+                     "id":"fn2",
+                     "done":false,
+                     "sort":1,
+                     "title":"День 5: Максимальный подход на счёт до 30"
+                  }
+               ]
+            },
+            {
+               "id":"attempt_final",
+               "why":"Если с первой попытки не получилось, это второй шанс; если получилось — закрепляем",
+               "sort":10,
+               "title":"Финальная попытка или закрепление",
+               "detail":"После 3–4 часов отдыха или на следующий день — финальная попытка. Разминка 10 мин, максимальный подход. Если получилось 30 — цель достигнута! Если близко, отдыхаем неделю и повторяем цикл.",
+               "group_id":"finish",
+               "day_offset":26,
+               "estimate_min":20,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"af1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка"
+                  },
+                  {
+                     "id":"af2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Максимальный подход"
+                  }
+               ]
+            }
+         ],
+         "horizon":"4–6 недель, 3–6 тренировок в неделю по 15–25 мин",
+         "outcome":"Сделать 30 отжиманий подряд",
+         "summary":"Программа прогрессивной тренировки отжиманий на 4–6 недель. Будем увеличивать объём и интенсивность, адаптируясь к вашему текущему уровню.",
+         "questions":[
+            {
+               "id":"current_level",
+               "prompt":"Сколько отжиманий вы делаете сейчас?",
+               "options":[
+                  "0–5",
+                  "6–15",
+                  "16–25",
+                  "больше 25"
+               ]
+            },
+            {
+               "id":"frequency",
+               "prompt":"Как часто вы готовы тренироваться?",
+               "options":[
+                  "3 раза в неделю",
+                  "4 раза в неделю",
+                  "5–6 раз в неделю"
+               ]
+            }
+         ],
+         "paraphrase":"Ок — ведём к: 30 отжиманий подряд",
+         "success_criteria":"Выполнить 30 отжиманий одним подходом без остановки с правильной техникой"
+      },
+      "parsed_ok":true,
+      "tokens_in":7060,
+      "tokens_out":5259,
+      "latency_ms":35119,
+      "error":null,
+      "created_at":"2026-07-31 14:25:23.738699 +00:00",
+      "user_id":"a81b3885-558d-4ac8-bff3-5f85995c43c0"
+   },
+   {
+      "id":"30cb76d6-58d2-4440-bf35-0f719e763988",
+      "project_id":"9c59249f-d1aa-46c3-980b-bbc21d7cdd07",
+      "purpose":"refine",
+      "model":"claude-haiku-4-5",
+      "prompt_messages":[
+         {
+            "role":"system",
+            "content":"You refine an existing Facio Path from the user's clarification batch.\nReturn Path JSON only (not the create kind-union).\n\n## Safety / policy (hard)\n\n- No medical diagnosis, treatment plans, extreme weight-loss, or ED-adjacent coaching.\n- Self-harm, violence, or illegal harm → do NOT build a path. For create:   kind=instant_answer with a short refusal / redirect to professionals or   crisis resources — never give harm instructions.\n- Never invent URLs in resources[]; omit or use clearly generic names only   if the user already named a source.\n- Never promise guaranteed health or finance outcomes.\n- When unsure about safety → refuse / instant_answer; never a \"helpful\" path.\n\n\n## Wire sentinels (no JSON null on path fields)\n\nStructured output forbids null on optional path fields. Use:\n- missing optional string → \"\" (id, detail, group_id, goal_for_cycle,   day title/summary, group description, checklist id)\n- missing optional int → -1 (estimate_min, sort; never for a real day_offset)\n- unused create branch → empty stub object (not null): see Response shape\n\nCreate #2 / refine Path wire does NOT include timers/timeline/interval_plan/counter objects — only plugin_hints[]. Full plugins are a later call (#3).\n\n\nThe user payload has:\n- current_state: existing Path JSON\n- answers[]: {question_id, value} for this round (may be empty)\n- comment: optional free-text for the whole round (may be null)\n\nRules:\n- Apply ALL answers and the comment in ONE pass — do not ignore any.\n- Do NOT invent constraints/slots the user did not provide.\n- If clarify changes the contract → update title, summary, outcome,   success_criteria, horizon, and paraphrase explicitly.\n- Keep title + summary non-empty and useful after refine.\n- Keep cycle + days coherent: if horizon_days changes, rewrite days[] and   action day_offset to match; preserve train/rest mix for fitness weeks.\n- Preserve action/group ids when the step is the same; do not reshuffle   the whole path without cause. New/replaced steps may get new ids.\n- Keep every action.why non-empty and meaningful.\n- questions[]: only still-useful clarifies (0 or 2–4, max 4); else [].\n- Soft cap ≤ 8–12 actions; first remaining step still doable soon.\n- Match user language.\n\n## Path fields (Path JSON root — no kind wrapper)\n\n- title: plan hero title (one short line, ≤ ~120 chars). Shown at the top of   the plan body. Examples: \"Карбонара на ужин\", \"К 30 отжиманиям — неделя 1\".\n- summary: 1–3 sentences at the start of the plan body (≤ ~600 chars). What   this cycle delivers and the logic of stages — not a bullet dump. Never empty.\n- outcome: clear goal (1 short sentence).\n- paraphrase: soft-start UI line confirming understanding   (e.g. \"Ок — ведём к: …\"); warmer than outcome; match user language.\n- success_criteria: verifiable done condition (no guaranteed health/finance claims).\n- horizon: rough span/load (e.g. \"1 evening\", \"7 days, ~20 min/session\").\n- domain: ONE of cooking|fitness|learning|home|errands|work|health|finance|  social|other (primary demand cluster). Unsure / safety grey → other.\n- tags: 0–5 short slugs (e.g. pasta, dinner); optional finer clustering.\n- cycle: REQUIRED first-class cycle object:\n  - index: usually 1 on create\n  - horizon_days: integer length of THIS cycle\n      * cooking / one-dish (carbonara) → 1\n      * fitness / push-ups toward a rep goal → 7 (week)\n      * other domains: pick a short honest horizon (1–14 typical)\n  - status: \"draft\" on create/refine; never invent completed\n  - goal_for_cycle: short goal for this cycle, or \"\" if none\n- days[]: REQUIRED explicit day map for the cycle (not only day_offset):\n  - day_index: 0 .. horizon_days-1 (include every day in the skeleton)\n  - kind: train | rest | cook_session | other\n      * carbonara / cooking session → one day kind=cook_session\n      * push-ups week → mix train and rest (NOT 7 identical train days)\n  - title / summary: short labels or \"\" (e.g. \"Силовая A\", \"Отдых + мобилити\")\n- groups[]: optional sections (Покупки, Готовка). Stable `id`, `title`,   description (1–2 sentences or \"\"), `sort`.\n- actions[]: ordered steps, soft cap ≤ 8–12 (never a 40-step dump; multi-day   may use up to ~16 with one focus per day). Each:\n  - id: stable key (or \"\"); reuse on refine/repair when the step is the same\n  - title: verb + object («Сегодня» / path step). When days[] present,     do NOT put \"день N\" / \"day N\" / \"(день N)\" in titles — day affiliation     is via day_offset + UI days[] headers\n  - why: REQUIRED — hero «Почему сейчас»; why THIS step matters; never filler\n  - detail: concrete how-to (or \"\"). Cooking: method/timing.     Shopping: use checklist_items instead of many micro-actions\n  - estimate_min: honest minutes, or -1 if unknown. First action: doable today,     ideally ≤ 30–60 min\n  - day_offset: REQUIRED when days[] present — must equal a days[].day_index\n  - sort (≥0) or -1 if unspecified; group_id matching groups[].id, or \"\"\n  - checklist_items[]: sub-checks (e.g. eggs ☐); done=false on create; id or \"\"\n  - plugin_hints[]: short tool announcements ONLY (no plugin objects here):\n      * \"timeline\" — session axis (carbonara cook MUST hint this)\n      * \"timers\" — simple manual TimerStack for an ISOLATED wait on a step         that has NO timeline (e.g. dough rest). Do NOT combine with timeline         on the same action — timeline already covers the session clock.\n      * \"interval\" — work/rest circuit (fitness day0 circuit)\n      * \"counter\" — dose/reps target\n      * [] when no tools (shopping, rest)\n      One primary clock per action: timeline XOR timers (never both).       Fitness circuit: [\"interval\",\"counter\"]; other train: [\"counter\"].\n  - Do NOT emit timers[], timeline, interval_plan, or counter objects on Path.\n- questions[]: 0 or 2–4 (max 4) clarifies that change the path; not an interview.   Emit the full batch for one round — user answers all at once.\n- Do NOT emit resources[] or milestones[] (server defaults to []).\n\n"
+         },
+         {
+            "role":"user",
+            "content":"{\"current_state\": {\"title\": \"От текущего уровня к 30 отжиманиям\", \"summary\": \"Программа прогрессивной тренировки отжиманий на 4–6 недель. Будем увеличивать объём и интенсивность, адаптируясь к вашему текущему уровню.\", \"outcome\": \"Сделать 30 отжиманий подряд\", \"paraphrase\": \"Ок — ведём к: 30 отжиманий подряд\", \"success_criteria\": \"Выполнить 30 отжиманий одним подходом без остановки с правильной техникой\", \"horizon\": \"4–6 недель, 3–6 тренировок в неделю по 15–25 мин\", \"domain\": \"fitness\", \"tags\": [\"push-ups\", \"strength\", \"progression\"], \"cycle\": {\"index\": 1, \"horizon_days\": 42, \"status\": \"draft\", \"goal_for_cycle\": \"Построить базу объёма и техники, подойти к промежуточной цели\"}, \"days\": [{\"day_index\": 0, \"kind\": \"train\", \"title\": \"День 1: Техника и разминка\", \"summary\": \"Первая тренировка — освоение формы.\"}, {\"day_index\": 1, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 2, \"kind\": \"train\", \"title\": \"День 2: Объём\", \"summary\": \"Короткие подходы, суммарный объём.\"}, {\"day_index\": 3, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 4, \"kind\": \"train\", \"title\": \"День 3: Вариативность\", \"summary\": \"Отжимания с разной расстановкой рук.\"}, {\"day_index\": 5, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 6, \"kind\": \"train\", \"title\": \"Неделя 1–2: Объём растёт\", \"summary\": \"Увеличение объёма.\"}, {\"day_index\": 7, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 8, \"kind\": \"train\", \"title\": \"Неделя 1–2: Аккумуляция\", \"summary\": \"Накопление объёма.\"}, {\"day_index\": 9, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 10, \"kind\": \"train\", \"title\": \"Неделя 1–2: Тест максимума\", \"summary\": \"Проверка прогресса.\"}, {\"day_index\": 11, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 12, \"kind\": \"train\", \"title\": \"Неделя 3–4: Интенсивность\", \"summary\": \"Работа на максимум, суперсеты, пирамиды.\"}, {\"day_index\": 13, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 14, \"kind\": \"train\", \"title\": \"Неделя 3–4: Максимальные подходы\", \"summary\": \"Пирамида и интенсив.\"}, {\"day_index\": 15, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 16, \"kind\": \"train\", \"title\": \"Неделя 3–4: Утомление и пик\", \"summary\": \"Работа с усталостью, близко к максимуму.\"}, {\"day_index\": 17, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 18, \"kind\": \"train\", \"title\": \"Неделя 5–6: К 30 повторениям\", \"summary\": \"Работа к целевой цифре.\"}, {\"day_index\": 19, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 20, \"kind\": \"train\", \"title\": \"Неделя 5–6: Максимальные подходы\", \"summary\": \"Выкладываемся на максимум.\"}, {\"day_index\": 21, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 22, \"kind\": \"train\", \"title\": \"Неделя 5–6: Техника под нагрузкой\", \"summary\": \"Качество на усталости.\"}, {\"day_index\": 23, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 24, \"kind\": \"train\", \"title\": \"Неделя 5–6: Финальная интенсивная\", \"summary\": \"Уточнение перед попыткой.\"}, {\"day_index\": 25, \"kind\": \"rest\", \"title\": \"Полный отдых\", \"summary\": null}, {\"day_index\": 26, \"kind\": \"train\", \"title\": \"Неделя 5–6: Попытка 30\", \"summary\": \"Максимальный подход.\"}, {\"day_index\": 27, \"kind\": \"rest\", \"title\": \"Отдых или финальная попытка\", \"summary\": null}, {\"day_index\": 28, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 29, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 30, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 31, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 32, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 33, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 34, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 35, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 36, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 37, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 38, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 39, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 40, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}, {\"day_index\": 41, \"kind\": \"rest\", \"title\": \"Отдых\", \"summary\": null}], \"groups\": [{\"id\": \"base\", \"title\": \"Базовая техника\", \"description\": \"Освоение правильной формы отжиманий.\", \"sort\": 0}, {\"id\": \"volume\", \"title\": \"Объём (недели 1–2)\", \"description\": \"Увеличение общего количества повторений через короткие подходы.\", \"sort\": 1}, {\"id\": \"intensity\", \"title\": \"Интенсивность (недели 3–4)\", \"description\": \"Работа на максимум, суперсеты, пирамиды.\", \"sort\": 2}, {\"id\": \"finish\", \"title\": \"Финиш (недели 5–6)\", \"description\": \"Приближение к 30 повторениям, финальные попытки.\", \"sort\": 3}], \"actions\": [{\"id\": \"tech_intro\", \"title\": \"Освоить правильную технику\", \"why\": \"Неправильная форма замедляет прогресс и увеличивает риск травмы\", \"detail\": \"Исходная: руки на ширине плеч, локти прижаты к корпусу, спина прямая. Вниз медленнее, чем вверх. Лишь когда техника уверенна, добавляем объём.\", \"estimate_min\": 20, \"day_offset\": 0, \"sort\": 0, \"group_id\": \"base\", \"checklist_items\": [{\"id\": \"t1\", \"title\": \"Разминка: вращение рук, планка 20 сек\", \"done\": false, \"sort\": 0}, {\"id\": \"t2\", \"title\": \"Отжимания с колен или от стены для ощущения формы\", \"done\": false, \"sort\": 1}, {\"id\": \"t3\", \"title\": \"3 подхода по 3–5 отжиманий максимум с отдыхом\", \"done\": false, \"sort\": 2}], \"plugin_hints\": [\"counter\"], \"timers\": [], \"counter\": null, \"timeline\": null, \"interval_plan\": null}, {\"id\": \"vol_1\", \"title\": \"Объём: подходы и суммарные повторения\", \"why\": \"На неделях 1–2 лепим количество, комфортно и без спешки\", \"detail\": \"5–6 подходов в день, каждый на 50–70% от текущего максимума. Между подходами — 60–90 сек. Цель: суммарно 50–80 повторений в день. Вариативность: узкие и широкие хваты.\", \"estimate_min\": 22, \"day_offset\": 2, \"sort\": 1, \"group_id\": \"volume\", \"checklist_items\": [{\"id\": \"v1\", \"title\": \"Разминка: планка 30 сек, вращение\", \"done\": false, \"sort\": 0}, {\"id\": \"v2\", \"title\": \"5–6 подходов разными хватами\", \"done\": false, \"sort\": 1}, {\"id\": \"v3\", \"title\": \"Суммарно 50–80 повторений\", \"done\": false, \"sort\": 2}], \"plugin_hints\": [\"counter\"], \"timers\": [], \"counter\": null, \"timeline\": null, \"interval_plan\": null}, {\"id\": \"var_1\", \"title\": \"Вариативность: узкие, стандартные, широкие\", \"why\": \"Разные углы нагрузки = лучший баланс мышц и адаптация\", \"detail\": \"1–2 подхода узких (локти ближе), 1–2 подхода стандартных, 1–2 подхода широких (локти дальше). Все на комфортное количество. Отдых между подходами 60–90 сек.\", \"estimate_min\": 23, \"day_offset\": 4, \"sort\": 2, \"group_id\": \"volume\", \"checklist_items\": [{\"id\": \"va1\", \"title\": \"Разминка\", \"done\": false, \"sort\": 0}, {\"id\": \"va2\", \"title\": \"Узкие, стандартные, широкие хваты\", \"done\": false, \"sort\": 1}, {\"id\": \"va3\", \"title\": \"Суммарно 70–100 повторений\", \"done\": false, \"sort\": 2}], \"plugin_hints\": [\"counter\"], \"timers\": [], \"counter\": null, \"timeline\": null, \"interval_plan\": null}, {\"id\": \"vol_growth\", \"title\": \"Объём растёт: 100+ повторений за день\", \"why\": \"Адаптация — организм привык, нужен толчок объёма\", \"detail\": \"Увеличиваем количество подходов или повторений на 10–15%. 6–7 подходов, каждый на 60–75% от максимума. Отдых 45–60 сек между подходами.\", \"estimate_min\": 25, \"day_offset\": 6, \"sort\": 3, \"group_id\": \"volume\", \"checklist_items\": [{\"id\": \"vg1\", \"title\": \"6–7 подходов\", \"done\": false, \"sort\": 0}, {\"id\": \"vg2\", \"title\": \"Суммарно 100–120 повторений\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"], \"timers\": [], \"counter\": null, \"timeline\": null, \"interval_plan\": null}, {\"id\": \"vol_acc\", \"title\": \"Аккумуляция: суммарный объём на максимум\", \"why\": \"Накопление объёма — основа выносливости и базы для интенсивности\", \"detail\": \"5–6 подходов, но каждый подход растёт (пирамида вверх). Первый 6 рэпов, второй 7, третий 8, четвёртый 9 и т.д. Или просто 5–6 подходов по 8–12 рэпов. Отдых 60 сек.\", \"estimate_min\": 25, \"day_offset\": 8, \"sort\": 4, \"group_id\": \"volume\", \"checklist_items\": [{\"id\": \"va1\", \"title\": \"5–6 подходов растущего объёма\", \"done\": false, \"sort\": 0}, {\"id\": \"va2\", \"title\": \"Отдых 60 сек между подходами\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"], \"timers\": [], \"counter\": null, \"timeline\": null, \"interval_plan\": null}, {\"id\": \"vol_test\", \"title\": \"Тест максимума: проверка прогресса\", \"why\": \"Убедиться в прогрессе и задать новый ориентир для интенсивной фазы\", \"detail\": \"После 5 мин разминки и 2–3 подходов дошагивания — один максимальный подход на счёт. Примерно +5–10 рэпов от стартовой точки. Записать результат.\", \"estimate_min\": 20, \"day_offset\": 10, \"sort\": 5, \"group_id\": \"volume\", \"checklist_items\": [{\"id\": \"vt1\", \"title\": \"Разминка и дошагивание\", \"done\": false, \"sort\": 0}, {\"id\": \"vt2\", \"title\": \"Максимальный подход на счёт\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"], \"timers\": [], \"counter\": null, \"timeline\": null, \"interval_plan\": null}, {\"id\": \"int_super_pyr\", \"title\": \"Интенсивность: суперсеты и пирамида\", \"why\": \"Переходим на интенсивность — меньше подходов, выше качество и нагрузка\", \"detail\": \"День 1: 3 суперсета (отжимания + вспомогательное упр) с отдыхом 90 сек. День 2: Пирамида 5–4–3–2–1 вверх, затем 1–2–3–4–5 вниз, отдых 90 сек. 3–4 подхода по 80–90% от текущего максимума (День 3).\", \"estimate_min\": 25, \"day_offset\": 12, \"sort\": 6, \"group_id\": \"intensity\", \"checklist_items\": [{\"id\": \"is1\", \"title\": \"День 1: Разминка + 3 суперсета\", \"done\": false, \"sort\": 0}, {\"id\": \"is2\", \"title\": \"День 2: Пирамида полная\", \"done\": false, \"sort\": 1}, {\"id\": \"is3\", \"title\": \"День 3: 3–4 максимальных подхода\", \"done\": false, \"sort\": 2}], \"plugin_hints\": [\"counter\"], \"timers\": [], \"counter\": null, \"timeline\": null, \"interval_plan\": null}, {\"id\": \"int_fatigue_max\", \"title\": \"Интенсивность: утомление и максимум\", \"why\": \"Укрепление нервной системы и работа с высокими нагрузками, адаптация к усталости\", \"detail\": \"День 4: 6 подходов подряд с минимальным отдыхом (30–45 сек) на 60–70% от максимума, последний самый тяжёлый. День 5: 2–3 подхода по 80–90% от максимума с отдыхом 3 мин, упор на качество каждого повтора.\", \"estimate_min\": 25, \"day_offset\": 14, \"sort\": 7, \"group_id\": \"intensity\", \"checklist_items\": [{\"id\": \"if1\", \"title\": \"День 4: 6 подходов с коротким отдыхом\", \"done\": false, \"sort\": 0}, {\"id\": \"if2\", \"title\": \"День 5: 2–3 подхода на 90%+\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"], \"timers\": [], \"counter\": null, \"timeline\": null, \"interval_plan\": null}, {\"id\": \"fin_combined\", \"title\": \"Финиш: объём и максимум к 30 повторениям\", \"why\": \"На финише совмещаем объём и качество для приближения к 30\", \"detail\": \"День 1: 4–5 подходов на 70–80%, отдых 2 мин. День 2: 2–3 максимальных подхода, отдых 3–4 мин, один может быть близок к 30. День 3: 3–4 подхода с акцентом на медленное опускание (3–4 сек), 60–75% от максимума.\", \"estimate_min\": 25, \"day_offset\": 18, \"sort\": 8, \"group_id\": \"finish\", \"checklist_items\": [{\"id\": \"fs1\", \"title\": \"День 1: 4–5 подходов на 70–80%\", \"done\": false, \"sort\": 0}, {\"id\": \"fs2\", \"title\": \"День 2: 2–3 максимальных подхода\", \"done\": false, \"sort\": 1}, {\"id\": \"fs3\", \"title\": \"День 3: Техника под нагрузкой\", \"done\": false, \"sort\": 2}], \"plugin_hints\": [\"counter\"], \"timers\": [], \"counter\": null, \"timeline\": null, \"interval_plan\": null}, {\"id\": \"fin_peak\", \"title\": \"Финальная интенсивная и попытка 30\", \"why\": \"Последняя тренировка перед кульминацией и финальная попытка цели\", \"detail\": \"День 4: 2 максимальных подхода с отдыхом 4–5 мин. День 5: После 10 мин разминки — один максимальный подход на счёт до 30. Если не вышло, отдыхаем 5–10 мин и ещё одна попытка.\", \"estimate_min\": 25, \"day_offset\": 20, \"sort\": 9, \"group_id\": \"finish\", \"checklist_items\": [{\"id\": \"fn1\", \"title\": \"День 4: 2 максимальных подхода\", \"done\": false, \"sort\": 0}, {\"id\": \"fn2\", \"title\": \"День 5: Максимальный подход на счёт до 30\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"], \"timers\": [], \"counter\": null, \"timeline\": null, \"interval_plan\": null}, {\"id\": \"attempt_final\", \"title\": \"Финальная попытка или закрепление\", \"why\": \"Если с первой попытки не получилось, это второй шанс; если получилось — закрепляем\", \"detail\": \"После 3–4 часов отдыха или на следующий день — финальная попытка. Разминка 10 мин, максимальный подход. Если получилось 30 — цель достигнута! Если близко, отдыхаем неделю и повторяем цикл.\", \"estimate_min\": 20, \"day_offset\": 26, \"sort\": 10, \"group_id\": \"finish\", \"checklist_items\": [{\"id\": \"af1\", \"title\": \"Разминка\", \"done\": false, \"sort\": 0}, {\"id\": \"af2\", \"title\": \"Максимальный подход\", \"done\": false, \"sort\": 1}], \"plugin_hints\": [\"counter\"], \"timers\": [], \"counter\": null, \"timeline\": null, \"interval_plan\": null}], \"questions\": [{\"id\": \"current_level\", \"prompt\": \"Сколько отжиманий вы делаете сейчас?\", \"options\": [\"0–5\", \"6–15\", \"16–25\", \"больше 25\"]}, {\"id\": \"frequency\", \"prompt\": \"Как часто вы готовы тренироваться?\", \"options\": [\"3 раза в неделю\", \"4 раза в неделю\", \"5–6 раз в неделю\"]}], \"resources\": [], \"milestones\": []}, \"answers\": [{\"question_id\": \"current_level\", \"value\": \"18\"}, {\"question_id\": \"frequency\", \"value\": \"5–6 раз в неделю\"}], \"comment\": null}"
+         }
+      ],
+      "raw_response":{
+         "days":[
+            {
+               "kind":"train",
+               "title":"День 1: Техника и состояние",
+               "summary":"Проверка текущего уровня и освежение формы",
+               "day_index":0
+            },
+            {
+               "kind":"train",
+               "title":"День 2: Объём разными хватами",
+               "summary":"Накопление на 70–80% от максимума",
+               "day_index":1
+            },
+            {
+               "kind":"train",
+               "title":"День 3: Максимальный подход",
+               "summary":"Тест и установка нового ориентира",
+               "day_index":2
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"Восстановление перед интенсивной фазой",
+               "day_index":3
+            },
+            {
+               "kind":"train",
+               "title":"День 4: Пирамида и суперсеты",
+               "summary":"Переход на интенсивность",
+               "day_index":4
+            },
+            {
+               "kind":"train",
+               "title":"День 5: Объём и качество",
+               "summary":"5–6 подходов на 70–75%",
+               "day_index":5
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"Восстановление",
+               "day_index":6
+            },
+            {
+               "kind":"train",
+               "title":"День 6: Максимум с отдыхом",
+               "summary":"2–3 подхода на 85–90%",
+               "day_index":7
+            },
+            {
+               "kind":"train",
+               "title":"День 7: Вариативные хваты",
+               "summary":"Узкие, стандартные, широкие",
+               "day_index":8
+            },
+            {
+               "kind":"train",
+               "title":"День 8: Утомление + максимум",
+               "summary":"6 подходов с коротким отдыхом, потом 2 максимальных",
+               "day_index":9
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"Восстановление",
+               "day_index":10
+            },
+            {
+               "kind":"train",
+               "title":"День 9: Медленное опускание",
+               "summary":"3–4 подхода, 3–4 сек вниз, 60–75% от максимума",
+               "day_index":11
+            },
+            {
+               "kind":"train",
+               "title":"День 10: Пирамида полная",
+               "summary":"Вверх и вниз: 5–4–3–2–1–2–3–4–5",
+               "day_index":12
+            },
+            {
+               "kind":"train",
+               "title":"День 11: Максимальный подход",
+               "summary":"Один или два подхода на счёт до 30",
+               "day_index":13
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"Восстановление перед финишем",
+               "day_index":14
+            },
+            {
+               "kind":"train",
+               "title":"День 12: Комбо объём + максимум",
+               "summary":"4–5 подходов 70–80%, затем 2–3 на 85–90%",
+               "day_index":15
+            },
+            {
+               "kind":"train",
+               "title":"День 13: Техника под нагрузкой",
+               "summary":"3–4 подхода, медленное выполнение, качество",
+               "day_index":16
+            },
+            {
+               "kind":"train",
+               "title":"День 14: Финальная интенсивная",
+               "summary":"2 максимальных подхода с 4–5 мин отдыхом",
+               "day_index":17
+            },
+            {
+               "kind":"rest",
+               "title":"Полный отдых",
+               "summary":"Восстановление перед попыткой",
+               "day_index":18
+            },
+            {
+               "kind":"train",
+               "title":"День 15: ФИНАЛЬНАЯ ПОПЫТКА 30",
+               "summary":"После разминки — максимальный подход на счёт до 30",
+               "day_index":19
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых или повторная попытка",
+               "summary":"",
+               "day_index":20
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":21
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":22
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":23
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":24
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":25
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":26
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":27
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":28
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":29
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":30
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":31
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":32
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":33
+            },
+            {
+               "kind":"rest",
+               "title":"Отдых",
+               "summary":"",
+               "day_index":34
+            }
+         ],
+         "tags":[
+            "push-ups",
+            "strength",
+            "progression",
+            "intensity"
+         ],
+         "cycle":{
+            "index":1,
+            "status":"draft",
+            "horizon_days":35,
+            "goal_for_cycle":"От 18 к 30 отжиманиям через объём и интенсивность"
+         },
+         "title":"От 18 к 30 отжиманиям — 5–6 недель",
+         "domain":"fitness",
+         "groups":[
+            {
+               "id":"base",
+               "sort":0,
+               "title":"Техника и состояние",
+               "description":"Проверка текущего уровня, освежение формы перед интенсивной работой."
+            },
+            {
+               "id":"volume",
+               "sort":1,
+               "title":"Объём (дни 2, 5, 9, 12, 16)",
+               "description":"Накопление повторений через подходы на 70–80% от максимума, разные хваты и темпы."
+            },
+            {
+               "id":"intensity",
+               "sort":2,
+               "title":"Интенсивность (дни 4, 7, 11, 15, 17)",
+               "description":"Максимальные подходы, пирамиды, суперсеты, работа на 85–90% и выше."
+            },
+            {
+               "id":"finish",
+               "sort":3,
+               "title":"Финиш (дни 13, 19)",
+               "description":"Финальная подготовка и попытка 30 отжиманий."
+            }
+         ],
+         "actions":[
+            {
+               "id":"tech_intro",
+               "why":"Вы уже на 18 рэпов — важно убедиться, что форма правильная, и точно знать текущий максимум перед интенсивной фазой",
+               "sort":0,
+               "title":"Проверить текущий уровень и технику",
+               "detail":"После разминки (вращение рук, планка 30 сек) — один максимальный подход на счёт. Записать точное количество. Проверить: локти к корпусу, спина прямая, опускание медленнее подъёма.",
+               "group_id":"base",
+               "day_offset":0,
+               "estimate_min":15,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"t1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка: вращение рук, планка 30 сек"
+                  },
+                  {
+                     "id":"t2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Максимальный подход на счёт"
+                  },
+                  {
+                     "id":"t3",
+                     "done":false,
+                     "sort":2,
+                     "title":"Проверка формы: локти, спина, темп"
+                  }
+               ]
+            },
+            {
+               "id":"vol_base",
+               "why":"От 18 рэпов нужно набрать объём для прочной базы перед финальным толчком",
+               "sort":1,
+               "title":"Объём разными хватами",
+               "detail":"5–6 подходов: узкие (1–2 подхода), стандартные (2–3), широкие (1–2). Каждый подход на 70–80% от максимума, то есть примерно 12–15 рэпов за подход. Отдых между подходами 60–75 сек. Суммарно ~80–90 повторений.",
+               "group_id":"volume",
+               "day_offset":1,
+               "estimate_min":22,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"v1",
+                     "done":false,
+                     "sort":0,
+                     "title":"5–6 подходов разными хватами"
+                  },
+                  {
+                     "id":"v2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Каждый подход на 70–80% (12–15 рэпов)"
+                  },
+                  {
+                     "id":"v3",
+                     "done":false,
+                     "sort":2,
+                     "title":"Отдых 60–75 сек между подходами"
+                  }
+               ]
+            },
+            {
+               "id":"int_test",
+               "why":"После объёмной тренировки важно понять, вырос ли максимум; это даст уверенность и новый целевой уровень для интенсивной фазы",
+               "sort":2,
+               "title":"Максимальный подход — новый ориентир",
+               "detail":"После разминки и 2–3 подходов дошагивания (50–60% от максимума) — один максимальный подход. Стараемся хотя бы на 1–2 повтора больше, чем было в начале. Записать результат.",
+               "group_id":"intensity",
+               "day_offset":2,
+               "estimate_min":18,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"it1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка и дошагивание"
+                  },
+                  {
+                     "id":"it2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Один максимальный подход на счёт"
+                  },
+                  {
+                     "id":"it3",
+                     "done":false,
+                     "sort":2,
+                     "title":"Записать новый ориентир"
+                  }
+               ]
+            },
+            {
+               "id":"int_pyr_super",
+               "why":"Переход на интенсивность: укрепляем нервную систему и меняем стимул для роста",
+               "sort":3,
+               "title":"Пирамида и суперсеты",
+               "detail":"День 1: Пирамида вверх 5–4–3–2–1, потом вниз 1–2–3–4–5 (каждое число = рэпы), отдых 90 сек между блоками. День 2: 3 суперсета (отжимания + вспомогательное упр, например планка 30 сек), отдых 90 сек. Оба варианта — на 75–85% от максимума.",
+               "group_id":"intensity",
+               "day_offset":4,
+               "estimate_min":25,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"ps1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Пирамида полная или 3 суперсета"
+                  },
+                  {
+                     "id":"ps2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Работа на 75–85% от максимума"
+                  },
+                  {
+                     "id":"ps3",
+                     "done":false,
+                     "sort":2,
+                     "title":"Отдых 90 сек между блоками"
+                  }
+               ]
+            },
+            {
+               "id":"vol_acc2",
+               "why":"После интенсива возвращаемся к объёму для адаптации и восстановления ЦНС",
+               "sort":4,
+               "title":"Объём и качество: 5–6 подходов на 70–75%",
+               "detail":"5–6 подходов на 70–75% от максимума (примерно 12–14 рэпов за подход). Медленное опускание (3–4 сек). Отдых 60 сек между подходами. Суммарно ~75–85 повторений. Цель — качество и комфорт.",
+               "group_id":"volume",
+               "day_offset":5,
+               "estimate_min":23,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"va1",
+                     "done":false,
+                     "sort":0,
+                     "title":"5–6 подходов на 70–75%"
+                  },
+                  {
+                     "id":"va2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Медленное опускание 3–4 сек"
+                  },
+                  {
+                     "id":"va3",
+                     "done":false,
+                     "sort":2,
+                     "title":"Отдых 60 сек, суммарно ~80 рэпов"
+                  }
+               ]
+            },
+            {
+               "id":"int_max2",
+               "why":"Позволяет ЦНС восстановиться между подходами и работать на 85–90% с качеством",
+               "sort":5,
+               "title":"Максимум с длинным отдыхом",
+               "detail":"2–3 максимальных подхода (или близких к максимуму) с отдыхом 3–4 мин между подходами. Каждый подход считаем и записываем. Если один из них близок к 25+ рэпам — отлично, это означает, что 30 уже в пределах досягаемости.",
+               "group_id":"intensity",
+               "day_offset":7,
+               "estimate_min":20,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"im1",
+                     "done":false,
+                     "sort":0,
+                     "title":"2–3 максимальных подхода"
+                  },
+                  {
+                     "id":"im2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Отдых 3–4 мин между подходами"
+                  },
+                  {
+                     "id":"im3",
+                     "done":false,
+                     "sort":2,
+                     "title":"Записать каждый результат"
+                  }
+               ]
+            },
+            {
+               "id":"var_wide",
+               "why":"Разные углы нагрузки укрепляют разные части груди и трицепса, снижают риск плато",
+               "sort":6,
+               "title":"Вариативные хваты: узкие, стандартные, широкие",
+               "detail":"1–2 подхода узких (локти ближе к корпусу), 2–3 подхода стандартных, 1–2 подхода широких (локти дальше). Каждый подход на 70–75% от максимума. Отдых 60–75 сек. Суммарно ~80 рэпов.",
+               "group_id":"volume",
+               "day_offset":8,
+               "estimate_min":24,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"vw1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Узкие, стандартные, широкие хваты"
+                  },
+                  {
+                     "id":"vw2",
+                     "done":false,
+                     "sort":1,
+                     "title":"1–2–1 или 2–3–2 подходов"
+                  },
+                  {
+                     "id":"vw3",
+                     "done":false,
+                     "sort":2,
+                     "title":"Каждый на 70–75%, отдых 60–75 сек"
+                  }
+               ]
+            },
+            {
+               "id":"fat_max",
+               "why":"Укрепляет способность работать в утомлении и готовит мышцы к финальному напряжению на 30",
+               "sort":7,
+               "title":"Утомление + максимум: объём с коротким отдыхом + финал на максимум",
+               "detail":"Часть 1: 6 подходов подряд с коротким отдыхом 30–45 сек на 60–70% от максимума (примерно 10–12 рэпов за подход). Часть 2 (после 2–3 мин восстановления): 2 максимальных подхода с отдыхом 3–4 мин. Один из этих подходов может быть близок к 28–30.",
+               "group_id":"intensity",
+               "day_offset":9,
+               "estimate_min":28,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"fm1",
+                     "done":false,
+                     "sort":0,
+                     "title":"6 подходов с коротким отдыхом 30–45 сек"
+                  },
+                  {
+                     "id":"fm2",
+                     "done":false,
+                     "sort":1,
+                     "title":"После 2–3 мин отдыха — 2 максимальных подхода"
+                  },
+                  {
+                     "id":"fm3",
+                     "done":false,
+                     "sort":2,
+                     "title":"Один из максимальных подходов может быть близко к 28–30"
+                  }
+               ]
+            },
+            {
+               "id":"slow_tempo",
+               "why":"Работа на медленном темпе укрепляет связь мышцы и ЦНС, улучшает технику в утомлении",
+               "sort":8,
+               "title":"Медленное опускание: техника под нагрузкой",
+               "detail":"3–4 подхода на 60–75% от максимума, опускание 3–4 сек, подъём нормальный. Отдых 75 сек между подходами. Цель — качество каждого повтора и контроль в конце подхода. Суммарно ~60–70 рэпов.",
+               "group_id":"volume",
+               "day_offset":11,
+               "estimate_min":22,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"st1",
+                     "done":false,
+                     "sort":0,
+                     "title":"3–4 подхода на 60–75%"
+                  },
+                  {
+                     "id":"st2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Опускание 3–4 сек, подъём нормальный"
+                  },
+                  {
+                     "id":"st3",
+                     "done":false,
+                     "sort":2,
+                     "title":"Отдых 75 сек, качество важнее объёма"
+                  }
+               ]
+            },
+            {
+               "id":"pyr_full",
+               "why":"Эффективный способ работать и на объём, и на максимум в одной сессии",
+               "sort":9,
+               "title":"Пирамида полная: вверх и вниз",
+               "detail":"Пирамида вверх: 5–4–3–2–1 (каждое число = количество рэпов), отдых 90 сек. Потом пирамида вниз: 1–2–3–4–5, отдых 90 сек. Общий объём ~30 рэпов, работа на 70–85% от максимума.",
+               "group_id":"intensity",
+               "day_offset":12,
+               "estimate_min":24,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"pf1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Пирамида вверх: 5–4–3–2–1"
+                  },
+                  {
+                     "id":"pf2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Пирамида вниз: 1–2–3–4–5"
+                  },
+                  {
+                     "id":"pf3",
+                     "done":false,
+                     "sort":2,
+                     "title":"Отдых 90 сек между блоками"
+                  }
+               ]
+            },
+            {
+               "id":"int_max3",
+               "why":"На этом этапе цель уже очень близко; проверяем, готовы ли мы к финальной попытке",
+               "sort":10,
+               "title":"Максимальный подход — проверка близости к 30",
+               "detail":"После разминки и 2–3 подходов дошагивания — один или два максимальных подхода с отдыхом 4–5 мин. Стараемся дотянуть до 25+ рэпов. Если получилось 27–29 — отлично, финальная попытка будет в ближайшие дни.",
+               "group_id":"intensity",
+               "day_offset":13,
+               "estimate_min":20,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"im1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка и дошагивание"
+                  },
+                  {
+                     "id":"im2",
+                     "done":false,
+                     "sort":1,
+                     "title":"1–2 максимальных подхода с отдыхом 4–5 мин"
+                  },
+                  {
+                     "id":"im3",
+                     "done":false,
+                     "sort":2,
+                     "title":"Целимся на 25–28 рэпов"
+                  }
+               ]
+            },
+            {
+               "id":"fin_combo",
+               "why":"Последняя полноценная тренировка перед попыткой: убедимся, что ресурс есть",
+               "sort":11,
+               "title":"Комбо: объём + максимум перед финишем",
+               "detail":"Часть 1: 4–5 подходов на 70–80% от максимума (12–14 рэпов за подход), отдых 60–75 сек. Часть 2 (после 3 мин отдыха): 2–3 максимальных подхода, отдых 4 мин между ними. Один из них должен быть максимально близок к 30.",
+               "group_id":"finish",
+               "day_offset":15,
+               "estimate_min":26,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"fc1",
+                     "done":false,
+                     "sort":0,
+                     "title":"4–5 подходов на 70–80%"
+                  },
+                  {
+                     "id":"fc2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Отдых 3 мин, потом 2–3 максимальных подхода"
+                  },
+                  {
+                     "id":"fc3",
+                     "done":false,
+                     "sort":2,
+                     "title":"Один из максимальных близок к 30"
+                  }
+               ]
+            },
+            {
+               "id":"fin_tech",
+               "why":"Перед финальной попыткой отрабатываем качество движения, когда мышцы уже утомлены",
+               "sort":12,
+               "title":"Техника под максимальной нагрузкой",
+               "detail":"3–4 подхода на 65–75% от максимума, медленное опускание (3–4 сек), подъём контролируемый. Отдых 75–90 сек между подходами. Цель — убедиться, что даже в утомлении техника не разваливается. Суммарно ~60 рэпов.",
+               "group_id":"finish",
+               "day_offset":16,
+               "estimate_min":23,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"ft1",
+                     "done":false,
+                     "sort":0,
+                     "title":"3–4 подхода на 65–75%"
+                  },
+                  {
+                     "id":"ft2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Медленное опускание 3–4 сек"
+                  },
+                  {
+                     "id":"ft3",
+                     "done":false,
+                     "sort":2,
+                     "title":"Контроль и качество в утомлении"
+                  }
+               ]
+            },
+            {
+               "id":"fin_intensity",
+               "why":"Последний шанс укрепить нервную систему перед попыткой; проверяем, на что мы способны",
+               "sort":13,
+               "title":"Финальная интенсивная сессия: 2 максимальных подхода",
+               "detail":"После полноценной разминки (10–15 мин) и 2 подходов дошагивания — 2 максимальных подхода с отдыхом 4–5 мин. Целимся на 28–30 рэпов в каждом. Если один из них — в точку, отлично. Если близко, то завтра финальная попытка.",
+               "group_id":"finish",
+               "day_offset":17,
+               "estimate_min":22,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"fi1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Разминка 10–15 мин"
+                  },
+                  {
+                     "id":"fi2",
+                     "done":false,
+                     "sort":1,
+                     "title":"2 подхода дошагивания 50–60%"
+                  },
+                  {
+                     "id":"fi3",
+                     "done":false,
+                     "sort":2,
+                     "title":"2 максимальных подхода, отдых 4–5 мин"
+                  }
+               ]
+            },
+            {
+               "id":"attempt_final",
+               "why":"Кульминация программы: после 4–5 недель интенсивной работы вы готовы к этому",
+               "sort":14,
+               "title":"ФИНАЛЬНАЯ ПОПЫТКА: 30 отжиманий",
+               "detail":"После полноценной разминки (10–15 мин: вращение, планка, лёгкие подходы) — один максимальный подход на счёт до 30. Медленное опускание, ровная спина, локти к корпусу. Если получилось 30 — цель достигнута! Если не совсем, но близко (27–29) — отдыхаем 3–5 мин и ещё одна попытка.",
+               "group_id":"finish",
+               "day_offset":19,
+               "estimate_min":20,
+               "plugin_hints":[
+                  "counter"
+               ],
+               "checklist_items":[
+                  {
+                     "id":"af1",
+                     "done":false,
+                     "sort":0,
+                     "title":"Полная разминка 10–15 мин"
+                  },
+                  {
+                     "id":"af2",
+                     "done":false,
+                     "sort":1,
+                     "title":"Максимальный подход на счёт до 30"
+                  },
+                  {
+                     "id":"af3",
+                     "done":false,
+                     "sort":2,
+                     "title":"При необходимости — вторая попытка после 3–5 мин отдыха"
+                  }
+               ]
+            }
+         ],
+         "horizon":"4–5 недель, 5–6 тренировок в неделю по 15–25 мин",
+         "outcome":"Выполнить 30 отжиманий подряд с правильной техникой",
+         "summary":"Вы уже на уровне 18 отжиманий — это хороший старт. Программа сокращена на 4–5 недель с уклоном на интенсивность и финальный толчок к 30. Тренируемся 5–6 раз в неделю: чередуем силовые блоки (максимум, качество) с объёмными днями (накопление) и минимальным отдыхом.",
+         "questions":[
+            
+         ],
+         "paraphrase":"Ок — за 4–5 недель интенсивной работы с вашей базой в 18 рэпов добираемся к 30",
+         "success_criteria":"Сделать 30 отжиманий одним подходом без остановки с правильной формой"
+      },
+      "parsed_ok":true,
+      "tokens_in":8975,
+      "tokens_out":6317,
+      "latency_ms":43992,
+      "error":null,
+      "created_at":"2026-07-31 14:28:08.572878 +00:00",
+      "user_id":"a81b3885-558d-4ac8-bff3-5f85995c43c0"
+   }
+]

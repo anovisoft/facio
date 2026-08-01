@@ -6,14 +6,19 @@ import type {
   ProjectDetail,
   ProjectSummary,
   RefineAnswerItem,
+  RepairIntent,
   StateVersionSummary,
 } from '@/api/types';
+import { getLocalDate } from '@/services/localDate';
 
 export function listProjects(
   status: ListStatusFilter = 'open',
   signal?: AbortSignal,
 ): Promise<ProjectSummary[]> {
-  return apiRequest('/projects', { query: { status }, signal });
+  return apiRequest('/projects', {
+    query: { status, local_date: getLocalDate() },
+    signal,
+  });
 }
 
 export function createProject(
@@ -31,7 +36,10 @@ export function getProject(
   projectId: string,
   signal?: AbortSignal,
 ): Promise<ProjectDetail> {
-  return apiRequest(`/projects/${projectId}`, { signal });
+  return apiRequest(`/projects/${projectId}`, {
+    query: { local_date: getLocalDate() },
+    signal,
+  });
 }
 
 export function refineProject(
@@ -56,6 +64,7 @@ export function refineProject(
   return apiRequest(`/projects/${projectId}/refine`, {
     method: 'POST',
     body,
+    query: { local_date: getLocalDate() },
     signal,
   });
 }
@@ -75,6 +84,7 @@ export function restoreState(
   return apiRequest(`/projects/${projectId}/restore-state`, {
     method: 'POST',
     body: { version },
+    query: { local_date: getLocalDate() },
     signal,
   });
 }
@@ -87,6 +97,7 @@ export function commitProject(
   return apiRequest(`/projects/${projectId}/commit`, {
     method: 'POST',
     body: { first_step_when: firstStepWhen },
+    query: { local_date: getLocalDate() },
     signal,
   });
 }
@@ -99,18 +110,24 @@ export function abandonProject(
   return apiRequest(`/projects/${projectId}/abandon`, {
     method: 'POST',
     body: reason ? { reason } : {},
+    query: { local_date: getLocalDate() },
     signal,
   });
 }
 
 export function repairProject(
   projectId: string,
-  reason: string,
+  payload: { intent?: RepairIntent; reason?: string },
   signal?: AbortSignal,
 ): Promise<ProjectDetail> {
+  const body: { intent?: RepairIntent; reason?: string } = {};
+  if (payload.intent) body.intent = payload.intent;
+  const reason = payload.reason?.trim();
+  if (reason) body.reason = reason;
   return apiRequest(`/projects/${projectId}/repair`, {
     method: 'POST',
-    body: { reason },
+    body,
+    query: { local_date: getLocalDate() },
     signal,
   });
 }

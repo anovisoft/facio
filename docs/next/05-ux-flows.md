@@ -147,10 +147,21 @@ Intent
 Не могу сегодня
   → варианты: сдвинуть день / облегчить / заменить на rest
   → подтверждение короткого diff
-  → новый «Сегодня»
+  → новый «Сегодня» (с учётом physical unlock)
 ```
 
 Минимум must; без этого multi-day dogfood ломается.
+
+## Физический день (Home)
+
+```text
+unlocked_day_index от local_today − cycle_anchor
+focus = earliest pending ≤ unlocked  → execute (Сделано / plugins)
+дни > unlocked → видны на «Весь план» и peek, controls disabled
+закрыл день рано → peek завтрашнего, не авто-execute день+1
+```
+
+См. [04 §4](./04-model.md).
 
 ---
 

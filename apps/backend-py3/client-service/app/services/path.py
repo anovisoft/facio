@@ -42,6 +42,7 @@ from app.schemas.api import (
     CreateIntentResponse,
     InstantAnswerResponse,
     PathCreatedResponse,
+    RepairIntent,
     TimelineEntry,
     TimelineResponse,
 )
@@ -79,6 +80,12 @@ logger = logging.getLogger("app.path")
 _LLM_MAX_ATTEMPTS = 2
 _T = TypeVar("_T")
 MaterializeMode = Literal["none", "merge"]
+
+_INTENT_REASON_HINTS: dict[RepairIntent, str] = {
+    "shift": "Can't do today's plan — shift it to the next day.",
+    "lighten": "Today's plan is too much — lighten the load.",
+    "rest": "Swap today for a light rest day.",
+}
 
 
 @dataclass
@@ -848,8 +855,17 @@ class PathService:
         user: User,
         project_id: UUID,
         *,
-        reason: str,
-    ) -> Project:
+        reason: str | None = None,
+        intent: RepairIntent | None = None,
+    ) -> tuple[Project, str | None]:
+        """Structured «Не могу» repair. Returns ``(project, repair_summary)``
+        where ``repair_summary`` is the repair-flavored paraphrase for a
+        one-line confirmation toast (docs/next/05 Repair UX).
+        """
+        if intent is None and not (reason or "").strip():
+            raise ConflictError("Provide intent and/or reason to repair")
+        effective_reason = reason or _INTENT_REASON_HINTS.get(intent, "")
+
         project = await self.projects.get_project(
             user, project_id, for_update=True
         )
@@ -860,14 +876,14 @@ class PathService:
             user_id=user.id,
             project_id=project.id,
             role=ConversationRole.user,
-            content=reason,
-            meta={"kind": "repair_reason"},
+            content=effective_reason,
+            meta={"kind": "repair_reason", "intent": intent},
         )
         await self.audit.add_event(
             event_type=EventType.repair_requested,
             user_id=user.id,
             project_id=project.id,
-            payload={"reason": reason},
+            payload={"reason": effective_reason, "intent": intent},
         )
 
         _, current = await self.projects.get_latest_state(project.id)
@@ -883,8 +899,9 @@ class PathService:
             purpose="repair",
             messages=messages_for_repair(
                 current_state=current.model_dump(mode="json"),
-                reason=reason,
+                reason=effective_reason,
                 project_status=project.status.value,
+                intent=intent,
             ),
             source=StateSource.llm_repair,
             materialize=materialize,
@@ -899,22 +916,25 @@ class PathService:
                 "state_version": result.version,
                 "llm_call_id": str(result.llm_call_id),
                 "source": StateSource.llm_repair.value,
+                "intent": intent,
             },
         )
         await self.audit.add_event(
             event_type=EventType.repair_applied,
             user_id=user.id,
             project_id=project.id,
-            payload={"version": result.version},
+            payload={"version": result.version, "intent": intent},
         )
         await self.db.commit()
         logger.info(
-            "repair project=%s version=%s status=%s",
+            "repair project=%s version=%s status=%s intent=%s",
             project.id,
             result.version,
             project.status.value,
+            intent,
         )
-        return await self.projects.get_project(user, project.id)
+        repaired = await self.projects.get_project(user, project.id)
+        return repaired, result.state.paraphrase or None
 
     async def get_transcript(
         self, user: User, project_id: UUID

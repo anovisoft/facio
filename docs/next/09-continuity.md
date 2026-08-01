@@ -22,8 +22,8 @@
 | 1 | Narrative (title/summary) + batch clarify + comment | **одобрен** (+ UX: custom answer, keyboard, header, back button) |
 | 2 | Cycle + days/kind + Home «день N» + Path day map | **одобрен** (+ hierarchy PathList, rest nesting) |
 | 3 | TimerStack + Counter | **dogfood ок** |
-| 3′ | Progressive create + clock UX + схлоп Accept | **в коде** (#2/#3 + Draft UX D); **ждёт dogfood** |
-| 4 | Repair на живом плане | не начат |
+| 3′ | Progressive create + clock UX + схлоп Accept + Draft UX D | **одобрен** (polish later) |
+| 4 | Repair + **физический день** на живом плане | **в коде**; ждёт dogfood |
 | 5 | Next cycle CTA | не начат |
 
 Миграции backend (по порядку): `005` narrative → `006` cycle/schedule → `007` action plugins → `008` timeline/interval.
@@ -42,7 +42,21 @@ Accept дублирует draft: карта уже полная на create (H1 
 - Repair — не «режим после Accept», а тот же edit-loop на живом плане (срыв дня = мутация state).
 - Не возвращать chat-home; принцип «Plan as Runtime Artifact» сильнее, не слабее.
 
-Следствие для Среза 4: реализовать Repair уже как универсальную мутацию живого плана, не как заплатку на мёртвый draft-цикл.
+Следствие для Среза 4: (1) **физический день** — calendar unlock от якоря commit; (2) Repair как универсальная мутация живого плана на фоне unlock, не заплатка на мёртвый draft-цикл.
+
+### E. Физический день (зафиксировано — must в Срезе 4)
+
+Dogfood: день 1 закрыт → сразу день 2. Программный `day_index` есть, **wall-clock нет**.
+
+**Канон:**
+- `cycle_anchor_date` от commit (`first_step_when` today/tomorrow сдвигает D0)
+- `unlocked = -1` до anchor; иначе `min(local_today − anchor, horizon−1)` — локальная дата с клиента
+- Execute только `day_index ≤ unlocked` (catch-up на незакрытом прошлом ок)
+- **Будущие дни смотреть можно** (карта / весь план / peek); complete/skip/plugins — нет
+- horizon=1 (карбонара) + commit today — без регресса
+- Repair intents: shift / lighten / rest + summary banner
+
+Детали: [04 §4](./04-model.md), [08 Срез 4](./08-impl-plan.md).
 
 ### B. Progressive create — 3 фазы (зафиксировано после hang dogfood)
 
@@ -221,7 +235,7 @@ API: `POST .../counter`, `POST .../timers/{id}/complete`. Timeline/interval runt
 
 | Тема | Заметка |
 |------|---------|
-| Progressive / Draft UX | **#1→#2→#3** + layout D в коде; **ждёт dogfood** |
+| Progressive / Draft UX | **#1→#2→#3** + layout D — **одобрен**; polish later |
 | Always-editable план | Accept-дубль убран (Save/Start); Repair = общий edit — Срез 4 |
 | Timeline / Interval | #2 hints; #3 materialize; XOR timeline/timers на одном шаге |
 | Clarify options отжиманий | Не мешать ось «сколько раз» и «с колен/стены» в одном ряду чипов |
@@ -237,8 +251,9 @@ API: `POST .../counter`, `POST .../timers/{id}/complete`. Timeline/interval runt
 
 ## Следующий шаг
 
-1. **Dogfood 3′** (progressive + clock + Draft UX D) на карбонаре/отжиманиях — checklist ниже
-2. Одобрение 3′ → **Срез 4 Repair**
+1. **Dogfood Среза 4** (физический день + Repair) — checklist: закрыл день 1 ≠ день 2 execute; будущие видны/locked; «Не могу» → shift/lighten/rest
+2. Одобрение 4 → **Срез 5 — Next cycle**
+3. После финала списка: polish Draft UX
 
 ### Dogfood checklist (после UX polish)
 
