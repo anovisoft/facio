@@ -185,8 +185,16 @@ async def test_commit_activates_and_materializes(
     cook = next(a for a in body["actions"] if a["key"] == "cook")
     assert cook["timeline"] is not None
     assert cook["timers"] == []
-    sear = next(a for a in body["actions"] if a["key"] == "sear")
-    assert len(sear["timers"]) >= 1
+    prep = next(a for a in body["actions"] if a["key"] == "prep")
+    assert prep["plugin_hints"] == []
+    assert prep["checklist_items"]
+    assert prep.get("timeline") is None
+    assert prep.get("timers") == []
+    first_marker = cook["timeline"]["markers"][0]["title"].lower()
+    assert not any(
+        w in first_marker
+        for w in ("нарезать", "натереть", "желт", "chop", "cut ", "grate")
+    )
 
     events = (
         await db_session.execute(

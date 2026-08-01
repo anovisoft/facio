@@ -165,6 +165,8 @@ timeline
 
 Дробные «помешать» = маркеры оси, не peer-таймеры. **UI:** Timeline = Session Stage.
 
+**Prep ≠ axis:** mise / ножевая работа (нарезать, сыр, желтки) — отдельный **checklist**-action **до** cook-сессии, `plugin_hints=[]`. Timeline t=0 = жар / кипяток / критичная ось — **не** «нарезать».
+
 #### interval_plan (HIIT по секундам)
 
 ```text

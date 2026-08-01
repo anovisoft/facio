@@ -301,7 +301,7 @@ Home сейчас — буклет: labels, why, detail, checklist, плагин
 
 - Marketplace программ / монетизация
 - Свободный чат «придумай что дальше»
-- Domain-aware Repair, cook prep≠timeline, Home polish (backlog [09](./09-continuity.md))
+- Domain-aware Repair, Home polish (backlog [09](./09-continuity.md)); cook prep≠timeline — **в коде / ждёт dogfood**
 
 ### DoD
 

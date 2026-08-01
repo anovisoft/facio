@@ -368,7 +368,15 @@ API: `POST .../counter`, `POST .../stepper/beats/{id}/counter`, `POST .../timers
 
 ### Cook timeline: prep ≠ clock axis
 
-Не два timeline / не табы на Home. Path: action «подготовка» (checklist) → action «сессия» (один timeline с t=0 от жара/воды). Mise (нарезать) не marker на оси. Промпт #2/#3 + few-shot карбонара.
+**Статус:** **в коде / ждёт dogfood**.
+
+Не два timeline / не табы на Home. Path:
+
+1. action(s) **подготовка / mise** → `checklist` (нарезать, сыр, желтки…) — **без** timeline
+2. action **сессия готовки** → один `timeline`, t=0 = старт жара / кипятка / критичной оси
+
+**Запрещено:** mise («нарезать карбонад») как первый marker на timeline.  
+Промпт #2/#3 + few-shot карбонара + factories/tests — выровнены.
 
 ### Home Session Stage polish
 

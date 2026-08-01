@@ -73,6 +73,9 @@ async def test_create_path_project(
     assert "timeline" in cook["plugin_hints"]
     assert cook.get("timeline") is None
     assert ready.get("plugins_ready") is False
+    prep = next(a for a in ready["actions"] if a["key"] == "prep")
+    assert prep["plugin_hints"] == []
+    assert prep["checklist_items"]
 
     events = (
         await db_session.execute(

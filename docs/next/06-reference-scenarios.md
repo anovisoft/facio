@@ -20,10 +20,10 @@
 | summary | 1–3 предложения: что получится, сколько займёт, логика этапов |
 | cycle | Короткий (1 cook_session / один вечер) |
 | days | Один день kind=`cook_session` (или эквивалент) |
-| groups | Напр. Покупки → Подготовка → Готовка |
-| plugins | Checklist на покупки; на cook-шаге **timeline** (ось + markers), не peer-таймеры «помешать» |
+| groups | Покупки → **Подготовка (mise/checklist)** → Готовка |
+| plugins | Checklist на покупки **и** mise (нарезать, сыр, желтки); на cook-сессии **только timeline**, t=0 = жар/кипяток — **не** «нарезать» |
 | signals | nudge на дробные markers; alert на критичные |
-| Home | Session Stage = timeline (~2/3); бургер → весь план |
+| Home | Session Stage = timeline (~2/3); prep — отдельный шаг до stage |
 
 ### First-run
 
@@ -32,7 +32,8 @@ Batch clarify примерного содержания: на сколько п�
 ### Live dogfood bar
 
 - Прошли покупки чеклистом
-- На готовке идут по **timeline** (Session Stage), не по буклету рецепта
+- Прошли **mise/prep** чеклистом (нарезать и т.п. — **не** на timeline)
+- На готовке идут по **timeline** с t=0 от жара/воды (Session Stage), не по буклету рецепта
 - Не ощущается «рецепт из ChatGPT в todo»
 
 ### Next cycle

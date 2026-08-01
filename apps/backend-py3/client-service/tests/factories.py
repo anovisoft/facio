@@ -10,8 +10,8 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
     state: dict[str, Any] = {
         "title": "Карбонара на двоих",
         "summary": (
-            "За вечер купим продукты и приготовим карбонару на двоих. "
-            "Сначала покупки со списком, потом готовка по шагам."
+            "За вечер купим продукты, сделаем mise и приготовим карбонару "
+            "на двоих. Покупки → подготовка → готовка по таймлайну."
         ),
         "outcome": "Приготовить карбонару на двоих",
         "paraphrase": "Ок — ведём к карбонаре на двоих сегодня вечером",
@@ -30,7 +30,7 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
                 "day_index": 0,
                 "kind": "cook_session",
                 "title": "Вечер готовки",
-                "summary": "Покупки и карбонара за один заход.",
+                "summary": "Покупки, mise и карбонара за один заход.",
             }
         ],
         "groups": [
@@ -41,10 +41,16 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
                 "sort": 0,
             },
             {
+                "id": "prep",
+                "title": "Подготовка",
+                "description": "Mise en place до включения плиты.",
+                "sort": 1,
+            },
+            {
                 "id": "cook",
                 "title": "Готовка",
                 "description": "Собрать блюдо по классическому методу.",
-                "sort": 1,
+                "sort": 2,
             },
         ],
         "actions": [
@@ -80,16 +86,35 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
                 "stepper": None,
             },
             {
-                "id": "sear",
-                "title": "Обжарить гуанчиале",
-                "why": "Параллельная подготовка мяса",
-                "detail": "До золотистой корочки",
-                "estimate_min": 8,
+                "id": "prep",
+                "title": "Подготовить продукты",
+                "why": "Mise до плиты — на таймлайне только жар и вода",
+                "detail": "Нарезать мясо, натереть сыр, смешать желтки",
+                "estimate_min": 15,
                 "day_offset": 0,
                 "sort": 1,
-                "group_id": "cook",
-                "checklist_items": [],
-                "plugin_hints": ["timers"],
+                "group_id": "prep",
+                "checklist_items": [
+                    {
+                        "id": "cut_meat",
+                        "title": "Нарезать гуанчиале",
+                        "done": False,
+                        "sort": 0,
+                    },
+                    {
+                        "id": "grate_cheese",
+                        "title": "Натереть сыр",
+                        "done": False,
+                        "sort": 1,
+                    },
+                    {
+                        "id": "mix_yolks",
+                        "title": "Смешать желтки с сыром",
+                        "done": False,
+                        "sort": 2,
+                    },
+                ],
+                "plugin_hints": [],
                 "timers": [],
                 "counter": None,
                 "timeline": None,
@@ -134,16 +159,61 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
 
 
 def sample_plugins_materialize(**overrides: Any) -> dict[str, Any]:
-    """Create #3 payload for carbonara cook (timeline) + sear (timers only)."""
+    """Create #3 payload for carbonara cook session (timeline only)."""
     payload: dict[str, Any] = {
         "actions": [
             {
-                "action_id": "sear",
+                "action_id": "cook",
+                "timers": [],
+                "counter": None,
+                "timeline": {
+                    "duration_sec": 600,
+                    "markers": [
+                        {
+                            "sec": 0,
+                            "title": "Жар / мясо на сковороду",
+                            "signal": "nudge",
+                        },
+                        {"sec": 180, "title": "Паста в воду", "signal": "nudge"},
+                        {
+                            "sec": 360,
+                            "title": "Помешать пасту",
+                            "signal": "nudge",
+                        },
+                        {
+                            "sec": 480,
+                            "title": "Эмульсия и снять с огня",
+                            "signal": "nudge",
+                        },
+                        {
+                            "sec": 600,
+                            "title": "На тарелки",
+                            "signal": "alert",
+                        },
+                    ],
+                },
+                "interval_plan": None,
+                "stepper": None,
+            },
+        ]
+    }
+    payload.update(overrides)
+    return payload
+
+
+def sample_plugins_materialize_with_isolated_timer(
+    **overrides: Any,
+) -> dict[str, Any]:
+    """#3 payload: isolated timers action + cook timeline (XOR)."""
+    payload: dict[str, Any] = {
+        "actions": [
+            {
+                "action_id": "proof",
                 "timers": [
                     {
-                        "id": "guanciale",
-                        "title": "Обжарить гуанчиале",
-                        "duration_sec": 480,
+                        "id": "dough_rest",
+                        "title": "Расстойка",
+                        "duration_sec": 600,
                         "signal": "nudge",
                         "parallel_group": None,
                     },
@@ -487,7 +557,7 @@ def refined_path_state(base: dict[str, Any] | None = None) -> dict[str, Any]:
     state["title"] = "Карбонара на 2 с гуанчиале"
     state["summary"] = (
         "Путь уточнён под 2 порции и гуанчиале. "
-        "Покупки с количествами, затем классическая готовка."
+        "Покупки, mise, затем классическая готовка по таймлайну."
     )
     state["paraphrase"] = "Ок — карбонара на 2 порции с гуанчиале"
     state["questions"] = []
@@ -532,7 +602,7 @@ def sample_carbonara_repeat_path_state(**overrides: Any) -> dict[str, Any]:
     state = sample_path_state()
     state["title"] = "Карбонара ещё раз"
     state["summary"] = (
-        "Повторяем карбонару на двоих — тот же вечер: покупки и готовка."
+        "Повторяем карбонару на двоих — тот же вечер: покупки, mise и готовка."
     )
     state["paraphrase"] = "Ок — повторяем карбонару"
     state["cycle"] = {

@@ -227,6 +227,7 @@ def auth_headers(device_id: str) -> dict[str, str]:
 def enqueue_path(llm: ScriptedLLMProvider) -> Callable[..., None]:
     def _enqueue(**overrides: Any) -> None:
         # Phase 1 gate (start surface) + phase 2 Path skeleton + hints.
+        plugins = overrides.pop("plugins", None)
         path = sample_create_path(**overrides)["path"]
         llm.enqueue(
             "create",
@@ -253,7 +254,7 @@ def enqueue_path(llm: ScriptedLLMProvider) -> Callable[..., None]:
         )
         llm.enqueue("create", path)
         # Phase 3 after commit — plugins for hinted actions.
-        llm.enqueue("plugins", sample_plugins_materialize())
+        llm.enqueue("plugins", plugins or sample_plugins_materialize())
 
     return _enqueue
 

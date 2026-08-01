@@ -15,7 +15,7 @@ def test_ensure_action_keys_fills_missing_ids():
     state = ensure_action_keys(PathState.model_validate(payload))
     assert state.actions[0].id == "a0"
     assert state.actions[0].checklist_items[0].id == "c0"
-    assert state.actions[1].id == "sear"
+    assert state.actions[1].id == "prep"
     assert state.actions[2].id == "cook"
 
 

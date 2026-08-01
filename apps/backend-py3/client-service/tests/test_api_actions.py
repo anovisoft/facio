@@ -112,7 +112,7 @@ async def test_toggle_checklist_then_complete(
     detail = await client.get(
         f"/api/v1/projects/{project['id']}", headers=auth_headers
     )
-    assert detail.json()["next_action"]["key"] == "sear"
+    assert detail.json()["next_action"]["key"] == "prep"
 
 
 async def test_skip_action(client, auth_headers, enqueue_path, db_session):
@@ -148,19 +148,31 @@ async def test_completing_all_actions_completes_project(
             headers=auth_headers,
             json={"done": True},
         )
-    await client.post(
-        f"/api/v1/actions/{buy['id']}/complete", headers=auth_headers
-    )
+    assert (
+        await client.post(
+            f"/api/v1/actions/{buy['id']}/complete", headers=auth_headers
+        )
+    ).status_code == 200
 
-    sear = next(a for a in project["actions"] if a["key"] == "sear")
-    await client.post(
-        f"/api/v1/actions/{sear['id']}/complete", headers=auth_headers
-    )
+    prep = next(a for a in project["actions"] if a["key"] == "prep")
+    for item in prep["checklist_items"]:
+        await client.post(
+            f"/api/v1/checklist-items/{item['id']}/toggle",
+            headers=auth_headers,
+            json={"done": True},
+        )
+    assert (
+        await client.post(
+            f"/api/v1/actions/{prep['id']}/complete", headers=auth_headers
+        )
+    ).status_code == 200
 
     cook = next(a for a in project["actions"] if a["key"] == "cook")
-    await client.post(
-        f"/api/v1/actions/{cook['id']}/complete", headers=auth_headers
-    )
+    assert (
+        await client.post(
+            f"/api/v1/actions/{cook['id']}/complete", headers=auth_headers
+        )
+    ).status_code == 200
 
     detail = await client.get(
         f"/api/v1/projects/{project['id']}", headers=auth_headers
@@ -291,11 +303,55 @@ async def test_stepper_materialize_and_beat_counter(
     assert "counter_updated" in events
 
 
-async def test_timer_complete_on_sear_step(
+async def test_timer_complete_on_isolated_timers_step(
     client, auth_headers, enqueue_path, db_session
 ):
-    project = await _create_and_commit(client, auth_headers, enqueue_path)
-    # Skip buy to reach sear (timers-only step; cook has timeline without timers)
+    """Timers API: isolated timers action (XOR with cook timeline)."""
+    from tests.factories import (
+        sample_path_state,
+        sample_plugins_materialize_with_isolated_timer,
+    )
+
+    path = sample_path_state()
+    # Replace prep checklist with an isolated timers wait (dough-style).
+    path["actions"][1] = {
+        "id": "proof",
+        "title": "Расстойка теста",
+        "why": "Изолированное ожидание без оси сессии",
+        "detail": "Ручной Start",
+        "estimate_min": 10,
+        "day_offset": 0,
+        "sort": 1,
+        "group_id": "prep",
+        "checklist_items": [],
+        "plugin_hints": ["timers"],
+        "timers": [],
+        "counter": None,
+        "timeline": None,
+        "interval_plan": None,
+        "stepper": None,
+    }
+    enqueue_path(
+        path_overrides={"actions": path["actions"]},
+        plugins=sample_plugins_materialize_with_isolated_timer(),
+    )
+    created = await client.post(
+        "/api/v1/projects",
+        headers=auth_headers,
+        json={"intent": "Приготовить карбонару"},
+    )
+    project = created.json()["project"]
+    await wait_path_ready(client, auth_headers, project["id"])
+    committed = await client.post(
+        f"/api/v1/projects/{project['id']}/commit",
+        headers=auth_headers,
+        json={"first_step_when": "today"},
+    )
+    assert committed.status_code == 200
+    project = await wait_plugins_ready(
+        client, auth_headers, committed.json()["id"]
+    )
+
     buy = next(a for a in project["actions"] if a["key"] == "buy")
     await client.post(
         f"/api/v1/actions/{buy['id']}/skip", headers=auth_headers
@@ -303,13 +359,13 @@ async def test_timer_complete_on_sear_step(
     detail = await client.get(
         f"/api/v1/projects/{project['id']}", headers=auth_headers
     )
-    sear = detail.json()["next_action"]
-    assert sear["key"] == "sear"
-    assert sear["timers"]
-    timer_id = sear["timers"][0]["id"]
+    proof = detail.json()["next_action"]
+    assert proof["key"] == "proof"
+    assert proof["timers"]
+    timer_id = proof["timers"][0]["id"]
 
     done = await client.post(
-        f"/api/v1/actions/{sear['id']}/timers/{timer_id}/complete",
+        f"/api/v1/actions/{proof['id']}/timers/{timer_id}/complete",
         headers=auth_headers,
         json={"completed": True},
     )

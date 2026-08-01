@@ -51,7 +51,7 @@ def test_parse_path_normalizes_wire_sentinels():
     payload["days"][0]["title"] = ""
     payload["days"][0]["summary"] = ""
     payload["groups"][0]["description"] = ""
-    cook = payload["actions"][1]
+    cook = payload["actions"][2]
     cook["counter"] = {
         "label": "",
         "target": -1,
@@ -80,12 +80,12 @@ def test_parse_path_normalizes_wire_sentinels():
     assert state.days[0].title is None
     assert state.days[0].summary is None
     assert state.groups[0].description is None
-    assert state.actions[1].counter is None
-    assert state.actions[1].timeline is None
-    assert state.actions[1].interval_plan is None
-    assert len(state.actions[1].timers) == 1
-    assert state.actions[1].timers[0].id is None
-    assert state.actions[1].timers[0].parallel_group is None
+    assert state.actions[2].counter is None
+    assert state.actions[2].timeline is None
+    assert state.actions[2].interval_plan is None
+    assert len(state.actions[2].timers) == 1
+    assert state.actions[2].timers[0].id is None
+    assert state.actions[2].timers[0].parallel_group is None
 
 
 def test_parse_create_drops_unused_branch_stubs():

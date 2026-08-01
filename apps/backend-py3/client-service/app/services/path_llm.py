@@ -115,8 +115,8 @@ _PATH_FIELDS = """\
       * carbonara / cooking session → one day kind=cook_session
       * push-ups week → mix train and rest (NOT 7 identical train days)
   - title / summary: short labels or "" (e.g. "Силовая A", "Отдых + мобилити")
-- groups[]: optional sections (Покупки, Готовка). Stable `id`, `title`, \
-  description (1–2 sentences or ""), `sort`.
+- groups[]: optional sections (Покупки, Подготовка, Готовка). Stable `id`, \
+  `title`, description (1–2 sentences or ""), `sort`.
 - actions[]: ordered steps, soft cap ≤ 8–12 (never a 40-step dump; multi-day \
   may use up to ~16 with one focus per day). Each:
   - id: stable key (or ""); reuse on refine/repair when the step is the same
@@ -130,12 +130,16 @@ _PATH_FIELDS = """\
     ideally ≤ 30–60 min
   - day_offset: REQUIRED when days[] present — must equal a days[].day_index
   - sort (≥0) or -1 if unspecified; group_id matching groups[].id, or ""
-  - checklist_items[]: shopping / binary prep only (eggs ☐). done=false on \
-    create; id or "". NEVER use checklist for gym sets («Подход 1/2/3») — \
-    that is stepper beats, not checkboxes.
+  - checklist_items[]: shopping / binary prep / mise only (eggs ☐, cut meat, \
+    grate cheese). done=false on create; id or "". NEVER use checklist for \
+    gym sets («Подход 1/2/3») — that is stepper beats, not checkboxes.
   - plugin_hints[]: short tool announcements ONLY (no plugin objects here):
-      * "timeline" — ONE session axis with markers (carbonara cook MUST). \
-        Stir / "помешать" moments = markers on the axis, NOT peer timers.
+      * "timeline" — ONE session axis with markers (carbonara COOK SESSION \
+        MUST). Stir / "помешать" = markers on the axis, NOT peer timers. \
+        Timeline markers are ONLY clock-critical session beats (heat/sear \
+        progress, pasta in water, emulsify, plate). FORBIDDEN: knife-work / \
+        mise / "нарезать" / grate / mix yolks as timeline markers — those \
+        belong on a PRIOR prep checklist action with plugin_hints=[].
       * "timers" — isolated manual Start wait with NO session axis \
         (e.g. dough rest). Do NOT combine with timeline on the same action.
       * "stepper" — strength session: measure/work/rest beats with counters \
@@ -146,11 +150,11 @@ _PATH_FIELDS = """\
         Prefer stepper when the session is sets + rest by reps, not seconds.
       * "counter" — a SINGLE dose outside a set series (rare). Inside \
         strength sets, put counters on stepper beats, not on the action.
-      * [] when no tools (shopping, rest mobility)
-      Choose the right object: cook → timeline; strength sets → stepper; \
-      timed HIIT → interval; shopping → checklist. timeline XOR timers \
-      (never both). If stepper is present, do NOT also hint bare "counter" \
-      for the same sets.
+      * [] when no tools (shopping, prep/mise, rest mobility)
+      Choose the right object: cook session → timeline; prep/mise → \
+      checklist + []; strength sets → stepper; timed HIIT → interval; \
+      shopping → checklist. timeline XOR timers (never both). If stepper \
+      is present, do NOT also hint bare "counter" for the same sets.
   - Do NOT emit timers[], timeline, interval_plan, counter, or stepper \
     objects on Path — hints only.
 - questions[]: 0 or 2–4 (max 4) clarifies that change the path; not an interview. \
@@ -170,14 +174,20 @@ _PATH_QUALITY = """\
   an action attached. Do not pad with empty rest days to make the cycle \
   sound longer — a short honest horizon beats a hollow multi-week shell.
 - Carbonara: cycle.horizon_days=1, one cook_session day.
-- Carbonara cook step: plugin_hints MUST be ["timeline"] only (no "timers" on \
-  the same step — stir markers live on the timeline axis); shopping → [].
+- Cooking / carbonara Path shape (prep ≠ timeline axis):
+    1) shop — checklist, plugin_hints=[]
+    2) prep / mise — checklist action(s) BEFORE the cook session \
+       (cut meat, grate cheese, mix yolks…); plugin_hints=[] — NEVER \
+       timeline or timers on mise
+    3) cook session — ONE action, plugin_hints=["timeline"] only \
+       (no "timers" on the same step; stir markers live on the axis). \
+       Timeline t=0 = heat / water / sear-on-axis — NOT knife-work.
 - Push-ups / strength train day: ONE session action with plugin_hints \
   ["stepper"] — not two actions (max + volume), not checklist approaches, \
   not a lone action-level counter. Rest days → [].
 - First action executable today; honest estimate_min, ideally ≤ 30–60 min.
 - Soft cap ≤ 8–12 actions; prefer checklist over many buy-micro-steps.
-- Cooking: shopping group + cook how-to in detail; not titles only.
+- Cooking: shopping + prep/mise groups + cook how-to in detail; not titles only.
 - Prefer a few strong steps over a long todo dump.
 - When days[] exist, action titles must not repeat day numbers \
   ("день 2", "day 3") — structure lives in days[] + day_offset.
@@ -366,7 +376,9 @@ Rules:
 - questions[]: 0 or 2–4 still-useful clarifies for later; often [] after \
   a finished cycle.
 - Soft cap ≤ 8–12 actions; plugin_hints as on create \
-  (cook → timeline; strength → stepper; shopping → []).
+  (cook session → timeline; prep/mise → []; shopping → []; \
+  strength → stepper). On cook repeat: keep prep checklist outside \
+  the timeline axis (no mise-as-first-marker).
 - title/summary/paraphrase non-empty; match user language.
 - Never grow past horizon caps; no hollow rest tails.
 
@@ -439,9 +451,9 @@ _FEWSHOT_PATH: dict[str, Any] = {
     "path": {
         "title": "Карбонара на ужин",
         "summary": (
-            "За один вечер купим продукты и приготовим классическую "
-            "карбонару без сливок. Сначала покупки, потом готовка "
-            "по шагам — около часа с магазином."
+            "За один вечер купим продукты, сделаем mise en place и "
+            "приготовим классическую карбонару без сливок. Покупки → "
+            "подготовка → готовка по таймлайну — около часа с магазином."
         ),
         "outcome": "Приготовить карбонару дома",
         "paraphrase": "Ок — ведём к: карбонара на ужин",
@@ -460,7 +472,7 @@ _FEWSHOT_PATH: dict[str, Any] = {
                 "day_index": 0,
                 "kind": "cook_session",
                 "title": "Вечер готовки",
-                "summary": "Покупки и классическая карбонара за один заход.",
+                "summary": "Покупки, mise и классическая карбонара за один заход.",
             }
         ],
         "groups": [
@@ -471,10 +483,16 @@ _FEWSHOT_PATH: dict[str, Any] = {
                 "sort": 0,
             },
             {
+                "id": "prep",
+                "title": "Подготовка",
+                "description": "Mise en place до включения плиты.",
+                "sort": 1,
+            },
+            {
                 "id": "cook",
                 "title": "Готовка",
                 "description": "Собрать блюдо по классическому методу.",
-                "sort": 1,
+                "sort": 2,
             },
         ],
         "actions": [
@@ -511,17 +529,51 @@ _FEWSHOT_PATH: dict[str, Any] = {
                 "plugin_hints": [],
             },
             {
+                "id": "prep",
+                "title": "Подготовить продукты",
+                "why": "Mise до плиты — на таймлайне готовки уже только жар и вода",
+                "detail": (
+                    "Нарежь гуанчиале/карбонад кубиками, натри сыр, "
+                    "смешай желтки с сыром. Всё готово до включения огня."
+                ),
+                "estimate_min": 15,
+                "day_offset": 0,
+                "sort": 1,
+                "group_id": "prep",
+                "checklist_items": [
+                    {
+                        "id": "cut_meat",
+                        "title": "нарезать гуанчиале",
+                        "done": False,
+                        "sort": 0,
+                    },
+                    {
+                        "id": "grate_cheese",
+                        "title": "натереть сыр",
+                        "done": False,
+                        "sort": 1,
+                    },
+                    {
+                        "id": "mix_yolks",
+                        "title": "смешать желтки с сыром",
+                        "done": False,
+                        "sort": 2,
+                    },
+                ],
+                "plugin_hints": [],
+            },
+            {
                 "id": "cook",
                 "title": "Приготовить карбонару",
                 "why": "Это и есть цель вечера — довести блюдо до тарелки",
                 "detail": (
-                    "Обжарь гуанчиале. Свари пасту al dente. Смешай желтки "
-                    "с тёртым сыром. Сними с огня, соедини пасту с жиром, "
-                    "добавь яично-сырную смесь, быстро мешай. Без сливок."
+                    "Обжарь гуанчиале. Свари пасту al dente. Сними с огня, "
+                    "соедини пасту с жиром, добавь яично-сырную смесь, "
+                    "быстро мешай. Без сливок."
                 ),
-                "estimate_min": 40,
+                "estimate_min": 25,
                 "day_offset": 0,
-                "sort": 1,
+                "sort": 2,
                 "group_id": "cook",
                 "checklist_items": [],
                 "plugin_hints": ["timeline"],
@@ -750,8 +802,8 @@ _FEWSHOT_GATE_PATH: dict[str, Any] = {
         "paraphrase": "Ок — ведём к: карбонара на ужин",
         "title": "Карбонара на ужин",
         "summary": (
-            "За один вечер купим продукты и приготовим классическую "
-            "карбонару без сливок."
+            "За один вечер купим продукты, сделаем mise и приготовим "
+            "классическую карбонару без сливок."
         ),
         "questions": [
             {
@@ -790,8 +842,12 @@ Do NOT rewrite the Path skeleton (no title/days/questions).
   parallel_group|""}}. Empty [] when unused.
 - timeline: ALWAYS present. Real: duration_sec≥1 + markers[] of \
   {{sec, title, signal}} (sec = absolute at_sec). Absent → \
-  {{duration_sec:-1, markers:[]}}. Carbonara cook: pasta axis with stir \
-  nudges + alert done — not peer stir timers as the primary shape.
+  {{duration_sec:-1, markers:[]}}. Carbonara cook session: clock axis \
+  starting at heat/water/sear-on-axis (e.g. «Паста в воду» / «Жар»), \
+  with stir nudges + alert done — NOT peer stir timers as the primary \
+  shape. FORBIDDEN: invent mise / knife-work markers («нарезать», \
+  grate, mix yolks) on a timeline hint — mise belongs on a prior \
+  checklist action with no timeline. First marker MUST NOT be cut/chop.
 - interval_plan: ALWAYS present. Real: segments[] of {{sec, title, signal}} \
   (sec = segment duration_sec). Absent → {{segments:[]}}. Timed HIIT only.
 - stepper: ALWAYS present. Real: beats[] of \
@@ -811,6 +867,9 @@ Honor plugin_hints: timeline → real timeline + timers MUST be []; \
 timers → timers[] only when timeline is absent; stepper → real stepper beats \
 (+ action counter stub); interval → interval_plan; counter → counter only \
 when there is no stepper. Unused shapes → stubs / [].
+If hint is timeline: emit ONLY clock-critical session markers; do NOT \
+invent prep/mise markers (cut/chop/grate/yolks) — those were checklist \
+on a prior action.
 NEVER put a real timeline and non-empty timers on the same action.
 NEVER turn gym sets into checklist_items or a bare counter without stepper.
 
@@ -825,12 +884,17 @@ _FEWSHOT_MATERIALIZE_CARBONARA: dict[str, Any] = {
             "timers": [],
             "counter": dict(_EMPTY_COUNTER_STUB),
             "timeline": {
-                "duration_sec": 480,
+                "duration_sec": 600,
                 "markers": [
-                    {"sec": 0, "title": "Паста в воду", "signal": "nudge"},
-                    {"sec": 120, "title": "Помешать", "signal": "nudge"},
-                    {"sec": 300, "title": "Помешать ещё", "signal": "nudge"},
-                    {"sec": 480, "title": "Лапша al dente", "signal": "alert"},
+                    {"sec": 0, "title": "Жар / мясо на сковороду", "signal": "nudge"},
+                    {"sec": 180, "title": "Паста в воду", "signal": "nudge"},
+                    {"sec": 360, "title": "Помешать пасту", "signal": "nudge"},
+                    {
+                        "sec": 480,
+                        "title": "Эмульсия и снять с огня",
+                        "signal": "nudge",
+                    },
+                    {"sec": 600, "title": "На тарелки", "signal": "alert"},
                 ],
             },
             "interval_plan": dict(_EMPTY_INTERVAL_STUB),
@@ -1084,7 +1148,11 @@ def messages_for_materialize_plugins(
                             "action_id": "cook",
                             "title": "Приготовить карбонару",
                             "plugin_hints": ["timeline"],
-                            "detail": "Паста + гуанчиале",
+                            "detail": (
+                                "Prep/mise already done as checklist. "
+                                "Timeline = heat → pasta water → emulsify → plate. "
+                                "No cut/chop markers."
+                            ),
                         }
                     ],
                     "domain": "cooking",

@@ -35,6 +35,13 @@ def test_fewshots_parse_as_create_responses():
     assert buy.timeline is None
     assert buy.interval_plan is None
     assert buy.stepper is None
+    prep = next(a for a in carbonara.path.actions if a.id == "prep")
+    assert prep.plugin_hints == []
+    assert prep.checklist_items
+    assert prep.timeline is None
+    assert any(
+        "нарезать" in (item.title or "").lower() for item in prep.checklist_items
+    )
 
     fitness = parse_create_response(_FEWSHOT_FITNESS)
     assert fitness.kind == "path"
@@ -126,3 +133,30 @@ def test_carbonara_state_short_cycle():
     state = PathState.model_validate(sample_path_state())
     assert state.cycle.horizon_days == 1
     assert all(a.day_offset == 0 for a in state.actions)
+    prep = next(a for a in state.actions if a.id == "prep")
+    cook = next(a for a in state.actions if a.id == "cook")
+    assert prep.plugin_hints == []
+    assert prep.checklist_items
+    assert cook.plugin_hints == ["timeline"]
+
+
+def test_carbonara_materialize_timeline_not_mise_first():
+    """Cook timeline starts at heat/water — not knife-work/mise."""
+    from app.services.path_llm import (
+        _FEWSHOT_MATERIALIZE_CARBONARA,
+        parse_plugins_materialize,
+    )
+    from tests.factories import sample_plugins_materialize
+
+    for payload in (
+        _FEWSHOT_MATERIALIZE_CARBONARA,
+        sample_plugins_materialize(),
+    ):
+        result = parse_plugins_materialize(payload)
+        cook = next(a for a in result.actions if a.action_id == "cook")
+        assert cook.timeline is not None
+        assert cook.timeline.markers
+        first = cook.timeline.markers[0].title.lower()
+        mise_words = ("нарезать", "натереть", "желт", "mise", "chop", "cut ", "grate")
+        assert not any(w in first for w in mise_words), first
+        assert cook.timers == []
