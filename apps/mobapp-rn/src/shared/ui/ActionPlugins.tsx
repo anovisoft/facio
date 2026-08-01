@@ -6,6 +6,8 @@ import type {
   ActionTimelineResponse,
   CounterResponse,
   IntervalPlanResponse,
+  StepperBeatResponse,
+  StepperResponse,
   TimerResponse,
   TimerSignal,
 } from '@/api/types';
@@ -820,6 +822,267 @@ export function CounterControl({
   );
 }
 
+type StepperPlayerProps = {
+  stepper: StepperResponse;
+  interactive?: boolean;
+  disabled?: boolean;
+  /** Persist work/measure counter for the current beat. */
+  onBeatCounterChange?: (beatId: string, nextCurrent: number) => void;
+  /** Compact strip-only mode for sticky stage. */
+  compact?: boolean;
+};
+
+function formatMmSs(totalSec: number): string {
+  const sec = Math.max(0, Math.ceil(totalSec));
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+export function StepperPlayer({
+  stepper,
+  interactive = false,
+  disabled = false,
+  onBeatCounterChange,
+  compact = false,
+}: StepperPlayerProps) {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  const beats = stepper.beats ?? [];
+  const [beatIndex, setBeatIndex] = useState(0);
+  const [restRun, setRestRun] = useState<{
+    startedAt: number;
+    durationSec: number;
+    notificationId: string | null;
+  } | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+  const [sessionDone, setSessionDone] = useState(false);
+
+  const safeIndex = Math.min(beatIndex, Math.max(0, beats.length - 1));
+  const current: StepperBeatResponse | null =
+    beats.length === 0 ? null : beats[safeIndex];
+
+  useEffect(() => {
+    if (!restRun) return;
+    const id = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(id);
+  }, [restRun]);
+
+  const restRemaining = restRun
+    ? Math.max(0, restRun.durationSec - (now - restRun.startedAt) / 1000)
+    : 0;
+
+  useEffect(() => {
+    if (!restRun || restRemaining > 0) return;
+    void (async () => {
+      await cancelScheduledNotification(restRun.notificationId);
+      const beat = beats[safeIndex];
+      if (beat) {
+        await signalTimerComplete(beat.title, beat.signal ?? 'nudge');
+      }
+      setRestRun(null);
+    })();
+  }, [restRemaining, restRun, beats, safeIndex]);
+
+  if (beats.length === 0) return null;
+
+  const goNext = () => {
+    if (!interactive || disabled) return;
+    void cancelScheduledNotification(restRun?.notificationId ?? null);
+    setRestRun(null);
+    if (safeIndex + 1 >= beats.length) {
+      setSessionDone(true);
+      return;
+    }
+    setBeatIndex(safeIndex + 1);
+    setSessionDone(false);
+  };
+
+  const startRest = async () => {
+    if (!interactive || disabled || !current || current.kind !== 'rest') return;
+    if (restRun) return;
+    const duration = current.duration_sec ?? 0;
+    if (duration < 1) return;
+    const endsAt = Date.now() + duration * 1000;
+    const notificationId = await scheduleTimerNotification(
+      `stepper-${current.id}`,
+      current.title,
+      current.signal ?? 'nudge',
+      endsAt,
+    );
+    setRestRun({
+      startedAt: Date.now(),
+      durationSec: duration,
+      notificationId,
+    });
+    setNow(Date.now());
+  };
+
+  const strip = (
+    <View style={styles.beatStrip}>
+      {beats.map((beat, index) => {
+        const active = index === safeIndex && !sessionDone;
+        const past = index < safeIndex || sessionDone;
+        return (
+          <View
+            key={beat.id || `b${index}`}
+            style={[
+              styles.beatDot,
+              {
+                backgroundColor: active
+                  ? colors.primary
+                  : past
+                    ? colors.border
+                    : colors.surface,
+                borderColor: active ? colors.primary : colors.border,
+              },
+            ]}
+          />
+        );
+      })}
+    </View>
+  );
+
+  if (compact) {
+    return (
+      <View
+        style={[
+          styles.stepperCompact,
+          { borderColor: colors.border, backgroundColor: colors.surface },
+        ]}
+      >
+        {strip}
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
+          {sessionDone
+            ? t('plugins.timerDone')
+            : current?.title ?? t('plugins.stepper')}
+        </Text>
+        {current?.kind === 'rest' && restRun ? (
+          <Text style={[styles.clockBig, { color: colors.primary }]}>
+            {formatMmSs(restRemaining)}
+          </Text>
+        ) : current?.counter ? (
+          <Text style={[styles.counterValue, { color: colors.text }]}>
+            {current.counter.current}
+            <Text style={{ color: colors.textSecondary }}>
+              {' '}
+              / {current.counter.target}
+            </Text>
+          </Text>
+        ) : null}
+      </View>
+    );
+  }
+
+  return (
+    <View
+      style={[
+        styles.stepperCard,
+        { borderColor: colors.border, backgroundColor: colors.surface },
+      ]}
+    >
+      <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
+        {t('plugins.stepper')}
+      </Text>
+      {strip}
+      <Text style={[styles.beatMeta, { color: colors.textSecondary }]}>
+        {sessionDone
+          ? t('plugins.timerDone')
+          : t('plugins.segmentOf', {
+              current: safeIndex + 1,
+              total: beats.length,
+            })}
+      </Text>
+      {!sessionDone && current ? (
+        <>
+          <Text style={[styles.beatTitle, { color: colors.text }]}>
+            {current.title}
+          </Text>
+          {current.kind === 'rest' ? (
+            <View style={styles.restBlock}>
+              <Text style={[styles.clockBig, { color: colors.primary }]}>
+                {restRun
+                  ? formatMmSs(restRemaining)
+                  : formatMmSs(current.duration_sec ?? 0)}
+              </Text>
+              {interactive ? (
+                <View style={styles.clockActions}>
+                  {!restRun ? (
+                    <Pressable
+                      disabled={disabled}
+                      onPress={() => void startRest()}
+                      style={[styles.btn, { borderColor: colors.primary }]}
+                    >
+                      <Text style={{ color: colors.primary }}>
+                        {t('plugins.start')}
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                  <Pressable
+                    disabled={disabled}
+                    onPress={goNext}
+                    style={[styles.btn, { borderColor: colors.border }]}
+                  >
+                    <Text style={{ color: colors.text }}>
+                      {t('plugins.nextBeat')}
+                    </Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <Text style={[styles.previewBadge, { color: colors.textMuted }]}>
+                  {t('plugins.preview')}
+                </Text>
+              )}
+            </View>
+          ) : current.counter ? (
+            <View style={styles.workBlock}>
+              <CounterControl
+                counter={current.counter}
+                interactive={interactive}
+                disabled={disabled}
+                onChange={(next) =>
+                  onBeatCounterChange?.(current.id, next)
+                }
+              />
+              {interactive ? (
+                <Pressable
+                  disabled={disabled}
+                  onPress={goNext}
+                  style={[
+                    styles.btn,
+                    styles.nextBtn,
+                    { borderColor: colors.primary },
+                  ]}
+                >
+                  <Text style={{ color: colors.primary }}>
+                    {t('plugins.nextBeat')}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
+          ) : (
+            interactive ? (
+              <Pressable
+                disabled={disabled}
+                onPress={goNext}
+                style={[styles.btn, { borderColor: colors.primary }]}
+              >
+                <Text style={{ color: colors.primary }}>
+                  {t('plugins.nextBeat')}
+                </Text>
+              </Pressable>
+            ) : (
+              <Text style={[styles.previewBadge, { color: colors.textMuted }]}>
+                {t('plugins.preview')}
+              </Text>
+            )
+          )}
+        </>
+      ) : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   root: {
     gap: spacing.sm,
@@ -919,5 +1182,62 @@ const styles = StyleSheet.create({
     ...typography.title,
     minWidth: 96,
     textAlign: 'center',
+  },
+  stepperCard: {
+    borderWidth: 1,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    gap: spacing.sm,
+    minHeight: 220,
+  },
+  stepperCompact: {
+    borderWidth: 1,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  beatStrip: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  beatDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+  },
+  beatMeta: {
+    ...typography.caption,
+  },
+  beatTitle: {
+    ...typography.title,
+  },
+  restBlock: {
+    gap: spacing.sm,
+    alignItems: 'center',
+  },
+  workBlock: {
+    gap: spacing.sm,
+  },
+  clockBig: {
+    ...typography.title,
+    fontSize: 40,
+    lineHeight: 48,
+    fontVariant: ['tabular-nums'],
+  },
+  clockActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    justifyContent: 'center',
+  },
+  nextBtn: {
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
   },
 });

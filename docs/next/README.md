@@ -17,12 +17,12 @@
 1. [01 — Диагноз](./01-diagnosis.md) — почему нет ценности и что меняем
 2. [02 — Цели и гипотезы](./02-goals-hypotheses.md) — что считаем успехом этого среза
 3. [03 — Scope](./03-scope.md) — must / should / out
-4. [04 — Модель](./04-model.md) — план-контент, cycle, schedule, plugins
-5. [05 — UX и потоки](./05-ux-flows.md) — first-run, Сегодня, продление цикла, repair
+4. [04 — Модель](./04-model.md) — план-контент, cycle, schedule, plugins (**stepper**)
+5. [05 — UX и потоки](./05-ux-flows.md) — Session Stage Home, бургер→план, draft, repair
 6. [06 — Эталоны](./06-reference-scenarios.md) — карбонара и отжимания
 7. [07 — Тестирование](./07-testing-stance.md) — когда внешние юзеры, что до
-8. [08 — План реализации](./08-impl-plan.md) — срезы 1–5 для поэтапной передачи субагентам
-9. [09 — Continuity](./09-continuity.md) — статус кода, grammar/gate, решения A–D (живой план, slim create, clock, **Draft UX layout**) — читать после любой суммаризации чата
+8. [08 — План реализации](./08-impl-plan.md) — срезы 1–5 + **4′ Session Stage**
+9. [09 — Continuity](./09-continuity.md) — решения A–F — читать после суммаризации чата
 
 ---
 
@@ -42,16 +42,12 @@
 
 - Полный маршрут не прячется «до Accept»; **Draft → Accept → live как жёсткий конвейер устарел** — живой план + мутации.
 - Progressive create: **#1** start → **#2** Path+hints → **#3** plugins after Start.
-- Draft UX (одобрено, см. [09 §D](./09-continuity.md)): compact outline + sticky CTA + comment always; полный Path по раскрытию.
-- На плане — hints; live plugins после старта.
+- Draft UX: compact outline + sticky CTA + comment always.
+- **Home = Session Stage** (timeline/stepper герой ~2/3); **бургер справа сверху → весь план**.
+- Stepper: measure/work/rest beats; силовая = один session action; не checklist подходов.
 - CTA: «Сохранить и приступить» / «Сохранить»; без сегодня/завтра.
-- Timeline XOR timers на одном шаге.
-- Batch clarify + поле комментария.
-- Clock family: TimerStack + Timeline + Interval (pause); Counter; на плане — **hints**, live после Start (#3).
-- Позже: несколько #3 с разными formats, если plugins разрастутся.
-- Schedule / дни программы сразу.
-- Cycles + reuse → следующий цикл.
-- Repair must; тот же класс правок, что refine.
-- Wedge-эталоны: карбонара + отжимания.
-- Внешний юзер-тест текущего билда — рано.
-- Рабочая память кода/инцидентов: [09 — Continuity](./09-continuity.md).
+- Timeline XOR timers; clock family + stepper; hints → live #3.
+- Физический день + preview locked.
+- Batch clarify + comment; Repair; cycles → next cycle.
+- Wedge: карбонара + отжимания. Внешний юзер-тест — рано.
+- Рабочая память: [09 — Continuity](./09-continuity.md).

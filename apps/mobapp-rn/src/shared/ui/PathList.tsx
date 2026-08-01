@@ -13,6 +13,7 @@ import type {
 import {
   CounterControl,
   IntervalPlayer,
+  StepperPlayer,
   TimelineProgress,
   TimerStack,
 } from '@/shared/ui/ActionPlugins';
@@ -38,6 +39,11 @@ type Props = {
     nextDone: boolean,
   ) => void;
   onCounterChange?: (actionId: string, nextCurrent: number) => void;
+  onStepperBeatCounterChange?: (
+    actionId: string,
+    beatId: string,
+    nextCurrent: number,
+  ) => void;
   onCompleteTimer?: (actionId: string, timerId: string) => void;
 };
 
@@ -62,6 +68,8 @@ function pluginHintLabel(
       return t('plugins.hintInterval');
     case 'counter':
       return t('plugins.hintCounter');
+    case 'stepper':
+      return t('plugins.hintStepper');
     default:
       return hint;
   }
@@ -72,7 +80,8 @@ function actionHasLivePlugins(action: ActionResponse): boolean {
     (action.timers?.length ?? 0) > 0 ||
     Boolean(action.counter) ||
     Boolean(action.timeline) ||
-    Boolean(action.interval_plan)
+    Boolean(action.interval_plan) ||
+    Boolean(action.stepper)
   );
 }
 
@@ -226,6 +235,7 @@ export function PathList({
   pluginsInteractive = false,
   onToggleChecklist,
   onCounterChange,
+  onStepperBeatCounterChange,
   onCompleteTimer,
 }: Props) {
   const { t } = useTranslation();
@@ -389,6 +399,7 @@ export function PathList({
                       action.counter ||
                       action.timeline ||
                       action.interval_plan ||
+                      action.stepper ||
                       visiblePluginHints(action).length > 0,
                   );
                 const prev = section.actions[index - 1];
@@ -585,6 +596,27 @@ export function PathList({
                                 onCounterChange
                                   ? (next) =>
                                       onCounterChange(action.id, next)
+                                  : undefined
+                              }
+                            />
+                          ) : null}
+                          {action.stepper ? (
+                            <StepperPlayer
+                              stepper={action.stepper}
+                              interactive={
+                                pluginsInteractive &&
+                                action.status === 'pending' &&
+                                !isLocked
+                              }
+                              disabled={checklistDisabled}
+                              onBeatCounterChange={
+                                onStepperBeatCounterChange
+                                  ? (beatId, next) =>
+                                      onStepperBeatCounterChange(
+                                        action.id,
+                                        beatId,
+                                        next,
+                                      )
                                   : undefined
                               }
                             />

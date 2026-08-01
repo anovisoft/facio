@@ -14,6 +14,8 @@ from app.schemas.api import (
     GroupResponse,
     IntervalPlanResponse,
     IntervalSegmentResponse,
+    StepperBeatResponse,
+    StepperResponse,
     TimelineMarkerResponse,
     TimerResponse,
 )
@@ -22,6 +24,7 @@ from app.schemas.path_state import (
     PathCounter,
     PathIntervalPlan,
     PathState,
+    PathStepper,
     PathTimeline,
     PathTimer,
 )
@@ -113,6 +116,46 @@ def _serialize_interval_from_orm(
     return IntervalPlanResponse(segments=segments)
 
 
+def _serialize_stepper_from_orm(raw: dict | None) -> StepperResponse | None:
+    if not isinstance(raw, dict):
+        return None
+    beats_raw = raw.get("beats") or []
+    if not isinstance(beats_raw, list) or not beats_raw:
+        return None
+    beats: list[StepperBeatResponse] = []
+    for item in beats_raw:
+        if not isinstance(item, dict):
+            continue
+        kind = item.get("kind")
+        if kind not in ("measure", "work", "rest"):
+            continue
+        counter = _serialize_counter_from_orm(
+            item.get("counter") if isinstance(item.get("counter"), dict) else None
+        )
+        duration = item.get("duration_sec")
+        duration_sec = (
+            int(duration)
+            if duration is not None and int(duration) >= 1
+            else None
+        )
+        signal = item.get("signal") or None
+        if signal == "":
+            signal = None
+        beats.append(
+            StepperBeatResponse(
+                id=str(item.get("id") or ""),
+                kind=kind,
+                title=str(item.get("title") or ""),
+                counter=counter,
+                duration_sec=duration_sec,
+                signal=signal,  # type: ignore[arg-type]
+            )
+        )
+    if not beats:
+        return None
+    return StepperResponse(beats=beats)
+
+
 def _serialize_timers_from_state(
     timers: list[PathTimer],
 ) -> list[TimerResponse]:
@@ -180,6 +223,26 @@ def _serialize_interval_from_state(
     )
 
 
+def _serialize_stepper_from_state(
+    stepper: PathStepper | None,
+) -> StepperResponse | None:
+    if stepper is None:
+        return None
+    beats: list[StepperBeatResponse] = []
+    for b_index, beat in enumerate(stepper.beats):
+        beats.append(
+            StepperBeatResponse(
+                id=beat.id or f"b{b_index}",
+                kind=beat.kind,
+                title=beat.title,
+                counter=_serialize_counter_from_state(beat.counter),
+                duration_sec=beat.duration_sec,
+                signal=beat.signal,
+            )
+        )
+    return StepperResponse(beats=beats)
+
+
 def serialize_action(action: Action, *, day_locked: bool = False) -> ActionResponse:
     group = action.group
     return ActionResponse(
@@ -207,6 +270,7 @@ def serialize_action(action: Action, *, day_locked: bool = False) -> ActionRespo
         counter=_serialize_counter_from_orm(action.counter),
         timeline=_serialize_timeline_from_orm(action.timeline),
         interval_plan=_serialize_interval_from_orm(action.interval_plan),
+        stepper=_serialize_stepper_from_orm(action.stepper),
     )
 
 
@@ -374,6 +438,7 @@ def serialize_path_state(
                 counter=_serialize_counter_from_state(item.counter),
                 timeline=_serialize_timeline_from_state(item.timeline),
                 interval_plan=_serialize_interval_from_state(item.interval_plan),
+                stepper=_serialize_stepper_from_state(item.stepper),
             )
         )
     actions.sort(

@@ -195,6 +195,7 @@ def _preserve_plugins(prior: PathState, new: PathState) -> PathState:
             and item.counter is None
             and item.timeline is None
             and item.interval_plan is None
+            and item.stepper is None
         )
         if not empty_new:
             actions.append(item)
@@ -206,6 +207,7 @@ def _preserve_plugins(prior: PathState, new: PathState) -> PathState:
                     "counter": old.counter,
                     "timeline": old.timeline,
                     "interval_plan": old.interval_plan,
+                    "stepper": old.stepper,
                     "plugin_hints": item.plugin_hints or old.plugin_hints,
                 }
             )
@@ -350,6 +352,13 @@ async def complete_materialize_plugins_job(
                 await db.rollback()
                 async with async_session_maker() as audit_db:
                     audit = AuditService(audit_db)
+                    await audit.add_turn(
+                        user_id=user_id,
+                        project_id=project_id,
+                        role=ConversationRole.system,
+                        content="Plugin materialize failed",
+                        meta={"kind": "plugins_error", "error": str(exc)},
+                    )
                     await audit.add_event(
                         event_type=EventType.plan_failed,
                         user_id=user_id,
@@ -602,7 +611,9 @@ class PathService:
             )
             return project
 
-        version, current = await self.projects.get_latest_state(project.id)
+        version, current = await self.projects.get_latest_state(
+            project.id, strict=True
+        )
         if current is None:
             raise ConflictError("Project has no Path state")
         if path_plugins_ready(current):
@@ -620,14 +631,24 @@ class PathService:
             )
             return project
 
-        payloads, _raw, llm_call_id = await self._generate_plugins(
-            user=user,
-            project_id=project.id,
-            messages=messages_for_materialize_plugins(
-                current_state=current.model_dump(mode="json"),
-                hinted_actions=hinted,
-            ),
-        )
+        try:
+            payloads, _raw, llm_call_id = await self._generate_plugins(
+                user=user,
+                project_id=project.id,
+                messages=messages_for_materialize_plugins(
+                    current_state=current.model_dump(mode="json"),
+                    hinted_actions=hinted,
+                ),
+            )
+        except Exception as exc:
+            await self.audit.add_turn(
+                user_id=user.id,
+                project_id=project.id,
+                role=ConversationRole.system,
+                content="Plugin materialize failed",
+                meta={"kind": "plugins_error", "error": str(exc)},
+            )
+            raise
 
         state = ensure_action_keys(
             merge_plugin_payloads(current, payloads.actions)

@@ -139,7 +139,8 @@ def test_wire_schema_size_smoke() -> None:
     # Path+full plugins (~4383) still failed; Path+hints must stay well under.
     assert path_m["chars"] < 3200, path_m
     assert gate_m["chars"] < 1800, gate_m
-    assert plugins_m["chars"] < 2500, plugins_m
+    # Slice 4′ added stepper beats; keep well under grammar cliff (~4k+).
+    assert plugins_m["chars"] < 2800, plugins_m
     assert path_m["anyOf_null"] == 0
     assert gate_m["anyOf_null"] == 0
     assert gate_m["descriptions"] == 0
@@ -168,19 +169,22 @@ def test_path_wire_has_hints_not_plugin_objects() -> None:
     assert "PathClockBeat" not in defs
     assert "PathTimeline" not in defs
     assert "PathIntervalPlan" not in defs
+    assert "PathStepper" not in defs
+    assert "PathStepperBeat" not in defs
     action = defs["PathAction"]["properties"]
     assert "plugin_hints" in action
     assert "timers" not in action
     assert "counter" not in action
     assert "timeline" not in action
     assert "interval_plan" not in action
+    assert "stepper" not in action
 
 
 def test_plugins_materialize_wire_has_plugin_defs() -> None:
     out = _anthropic_json_schema(PLUGINS_MATERIALIZE_SCHEMA)
     defs = _defs(out)
     assert "PathTimer" in defs or "ActionPluginPayload" in defs
-    # Payload model embeds timer/counter/timeline defs.
+    # Payload model embeds timer/counter/timeline/stepper defs.
     payload = None
     for name, node in defs.items():
         props = (node or {}).get("properties") or {}
@@ -192,6 +196,8 @@ def test_plugins_materialize_wire_has_plugin_defs() -> None:
     assert "counter" in payload
     assert "timeline" in payload
     assert "interval_plan" in payload
+    assert "stepper" in payload
+    assert "PathStepper" in defs or "PathStepperBeat" in defs
 
 
 def test_create_gate_wire_has_no_path_branch() -> None:

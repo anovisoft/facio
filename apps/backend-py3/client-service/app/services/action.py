@@ -281,6 +281,89 @@ class ActionService:
         await self.db.commit()
         return (await self._get_owned_action(user, action_id))[0]
 
+    async def update_stepper_beat_counter(
+        self,
+        user: User,
+        action_id: UUID,
+        beat_id: str,
+        *,
+        current: int | None = None,
+        delta: int | None = None,
+        local_date: str | None = None,
+    ) -> Action:
+        action, project = await self._get_owned_action(user, action_id)
+        self._require_active(project)
+        if action.status != ActionStatus.pending:
+            raise ConflictError("Cannot update stepper on a closed action")
+        self._require_unlocked(action, project, local_date)
+        if not isinstance(action.stepper, dict):
+            raise ConflictError("Action has no stepper")
+        beats = action.stepper.get("beats")
+        if not isinstance(beats, list) or not beats:
+            raise ConflictError("Action has no stepper beats")
+
+        stepper = deepcopy(action.stepper)
+        updated_beats = stepper.get("beats") or []
+        found = False
+        previous = 0
+        target = 0
+        for beat in updated_beats:
+            if not isinstance(beat, dict):
+                continue
+            if str(beat.get("id")) != beat_id:
+                continue
+            counter = beat.get("counter")
+            if not isinstance(counter, dict):
+                raise ConflictError("Stepper beat has no counter")
+            previous = int(counter.get("current") or 0)
+            target = int(counter.get("target") or 0)
+            if current is not None:
+                new_current = current
+            else:
+                new_current = previous + int(delta or 0)
+            new_current = max(0, new_current)
+            if target > 0:
+                new_current = min(new_current, target)
+            counter["current"] = new_current
+            beat["counter"] = counter
+            found = True
+            break
+        if not found:
+            raise ConflictError("Stepper beat not found")
+
+        stepper["beats"] = updated_beats
+        action.stepper = stepper
+        flag_modified(action, "stepper")
+        await self.db.flush()
+
+        await self.audit.add_event(
+            event_type=EventType.counter_updated,
+            user_id=user.id,
+            project_id=project.id,
+            payload={
+                "action_id": str(action.id),
+                "beat_id": beat_id,
+                "previous_current": previous,
+                "current": (
+                    int(
+                        next(
+                            (
+                                b["counter"]["current"]
+                                for b in updated_beats
+                                if isinstance(b, dict)
+                                and str(b.get("id")) == beat_id
+                            ),
+                            0,
+                        )
+                    )
+                ),
+                "target": target,
+                "plugin": "stepper",
+            },
+        )
+        await self.db.commit()
+        return (await self._get_owned_action(user, action_id))[0]
+
     async def complete_timer(
         self,
         user: User,

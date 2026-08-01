@@ -136,83 +136,84 @@ id, title, why, detail?, estimate_min?, group_id?, sort, status
 checklist_items[]: { id, title, done, sort }
 ```
 
+**Когда:** покупки, сборы, бинарные «сделал/не».  
+**Не когда:** подходы в зале («Подход 1/2/3») — это не галочки. Для силовой → **stepper**.
+
 ### Clock family (runtime часов)
 
-Один движок времени на клиенте (elapsed, pause/resume, complete segment/marker, фон + сигналы). LLM на шаге выбирает **shape**, не произвольный виджет.
+Один движок времени на клиенте (elapsed, pause/resume, complete segment/marker, фон + сигналы). LLM выбирает **shape**, не произвольный виджет.
 
-#### timer_stack (есть в Срезе 3)
+Home рендерит shape как **Session Stage** (герой экрана), не виджет под буклетом. См. [05](./05-ux-flows.md) Session Stage.
+
+#### timer_stack (есть)
 
 ```text
 timers[]
-  id
-  title                 # «Лапша», «Помешать»
-  duration_sec
-  signal                # nudge | alert
-  parallel_group?       # параллельные таймеры готовки
+  id, title, duration_sec, signal  # nudge | alert
+  parallel_group?
 ```
 
-Отдельные отсчёты с ручным Start. Не выкидывать — нужны там, где нет единой оси сессии.
+Изолированный отсчёт с ручным Start — где **нет** единой оси сессии. XOR с timeline на одном action.
 
-- **nudge** — короткий/нейтральный (вибро / тихий звук).
-- **alert** — нельзя пропустить.
-
-#### timeline (next — карбонара / cook session)
-
-Одна ось сессии + progress bar; маркеры на абсолютном `at_sec` от старта:
+#### timeline (карбонара / cook)
 
 ```text
 timeline
-  duration_sec          # длина оси
-  markers[]
-    at_sec
-    title               # «Помешать», «al dente»
-    signal              # nudge | alert
-  tracks[]?             # опционально параллельные оси (мясо ∥ паста)
+  duration_sec
+  markers[]: { at_sec, title, signal }
 ```
 
-Пример: `0` лапша в воду → `120` помешать → `300` помешать → `480` alert конец.
+Дробные «помешать» = маркеры оси, не peer-таймеры. **UI:** Timeline = Session Stage.
 
-Не моделировать дробные «помешать» как peer-таймеры с отдельным Start — это маркеры на оси.
-
-#### interval_plan (next — тренировки / HIIT)
-
-Последовательность сегментов + **pause/resume** всей сессии:
+#### interval_plan (HIIT по секундам)
 
 ```text
 interval_plan
-  segments[]
-    duration_sec
-    title               # «Упражнение 1», «Отдых»
-    signal?             # обычно nudge на смене; alert на финале
+  segments[]: { duration_sec, title, signal? }
 ```
 
-Пример: 40s упр. → 20s отдых → 40s упр. …
+Когда work/rest заданы **секундами** (Табата), не числом повторов.
 
-### counter / dose
+#### stepper / set_plan (зал: подходы + отдых + замер) — must
+
+Одна силовая сессия = **один action** дня (не дробить max+volume). Внутри — биты:
 
 ```text
-counter
-  label?                # «подходы», «повторы»
-  target
-  current               # 0 на create
-  step?                 # инкремент, default 1
+stepper   # wire: stepper (JSONB на action); hint "stepper"
+  beats[]
+    id
+    kind          # measure | work | rest
+    title
+    counter?      # work/measure: { label?, target?, current, step? }
+    duration_sec? # rest: таймер отдыха
+    signal?
 ```
 
-UX: tap ± и/или swipe (как seek в плеере).
+Пример: measure → rest 5м → work (counter 12–15) → rest 2–3м → work → …
+
+**Запрещено:** checklist «Подход N» + один общий counter на action.  
+**Запрещено:** несколько голых counters без оркестрации отдыха.  
+#2: `plugin_hints: ["stepper"]`; #3: полные beats.
+
+### counter / dose (одиночный)
+
+```text
+counter: { label?, target, current, step? }
+```
+
+Только вне серии подходов. В силовой counter живёт **внутри beat**.
 
 ### Режим preview vs live
 
-Исторически: draft/Accept = disabled, после Accept = live.
+Один живой план; preview/live = сессия не начата / идёт. См. [05](./05-ux-flows.md), [09](./09-continuity.md).
 
-**Направление (после dogfood 3):** один живой план; preview vs live — скорее «ещё не стартовали сессию» / «сессия идёт», а не отдельный экран Accept. См. [05](./05-ux-flows.md), [09](./09-continuity.md).
+| | до старта | сессия |
+|--|-----------|--------|
+| Stage | полный shape | live + pause где есть |
+| Support | title + коротко | «Сейчас: …» |
+| Уведомления | нет | да |
 
-| | до старта сессии / пока план правится | сессия идёт |
-|--|----------------------------------------|-------------|
-| Рендер | полный, как в runtime | тот же |
-| Контролы clock/counter | можно править план; старт сессии — явный жест | live + pause где shape поддерживает |
-| Уведомления | нет / по политике | да (с permission) |
-
-LLM на create **обязан** ставить plugins там, где эталон без них бессмысленен. Для карбонары целевой shape — **timeline**; для круговой тренировки — **interval_plan**; простые timers — где уместен одиночный отсчёт.
+LLM **обязан** выбрать shape: cook → **timeline**; силовая с подходами → **stepper**; HIIT по sec → **interval_plan**; покупки → **checklist**.
 
 ---
 

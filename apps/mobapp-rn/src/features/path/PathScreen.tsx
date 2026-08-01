@@ -12,6 +12,7 @@ import {
   completeTimer,
   toggleChecklistItem,
   updateCounter,
+  updateStepperBeatCounter,
 } from '@/api/actions';
 import { getProject } from '@/api/projects';
 import { ApiError, type ProjectDetail } from '@/api/types';
@@ -115,6 +116,7 @@ export function PathScreen({ navigation, route }: RootScreenProps<'Path'>) {
                   timers: updated.timers,
                   timeline: updated.timeline,
                   interval_plan: updated.interval_plan,
+                  stepper: updated.stepper,
                 }
               : action,
           ),
@@ -122,6 +124,55 @@ export function PathScreen({ navigation, route }: RootScreenProps<'Path'>) {
             prev.next_action?.id === actionId
               ? {
                   ...prev.next_action,
+                  counter: updated.counter,
+                  timers: updated.timers,
+                  timeline: updated.timeline,
+                  interval_plan: updated.interval_plan,
+                  stepper: updated.stepper,
+                }
+              : prev.next_action,
+        };
+      });
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t('path.error'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onStepperBeatCounterChange = async (
+    actionId: string,
+    beatId: string,
+    nextCurrent: number,
+  ) => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const updated = await updateStepperBeatCounter(actionId, beatId, {
+        current: nextCurrent,
+      });
+      setProject((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          actions: prev.actions.map((action) =>
+            action.id === actionId
+              ? {
+                  ...action,
+                  stepper: updated.stepper,
+                  counter: updated.counter,
+                  timers: updated.timers,
+                  timeline: updated.timeline,
+                  interval_plan: updated.interval_plan,
+                }
+              : action,
+          ),
+          next_action:
+            prev.next_action?.id === actionId
+              ? {
+                  ...prev.next_action,
+                  stepper: updated.stepper,
                   counter: updated.counter,
                   timers: updated.timers,
                   timeline: updated.timeline,
@@ -152,6 +203,7 @@ export function PathScreen({ navigation, route }: RootScreenProps<'Path'>) {
                   counter: updated.counter,
                   timeline: updated.timeline,
                   interval_plan: updated.interval_plan,
+                  stepper: updated.stepper,
                 }
               : action,
           ),
@@ -163,6 +215,7 @@ export function PathScreen({ navigation, route }: RootScreenProps<'Path'>) {
                   counter: updated.counter,
                   timeline: updated.timeline,
                   interval_plan: updated.interval_plan,
+                  stepper: updated.stepper,
                 }
               : prev.next_action,
         };
@@ -205,6 +258,9 @@ export function PathScreen({ navigation, route }: RootScreenProps<'Path'>) {
               }
               onCounterChange={(actionId, next) =>
                 void onCounterChange(actionId, next)
+              }
+              onStepperBeatCounterChange={(actionId, beatId, next) =>
+                void onStepperBeatCounterChange(actionId, beatId, next)
               }
               onCompleteTimer={(actionId, timerId) =>
                 void onCompleteTimer(actionId, timerId)

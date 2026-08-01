@@ -34,6 +34,7 @@ def test_fewshots_parse_as_create_responses():
     assert buy.counter is None
     assert buy.timeline is None
     assert buy.interval_plan is None
+    assert buy.stepper is None
 
     fitness = parse_create_response(_FEWSHOT_FITNESS)
     assert fitness.kind == "path"
@@ -42,14 +43,15 @@ def test_fewshots_parse_as_create_responses():
     kinds = {d.kind for d in fitness.path.days}
     assert kinds == {"train", "rest"}
     train = next(a for a in fitness.path.actions if a.day_offset == 0)
-    assert "interval" in train.plugin_hints
-    assert "counter" in train.plugin_hints
+    assert train.plugin_hints == ["stepper"]
     assert train.counter is None
     assert train.interval_plan is None
+    assert train.stepper is None
     rest = next(a for a in fitness.path.actions if a.day_offset == 1)
     assert rest.plugin_hints == []
     assert rest.counter is None
     assert rest.interval_plan is None
+    assert rest.stepper is None
 
 
 def test_pick_next_action_prefers_earliest_day():

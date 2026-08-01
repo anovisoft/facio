@@ -195,6 +195,19 @@ class IntervalPlanResponse(BaseModel):
     segments: list[IntervalSegmentResponse] = Field(default_factory=list)
 
 
+class StepperBeatResponse(BaseModel):
+    id: str
+    kind: Literal["measure", "work", "rest"]
+    title: str
+    counter: CounterResponse | None = None
+    duration_sec: int | None = None
+    signal: TimerSignal | None = None
+
+
+class StepperResponse(BaseModel):
+    beats: list[StepperBeatResponse] = Field(default_factory=list)
+
+
 class GroupResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -259,7 +272,8 @@ class ActionResponse(BaseModel):
     plugin_hints: list[str] = Field(
         default_factory=list,
         description=(
-            "Create #2 announcements (timers|timeline|interval|counter). "
+            "Create #2 announcements "
+            "(timers|timeline|interval|counter|stepper). "
             "Full plugin payloads arrive after Start (#3)."
         ),
     )
@@ -267,6 +281,7 @@ class ActionResponse(BaseModel):
     counter: CounterResponse | None = None
     timeline: ActionTimelineResponse | None = None
     interval_plan: IntervalPlanResponse | None = None
+    stepper: StepperResponse | None = None
 
 
 class ProjectSummary(BaseModel):
@@ -360,6 +375,13 @@ class ProjectDetail(ProjectSummary):
         description=(
             "False while phase-3 plugin materialize runs after Start "
             "(actions may still show plugin_hints only)."
+        ),
+    )
+    plugins_error: str | None = Field(
+        default=None,
+        description=(
+            "Set when phase-3 plugin materialize failed; client should stop "
+            "polling plugins_ready and show an error with retry."
         ),
     )
     repair_summary: str | None = Field(

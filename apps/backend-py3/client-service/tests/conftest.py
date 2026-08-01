@@ -103,6 +103,10 @@ async def wait_plugins_ready(
         last = response.json()
         if last.get("plugins_ready"):
             return last
+        if last.get("plugins_error"):
+            raise AssertionError(
+                f"plugin materialize failed: {last['plugins_error']}"
+            )
         await asyncio.sleep(0.05)
     raise AssertionError(f"plugins_ready never became true: {last}")
 

@@ -39,6 +39,17 @@ import { radii, spacing, typography } from '@/theme';
 
 const PATH_POLL_MS = 1500;
 
+/** RN Hermes has no DOM AbortError type — reject wait polls with a plain Error. */
+function abortError(): Error {
+  const err = new Error('Aborted');
+  err.name = 'AbortError';
+  return err;
+}
+
+function isAbortError(e: unknown): boolean {
+  return e instanceof Error && e.name === 'AbortError';
+}
+
 type CommitIntent = 'start' | 'save';
 
 export function DraftStudioScreen({
@@ -196,18 +207,23 @@ export function DraftStudioScreen({
         const ready =
           detail.path_ready !== false && (detail.actions?.length ?? 0) > 0;
         if (ready) return detail;
-        await new Promise<void>((resolve, reject) => {
-          const timer = setTimeout(resolve, PATH_POLL_MS);
-          const onAbort = () => {
-            clearTimeout(timer);
-            reject(new DOMException('Aborted', 'AbortError'));
-          };
-          if (signal.aborted) {
-            onAbort();
-            return;
-          }
-          signal.addEventListener('abort', onAbort, { once: true });
-        });
+        try {
+          await new Promise<void>((resolve, reject) => {
+            const timer = setTimeout(resolve, PATH_POLL_MS);
+            const onAbort = () => {
+              clearTimeout(timer);
+              reject(abortError());
+            };
+            if (signal.aborted) {
+              onAbort();
+              return;
+            }
+            signal.addEventListener('abort', onAbort, { once: true });
+          });
+        } catch (e) {
+          if (signal.aborted || isAbortError(e)) return null;
+          throw e;
+        }
       }
     },
     [projectId, t],
@@ -262,7 +278,7 @@ export function DraftStudioScreen({
       setComment('');
       await refreshBackAvailability(detail, controller.signal);
     } catch (e) {
-      if (controller.signal.aborted) return;
+      if (controller.signal.aborted || isAbortError(e)) return;
       if (pushedVersion) undoStackRef.current.pop();
       setError(e instanceof ApiError ? e.message : t('draft.error'));
     } finally {

@@ -24,9 +24,10 @@
 | 3 | TimerStack + Counter | **dogfood ок** |
 | 3′ | Progressive create + clock UX + схлоп Accept + Draft UX D | **одобрен** (polish later) |
 | 4 | Repair + **физический день** на живом плане | **в коде**; ждёт dogfood |
+| 4′ | Session Stage + Stepper + бургер→план | **в коде** (schema `stepper`, Home stage, prompts); ждёт dogfood |
 | 5 | Next cycle CTA | не начат |
 
-Миграции backend (по порядку): `005` narrative → `006` cycle/schedule → `007` action plugins → `008` timeline/interval.
+Миграции backend (по порядку): `005` narrative → `006` cycle/schedule → `007` action plugins → `008` timeline/interval → `009` physical day → **`010` stepper JSONB**.
 
 ---
 
@@ -58,6 +59,20 @@ Dogfood: день 1 закрыт → сразу день 2. Программны
 
 Детали: [04 §4](./04-model.md), [08 Срез 4](./08-impl-plan.md).
 
+### F. Session Stage + Stepper + бургер (зафиксировано — **в коде**, Срез 4′)
+
+Dogfood: Home = буклет; силовая = checklist подходов + один counter; max+volume двумя action.
+
+**Канон (реализовано):**
+- Home: **Session Stage** (~2/3) = timeline | stepper beat | interval — герой экрана; support-текст ниже
+- **Бургер справа сверху** → Весь план (`Path`); дубль CTA «Весь план» в теле убран
+- Wire name: **`stepper`** (не `set_plan`); beats `measure | work | rest`
+- Hint `#2`: `"stepper"`; полные beats в `#3` внутри `PLUGINS_MATERIALIZE_SCHEMA` (~2506 chars wire, бюджет теста `<2800`)
+- Один train-день = один session action; запрет checklist-подходов в промптах/few-shot
+- Compact sticky при скролле — **не** в этом срезе (should-have later)
+
+Детали: [04 §5](./04-model.md), [05 Session Stage](./05-ux-flows.md), [08 Срез 4′](./08-impl-plan.md).
+
 ### B. Progressive create — 3 фазы (зафиксировано после hang dogfood)
 
 Hang: slim кадр пришёл, «Собираю полный план…» навсегда. Причина: phase-2 Path+**все plugins** → Anthropic **400 grammar too large**. Failed llm_call откатывался вместе с job → в `llm_calls` виден только успешный gate.
@@ -68,7 +83,7 @@ Hang: slim кадр пришёл, «Собираю полный план…» н
 |---|--------|-----|--------|
 | **1** | сразу | Gate + start surface (paraphrase/title/summary/questions/outline) | маленькая (уже есть) |
 | **2** | фон после #1 | Полный Path **без** plugins; на action — короткие **plugin hints** | Path без timers/timeline/interval/counter objects |
-| **3** | после «Начать сегодня» | Materialize plugins (timeline/interval/timers/counter) по hints | крошечная, можно позже дробить на несколько #3 с разными форматами |
+| **3** | после «Начать сегодня» | Materialize plugins (timeline/interval/timers/counter/**stepper**) по hints | крошечная; stepper можно отдельным #3 format |
 
 Instant = только #1.
 
@@ -162,11 +177,11 @@ title + summary
 - `resources` / `milestones` убраны с Anthropic wire (сервер → `[]`); в модели API поля живы
 
 4. **Решение B (Slice 3′ fix):** Path wire **без** plugin objects + `plugin_hints[]`; полный clock/counter — call **#3** после Start:
-   - `PATH_RESPONSE_SCHEMA` Anthropic wire ≈ **2996 chars** (было ~4383 с plugins → grammar 400; цель ≤~3k)
-   - `PLUGINS_MATERIALIZE_SCHEMA` ≈ **1853 chars** (action_id → timers/timeline/interval_plan/counter)
+   - `PATH_RESPONSE_SCHEMA` Anthropic wire ≈ **3007 chars** (hints include `stepper`; no plugin objects)
+   - `PLUGINS_MATERIALIZE_SCHEMA` ≈ **2506 chars** (timers/timeline/interval/counter/**stepper**; test budget `<2800`)
    - Gate ≈ **1380 chars** (без изменений)
    - Failed #2/#3: `llm_calls` + `path_error` turn **коммитятся** (не rollback audit)
-   - UI: Draft крутит spinner только пока нет `path_error`; Home поллит `plugins_ready`
+   - UI: Draft крутит spinner только пока нет `path_error`; Home блокирует loader пока нет `plugins_ready` / есть `plugins_error` + retry
 
 ### Запасной ход (ещё не включали)
 
@@ -217,17 +232,20 @@ title + summary плана
 - `counter`: label, target, current, step (wire stub `target:-1` → null)
 - `timeline`: duration_sec + markers[] (`sec` on wire = absolute `at_sec`; API exposes `at_sec`). Stub `{duration_sec:-1, markers:[]}` → null
 - `interval_plan`: segments[] (`sec` on wire = segment `duration_sec`; API exposes `duration_sec`). Stub `{segments:[]}` → null
+- `stepper`: beats[] `{id, kind: measure|work|rest, title, counter?, duration_sec?, signal?}`. Stub `{beats:[]}` → null. Hint `"stepper"`.
 - checklist как было
 
 Wire slim trick: shared `PathClockBeat` `{sec, title, signal}` for timeline markers and interval segments — used on **#3** materialize wire only (not on Path #2).
 
-UI: draft — plugin **hint chips** when hints present and payloads empty; Home/Path live — Start таймеров, timeline progress + pause, interval play/pause, ± каунтера after #3.  
+UI: draft — plugin **hint chips** when hints present and payloads empty (incl. stepper); Home Session Stage — timeline / stepper / interval as hero; Path live after #3.  
 Сигналы: nudge = короткая вибро; alert = сильнее + notification.  
-API: `POST .../counter`, `POST .../timers/{id}/complete`. Timeline/interval runtime — client-side (v1), plan data persisted on actions JSONB (`008_clock_plugins`). ProjectDetail: `path_ready`, `path_error`, `plugins_ready`.
+API: `POST .../counter`, `POST .../stepper/beats/{id}/counter`, `POST .../timers/{id}/complete`. Timeline/interval/stepper rest runtime — client-side (v1). ProjectDetail: `path_ready`, `path_error`, `plugins_ready`, `plugins_error`.
 
-Эталоны: карбонара cook → **hint timeline** (+ optional timers) → #3 timeline; отжимания day0 → **hints interval+counter** → #3 payloads; other train → counter hints.
+Эталоны: карбонара cook → **hint timeline** → #3 timeline; отжимания train → **hint stepper** → #3 beats (measure/work/rest).
 
-Миграции: `005` narrative → `006` cycle/schedule → `007` action plugins → `008` timeline/interval_plan.
+Миграции: `005` … `008` clock → `009` physical day → `010` stepper.
+
+**Dogfood hotfix (stepper + plugins loader):** measure/work beats without a real counter are soft-filled (`target=1`) on PathState / #3 normalize so Home never bricks on pydantic dumps. `get_latest_state` soft-fails to ORM for reads. Home blocks on «Собираю инструменты…» until `plugins_ready`; `plugins_error` + `POST .../materialize-plugins` for retry.
 
 ---
 
@@ -241,7 +259,12 @@ API: `POST .../counter`, `POST .../timers/{id}/complete`. Timeline/interval runt
 | Fitness long cycle + rest tail | **в коде**: `normalize_cycle_horizon` — trim hollow rest-tail + **hard truncate** fitness→7 / else→14 (лишние days+actions отбрасываются → следующий цикл); retry nudge; gate/prompt ≤7 outline |
 | Timeline / Interval | #2 hints; #3 materialize; XOR timeline/timers на одном шаге |
 | Clarify options отжиманий | Не мешать ось «сколько раз» и «с колен/стены» в одном ряду чипов |
-| Home перегружен | Много labels; declutter вместе с контролами / always-editable |
+| Home перегружен | → Срез 4′ Session Stage — **в коде**; compact sticky later |
+| Stepper / set_plan | **в коде** как wire `stepper` (миграция `010`); soft-normalize measure/work counters |
+| Invalid PathState brick Home | **в коде**: normalize + soft `get_latest_state` (no raw pydantic to UI) |
+| Plugins loader lock | **в коде**: Home blocking loader + `plugins_error` / rematerialize retry |
+| RN `DOMException` on commit start | **частично**: убрали `new DOMException` из Draft `waitForPathReady` → `abortError()`. Скрин может быть stale **или** второй источник: `abort()` на unmount рвёт `fetch` → `whatwg-fetch` делает `reject(new DOMException(...))`, а в Hermes global `DOMException` битый/нет. **Открыто:** polyfill DOMException в `index.ts` и/или не abort'ить inflight на успешном commit navigation; проверить после reload бандла |
+| Session Stage dogfood | Home всё ещё может выглядеть «буклетом», если #3 не дал timeline/stepper или plugins soft-fail → ORM без stage |
 | 8 недель vs cycle 7 дней | Narrative программы vs текущий cycle — явно на next cycle (Срез 5) |
 | Strip «день N» из старых title | Промпт чинит новые create; старые draft могут содержать |
 | Latency path-фазы | Полный Path всё ещё ~десятки секунд — ок на фоне, если slim уже на экране; резать tokens_out / few-shots |
@@ -251,21 +274,50 @@ API: `POST .../counter`, `POST .../timers/{id}/complete`. Timeline/interval runt
 
 ---
 
+## Инциденты RN (не потерять)
+
+### DOMException after «Сохранить и приступить»
+
+1. **Первый фикс (в коде):** `DraftStudioScreen.waitForPathReady` больше не использует `DOMException` — `abortError()` / `isAbortError()`. В `apps/mobapp-rn/src` строк `DOMException` нет.
+2. **Стек на скрине** указывает на `return () => abortRef.current?.abort()` в `useFocusEffect` cleanup — это момент unmount при `navigation.reset` после commit start.
+3. **Гипотеза если краш повторится после reload:** не наш код, а abort inflight `fetch` (`api/client.ts`) → polyfill `whatwg-fetch` (`node_modules/whatwg-fetch/fetch.js` ~L530) `reject(new DOMException('Aborted','AbortError'))` при отсутствии нормального global. Лечение: ранний polyfill в `index.ts` **или** на успешном commit не вызывать abort cleanup / глотать AbortError без LogBox.
+4. Скриншоты с одним timestamp могли быть до hot reload — сначала перепроверить с полным reload Metro.
+
+### Stepper validation brick Home (пофикшено)
+
+`stepper measure/work beats need a counter` → soft-fill + soft `get_latest_state`. См. блок Plugins выше.
+
+---
+
+## Процесс / предпочтения куратора (сессия)
+
+- Реализацию делать **субагентом**; куратор — архитектура, docs, review DoD.
+- Модель субагента по умолчанию: `cursor-grok-4.5-high` (см. `.cursor/rules/subagent-models.mdc`); дешёвое — `composer-2.5`.
+- Перед summarize чата — обновлять этот файл.
+
+---
+
 ## Следующий шаг
 
-1. **Hotfix после dogfood fitness — в коде, ждёт dogfood:** queued refine + horizon clamp/trim rest-tail + gate/prompt hardening (см. backlog выше + тесты `test_schemas_path_state.py`, `test_path_retry_hint.py`, `test_api_create.py`)
-2. Dogfood Среза 4 (physical day + Repair) параллельно / после
-3. Одобрение 4 → **Срез 5 — Next cycle**
-4. После финала списка: polish Draft UX
+1. **Проверить DOMException** после reload бандла; если жив — субагент: polyfill + безопасный abort на commit
+2. Dogfood **4 + 4′** (physical day, repair, stage Home, stepper, timeline, plugins loader)
+3. Одобрение → **Срез 5 — Next cycle**
+4. После финала списка: polish Draft UX; compact sticky stage on scroll
 
-### Dogfood checklist (после UX polish)
+### Dogfood checklist (актуальный)
 
-1. Create → вопросы → ответы **не сбрасываются** когда план доезжает  
-2. Outline виден; полный Path не уводит «Обновить путь» из-под пальца (sticky)  
-3. «Ещё важно» есть при 0 questions; refine после раунда возможен  
-4. Сохранить и приступить → Home + plugins; Сохранить → Projects  
-5. Карбонара: timeline без лишнего peer-timer на том же шаге  
-6. Нет grammar 400; `path_error` вместо вечного спиннера  
+1. Create → ответы clarify **не сбрасываются** когда path #2 доезжает  
+2. Queued refine: «Обновить» пока path грузится → ждёт → refine  
+3. Outline + sticky CTA; «Ещё важно» при 0 questions  
+4. Fitness cycle ≤7 дней; нет rest-хвоста 20–35  
+5. Сохранить и приступить → **loader plugins** → Home stage (не буклет / не DOMException)  
+6. Сохранить → список → открытие → loader если plugins ещё нет  
+7. Бургер ☰ → весь план; locked days видны, execute нет  
+8. Силовая: stepper beats (не checklist подходов + 1 counter)  
+9. Карбонара: timeline stage; XOR timers  
+10. Physical day: закрыл день N ≠ execute N+1 сегодня  
+11. Repair sheet shift/lighten/rest  
+12. Нет grammar 400; `path_error` / `plugins_error` вместо вечного спиннера  
 
 ---
 
@@ -283,7 +335,12 @@ API: `POST .../counter`, `POST .../timers/{id}/complete`. Timeline/interval runt
 | Path #2 / plugins #3 | `path_state.PATH_RESPONSE_SCHEMA`, `PLUGINS_MATERIALIZE_SCHEMA`; `complete_materialize_plugins_job` |
 | Промпты / sentinels / normalize | `app/services/path_llm.py` |
 | Wire transform Anthropic | `app/providers/anthropic_llm.py` |
-| PathState + plugins + hints | `app/schemas/path_state.py` |
-| Path UI hierarchy + hint chips | `apps/mobapp-rn/src/shared/ui/PathList.tsx` |
-| Home plugins + plugins_ready poll | `ProjectHomeScreen.tsx` + plugin components |
+| PathState + plugins + hints + stepper | `app/schemas/path_state.py` (`normalize_stepper_beats`) |
+| Horizon clamp / rest trim | `normalize_cycle_horizon` in `path_state.py` |
+| Physical day | `app/services/schedule.py`, migration `009` |
+| Stepper column | migration `010_action_stepper.py` |
+| Path UI + hints | `apps/mobapp-rn/src/shared/ui/PathList.tsx` |
+| Home Session Stage + plugins loader + burger | `ProjectHomeScreen.tsx`, `ActionPlugins.tsx` (`StepperPlayer`) |
+| Draft queued refine + abortError | `DraftStudioScreen.tsx` |
+| API client fetch+signal | `apps/mobapp-rn/src/api/client.ts` |
 | План срезов | [08](./08-impl-plan.md) |

@@ -225,7 +225,7 @@ async def test_draft_exposes_plugin_hints(client, auth_headers, enqueue_path):
     assert cook.get("timers") == []
 
 
-async def test_counter_update_and_timer_complete(
+async def test_stepper_materialize_and_beat_counter(
     client, auth_headers, enqueue_fitness, db_session
 ):
     enqueue_fitness()
@@ -238,8 +238,7 @@ async def test_counter_update_and_timer_complete(
         client, auth_headers, created.json()["project"]["id"]
     )
     d0 = next(a for a in project["actions"] if a["key"] == "d0")
-    assert "interval" in d0["plugin_hints"]
-    assert "counter" in d0["plugin_hints"]
+    assert d0["plugin_hints"] == ["stepper"]
     committed = await client.post(
         f"/api/v1/projects/{project['id']}/commit",
         headers=auth_headers,
@@ -250,25 +249,34 @@ async def test_counter_update_and_timer_complete(
         client, auth_headers, committed.json()["id"]
     )
     train = next(a for a in project["actions"] if a["key"] == "d0")
-    assert train["counter"] is not None
-    assert train["counter"]["current"] == 0
-    assert train["interval_plan"] is not None
+    assert train["counter"] is None
+    assert train["interval_plan"] is None
+    assert train["stepper"] is not None
+    beats = train["stepper"]["beats"]
+    assert len(beats) >= 3
+    assert beats[0]["kind"] == "measure"
+    assert beats[0]["counter"] is not None
+    measure_id = beats[0]["id"]
 
     bumped = await client.post(
-        f"/api/v1/actions/{train['id']}/counter",
+        f"/api/v1/actions/{train['id']}/stepper/beats/{measure_id}/counter",
         headers=auth_headers,
         json={"delta": 5},
     )
     assert bumped.status_code == 200
-    assert bumped.json()["counter"]["current"] == 5
+    bumped_beats = bumped.json()["stepper"]["beats"]
+    measure = next(b for b in bumped_beats if b["id"] == measure_id)
+    assert measure["counter"]["current"] == 5
 
     set_abs = await client.post(
-        f"/api/v1/actions/{train['id']}/counter",
+        f"/api/v1/actions/{train['id']}/stepper/beats/{measure_id}/counter",
         headers=auth_headers,
         json={"current": 10},
     )
     assert set_abs.status_code == 200
-    assert set_abs.json()["counter"]["current"] == 10
+    set_beats = set_abs.json()["stepper"]["beats"]
+    measure = next(b for b in set_beats if b["id"] == measure_id)
+    assert measure["counter"]["current"] == 10
 
     events = set(
         (

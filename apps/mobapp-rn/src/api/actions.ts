@@ -50,6 +50,23 @@ export function updateCounter(
   });
 }
 
+export function updateStepperBeatCounter(
+  actionId: string,
+  beatId: string,
+  body: { current?: number; delta?: number },
+  signal?: AbortSignal,
+): Promise<ActionResponse> {
+  return apiRequest(
+    `/actions/${actionId}/stepper/beats/${beatId}/counter`,
+    {
+      method: 'POST',
+      body,
+      query: { local_date: getLocalDate() },
+      signal,
+    },
+  );
+}
+
 export function completeTimer(
   actionId: string,
   timerId: string,

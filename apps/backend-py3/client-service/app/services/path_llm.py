@@ -18,6 +18,7 @@ from app.schemas.path_state import (
     PLUGINS_MATERIALIZE_SCHEMA,
     ActionPluginsMaterialize,
     PathState,
+    normalize_stepper_beats,
 )
 
 __all__ = [
@@ -62,7 +63,7 @@ Structured output forbids null on optional path fields. Use:
 - unused create branch → empty stub object (not null): see Response shape
 
 Create #2 / refine Path wire does NOT include timers/timeline/interval_plan/\
-counter objects — only plugin_hints[]. Full plugins are a later call (#3).
+counter/stepper objects — only plugin_hints[]. Full plugins are a later call (#3).
 """
 
 _PLUGIN_WIRE_SENTINELS = """\
@@ -73,7 +74,10 @@ _PLUGIN_WIRE_SENTINELS = """\
 - no timers → timers: []
 - no timeline → timeline stub {duration_sec:-1, markers:[]} (not null)
 - no interval_plan → interval_plan stub {segments:[]} (not null)
+- no stepper → stepper stub {beats:[]} (not null)
 - timer id / parallel_group missing → ""
+- stepper beat: unused counter → {label:"", target:-1, current:0, step:1}; \
+  unused duration_sec → -1; unused signal → "nudge" (ignored when absent)
 """
 
 _PATH_FIELDS = """\
@@ -125,18 +129,29 @@ _PATH_FIELDS = """\
     ideally ≤ 30–60 min
   - day_offset: REQUIRED when days[] present — must equal a days[].day_index
   - sort (≥0) or -1 if unspecified; group_id matching groups[].id, or ""
-  - checklist_items[]: sub-checks (e.g. eggs ☐); done=false on create; id or ""
+  - checklist_items[]: shopping / binary prep only (eggs ☐). done=false on \
+    create; id or "". NEVER use checklist for gym sets («Подход 1/2/3») — \
+    that is stepper beats, not checkboxes.
   - plugin_hints[]: short tool announcements ONLY (no plugin objects here):
-      * "timeline" — session axis (carbonara cook MUST hint this)
-      * "timers" — simple manual TimerStack for an ISOLATED wait on a step \
-        that has NO timeline (e.g. dough rest). Do NOT combine with timeline \
-        on the same action — timeline already covers the session clock.
-      * "interval" — work/rest circuit (fitness day0 circuit)
-      * "counter" — dose/reps target
-      * [] when no tools (shopping, rest)
-      One primary clock per action: timeline XOR timers (never both). \
-      Fitness circuit: ["interval","counter"]; other train: ["counter"].
-  - Do NOT emit timers[], timeline, interval_plan, or counter objects on Path.
+      * "timeline" — ONE session axis with markers (carbonara cook MUST). \
+        Stir / "помешать" moments = markers on the axis, NOT peer timers.
+      * "timers" — isolated manual Start wait with NO session axis \
+        (e.g. dough rest). Do NOT combine with timeline on the same action.
+      * "stepper" — strength session: measure/work/rest beats with counters \
+        on work/measure and rest timers between. ONE train day = ONE action \
+        with ["stepper"] (merge former max-test + volume into one session). \
+        FORBIDDEN: checklist «Подход N» + a bare action-level "counter".
+      * "interval" — HIIT / circuit timed purely in seconds (Tabata-style). \
+        Prefer stepper when the session is sets + rest by reps, not seconds.
+      * "counter" — a SINGLE dose outside a set series (rare). Inside \
+        strength sets, put counters on stepper beats, not on the action.
+      * [] when no tools (shopping, rest mobility)
+      Choose the right object: cook → timeline; strength sets → stepper; \
+      timed HIIT → interval; shopping → checklist. timeline XOR timers \
+      (never both). If stepper is present, do NOT also hint bare "counter" \
+      for the same sets.
+  - Do NOT emit timers[], timeline, interval_plan, counter, or stepper \
+    objects on Path — hints only.
 - questions[]: 0 or 2–4 (max 4) clarifies that change the path; not an interview. \
   Emit the full batch for one round — user answers all at once.
 - Do NOT emit resources[] or milestones[] (server defaults to []).
@@ -155,9 +170,10 @@ _PATH_QUALITY = """\
   sound longer — a short honest horizon beats a hollow multi-week shell.
 - Carbonara: cycle.horizon_days=1, one cook_session day.
 - Carbonara cook step: plugin_hints MUST be ["timeline"] only (no "timers" on \
-  the same step — redundant with the axis); shopping → [].
-- Push-ups: train steps need "counter" and/or "interval" in plugin_hints; \
-  rest → [].
+  the same step — stir markers live on the timeline axis); shopping → [].
+- Push-ups / strength train day: ONE session action with plugin_hints \
+  ["stepper"] — not two actions (max + volume), not checklist approaches, \
+  not a lone action-level counter. Rest days → [].
 - First action executable today; honest estimate_min, ideally ≤ 30–60 min.
 - Soft cap ≤ 8–12 actions; prefer checklist over many buy-micro-steps.
 - Cooking: shopping group + cook how-to in detail; not titles only.
@@ -361,6 +377,17 @@ _EMPTY_INTERVAL_STUB: dict[str, Any] = {
     "segments": [],
 }
 
+_EMPTY_STEPPER_STUB: dict[str, Any] = {
+    "beats": [],
+}
+
+_EMPTY_BEAT_COUNTER_STUB: dict[str, Any] = {
+    "label": "",
+    "target": -1,
+    "current": 0,
+    "step": 1,
+}
+
 _FEWSHOT_PATH_INTENT = "Приготовить карбонару"
 _FEWSHOT_PATH: dict[str, Any] = {
     "kind": "path",
@@ -542,17 +569,17 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
         "actions": [
             {
                 "id": "d0",
-                "title": "Круговая сессия",
+                "title": "Силовая сессия",
                 "why": "Первый силовой день задаёт ритм недели",
                 "detail": (
-                    "Работа / отдых по таймеру. Пауза между сегментами — ок."
+                    "Замер → отдых → подходы с отдыхом между. Один сеанс."
                 ),
-                "estimate_min": 15,
+                "estimate_min": 20,
                 "day_offset": 0,
                 "sort": 0,
                 "group_id": "",
                 "checklist_items": [],
-                "plugin_hints": ["interval", "counter"],
+                "plugin_hints": ["stepper"],
             },
             {
                 "id": "d1",
@@ -568,15 +595,15 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
             },
             {
                 "id": "d2",
-                "title": "Подходы отжиманий",
+                "title": "Силовая сессия",
                 "why": "Второй силовой день закрепляет объём",
-                "detail": "Снова 3 коротких подхода, без гонки за максимумом.",
-                "estimate_min": 15,
+                "detail": "Снова замер и подходы — без гонки за максимумом.",
+                "estimate_min": 20,
                 "day_offset": 2,
                 "sort": 2,
                 "group_id": "",
                 "checklist_items": [],
-                "plugin_hints": ["counter"],
+                "plugin_hints": ["stepper"],
             },
             {
                 "id": "d3",
@@ -592,15 +619,15 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
             },
             {
                 "id": "d4",
-                "title": "Подходы отжиманий",
+                "title": "Силовая сессия",
                 "why": "Держим ритм недели",
-                "detail": "3 подхода; остановитесь, если форма ломается.",
-                "estimate_min": 15,
+                "detail": "Подходы с хорошей формой; остановитесь, если ломается.",
+                "estimate_min": 20,
                 "day_offset": 4,
                 "sort": 4,
                 "group_id": "",
                 "checklist_items": [],
-                "plugin_hints": ["counter"],
+                "plugin_hints": ["stepper"],
             },
             {
                 "id": "d5",
@@ -616,15 +643,15 @@ _FEWSHOT_FITNESS: dict[str, Any] = {
             },
             {
                 "id": "d6",
-                "title": "Подходы отжиманий",
+                "title": "Силовая сессия",
                 "why": "Закрываем цикл базы",
                 "detail": "Последняя силовая недели — спокойный объём.",
-                "estimate_min": 15,
+                "estimate_min": 20,
                 "day_offset": 6,
                 "sort": 6,
                 "group_id": "",
                 "checklist_items": [],
-                "plugin_hints": ["counter"],
+                "plugin_hints": ["stepper"],
             },
         ],
         "questions": [
@@ -721,16 +748,26 @@ Do NOT rewrite the Path skeleton (no title/days/questions).
   {{duration_sec:-1, markers:[]}}. Carbonara cook: pasta axis with stir \
   nudges + alert done — not peer stir timers as the primary shape.
 - interval_plan: ALWAYS present. Real: segments[] of {{sec, title, signal}} \
-  (sec = segment duration_sec). Absent → {{segments:[]}}. Circuits / HIIT.
+  (sec = segment duration_sec). Absent → {{segments:[]}}. Timed HIIT only.
+- stepper: ALWAYS present. Real: beats[] of \
+  {{id|"", kind: measure|work|rest, title, counter, duration_sec, signal}}. \
+  measure/work: MUST emit a real counter (target≥1, current=0, step≥1) — \
+  NEVER a stub (target=-1) and NEVER omit counter. duration_sec=-1 on \
+  measure/work. \
+  rest: duration_sec≥1 + counter stub (target=-1). Absent → {{beats:[]}}. \
+  Strength train day: measure → rest → work → rest → work… One action covers \
+  the whole session (no separate max + volume actions).
 - counter: ALWAYS present. Real: label, target≥1, current=0, step≥1. \
-  Absent → {{label:"", target:-1, current:0, step:1}}.
+  Absent → {{label:"", target:-1, current:0, step:1}}. Use ONLY for a lone \
+  dose outside a set series. If stepper is real, action-level counter MUST \
+  be the absent stub.
 
 Honor plugin_hints: timeline → real timeline + timers MUST be []; \
-timers → timers[] only when timeline is absent; interval → interval_plan; \
-counter → counter. Unused shapes → stubs / [].
-NEVER put a real timeline and non-empty timers on the same action — \
-timers are for isolated waits without a session axis; timeline owns cook \
-sessions (pasta markers etc.).
+timers → timers[] only when timeline is absent; stepper → real stepper beats \
+(+ action counter stub); interval → interval_plan; counter → counter only \
+when there is no stepper. Unused shapes → stubs / [].
+NEVER put a real timeline and non-empty timers on the same action.
+NEVER turn gym sets into checklist_items or a bare counter without stepper.
 
 Emit one entry per hinted action (all hinted in the cycle for MVP).
 Match user language in titles. Do not chat. JSON only.
@@ -752,6 +789,7 @@ _FEWSHOT_MATERIALIZE_CARBONARA: dict[str, Any] = {
                 ],
             },
             "interval_plan": dict(_EMPTY_INTERVAL_STUB),
+            "stepper": dict(_EMPTY_STEPPER_STUB),
         }
     ]
 }
@@ -761,34 +799,155 @@ _FEWSHOT_MATERIALIZE_FITNESS: dict[str, Any] = {
         {
             "action_id": "d0",
             "timers": [],
-            "counter": {
-                "label": "повторы",
-                "target": 24,
-                "current": 0,
-                "step": 1,
-            },
+            "counter": dict(_EMPTY_COUNTER_STUB),
             "timeline": dict(_EMPTY_TIMELINE_STUB),
-            "interval_plan": {
-                "segments": [
-                    {"sec": 40, "title": "Отжимания", "signal": "nudge"},
-                    {"sec": 20, "title": "Отдых", "signal": "nudge"},
-                    {"sec": 40, "title": "Отжимания", "signal": "nudge"},
-                    {"sec": 20, "title": "Отдых", "signal": "nudge"},
-                    {"sec": 40, "title": "Отжимания", "signal": "alert"},
+            "interval_plan": dict(_EMPTY_INTERVAL_STUB),
+            "stepper": {
+                "beats": [
+                    {
+                        "id": "m0",
+                        "kind": "measure",
+                        "title": "Замер: сколько получается",
+                        "counter": {
+                            "label": "повторы",
+                            "target": 15,
+                            "current": 0,
+                            "step": 1,
+                        },
+                        "duration_sec": -1,
+                        "signal": "nudge",
+                    },
+                    {
+                        "id": "r0",
+                        "kind": "rest",
+                        "title": "Отдых перед подходами",
+                        "counter": dict(_EMPTY_BEAT_COUNTER_STUB),
+                        "duration_sec": 300,
+                        "signal": "nudge",
+                    },
+                    {
+                        "id": "w1",
+                        "kind": "work",
+                        "title": "Подход 1",
+                        "counter": {
+                            "label": "повторы",
+                            "target": 12,
+                            "current": 0,
+                            "step": 1,
+                        },
+                        "duration_sec": -1,
+                        "signal": "nudge",
+                    },
+                    {
+                        "id": "r1",
+                        "kind": "rest",
+                        "title": "Отдых",
+                        "counter": dict(_EMPTY_BEAT_COUNTER_STUB),
+                        "duration_sec": 120,
+                        "signal": "nudge",
+                    },
+                    {
+                        "id": "w2",
+                        "kind": "work",
+                        "title": "Подход 2",
+                        "counter": {
+                            "label": "повторы",
+                            "target": 12,
+                            "current": 0,
+                            "step": 1,
+                        },
+                        "duration_sec": -1,
+                        "signal": "nudge",
+                    },
+                    {
+                        "id": "r2",
+                        "kind": "rest",
+                        "title": "Отдых",
+                        "counter": dict(_EMPTY_BEAT_COUNTER_STUB),
+                        "duration_sec": 120,
+                        "signal": "nudge",
+                    },
+                    {
+                        "id": "w3",
+                        "kind": "work",
+                        "title": "Подход 3",
+                        "counter": {
+                            "label": "повторы",
+                            "target": 12,
+                            "current": 0,
+                            "step": 1,
+                        },
+                        "duration_sec": -1,
+                        "signal": "alert",
+                    },
                 ],
             },
         },
         {
             "action_id": "d2",
             "timers": [],
-            "counter": {
-                "label": "повторы",
-                "target": 24,
-                "current": 0,
-                "step": 1,
-            },
+            "counter": dict(_EMPTY_COUNTER_STUB),
             "timeline": dict(_EMPTY_TIMELINE_STUB),
             "interval_plan": dict(_EMPTY_INTERVAL_STUB),
+            "stepper": {
+                "beats": [
+                    {
+                        "id": "m0",
+                        "kind": "measure",
+                        "title": "Короткий замер",
+                        "counter": {
+                            "label": "повторы",
+                            "target": 12,
+                            "current": 0,
+                            "step": 1,
+                        },
+                        "duration_sec": -1,
+                        "signal": "nudge",
+                    },
+                    {
+                        "id": "r0",
+                        "kind": "rest",
+                        "title": "Отдых",
+                        "counter": dict(_EMPTY_BEAT_COUNTER_STUB),
+                        "duration_sec": 180,
+                        "signal": "nudge",
+                    },
+                    {
+                        "id": "w1",
+                        "kind": "work",
+                        "title": "Подход 1",
+                        "counter": {
+                            "label": "повторы",
+                            "target": 10,
+                            "current": 0,
+                            "step": 1,
+                        },
+                        "duration_sec": -1,
+                        "signal": "nudge",
+                    },
+                    {
+                        "id": "r1",
+                        "kind": "rest",
+                        "title": "Отдых",
+                        "counter": dict(_EMPTY_BEAT_COUNTER_STUB),
+                        "duration_sec": 90,
+                        "signal": "nudge",
+                    },
+                    {
+                        "id": "w2",
+                        "kind": "work",
+                        "title": "Подход 2",
+                        "counter": {
+                            "label": "повторы",
+                            "target": 10,
+                            "current": 0,
+                            "step": 1,
+                        },
+                        "duration_sec": -1,
+                        "signal": "alert",
+                    },
+                ],
+            },
         },
     ]
 }
@@ -901,15 +1060,15 @@ def messages_for_materialize_plugins(
                     "hinted_actions": [
                         {
                             "action_id": "d0",
-                            "title": "Круговая сессия",
-                            "plugin_hints": ["interval", "counter"],
-                            "detail": "Работа / отдых",
+                            "title": "Силовая сессия",
+                            "plugin_hints": ["stepper"],
+                            "detail": "Замер → отдых → подходы",
                         },
                         {
                             "action_id": "d2",
-                            "title": "Подходы отжиманий",
-                            "plugin_hints": ["counter"],
-                            "detail": "3 подхода",
+                            "title": "Силовая сессия",
+                            "plugin_hints": ["stepper"],
+                            "detail": "Замер и подходы",
                         },
                     ],
                     "domain": "fitness",
@@ -1132,10 +1291,32 @@ def normalize_path_wire_dict(data: dict[str, Any]) -> dict[str, Any]:
                 else:
                     interval["segments"] = normalized_segments
                     action["interval_plan"] = interval
+            action["stepper"] = _normalize_stepper_dict(action.get("stepper"))
             normalized_actions.append(action)
         out["actions"] = normalized_actions
 
     return out
+
+
+def _normalize_stepper_dict(stepper: Any) -> Any:
+    """Clear empty stepper stubs; normalize beat counter/duration sentinels."""
+    if not isinstance(stepper, dict):
+        return stepper
+    stepper = dict(stepper)
+    beats = stepper.get("beats") or []
+    if not isinstance(beats, list) or not beats:
+        return None
+    normalized_beats: list[Any] = []
+    for beat in beats:
+        if not isinstance(beat, dict):
+            continue
+        beat = dict(beat)
+        beat["id"] = _empty_to_none(beat.get("id"))
+        normalized_beats.append(beat)
+    if not normalized_beats:
+        return None
+    stepper["beats"] = normalize_stepper_beats(normalized_beats)
+    return stepper
 
 
 def normalize_plugin_payload_dict(data: dict[str, Any]) -> dict[str, Any]:
@@ -1207,6 +1388,7 @@ def normalize_plugin_payload_dict(data: dict[str, Any]) -> dict[str, Any]:
         else:
             interval["segments"] = normalized_segments
             out["interval_plan"] = interval
+    out["stepper"] = _normalize_stepper_dict(out.get("stepper"))
     return out
 
 

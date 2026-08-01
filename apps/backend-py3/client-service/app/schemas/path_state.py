@@ -28,12 +28,15 @@ TimerSignal = Literal["nudge", "alert"]
 TIMER_SIGNALS: frozenset[str] = frozenset(get_args(TimerSignal))
 
 # Light announcements on create #2 / refine wire (full payloads in #3).
-PluginHint = Literal["timers", "timeline", "interval", "counter"]
+PluginHint = Literal["timers", "timeline", "interval", "counter", "stepper"]
 PLUGIN_HINTS: frozenset[str] = frozenset(get_args(PluginHint))
+
+StepperBeatKind = Literal["measure", "work", "rest"]
+STEPPER_BEAT_KINDS: frozenset[str] = frozenset(get_args(StepperBeatKind))
 
 # Dropped from Path Anthropic wire (grammar size); still on PathAction app model.
 _PATH_WIRE_DROP_ACTION_KEYS = frozenset(
-    {"timers", "timeline", "interval_plan", "counter"}
+    {"timers", "timeline", "interval_plan", "counter", "stepper"}
 )
 _PATH_WIRE_DROP_DEFS = frozenset(
     {
@@ -42,8 +45,86 @@ _PATH_WIRE_DROP_DEFS = frozenset(
         "PathTimeline",
         "PathIntervalPlan",
         "PathClockBeat",
+        "PathStepperBeat",
+        "PathStepper",
     }
 )
+
+# Soft default when LLM emits measure/work without a real counter
+# (stub target=-1 / missing). Prefer this over hard-failing PathState load.
+_DEFAULT_BEAT_COUNTER: dict = {
+    "label": "",
+    "target": 1,
+    "current": 0,
+    "step": 1,
+}
+
+
+def _is_counter_stub(counter: object) -> bool:
+    if counter is None:
+        return True
+    if not isinstance(counter, dict):
+        return False
+    target = counter.get("target", -1)
+    return target is None or target == -1 or target == ""
+
+
+def _default_beat_counter(counter: object | None = None) -> dict:
+    """Fill a minimal valid counter; preserve current/step/label when present."""
+    out = dict(_DEFAULT_BEAT_COUNTER)
+    if not isinstance(counter, dict):
+        return out
+    label = counter.get("label")
+    if isinstance(label, str):
+        out["label"] = label
+    try:
+        current = int(counter.get("current", 0) or 0)
+        out["current"] = max(0, current)
+    except (TypeError, ValueError):
+        pass
+    try:
+        step = int(counter.get("step", 1) or 1)
+        out["step"] = step if step >= 1 else 1
+    except (TypeError, ValueError):
+        pass
+    # If LLM sent a positive target that somehow failed stub check, keep it.
+    try:
+        target = int(counter.get("target"))
+        if target >= 1:
+            out["target"] = target
+    except (TypeError, ValueError):
+        pass
+    return out
+
+
+def normalize_stepper_beats(beats: list) -> list:
+    """Normalize beat wire sentinels; auto-fill measure/work counters.
+
+    Rest beats: stub counters (target=-1) → None; duration stubs → None.
+    Measure/work: missing or stub counter → default {target:1, current:0, step:1}
+    so slightly-bad LLM #3 output does not brick PathState / Home.
+    """
+    normalized: list = []
+    for beat in beats:
+        if not isinstance(beat, dict):
+            normalized.append(beat)
+            continue
+        beat = dict(beat)
+        kind = beat.get("kind")
+        counter = beat.get("counter")
+        if kind in ("measure", "work"):
+            if _is_counter_stub(counter):
+                beat["counter"] = _default_beat_counter(counter)
+        elif isinstance(counter, dict) and _is_counter_stub(counter):
+            beat["counter"] = None
+        duration = beat.get("duration_sec", -1)
+        if duration is None or duration == -1 or duration == "":
+            beat["duration_sec"] = None
+        signal = beat.get("signal")
+        if signal == "" or signal is None:
+            beat["signal"] = None
+        normalized.append(beat)
+    return normalized
 
 
 class PathChecklistItem(BaseModel):
@@ -147,6 +228,43 @@ class PathIntervalPlan(BaseModel):
     )
 
 
+class PathStepperBeat(BaseModel):
+    """One beat in a strength session stepper (docs/next/04 §5)."""
+
+    id: str | None = Field(
+        default=None,
+        description="Stable beat id; reuse on refine when same beat.",
+    )
+    kind: StepperBeatKind = Field(
+        description="measure | work | rest.",
+    )
+    title: str = Field(min_length=1, description="Beat label.")
+    counter: PathCounter | None = Field(
+        default=None,
+        description="Dose for measure/work beats; absent on rest.",
+    )
+    duration_sec: int | None = Field(
+        default=None,
+        ge=1,
+        le=86_400,
+        description="Rest timer seconds; absent on measure/work.",
+    )
+    signal: TimerSignal | None = Field(
+        default=None,
+        description="Optional nudge|alert (usually on rest end).",
+    )
+
+
+class PathStepper(BaseModel):
+    """Strength session: measure → rest → work → rest → … (one action)."""
+
+    beats: list[PathStepperBeat] = Field(
+        default_factory=list,
+        min_length=1,
+        description="Ordered session beats.",
+    )
+
+
 class PathGroup(BaseModel):
     id: str = Field(
         min_length=1,
@@ -222,7 +340,7 @@ class PathAction(BaseModel):
         default_factory=list,
         description=(
             "Create #2 / refine: announce tools without payloads. "
-            "Values: timers|timeline|interval|counter. Empty [] if none. "
+            "Values: timers|timeline|interval|counter|stepper. Empty [] if none. "
             "Full plugin objects come in materialize #3 after Start."
         ),
     )
@@ -235,7 +353,7 @@ class PathAction(BaseModel):
     )
     counter: PathCounter | None = Field(
         default=None,
-        description="Dose counter for train sets/reps.",
+        description="Dose counter for a single dose (not set series).",
     )
     timeline: PathTimeline | None = Field(
         default=None,
@@ -243,13 +361,17 @@ class PathAction(BaseModel):
     )
     interval_plan: PathIntervalPlan | None = Field(
         default=None,
-        description="Sequential work/rest segments (fitness circuit).",
+        description="Sequential work/rest segments (HIIT by seconds).",
+    )
+    stepper: PathStepper | None = Field(
+        default=None,
+        description="Strength session beats (measure/work/rest).",
     )
 
     @model_validator(mode="before")
     @classmethod
     def normalize_plugin_stubs(cls, data: object) -> object:
-        """Wire stubs for counter / timeline / interval_plan → None."""
+        """Wire stubs for counter / timeline / interval_plan / stepper → None."""
         if not isinstance(data, dict):
             return data
         out = dict(data)
@@ -273,6 +395,16 @@ class PathAction(BaseModel):
             segments = interval.get("segments") or []
             if not segments:
                 out["interval_plan"] = None
+        stepper = out.get("stepper")
+        if isinstance(stepper, dict):
+            beats = stepper.get("beats") or []
+            if not beats:
+                out["stepper"] = None
+            else:
+                out["stepper"] = {
+                    **stepper,
+                    "beats": normalize_stepper_beats(list(beats)),
+                }
         return out
 
 
@@ -758,6 +890,23 @@ class PathState(BaseModel):
                         raise ValueError(
                             "interval_plan.segments.sec must be >= 1"
                         )
+            if action.stepper is not None:
+                if not action.stepper.beats:
+                    raise ValueError("stepper.beats must be non-empty")
+                for beat in action.stepper.beats:
+                    if not beat.title.strip():
+                        raise ValueError("stepper.beats.title must be non-empty")
+                    if beat.kind in ("measure", "work"):
+                        if beat.counter is None:
+                            raise ValueError(
+                                "stepper measure/work beats need a counter"
+                            )
+                    if beat.kind == "rest" and (
+                        beat.duration_sec is None or beat.duration_sec < 1
+                    ):
+                        raise ValueError(
+                            "stepper rest beats need duration_sec >= 1"
+                        )
         return self
 
 
@@ -792,6 +941,12 @@ class ActionPluginPayload(BaseModel):
             "Circuit segments. Wire: always emit; empty segments means absent."
         ),
     )
+    stepper: PathStepper | None = Field(
+        default=None,
+        description=(
+            "Strength beats. Wire: always emit; empty beats means absent."
+        ),
+    )
 
     @model_validator(mode="before")
     @classmethod
@@ -817,6 +972,16 @@ class ActionPluginPayload(BaseModel):
             segments = interval.get("segments") or []
             if not segments:
                 out["interval_plan"] = None
+        stepper = out.get("stepper")
+        if isinstance(stepper, dict):
+            beats = stepper.get("beats") or []
+            if not beats:
+                out["stepper"] = None
+            else:
+                out["stepper"] = {
+                    **stepper,
+                    "beats": normalize_stepper_beats(list(beats)),
+                }
         return out
 
 
@@ -836,8 +1001,8 @@ def _path_llm_schema() -> dict:
     """Structured-output schema for Anthropic Path create #2 / refine / repair.
 
     Drop ``resources`` / ``milestones`` and full plugin objects (timers /
-    timeline / interval_plan / counter) — grammar budget. Actions carry
-    ``plugin_hints`` only; payloads materialize in a separate #3 call.
+    timeline / interval_plan / counter / stepper) — grammar budget. Actions
+    carry ``plugin_hints`` only; payloads materialize in a separate #3 call.
     """
     schema = PathState.model_json_schema()
     props = schema.get("properties")

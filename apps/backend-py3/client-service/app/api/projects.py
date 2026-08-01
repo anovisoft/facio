@@ -4,6 +4,7 @@ from fastapi import APIRouter, BackgroundTasks, Body, Query
 
 from app.deps import CurrentUser, DbSession, LLM
 from app.errors import AppError
+from app.models import ConversationRole
 from app.schemas.api import CreateIntentResponse
 from app.schemas.path import (
     AbandonProjectRequest,
@@ -17,6 +18,7 @@ from app.schemas.path import (
     RestoreStateRequest,
     StateVersionSummary,
 )
+from app.services.audit import AuditService
 from app.services.path import (
     PathService,
     complete_create_path_job,
@@ -167,6 +169,37 @@ async def commit_project(
             user_id=user.id,
         )
     return detail
+
+
+@router.post("/{project_id}/materialize-plugins", response_model=ProjectDetail)
+async def rematerialize_plugins(
+    project_id: UUID,
+    user: CurrentUser,
+    db: DbSession,
+    llm: LLM,
+    background_tasks: BackgroundTasks,
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
+) -> ProjectDetail:
+    """Re-queue phase-3 plugin materialize (Home retry after plugins_error)."""
+    service = ProjectService(db)
+    project = await service.get_project(user, project_id)
+    path_service = PathService(db, llm=llm)
+    if await path_service.needs_plugin_materialize(user, project.id):
+        audit = AuditService(db)
+        await audit.add_turn(
+            user_id=user.id,
+            project_id=project.id,
+            role=ConversationRole.system,
+            content="Retrying plugin materialize",
+            meta={"kind": "plugins_retrying"},
+        )
+        await db.commit()
+        background_tasks.add_task(
+            complete_materialize_plugins_job,
+            project_id=project.id,
+            user_id=user.id,
+        )
+    return await service.to_detail(project, local_date=local_date)
 
 
 @router.post("/{project_id}/abandon", response_model=ProjectDetail)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime, timedelta
 from typing import Literal
 from uuid import UUID
@@ -48,6 +49,8 @@ from app.services.serializers import (
 ListStatusFilter = Literal[
     "open", "abandoned", "draft", "active", "completed"
 ]
+
+logger = logging.getLogger(__name__)
 
 
 class ProjectService:
@@ -126,8 +129,16 @@ class ProjectService:
         return await self.get_project(user, project.id)
 
     async def get_latest_state(
-        self, project_id: UUID
+        self, project_id: UUID, *, strict: bool = False
     ) -> tuple[int | None, PathState | None]:
+        """Load latest PathState.
+
+        On validation failure: when ``strict`` is False (reads / Home),
+        return ``(version, None)`` so callers can fall back to ORM and
+        never surface raw pydantic dumps to the client. When ``strict``
+        is True (commit / writes that need a valid state), raise a short
+        ValidationAppError.
+        """
         result = await self.db.execute(
             select(StateVersion)
             .where(StateVersion.project_id == project_id)
@@ -140,9 +151,17 @@ class ProjectService:
         try:
             return row.version, PathState.model_validate(row.state_json)
         except ValidationError as exc:
-            raise ValidationAppError(
-                f"Latest state version is invalid: {exc}"
-            ) from exc
+            logger.warning(
+                "Invalid PathState project=%s version=%s: %s",
+                project_id,
+                row.version,
+                exc,
+            )
+            if strict:
+                raise ValidationAppError(
+                    "Latest path state could not be loaded"
+                ) from exc
+            return row.version, None
 
     async def list_state_versions(
         self, user: User, project_id: UUID
@@ -330,7 +349,9 @@ class ProjectService:
         )
         path_error = None
         if project.status == ProjectStatus.draft and not path_ready:
-            path_error = await self._latest_path_error(project.id)
+            path_error = await self._latest_turn_meta_error(
+                project.id, kind="path_error"
+            )
 
         plugins_ready = True
         if state is not None:
@@ -341,6 +362,14 @@ class ProjectService:
                 and not plugins_ready
             ):
                 plugins_ready = False
+        elif project.status == ProjectStatus.active:
+            # Degraded read: invalid PathState — ORM is source of truth;
+            # don't lock Home on an infinite plugins spinner.
+            plugins_ready = True
+
+        plugins_error = None
+        if project.status == ProjectStatus.active and not plugins_ready:
+            plugins_error = await self._latest_plugins_error(project.id)
 
         summary = ProjectSummary.model_validate(
             project, from_attributes=True
@@ -368,9 +397,12 @@ class ProjectService:
             path_ready=path_ready,
             path_error=path_error,
             plugins_ready=plugins_ready,
+            plugins_error=plugins_error,
         )
 
-    async def _latest_path_error(self, project_id: UUID) -> str | None:
+    async def _latest_turn_meta_error(
+        self, project_id: UUID, *, kind: str
+    ) -> str | None:
         result = await self.db.execute(
             select(ConversationTurn)
             .where(
@@ -381,10 +413,39 @@ class ProjectService:
         )
         for turn in result.scalars().all():
             meta = turn.meta or {}
-            if meta.get("kind") == "path_error":
+            if meta.get("kind") == kind:
                 err = meta.get("error")
                 return str(err) if err else turn.content
         return None
+
+    async def _latest_plugins_error(self, project_id: UUID) -> str | None:
+        """Return plugins_error only if it's the newest plugins-related turn.
+
+        A later ``plugins_retrying`` or ``plugins_ready`` clears the sticky
+        error so Home can show the loader again after retry.
+        """
+        result = await self.db.execute(
+            select(ConversationTurn)
+            .where(
+                ConversationTurn.project_id == project_id,
+            )
+            .order_by(ConversationTurn.created_at.desc())
+            .limit(20)
+        )
+        for turn in result.scalars().all():
+            meta = turn.meta or {}
+            kind = meta.get("kind")
+            if kind in ("plugins_ready", "plugins_retrying"):
+                return None
+            if kind == "plugins_error":
+                err = meta.get("error")
+                return str(err) if err else turn.content
+        return None
+
+    async def _latest_path_error(self, project_id: UUID) -> str | None:
+        return await self._latest_turn_meta_error(
+            project_id, kind="path_error"
+        )
 
     async def commit(
         self,
@@ -398,7 +459,7 @@ class ProjectService:
         if project.status != ProjectStatus.draft:
             raise ConflictError("Only draft projects can be committed")
 
-        version, state = await self.get_latest_state(project.id)
+        version, state = await self.get_latest_state(project.id, strict=True)
         if state is None:
             raise ValidationAppError("Project has no Path state to commit")
         if not state.actions:

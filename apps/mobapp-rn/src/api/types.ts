@@ -85,6 +85,21 @@ export interface IntervalPlanResponse {
   segments: IntervalSegmentResponse[];
 }
 
+export type StepperBeatKind = 'measure' | 'work' | 'rest';
+
+export interface StepperBeatResponse {
+  id: string;
+  kind: StepperBeatKind;
+  title: string;
+  counter?: CounterResponse | null;
+  duration_sec?: number | null;
+  signal?: TimerSignal | null;
+}
+
+export interface StepperResponse {
+  beats: StepperBeatResponse[];
+}
+
 export interface GroupResponse {
   id: string;
   key: string;
@@ -144,6 +159,7 @@ export interface ActionResponse {
   counter?: CounterResponse | null;
   timeline?: ActionTimelineResponse | null;
   interval_plan?: IntervalPlanResponse | null;
+  stepper?: StepperResponse | null;
 }
 
 export interface ProjectSummary {
@@ -201,6 +217,8 @@ export interface ProjectDetail extends ProjectSummary {
   path_error?: string | null;
   /** False while phase-3 plugin materialize runs after Start. */
   plugins_ready?: boolean;
+  /** Set when phase-3 failed — stop polling, show error + retry. */
+  plugins_error?: string | null;
   /**
    * Set only on the response to POST .../repair: short one-line "what
    * changed" summary for a confirmation toast/banner. Not present on GET.

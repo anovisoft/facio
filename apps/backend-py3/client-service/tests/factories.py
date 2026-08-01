@@ -77,6 +77,7 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
                 "counter": None,
                 "timeline": None,
                 "interval_plan": None,
+                "stepper": None,
             },
             {
                 "id": "sear",
@@ -93,6 +94,7 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
                 "counter": None,
                 "timeline": None,
                 "interval_plan": None,
+                "stepper": None,
             },
             {
                 "id": "cook",
@@ -109,6 +111,7 @@ def sample_path_state(**overrides: Any) -> dict[str, Any]:
                 "counter": None,
                 "timeline": None,
                 "interval_plan": None,
+                "stepper": None,
             },
         ],
         "questions": [
@@ -148,6 +151,7 @@ def sample_plugins_materialize(**overrides: Any) -> dict[str, Any]:
                 "counter": None,
                 "timeline": None,
                 "interval_plan": None,
+                "stepper": None,
             },
             {
                 "action_id": "cook",
@@ -167,11 +171,74 @@ def sample_plugins_materialize(**overrides: Any) -> dict[str, Any]:
                     ],
                 },
                 "interval_plan": None,
+                "stepper": None,
             },
         ]
     }
     payload.update(overrides)
     return payload
+
+
+def _sample_train_stepper(*, measure_target: int = 15) -> dict[str, Any]:
+    return {
+        "beats": [
+            {
+                "id": "m0",
+                "kind": "measure",
+                "title": "Замер",
+                "counter": {
+                    "label": "повторы",
+                    "target": measure_target,
+                    "current": 0,
+                    "step": 1,
+                },
+                "duration_sec": None,
+                "signal": "nudge",
+            },
+            {
+                "id": "r0",
+                "kind": "rest",
+                "title": "Отдых",
+                "counter": None,
+                "duration_sec": 180,
+                "signal": "nudge",
+            },
+            {
+                "id": "w1",
+                "kind": "work",
+                "title": "Подход 1",
+                "counter": {
+                    "label": "повторы",
+                    "target": 12,
+                    "current": 0,
+                    "step": 1,
+                },
+                "duration_sec": None,
+                "signal": "nudge",
+            },
+            {
+                "id": "r1",
+                "kind": "rest",
+                "title": "Отдых",
+                "counter": None,
+                "duration_sec": 90,
+                "signal": "nudge",
+            },
+            {
+                "id": "w2",
+                "kind": "work",
+                "title": "Подход 2",
+                "counter": {
+                    "label": "повторы",
+                    "target": 12,
+                    "current": 0,
+                    "step": 1,
+                },
+                "duration_sec": None,
+                "signal": "alert",
+            },
+        ]
+    }
 
 
 def sample_fitness_plugins_materialize(**overrides: Any) -> dict[str, Any]:
@@ -180,58 +247,34 @@ def sample_fitness_plugins_materialize(**overrides: Any) -> dict[str, Any]:
             {
                 "action_id": "d0",
                 "timers": [],
-                "counter": {
-                    "label": "повторы",
-                    "target": 24,
-                    "current": 0,
-                    "step": 1,
-                },
+                "counter": None,
                 "timeline": None,
-                "interval_plan": {
-                    "segments": [
-                        {"sec": 40, "title": "Отжимания", "signal": "nudge"},
-                        {"sec": 20, "title": "Отдых", "signal": "nudge"},
-                        {"sec": 40, "title": "Отжимания", "signal": "nudge"},
-                        {"sec": 20, "title": "Отдых", "signal": "nudge"},
-                        {"sec": 40, "title": "Отжимания", "signal": "alert"},
-                    ],
-                },
+                "interval_plan": None,
+                "stepper": _sample_train_stepper(measure_target=15),
             },
             {
                 "action_id": "d2",
                 "timers": [],
-                "counter": {
-                    "label": "повторы",
-                    "target": 24,
-                    "current": 0,
-                    "step": 1,
-                },
+                "counter": None,
                 "timeline": None,
                 "interval_plan": None,
+                "stepper": _sample_train_stepper(measure_target=12),
             },
             {
                 "action_id": "d4",
                 "timers": [],
-                "counter": {
-                    "label": "повторы",
-                    "target": 24,
-                    "current": 0,
-                    "step": 1,
-                },
+                "counter": None,
                 "timeline": None,
                 "interval_plan": None,
+                "stepper": _sample_train_stepper(measure_target=12),
             },
             {
                 "action_id": "d6",
                 "timers": [],
-                "counter": {
-                    "label": "повторы",
-                    "target": 24,
-                    "current": 0,
-                    "step": 1,
-                },
+                "counter": None,
                 "timeline": None,
                 "interval_plan": None,
+                "stepper": _sample_train_stepper(measure_target=12),
             },
         ]
     }
@@ -240,7 +283,7 @@ def sample_fitness_plugins_materialize(**overrides: Any) -> dict[str, Any]:
 
 
 def sample_fitness_path_state(**overrides: Any) -> dict[str, Any]:
-    """Push-ups week: 7-day cycle with train/rest mix."""
+    """Push-ups week: 7-day cycle with train/rest mix + stepper hints."""
     days = []
     actions = []
     kinds = [
@@ -264,27 +307,20 @@ def sample_fitness_path_state(**overrides: Any) -> dict[str, Any]:
         if kind == "train":
             action: dict[str, Any] = {
                 "id": f"d{i}",
-                "title": (
-                    "Круговая сессия" if i == 0 else "Подходы отжиманий"
-                ),
+                "title": "Силовая сессия",
                 "why": f"Силовой день {i // 2 + 1} двигает к 30 отжиманиям",
-                "detail": (
-                    "Работа / отдых по таймеру."
-                    if i == 0
-                    else "3 коротких подхода с хорошей формой."
-                ),
-                "estimate_min": 15,
+                "detail": "Замер → отдых → подходы с отдыхом между.",
+                "estimate_min": 20,
                 "day_offset": i,
                 "sort": i,
                 "group_id": None,
                 "checklist_items": [],
-                "plugin_hints": (
-                    ["interval", "counter"] if i == 0 else ["counter"]
-                ),
+                "plugin_hints": ["stepper"],
                 "timers": [],
                 "counter": None,
                 "timeline": None,
                 "interval_plan": None,
+                "stepper": None,
             }
             actions.append(action)
         else:
@@ -304,6 +340,7 @@ def sample_fitness_path_state(**overrides: Any) -> dict[str, Any]:
                     "counter": None,
                     "timeline": None,
                     "interval_plan": None,
+                    "stepper": None,
                 }
             )
     state: dict[str, Any] = {
@@ -375,11 +412,12 @@ def sample_fitness_overshoot_path_state(**overrides: Any) -> dict[str, Any]:
                     "sort": i,
                     "group_id": None,
                     "checklist_items": [],
-                    "plugin_hints": ["counter"],
+                    "plugin_hints": ["stepper"],
                     "timers": [],
                     "counter": None,
                     "timeline": None,
                     "interval_plan": None,
+                    "stepper": None,
                 }
             )
     for i in range(20, 35):

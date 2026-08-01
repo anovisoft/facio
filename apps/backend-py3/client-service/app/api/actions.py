@@ -84,6 +84,29 @@ async def update_counter(
 
 
 @router.post(
+    "/actions/{action_id}/stepper/beats/{beat_id}/counter",
+    response_model=ActionResponse,
+)
+async def update_stepper_beat_counter(
+    action_id: UUID,
+    beat_id: str,
+    body: UpdateCounterRequest,
+    user: CurrentUser,
+    db: DbSession,
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
+) -> ActionResponse:
+    action = await ActionService(db).update_stepper_beat_counter(
+        user,
+        action_id,
+        beat_id,
+        current=body.current,
+        delta=body.delta,
+        local_date=local_date,
+    )
+    return serialize_action(action)
+
+
+@router.post(
     "/actions/{action_id}/timers/{timer_id}/complete",
     response_model=ActionResponse,
 )

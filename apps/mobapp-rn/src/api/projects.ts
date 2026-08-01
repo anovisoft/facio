@@ -131,3 +131,14 @@ export function repairProject(
     signal,
   });
 }
+
+export function rematerializePlugins(
+  projectId: string,
+  signal?: AbortSignal,
+): Promise<ProjectDetail> {
+  return apiRequest(`/projects/${projectId}/materialize-plugins`, {
+    method: 'POST',
+    query: { local_date: getLocalDate() },
+    signal,
+  });
+}

@@ -21,8 +21,9 @@ import {
   skipAction,
   toggleChecklistItem,
   updateCounter,
+  updateStepperBeatCounter,
 } from '@/api/actions';
-import { getProject, repairProject } from '@/api/projects';
+import { getProject, rematerializePlugins, repairProject } from '@/api/projects';
 import { ApiError, type DayKind, type ProjectDetail, type RepairIntent } from '@/api/types';
 import { FirstCompletionOverlay } from '@/features/home/FirstCompletionOverlay';
 import { RepairSheet } from '@/features/home/RepairSheet';
@@ -33,6 +34,7 @@ import { AsyncState } from '@/shared/ui/AsyncState';
 import {
   CounterControl,
   IntervalPlayer,
+  StepperPlayer,
   TimelineProgress,
   TimerStack,
 } from '@/shared/ui/ActionPlugins';
@@ -70,9 +72,31 @@ export function ProjectHomeScreen({
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: project?.title || project?.outcome || project?.paraphrase || t('home.today'),
+      title:
+        project?.title ||
+        project?.outcome ||
+        project?.paraphrase ||
+        t('home.today'),
+      headerRight: () => (
+        <Pressable
+          onPress={() => navigation.navigate('Path', { projectId })}
+          accessibilityLabel={t('home.menuPath')}
+          hitSlop={10}
+          style={{ paddingHorizontal: spacing.sm }}
+        >
+          <Text style={{ fontSize: 22, color: colors.text }}>☰</Text>
+        </Pressable>
+      ),
     });
-  }, [navigation, project?.title, project?.outcome, project?.paraphrase, t]);
+  }, [
+    navigation,
+    project?.title,
+    project?.outcome,
+    project?.paraphrase,
+    projectId,
+    t,
+    colors.text,
+  ]);
 
   const load = useCallback(async () => {
     abortRef.current?.abort();
@@ -105,19 +129,39 @@ export function ProjectHomeScreen({
 
   // Poll while phase-3 plugins are still materializing after Start.
   useEffect(() => {
-    if (!project || project.plugins_ready !== false || busy) return;
+    if (
+      !project ||
+      project.plugins_ready !== false ||
+      project.plugins_error ||
+      busy
+    ) {
+      return;
+    }
     const timer = setInterval(() => {
       void (async () => {
         try {
           const detail = await getProject(projectId);
           setProject(detail);
         } catch {
-          // Keep showing skeleton; next tick retries.
+          // Keep showing loader; next tick retries.
         }
       })();
     }, 1500);
     return () => clearInterval(timer);
   }, [project, busy, projectId]);
+
+  const onRetryPlugins = useCallback(async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const detail = await rematerializePlugins(projectId);
+      setProject(detail);
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t('home.pluginsError'));
+    } finally {
+      setBusy(false);
+    }
+  }, [projectId, t]);
 
   const refreshAfterMutation = async () => {
     const detail = await getProject(projectId);
@@ -245,11 +289,46 @@ export function ProjectHomeScreen({
         timers: updated.timers,
         timeline: updated.timeline,
         interval_plan: updated.interval_plan,
+        stepper: updated.stepper,
       });
     } catch (e) {
       patchNextAction({
         counter: { ...action.counter, current: previous },
       });
+      setError(e instanceof ApiError ? e.message : t('home.error'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onStepperBeatCounterChange = async (
+    beatId: string,
+    nextCurrent: number,
+  ) => {
+    const action = project?.next_action;
+    if (!action?.stepper || busy) return;
+    const previous = action.stepper;
+    const optimisticBeats = previous.beats.map((beat) =>
+      beat.id === beatId && beat.counter
+        ? { ...beat, counter: { ...beat.counter, current: nextCurrent } }
+        : beat,
+    );
+    patchNextAction({ stepper: { beats: optimisticBeats } });
+    setBusy(true);
+    setError(null);
+    try {
+      const updated = await updateStepperBeatCounter(action.id, beatId, {
+        current: nextCurrent,
+      });
+      patchNextAction({
+        stepper: updated.stepper,
+        counter: updated.counter,
+        timers: updated.timers,
+        timeline: updated.timeline,
+        interval_plan: updated.interval_plan,
+      });
+    } catch (e) {
+      patchNextAction({ stepper: previous });
       setError(e instanceof ApiError ? e.message : t('home.error'));
     } finally {
       setBusy(false);
@@ -266,6 +345,7 @@ export function ProjectHomeScreen({
         counter: updated.counter,
         timeline: updated.timeline,
         interval_plan: updated.interval_plan,
+        stepper: updated.stepper,
       });
     } catch (e) {
       setError(e instanceof ApiError ? e.message : t('home.error'));
@@ -396,6 +476,38 @@ export function ProjectHomeScreen({
     );
   }
 
+  // Block Home on a loader until phase-3 plugins land (or fail).
+  const pluginsPending =
+    project.plugins_ready === false && !project.plugins_error;
+  if (pluginsPending) {
+    return (
+      <SafeScreen>
+        <AsyncState
+          loading
+          loadingMessage={t('home.pluginsLoading')}
+          retryLabel={t('projects.retry')}
+          onRetry={() => void load()}
+        >
+          {null}
+        </AsyncState>
+      </SafeScreen>
+    );
+  }
+
+  if (project.plugins_ready === false && project.plugins_error) {
+    return (
+      <SafeScreen>
+        <AsyncState
+          error={error ?? t('home.pluginsError')}
+          retryLabel={t('projects.retry')}
+          onRetry={() => void onRetryPlugins()}
+        >
+          {null}
+        </AsyncState>
+      </SafeScreen>
+    );
+  }
+
   return (
     <>
       <SafeScreen scroll>
@@ -481,42 +593,118 @@ export function ProjectHomeScreen({
                 })}
               </Text>
             ) : null}
-            <Text style={[styles.todayLabel, { color: colors.textMuted }]}>
-              {todayLead()}
-            </Text>
+
+            {/* Session Stage — hero (~2/3 focus) */}
             {isRestDay ? (
-              <Text style={[styles.restHint, { color: colors.textSecondary }]}>
-                {currentDay?.summary || t('home.restHint')}
-              </Text>
+              <View
+                style={[
+                  styles.restStage,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.surfaceMuted,
+                  },
+                ]}
+              >
+                <Text style={[styles.todayLabel, { color: colors.textMuted }]}>
+                  {todayLead()}
+                </Text>
+                {currentDay?.title ? (
+                  <Text style={[styles.restTitle, { color: colors.text }]}>
+                    {currentDay.title}
+                  </Text>
+                ) : null}
+                <Text style={[styles.restHint, { color: colors.textSecondary }]}>
+                  {currentDay?.summary || t('home.restHint')}
+                </Text>
+                <Text style={[styles.restStepTitle, { color: colors.text }]}>
+                  {next.title}
+                </Text>
+              </View>
+            ) : next.timeline ||
+              next.stepper ||
+              next.interval_plan ||
+              (next.timers?.length ?? 0) > 0 ||
+              next.counter ? (
+              <View style={styles.stage}>
+                {next.timeline ? (
+                  <TimelineProgress
+                    timeline={next.timeline}
+                    interactive
+                    disabled={busy}
+                  />
+                ) : null}
+                {next.stepper ? (
+                  <StepperPlayer
+                    stepper={next.stepper}
+                    interactive
+                    disabled={busy}
+                    onBeatCounterChange={(beatId, value) =>
+                      void onStepperBeatCounterChange(beatId, value)
+                    }
+                  />
+                ) : null}
+                {next.interval_plan ? (
+                  <IntervalPlayer
+                    plan={next.interval_plan}
+                    interactive
+                    disabled={busy}
+                  />
+                ) : null}
+                {!next.timeline &&
+                !next.stepper &&
+                !next.interval_plan &&
+                (next.timers?.length ?? 0) > 0 ? (
+                  <TimerStack
+                    timers={next.timers ?? []}
+                    interactive
+                    disabled={busy}
+                    onCompleteTimer={(timerId) => void onCompleteTimer(timerId)}
+                  />
+                ) : null}
+                {!next.timeline &&
+                !next.stepper &&
+                !next.interval_plan &&
+                next.counter ? (
+                  <CounterControl
+                    counter={next.counter}
+                    interactive
+                    disabled={busy}
+                    onChange={(value) => void onCounterChange(value)}
+                  />
+                ) : null}
+              </View>
             ) : null}
-            {currentDay?.title && !isRestDay ? (
-              <Text style={[styles.groupLabel, { color: colors.textMuted }]}>
-                {currentDay.title}
-              </Text>
-            ) : null}
-            {isRestDay && currentDay?.title ? (
-              <Text style={[styles.restTitle, { color: colors.text }]}>
-                {currentDay.title}
-              </Text>
-            ) : null}
-            {groupLabel && !isRestDay ? (
-              <Text style={[styles.groupLabel, { color: colors.textMuted }]}>
-                {groupLabel}
-              </Text>
-            ) : null}
-            <Text
-              style={[
-                isRestDay ? styles.restStepTitle : styles.stepTitle,
-                { color: colors.text },
-              ]}
-            >
-              {next.title}
-            </Text>
-            {next.estimate_min != null ? (
-              <Text style={[styles.estimate, { color: colors.textSecondary }]}>
-                {t('common.minutes', { count: next.estimate_min })}
-              </Text>
-            ) : null}
+
+            {/* Support — short title / Now */}
+            <View style={styles.support}>
+              {!isRestDay ? (
+                <Text style={[styles.todayLabel, { color: colors.textMuted }]}>
+                  {todayLead()}
+                </Text>
+              ) : null}
+              {currentDay?.title && !isRestDay ? (
+                <Text style={[styles.groupLabel, { color: colors.textMuted }]}>
+                  {currentDay.title}
+                </Text>
+              ) : null}
+              {groupLabel && !isRestDay ? (
+                <Text style={[styles.groupLabel, { color: colors.textMuted }]}>
+                  {groupLabel}
+                </Text>
+              ) : null}
+              {!isRestDay ? (
+                <Text style={[styles.stepTitle, { color: colors.text }]}>
+                  {next.title}
+                </Text>
+              ) : null}
+              {next.estimate_min != null ? (
+                <Text
+                  style={[styles.estimate, { color: colors.textSecondary }]}
+                >
+                  {t('common.minutes', { count: next.estimate_min })}
+                </Text>
+              ) : null}
+            </View>
 
             {!isRestDay ? <WhyHero why={next.why} /> : null}
             {isRestDay && next.why ? (
@@ -543,44 +731,15 @@ export function ProjectHomeScreen({
               </View>
             ) : null}
 
-            {(next.timers?.length ?? 0) > 0 ? (
+            {/* Isolated timers when a stage clock already owns the session */}
+            {(next.timeline || next.stepper || next.interval_plan) &&
+            (next.timers?.length ?? 0) > 0 ? (
               <View style={styles.plugins}>
                 <TimerStack
                   timers={next.timers ?? []}
                   interactive
                   disabled={busy}
                   onCompleteTimer={(timerId) => void onCompleteTimer(timerId)}
-                />
-              </View>
-            ) : null}
-
-            {next.timeline ? (
-              <View style={styles.plugins}>
-                <TimelineProgress
-                  timeline={next.timeline}
-                  interactive
-                  disabled={busy}
-                />
-              </View>
-            ) : null}
-
-            {next.interval_plan ? (
-              <View style={styles.plugins}>
-                <IntervalPlayer
-                  plan={next.interval_plan}
-                  interactive
-                  disabled={busy}
-                />
-              </View>
-            ) : null}
-
-            {next.counter ? (
-              <View style={styles.plugins}>
-                <CounterControl
-                  counter={next.counter}
-                  interactive
-                  disabled={busy}
-                  onChange={(value) => void onCounterChange(value)}
                 />
               </View>
             ) : null}
@@ -631,20 +790,13 @@ export function ProjectHomeScreen({
           </>
         ) : null}
 
-        <PrimaryButton
-          variant="ghost"
-          label={t('home.fullPath')}
-          disabled={busy}
-          onPress={() => navigation.navigate('Path', { projectId })}
-          style={styles.pathBtn}
-        />
-
         {!projectDone ? (
           <PrimaryButton
             variant="ghost"
             label={t('home.repair')}
             disabled={busy}
             onPress={onOpenRepair}
+            style={styles.pathBtn}
           />
         ) : null}
       </SafeScreen>
@@ -706,6 +858,23 @@ const styles = StyleSheet.create({
   },
   plugins: {
     marginTop: spacing.lg,
+  },
+  stage: {
+    marginBottom: spacing.lg,
+    minHeight: 240,
+    gap: spacing.md,
+  },
+  restStage: {
+    borderWidth: 1,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
+    minHeight: 160,
+  },
+  support: {
+    marginBottom: spacing.md,
+    gap: 2,
   },
   detail: {
     ...typography.body,

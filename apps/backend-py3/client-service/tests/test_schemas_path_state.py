@@ -235,6 +235,7 @@ def test_fitness_domain_truncates_actions_past_week():
             "counter": None,
             "timeline": None,
             "interval_plan": None,
+            "stepper": None,
         }
         for i in range(7, 10)
     ]
@@ -259,8 +260,125 @@ def test_progressive_start_skeleton_untouched_with_no_actions():
         {"day_index": i, "kind": "other", "title": None, "summary": None}
         for i in range(8)
     ]
-
     state = PathState.model_validate(payload)
-
     assert state.cycle.horizon_days == 8
     assert len(state.days) == 8
+
+
+# --- Stepper beat counter normalize (Slice 4′ dogfood) ----------------------
+
+
+def _fitness_action_with_stepper(beats: list) -> dict:
+    from tests.factories import sample_fitness_path_state
+
+    payload = sample_fitness_path_state()
+    for action in payload["actions"]:
+        if action.get("plugin_hints") == ["stepper"] or action.get("stepper"):
+            action["plugin_hints"] = ["stepper"]
+            action["stepper"] = {"beats": beats}
+            action["counter"] = None
+            break
+    return payload
+
+
+def test_measure_beat_without_counter_validates_after_normalize():
+    """LLM #3 sometimes omits counter on measure/work — soft-fill target=1."""
+    payload = _fitness_action_with_stepper(
+        [
+            {
+                "id": "m0",
+                "kind": "measure",
+                "title": "Замер",
+                "counter": None,
+                "duration_sec": None,
+                "signal": "nudge",
+            },
+            {
+                "id": "r0",
+                "kind": "rest",
+                "title": "Отдых",
+                "counter": None,
+                "duration_sec": 90,
+                "signal": "nudge",
+            },
+            {
+                "id": "w1",
+                "kind": "work",
+                "title": "Подход 1",
+                "counter": {
+                    "label": "",
+                    "target": -1,
+                    "current": 0,
+                    "step": 1,
+                },
+                "duration_sec": -1,
+                "signal": "nudge",
+            },
+        ]
+    )
+    state = PathState.model_validate(payload)
+    train = next(a for a in state.actions if a.stepper is not None)
+    assert train.stepper is not None
+    measure, rest, work = train.stepper.beats
+    assert measure.counter is not None
+    assert measure.counter.target == 1
+    assert measure.counter.current == 0
+    assert rest.counter is None
+    assert rest.duration_sec == 90
+    assert work.counter is not None
+    assert work.counter.target == 1
+
+
+def test_action_plugin_payload_fills_measure_stub_counter():
+    from app.schemas.path_state import ActionPluginPayload
+
+    payload = ActionPluginPayload.model_validate(
+        {
+            "action_id": "a0",
+            "timers": [],
+            "counter": {"label": "", "target": -1, "current": 0, "step": 1},
+            "timeline": {"duration_sec": -1, "markers": []},
+            "interval_plan": {"segments": []},
+            "stepper": {
+                "beats": [
+                    {
+                        "id": "m0",
+                        "kind": "measure",
+                        "title": "Max",
+                        "counter": {
+                            "label": "",
+                            "target": -1,
+                            "current": 0,
+                            "step": 1,
+                        },
+                        "duration_sec": -1,
+                        "signal": "nudge",
+                    }
+                ]
+            },
+        }
+    )
+    assert payload.stepper is not None
+    beat = payload.stepper.beats[0]
+    assert beat.counter is not None
+    assert beat.counter.target == 1
+    assert payload.counter is None
+
+
+def test_normalize_stepper_beats_helper():
+    from app.schemas.path_state import normalize_stepper_beats
+
+    beats = normalize_stepper_beats(
+        [
+            {"kind": "measure", "title": "M", "counter": None},
+            {
+                "kind": "rest",
+                "title": "R",
+                "counter": {"target": -1, "current": 0, "step": 1},
+                "duration_sec": -1,
+            },
+        ]
+    )
+    assert beats[0]["counter"]["target"] == 1
+    assert beats[1]["counter"] is None
+    assert beats[1]["duration_sec"] is None

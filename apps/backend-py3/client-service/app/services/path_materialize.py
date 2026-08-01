@@ -29,6 +29,11 @@ def action_plugins_filled(action: PathAction) -> bool:
         if hint == "interval" and action.interval_plan is None:
             return False
         if hint == "counter" and action.counter is None:
+            # Counter inside stepper beats satisfies set/dose need.
+            if action.stepper is not None:
+                continue
+            return False
+        if hint == "stepper" and action.stepper is None:
             return False
     return True
 
@@ -62,17 +67,34 @@ def merge_plugin_payloads(
         # redundant (grammar/UX); drop them when a real timeline is present.
         if timeline is not None and timeline.duration_sec >= 1:
             timers = []
+        stepper = payload.stepper
+        if stepper is not None:
+            beats = []
+            for b_index, beat in enumerate(stepper.beats):
+                beats.append(
+                    beat.model_copy(update={"id": beat.id or f"b{b_index}"})
+                )
+            stepper = stepper.model_copy(update={"beats": beats})
+        # Stepper owns the set series — drop bare action-level counter.
+        counter = payload.counter
+        if stepper is not None:
+            counter = None
         actions.append(
             item.model_copy(
                 update={
                     "timers": timers,
-                    "counter": payload.counter,
+                    "counter": counter,
                     "timeline": timeline,
                     "interval_plan": payload.interval_plan,
+                    "stepper": stepper,
                 }
             )
         )
-    return state.model_copy(update={"actions": actions})
+    # Re-validate so beat counter normalize / PathState checks run before
+    # persist (model_copy alone does not re-run PathState validators).
+    return PathState.model_validate(
+        state.model_copy(update={"actions": actions}).model_dump(mode="json")
+    )
 
 
 # Stable draft/API ids derived from project + logical key.
@@ -185,6 +207,39 @@ def _interval_plan_payload(plan) -> dict | None:
     }
 
 
+def _stepper_payload(
+    stepper,
+    *,
+    preserved_currents: dict[str, int] | None = None,
+) -> dict | None:
+    if stepper is None:
+        return None
+    currents = preserved_currents or {}
+    beats: list[dict] = []
+    for b_index, beat in enumerate(stepper.beats):
+        b_key = beat.id or f"b{b_index}"
+        counter = None
+        if beat.counter is not None:
+            current = currents.get(b_key, beat.counter.current)
+            counter = {
+                "label": beat.counter.label,
+                "target": beat.counter.target,
+                "current": max(0, int(current)),
+                "step": beat.counter.step if beat.counter.step else 1,
+            }
+        beats.append(
+            {
+                "id": b_key,
+                "kind": beat.kind,
+                "title": beat.title,
+                "counter": counter,
+                "duration_sec": beat.duration_sec,
+                "signal": beat.signal,
+            }
+        )
+    return {"beats": beats}
+
+
 def apply_contract(project: Project, state: PathState) -> None:
     project.title = state.title
     project.summary = state.summary
@@ -222,6 +277,7 @@ async def materialize_path(
     preserved_checklist: dict[str, dict[str, bool]] = {}
     preserved_counter: dict[str, int] = {}
     preserved_timers: dict[str, dict[str, bool]] = {}
+    preserved_stepper: dict[str, dict[str, int]] = {}
     preserved_due: dict[str, object] = {}
     if merge_progress:
         for action in project.actions:
@@ -241,6 +297,21 @@ async def materialize_path(
                     for t in action.timers
                     if isinstance(t, dict) and t.get("id")
                 }
+            if isinstance(action.stepper, dict):
+                beat_currents: dict[str, int] = {}
+                for beat in action.stepper.get("beats") or []:
+                    if not isinstance(beat, dict):
+                        continue
+                    bid = beat.get("id")
+                    counter = beat.get("counter")
+                    if (
+                        bid
+                        and isinstance(counter, dict)
+                        and "current" in counter
+                    ):
+                        beat_currents[str(bid)] = int(counter["current"])
+                if beat_currents:
+                    preserved_stepper[action.key] = beat_currents
 
     for action in list(project.actions):
         await db.delete(action)
@@ -291,6 +362,10 @@ async def materialize_path(
             ),
             timeline=_timeline_payload(item.timeline),
             interval_plan=_interval_plan_payload(item.interval_plan),
+            stepper=_stepper_payload(
+                item.stepper,
+                preserved_currents=preserved_stepper.get(key),
+            ),
         )
         db.add(action)
         await db.flush()

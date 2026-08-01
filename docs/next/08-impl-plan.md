@@ -28,8 +28,9 @@
 | **2** | Cycle + дни + Home «день N» | План ощущается программой, не очередью | Отжимания: карта недели, rest ≠ train |
 | **3** | Plugins: TimerStack + Counter | Runtime-ценность wedge (база) | Карбонара с таймерами; отжимания с каунтерами |
 | **3′** | Progressive create + clock UX | Ощущение + юзабельность | Slim <~5с; timeline карбонара; interval+pause тренировка |
-| **4** | Repair на живом плане | Цикл не умирает; без Draft/Accept-дубля | «Не могу сегодня» + правка структуры всегда |
-| **5** | Next cycle | Петля «тренер на следующую неделю» | Конец недели отжиманий → CTA → цикл 2 |
+| **4** | Repair + физический день | Цикл не умирает; calendar unlock | «Не могу» + день N≠N+1 execute |
+| **4′** | Session Stage + Stepper | Home = исполнение, не буклет; LLM знает объекты | Timeline/stepper герой; бургер→план |
+| **5** | Next cycle | Петля «тренер на следующую неделю» | Конец недели → CTA → цикл 2 |
 
 Срезы **1→2→3** сделаны. Дальше **не автоматом 4**: сначала явно выбрать порядок **3′ vs 4** (см. [09](./09-continuity.md)).  
 **3′** можно до или параллельно подготовке **4**; timeline/interval не блокер минимального Repair, но must до «runtime wedge готов».
@@ -227,6 +228,51 @@ Multi-day без «не могу сегодня» умирает к дню 3. Sk
 
 ---
 
+## Срез 4′ — Session Stage + Stepper (Home + prompts + schema)
+
+### Погружение
+
+Home сейчас — буклет: labels, why, detail, checklist, плагин снизу. Timeline/counter не ощущаются состоянием экрана. Силовая сессия ломается на «checklist подходов + один counter» и два action (max+volume). Нужны: (1) Session Stage UI, (2) stepper plugin, (3) промпты, чтобы LLM проектировал правильные объекты.
+
+### Входит
+
+**A. Model + prompts**
+- `stepper` / `set_plan` на action: beats `measure|work|rest` (+ counter на work/measure, duration на rest)
+- Hint `#2`: `"stepper"`; полные beats в `#3` (отдельный slim schema если grammar жмёт)
+- Промпты create/refine/materialize: cook→timeline; силовая→один action+stepper; запрет checklist-подходов; merge max+volume
+- Few-shot отжимания: неделя 1 с stepper на train-дне
+
+**B. Home UI — Session Stage**
+- Stage ~2/3: timeline или текущий stepper beat (+ compact при скролле)
+- Support: короткий title / «Сейчас»
+- **Бургер справа сверху** → Весь план (Path); убрать/понизить дубль CTA «Весь план» в теле
+- Rest day — спокойный вариант stage
+- Done / Skip / Repair — вторичный chrome
+
+**C. Path preview**
+- Locked days как сейчас; hint chips включают stepper
+
+### Не входит
+
+- Next cycle (Срез 5)
+- Полный redesign Draft
+- Google Calendar
+
+### DoD
+
+- [ ] Силовая: один session action со stepper (не checklist подходов + 1 counter)
+- [ ] Home: stage доминирует; бургер открывает весь план
+- [ ] Карбонара: timeline как stage (не буклет)
+- [ ] Промпты/few-shot отражают концепт; #3 materialize stepper без grammar 400
+- [ ] Существующие carbonara/fitness тесты зелёные или обновлены
+
+### Контекст субагенту
+
+Прочитать: 03 (plugins), 04 (§5 stepper + clock), 05 (Session Stage + бургер), 06, 09 (§F).  
+Опереться на 3′ + 4.
+
+---
+
 ## Срез 5 — Next cycle
 
 ### Погружение
@@ -280,4 +326,5 @@ Multi-day без «не могу сегодня» умирает к дню 3. Sk
 | Срез 3′ | **одобрен** (#2/#3 + Draft UX D); polish later → Срез 4 |
 
 | Срез 4 | **в коде** (physical day + Repair); ждёт dogfood |
+| Срез 4′ | **в коде** — Session Stage + Stepper + бургер; ждёт dogfood |
 | Срез 5 | не начат |

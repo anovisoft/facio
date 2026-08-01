@@ -22,10 +22,11 @@
 ### Runtime plugins (общие для cooking + fitness)
 
 - **Checklist** (уже есть) — покупки / prep
-- **Clock family:** Timer/TimerStack (есть) + **Timeline** (ось + markers, карбонара) + **Interval plan** (сегменты + pause, тренировки)
-- **Counter / Dose** — target/current, tap ± и/или swipe
-- На плане: плагины видны; live при старте сессии
-- Простые timers не выкидывать — нужны рядом с timeline/interval
+- **Clock family:** TimerStack + **Timeline** (готовка) + **Interval** (HIIT по sec) + **Stepper/set_plan** (силовая: measure/work/rest + counter на beat)
+- **Counter / Dose** — одиночный или внутри stepper beat
+- Checklist — покупки/бинарное; **не** подходы в зале
+- Home = **Session Stage** (shape герой); бургер → весь план
+- На плане: hints; live после Start (#3)
 
 ### Schedule / Cycle
 
