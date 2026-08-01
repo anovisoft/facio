@@ -7,11 +7,6 @@ module.exports = {
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
     newArchEnabled: true,
-    splash: {
-      image: './assets/splash-icon.png',
-      resizeMode: 'contain',
-      backgroundColor: '#F7F4EF',
-    },
     ios: {
       supportsTablet: false,
       bundleIdentifier: 'com.anovisoft.facio',
@@ -23,7 +18,7 @@ module.exports = {
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
-        backgroundColor: '#F7F4EF',
+        backgroundColor: '#FFFFFF',
       },
       package: 'com.anovisoft.facio',
       edgeToEdgeEnabled: true,
@@ -33,7 +28,26 @@ module.exports = {
     },
     plugins: [
       'expo-localization',
-      'expo-splash-screen',
+      [
+        'expo-splash-screen',
+        {
+          backgroundColor: '#FAFAFB',
+          image: './assets/splash-icon.png',
+          imageWidth: 200,
+          resizeMode: 'contain',
+          enableFullScreenImage_legacy: true,
+          ios: {
+            image: './assets/splash.png',
+            resizeMode: 'contain',
+            backgroundColor: '#FAFAFB',
+          },
+          android: {
+            image: './assets/splash-icon.png',
+            backgroundColor: '#FAFAFB',
+            imageWidth: 200,
+          },
+        },
+      ],
       '@sentry/react-native',
       'expo-notifications',
       './plugins/withMmkvZlib',

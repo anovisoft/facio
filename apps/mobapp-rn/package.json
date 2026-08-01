@@ -4,9 +4,9 @@
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
-    "android": "expo run:android",
-    "ios": "EXPO_XCODEBUILD_ARGUMENTS='-allowProvisioningUpdates' expo run:ios",
-    "ios:default": "EXPO_XCODEBUILD_ARGUMENTS='-allowProvisioningUpdates' expo run:ios --device '00008130-00022C1E1A8B803A'",
+    "android": "SENTRY_DISABLE_AUTO_UPLOAD=true expo run:android",
+    "ios": "SENTRY_DISABLE_AUTO_UPLOAD=true EXPO_XCODEBUILD_ARGUMENTS='-allowProvisioningUpdates' expo run:ios",
+    "ios:default": "SENTRY_DISABLE_AUTO_UPLOAD=true EXPO_XCODEBUILD_ARGUMENTS='-allowProvisioningUpdates' expo run:ios --device '00008130-00022C1E1A8B803A'",
     "prebuild:ios": "expo prebuild --platform ios",
     "prebuild:android": "expo prebuild --platform android",
     "web": "expo start --web"
