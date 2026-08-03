@@ -14,7 +14,7 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 | Prototype engine | `apps/` ≈ `docs/next` slices 1–5 **accepted** |
 | Carbonara dogfood | OK (timeline → finish → Repeat) |
 | Fitness multi-day E2E | Deferred — needs calendar week or **dev time travel** |
-| Facio 0.1 code shell | **A+B+B2+C accepted**. **Next = Slice D** (Session atom + complete + polishing #2 #6 #7) |
+| Facio 0.1 code shell | **A+B+B2+C accepted**. **Slice D iterate landed** (complete routing) — await PO dogfood |
 | Instant Answer | Off Create happy path (D5); screen may remain registered dead |
 
 ---
@@ -187,7 +187,7 @@ Tracked also in `docs/polishing bugs.txt` (#8).
 | B | Focus Engine v0 + Cover on cards | **accepted** (PO 2026-08-03) |
 | B2 | Hero Preview + drawer compact | **accepted** (PO 2026-08-03) |
 | C | Guide Explore trust (roadmap + Commitment; fold Draft) | **accepted** (PO 2026-08-03, after iterate) |
-| D | Session atom + Session complete beat + swipe/≡ | **next** — carries polishing #2 #6 #7 |
+| D | Session atom + Session complete beat + swipe/≡ | **iterate landed** — await PO dogfood (complete routing) |
 | E | Repair Diff + Undo | pending |
 | F | Identity + Finish Experience | pending |
 | G | Copy/i18n + kill Instant Answer + Morning Summary | pending |
@@ -209,11 +209,31 @@ Do not start Facio 0.1 by rewriting the backend runtime. Shell first. Uncommitte
 ## After summarization — PM start here
 
 1. Read [README](./README.md) → [11](./11-success-systems.md) (§9) → **this file** → [14](./14-impl-plan.md)  
-2. A+B+B2+C **accepted**. Next dispatch: **Slice D**.  
-3. Slice D must include polishing bugs #2 #6 #7 — see `docs/polishing bugs.txt`.  
+2. A+B+B2+C **accepted**. Slice D **iterate landed** — PO dogfood next; on accept → **E**.  
+3. Polishing #2 #6 #7 already landed in D; iterate = complete-routing only.  
 4. Do **not** reopen Guides gesture unless PO reports regress.  
-5. Do **not** invent deferred #3 (auto AI measure) or #5 (archive/tags/search).  
-6. Domain-neutral rest/day copy (#8) → Slice G or create-prompt pass — do not hardcode fitness rest on non-sport Guides.
+5. Do **not** invent deferred #3 / #5; #8 → G.  
+6. On D accept → Slice **E**.
+
+### Slice D — what landed (client, 2026-08-03)
+
+| Piece | Where |
+|-------|--------|
+| Session complete routing (D iterate) | `ProjectHomeScreen.onComplete` — after refresh: `next_action` → stay + light flash; else → Continue. **No modal. No progress bar.** |
+| Light Done flash | Inline banner `sessionDoneToast` / `sessionNextToast` (EN+RU); auto-dismiss ~1.8s |
+| FirstCompletionOverlay | **deleted** — no first-mode modal on Session Done |
+| firstCompletion store flags | **removed** from `store/index.ts` |
+| D2 same-day runtime | `store` `blockRuntimeByActionId` keyed by `actionId` + `localDate`; expire/clear when date ≠ today |
+| Stepper back + persist | `StepperPlayer` — Back/Next; hydrate beatIndex/rest; clear rest on step back; clear on Done/Skip |
+| Session layout #7 | `ProjectHomeScreen` — title → Day N/M (multi-day only) → large Full Block → detail / Why demoted |
+| Swipe up → Guide | `useSessionGuideSwipe` — `activeOffsetY` upward-only so ScrollView still works; ≡ unchanged (`variant="header"`) |
+| Counters | Still server-backed; runtime store is position/clocks only |
+
+**D2 behavior:** incomplete Session resume is **same calendar day only**. Cross-day open starts fresh beat index (server counters may remain). No multi-day mid-beat happy path.
+
+**Complete routing (PO locked, landed):** After Done + refresh — if Guide still has executable `next_action` → next Session in-place (light toast); else → Continue. Progress bar / first-completion modal gone from Done chrome. Guide-level progress → Finish (F).
+
+**Status:** **iterate landed** (2026-08-03) — await PO dogfood (carbonara shopping→cooking). On accept → E.
 
 ### Slice C iterate — PO dogfood (2026-08-03)
 
@@ -238,7 +258,7 @@ Do not start Facio 0.1 by rewriting the backend runtime. Shell first. Uncommitte
 | Path-ready signal | Cover → outline/roadmap → «Путь готов» banner (+ light flash on false→true) → clarify below |
 | Session ≡ | `GlassIconButton variant="header"` — no GlassSurface border in stack headerRight |
 
-**Status:** code done — **await PO dogfood again**. On accept → Slice D.
+**Status:** C **accepted** (PO 2026-08-03). Onward → Slice D (then E).
 
 ### Slice C — what landed (client)
 

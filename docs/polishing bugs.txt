@@ -5,12 +5,12 @@ Source dogfood notes. Status routed into Facio 0.1 slices. Canon: `docs/Facio 0.
 | # | Note | Status | Where |
 |---|------|--------|-------|
 | 1 | Burger size differs Session vs Continue — unify glass icon chips | **done** (hotfix) | `GlassIconButton` + Session header |
-| 2 | Stepper: no step back, only forward | **→ Slice D** | Session Full Block |
+| 2 | Stepper: no step back, only forward | **done** (Slice D) | `StepperPlayer` Back/Next |
 | 3 | After measure → auto AI modernize plan (background) | **deferred** — not 0.1 shell; revisit after E | Product open / later |
 | 4 | “Last day” chip on 1-day Guide feels wrong | **done** (hotfix) | Focus Engine `isLastDay` (horizon > 1) |
 | 5 | Guides search; archive → status tags; repeat carbonara | **deferred** — search later; archive/tags = PO; Repeat → F | F + later |
-| 6 | Stepper state resets when leaving Session → Continue → back | **→ Slice D** (atom / same-day resume) | Session persist |
-| 7 | Recompose Session: title → day N/M → large Block → why lower | **→ Slice D** | Session Stage layout |
+| 6 | Stepper state resets when leaving Session → Continue → back | **done** (Slice D) | same-day `blockRuntimeByActionId` |
+| 7 | Recompose Session: title → day N/M → large Block → why lower | **done** (Slice D) | Session Stage layout |
 | 8 | Rest / day-kind copy is fitness-flavored for all domains (e.g. drawing Guide rest: «без силовой нагрузки»; «Тренировка» on art days) | **→ Slice G** (copy) or create `#2` prompt pass — not D | `path.restEmpty`, `dayKind.*`, LLM day titles |
 
 ## Hotfix (1 + 4) — DoD
@@ -20,4 +20,4 @@ Source dogfood notes. Status routed into Facio 0.1 slices. Canon: `docs/Facio 0.
 
 ## Explicitly NOT now
 
-2, 6, 7 wait for **Slice D**. 3 and 5 stay deferred. **#8** domain-neutral rest/day copy → G / prompts (PO noted on C accept 2026-08-03).
+3 and 5 stay deferred. **#8** domain-neutral rest/day copy → G / prompts (PO noted on C accept 2026-08-03).

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import type {
@@ -16,6 +17,7 @@ import {
   scheduleTimerNotification,
   signalTimerComplete,
 } from '@/services/timerSignals';
+import { useSessionStore } from '@/store';
 import { useTheme } from '@/theme/ThemeContext';
 import { radii, spacing, typography } from '@/theme';
 
@@ -173,8 +175,10 @@ export function TimerStack({
                 <Pressable
                   disabled={disabled}
                   onPress={() => void stopTimer(timer.id)}
-                  style={[styles.btn, { borderColor: colors.border }]}
+                  style={[styles.iconBtn, { borderColor: colors.border }]}
+                  accessibilityLabel={t('plugins.stop')}
                 >
+                  <Ionicons name="stop" size={18} color={colors.text} />
                   <Text style={{ color: colors.text }}>{t('plugins.stop')}</Text>
                 </Pressable>
               ) : (
@@ -182,13 +186,23 @@ export function TimerStack({
                   disabled={!canStart}
                   onPress={() => void startTimer(timer)}
                   style={[
-                    styles.btn,
+                    styles.iconBtn,
                     {
                       borderColor: colors.primary,
                       opacity: canStart ? 1 : 0.4,
                     },
                   ]}
+                  accessibilityLabel={
+                    timer.completed
+                      ? t('plugins.timerDone')
+                      : t('plugins.start')
+                  }
                 >
+                  <Ionicons
+                    name={timer.completed ? 'checkmark' : 'play'}
+                    size={18}
+                    color={colors.primary}
+                  />
                   <Text style={{ color: colors.primary }}>
                     {timer.completed
                       ? t('plugins.timerDone')
@@ -422,8 +436,10 @@ export function TimelineProgress({
             <Pressable
               disabled={disabled}
               onPress={() => void start()}
-              style={[styles.btn, { borderColor: colors.primary }]}
+              style={[styles.iconBtn, { borderColor: colors.primary }]}
+              accessibilityLabel={t('plugins.start')}
             >
+              <Ionicons name="play" size={18} color={colors.primary} />
               <Text style={{ color: colors.primary }}>{t('plugins.start')}</Text>
             </Pressable>
           ) : null}
@@ -431,8 +447,10 @@ export function TimelineProgress({
             <Pressable
               disabled={disabled}
               onPress={() => void pause()}
-              style={[styles.btn, { borderColor: colors.border }]}
+              style={[styles.iconBtn, { borderColor: colors.border }]}
+              accessibilityLabel={t('plugins.pause')}
             >
+              <Ionicons name="pause" size={18} color={colors.text} />
               <Text style={{ color: colors.text }}>{t('plugins.pause')}</Text>
             </Pressable>
           ) : null}
@@ -440,8 +458,10 @@ export function TimelineProgress({
             <Pressable
               disabled={disabled}
               onPress={() => void resume()}
-              style={[styles.btn, { borderColor: colors.primary }]}
+              style={[styles.iconBtn, { borderColor: colors.primary }]}
+              accessibilityLabel={t('plugins.resume')}
             >
+              <Ionicons name="play" size={18} color={colors.primary} />
               <Text style={{ color: colors.primary }}>
                 {t('plugins.resume')}
               </Text>
@@ -451,8 +471,10 @@ export function TimelineProgress({
             <Pressable
               disabled={disabled}
               onPress={() => void reset()}
-              style={[styles.btn, { borderColor: colors.border }]}
+              style={[styles.iconBtn, { borderColor: colors.border }]}
+              accessibilityLabel={t('plugins.reset')}
             >
+              <Ionicons name="refresh" size={18} color={colors.text} />
               <Text style={{ color: colors.text }}>{t('plugins.reset')}</Text>
             </Pressable>
           ) : null}
@@ -830,6 +852,11 @@ type StepperPlayerProps = {
   onBeatCounterChange?: (beatId: string, nextCurrent: number) => void;
   /** Compact strip-only mode for sticky stage. */
   compact?: boolean;
+  /**
+   * Action id for same-calendar-day beatIndex / rest resume (D2).
+   * Omit in preview / Hero contexts.
+   */
+  actionId?: string;
 };
 
 function formatMmSs(totalSec: number): string {
@@ -839,28 +866,79 @@ function formatMmSs(totalSec: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+function hydrateStepperState(
+  actionId: string | undefined,
+  beats: StepperBeatResponse[],
+) {
+  const beatCount = beats.length;
+  if (!actionId || beatCount < 1) {
+    return { beatIndex: 0, sessionDone: false, rest: null as null };
+  }
+  const saved = useSessionStore.getState().getBlockRuntime(actionId);
+  if (!saved) {
+    return { beatIndex: 0, sessionDone: false, rest: null as null };
+  }
+  const beatIndex = Math.min(
+    Math.max(0, saved.beatIndex),
+    Math.max(0, beatCount - 1),
+  );
+  const sessionDone = Boolean(saved.sessionDone) && beatIndex >= beatCount - 1;
+  let rest: {
+    startedAt: number;
+    durationSec: number;
+    notificationId: string | null;
+    beatId: string;
+  } | null = null;
+  const beat = beats[beatIndex];
+  if (
+    saved.rest &&
+    !sessionDone &&
+    beat &&
+    saved.rest.beatId === beat.id &&
+    beat.kind === 'rest'
+  ) {
+    const remaining =
+      saved.rest.durationSec - (Date.now() - saved.rest.startedAt) / 1000;
+    if (remaining > 0.4) {
+      rest = {
+        startedAt: saved.rest.startedAt,
+        durationSec: saved.rest.durationSec,
+        notificationId: null,
+        beatId: saved.rest.beatId,
+      };
+    }
+  }
+  return { beatIndex, sessionDone, rest };
+}
+
 export function StepperPlayer({
   stepper,
   interactive = false,
   disabled = false,
   onBeatCounterChange,
   compact = false,
+  actionId,
 }: StepperPlayerProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const setBlockRuntime = useSessionStore((s) => s.setBlockRuntime);
   const beats = stepper.beats ?? [];
-  const [beatIndex, setBeatIndex] = useState(0);
+  const hydratedRef = useRef(false);
+  const initial = useRef(hydrateStepperState(actionId, beats)).current;
+  const [beatIndex, setBeatIndex] = useState(initial.beatIndex);
   const [restRun, setRestRun] = useState<{
     startedAt: number;
     durationSec: number;
     notificationId: string | null;
-  } | null>(null);
+    beatId?: string;
+  } | null>(initial.rest);
   const [now, setNow] = useState(() => Date.now());
-  const [sessionDone, setSessionDone] = useState(false);
+  const [sessionDone, setSessionDone] = useState(initial.sessionDone);
 
   const safeIndex = Math.min(beatIndex, Math.max(0, beats.length - 1));
   const current: StepperBeatResponse | null =
     beats.length === 0 ? null : beats[safeIndex];
+  const canGoBack = interactive && !disabled && (safeIndex > 0 || sessionDone);
 
   useEffect(() => {
     if (!restRun) return;
@@ -884,18 +962,65 @@ export function StepperPlayer({
     })();
   }, [restRemaining, restRun, beats, safeIndex]);
 
+  // Persist beat position / rest wall-clock for same-day leave→return (D2).
+  useEffect(() => {
+    if (!actionId || !interactive) return;
+    // Skip first paint write if we just hydrated (avoid clobber before mount settle).
+    if (!hydratedRef.current) {
+      hydratedRef.current = true;
+      return;
+    }
+    const beat = beats[safeIndex];
+    const rest =
+      restRun && beat
+        ? {
+            beatId: restRun.beatId ?? beat.id,
+            startedAt: restRun.startedAt,
+            durationSec: restRun.durationSec,
+          }
+        : null;
+    setBlockRuntime(actionId, {
+      beatIndex: safeIndex,
+      sessionDone,
+      rest,
+    });
+  }, [
+    actionId,
+    interactive,
+    safeIndex,
+    sessionDone,
+    restRun,
+    beats,
+    setBlockRuntime,
+  ]);
+
   if (beats.length === 0) return null;
+
+  const clearRest = () => {
+    void cancelScheduledNotification(restRun?.notificationId ?? null);
+    setRestRun(null);
+  };
 
   const goNext = () => {
     if (!interactive || disabled) return;
-    void cancelScheduledNotification(restRun?.notificationId ?? null);
-    setRestRun(null);
+    clearRest();
     if (safeIndex + 1 >= beats.length) {
       setSessionDone(true);
       return;
     }
     setBeatIndex(safeIndex + 1);
     setSessionDone(false);
+  };
+
+  const goBack = () => {
+    if (!canGoBack) return;
+    clearRest();
+    if (sessionDone) {
+      setSessionDone(false);
+      setBeatIndex(Math.max(0, beats.length - 1));
+      return;
+    }
+    setBeatIndex(Math.max(0, safeIndex - 1));
   };
 
   const startRest = async () => {
@@ -914,9 +1039,47 @@ export function StepperPlayer({
       startedAt: Date.now(),
       durationSec: duration,
       notificationId,
+      beatId: current.id,
     });
     setNow(Date.now());
   };
+
+  const navRow = interactive ? (
+    <View style={styles.stepNavRow}>
+      <Pressable
+        disabled={!canGoBack}
+        onPress={goBack}
+        style={[
+          styles.iconBtn,
+          styles.stepNavBtn,
+          {
+            borderColor: colors.border,
+            opacity: canGoBack ? 1 : 0.35,
+          },
+        ]}
+        accessibilityLabel={t('plugins.prevBeat')}
+      >
+        <Ionicons name="chevron-back" size={20} color={colors.text} />
+        <Text style={{ color: colors.text }}>{t('plugins.prevBeat')}</Text>
+      </Pressable>
+      <Pressable
+        disabled={disabled || sessionDone}
+        onPress={goNext}
+        style={[
+          styles.iconBtn,
+          styles.stepNavBtn,
+          {
+            borderColor: colors.primary,
+            opacity: disabled || sessionDone ? 0.35 : 1,
+          },
+        ]}
+        accessibilityLabel={t('plugins.nextBeat')}
+      >
+        <Text style={{ color: colors.primary }}>{t('plugins.nextBeat')}</Text>
+        <Ionicons name="chevron-forward" size={20} color={colors.primary} />
+      </Pressable>
+    </View>
+  ) : null;
 
   const strip = (
     <View style={styles.beatStrip}>
@@ -1011,22 +1174,15 @@ export function StepperPlayer({
                     <Pressable
                       disabled={disabled}
                       onPress={() => void startRest()}
-                      style={[styles.btn, { borderColor: colors.primary }]}
+                      style={[styles.iconBtn, { borderColor: colors.primary }]}
+                      accessibilityLabel={t('plugins.start')}
                     >
+                      <Ionicons name="play" size={18} color={colors.primary} />
                       <Text style={{ color: colors.primary }}>
                         {t('plugins.start')}
                       </Text>
                     </Pressable>
                   ) : null}
-                  <Pressable
-                    disabled={disabled}
-                    onPress={goNext}
-                    style={[styles.btn, { borderColor: colors.border }]}
-                  >
-                    <Text style={{ color: colors.text }}>
-                      {t('plugins.nextBeat')}
-                    </Text>
-                  </Pressable>
                 </View>
               ) : (
                 <Text style={[styles.previewBadge, { color: colors.textMuted }]}>
@@ -1044,40 +1200,16 @@ export function StepperPlayer({
                   onBeatCounterChange?.(current.id, next)
                 }
               />
-              {interactive ? (
-                <Pressable
-                  disabled={disabled}
-                  onPress={goNext}
-                  style={[
-                    styles.btn,
-                    styles.nextBtn,
-                    { borderColor: colors.primary },
-                  ]}
-                >
-                  <Text style={{ color: colors.primary }}>
-                    {t('plugins.nextBeat')}
-                  </Text>
-                </Pressable>
-              ) : null}
             </View>
-          ) : (
-            interactive ? (
-              <Pressable
-                disabled={disabled}
-                onPress={goNext}
-                style={[styles.btn, { borderColor: colors.primary }]}
-              >
-                <Text style={{ color: colors.primary }}>
-                  {t('plugins.nextBeat')}
-                </Text>
-              </Pressable>
-            ) : (
-              <Text style={[styles.previewBadge, { color: colors.textMuted }]}>
-                {t('plugins.preview')}
-              </Text>
-            )
+          ) : interactive ? null : (
+            <Text style={[styles.previewBadge, { color: colors.textMuted }]}>
+              {t('plugins.preview')}
+            </Text>
           )}
+          {navRow}
         </>
+      ) : sessionDone ? (
+        navRow
       ) : null}
     </View>
   );
@@ -1116,6 +1248,24 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
+  },
+  iconBtn: {
+    borderWidth: 1,
+    borderRadius: radii.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  stepNavRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  stepNavBtn: {
+    flex: 1,
+    justifyContent: 'center',
   },
   previewBadge: {
     ...typography.caption,
@@ -1166,8 +1316,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   counterBtn: {
-    width: 44,
-    height: 44,
+    width: 52,
+    height: 52,
     borderRadius: radii.md,
     borderWidth: 1.5,
     alignItems: 'center',
@@ -1180,15 +1330,17 @@ const styles = StyleSheet.create({
   },
   counterValue: {
     ...typography.title,
-    minWidth: 96,
+    fontSize: 36,
+    lineHeight: 42,
+    minWidth: 112,
     textAlign: 'center',
   },
   stepperCard: {
     borderWidth: 1,
-    borderRadius: radii.md,
-    padding: spacing.md,
-    gap: spacing.sm,
-    minHeight: 220,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
+    gap: spacing.md,
+    minHeight: 300,
   },
   stepperCompact: {
     borderWidth: 1,
@@ -1202,31 +1354,34 @@ const styles = StyleSheet.create({
   beatStrip: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: 8,
   },
   beatDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     borderWidth: 1,
   },
   beatMeta: {
     ...typography.caption,
   },
   beatTitle: {
-    ...typography.title,
+    ...typography.hero,
+    fontSize: 24,
+    lineHeight: 30,
   },
   restBlock: {
-    gap: spacing.sm,
+    gap: spacing.md,
     alignItems: 'center',
+    paddingVertical: spacing.sm,
   },
   workBlock: {
     gap: spacing.sm,
   },
   clockBig: {
     ...typography.title,
-    fontSize: 40,
-    lineHeight: 48,
+    fontSize: 48,
+    lineHeight: 56,
     fontVariant: ['tabular-nums'],
   },
   clockActions: {

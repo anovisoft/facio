@@ -15,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 
 import {
   completeAction,
@@ -27,9 +28,9 @@ import {
 import { getProject, rematerializePlugins, repairProject, completeCycle, startNextCycle } from '@/api/projects';
 import { ApiError, type DayKind, type ProjectDetail, type RepairIntent } from '@/api/types';
 import { FinishCycleSheet } from '@/features/home/FinishCycleSheet';
-import { FirstCompletionOverlay } from '@/features/home/FirstCompletionOverlay';
 import { NextCycleSheet } from '@/features/home/NextCycleSheet';
 import { RepairSheet } from '@/features/home/RepairSheet';
+import { useSessionGuideSwipe } from '@/features/home/useSessionGuideSwipe';
 import type { RootScreenProps } from '@/navigation/types';
 import { trackActionShown } from '@/services/beacons';
 import { classifyUnlockDate } from '@/services/localDate';
@@ -53,6 +54,9 @@ import { useSessionStore } from '@/store';
 import { useTheme } from '@/theme/ThemeContext';
 import { radii, spacing, typography } from '@/theme';
 
+/** Brief non-blocking Done flash — no modal / progress bar (D iterate). */
+const DONE_FLASH_MS = 1800;
+
 /** Session screen (Facio 0.1) — ProjectHomeScreen alias. */
 export function ProjectHomeScreen({
   navigation,
@@ -61,24 +65,44 @@ export function ProjectHomeScreen({
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { projectId } = route.params;
-  const markFirstCompletionShown = useSessionStore(
-    (s) => s.markFirstCompletionShown,
-  );
-  const hasFirstCompletionShown = useSessionStore((s) =>
-    s.hasFirstCompletionShown(projectId),
-  );
+  const clearBlockRuntime = useSessionStore((s) => s.clearBlockRuntime);
 
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showFirstCompletion, setShowFirstCompletion] = useState(false);
+  const [doneFlash, setDoneFlash] = useState<string | null>(null);
   const [repairSheetVisible, setRepairSheetVisible] = useState(false);
   const [repairSummary, setRepairSummary] = useState<string | null>(null);
   const [nextCycleSheetVisible, setNextCycleSheetVisible] = useState(false);
   const [finishCycleSheetVisible, setFinishCycleSheetVisible] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const shownActionIdRef = useRef<string | null>(null);
+  const doneFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const openGuide = useCallback(() => {
+    navigation.navigate('Guide', { projectId });
+  }, [navigation, projectId]);
+
+  const { panProps } = useSessionGuideSwipe({
+    enabled: !repairSheetVisible,
+    onOpenGuide: openGuide,
+  });
+
+  const showDoneFlash = useCallback((message: string) => {
+    setDoneFlash(message);
+    if (doneFlashTimerRef.current) clearTimeout(doneFlashTimerRef.current);
+    doneFlashTimerRef.current = setTimeout(() => {
+      setDoneFlash(null);
+      doneFlashTimerRef.current = null;
+    }, DONE_FLASH_MS);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (doneFlashTimerRef.current) clearTimeout(doneFlashTimerRef.current);
+    };
+  }, []);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -90,7 +114,7 @@ export function ProjectHomeScreen({
       headerRight: () => (
         <GlassIconButton
           variant="header"
-          onPress={() => navigation.navigate('Guide', { projectId })}
+          onPress={openGuide}
           accessibilityLabel={t('home.menuPath')}
           size={GLASS_ICON_CHIP_SIZE}
         >
@@ -103,7 +127,7 @@ export function ProjectHomeScreen({
     project?.title,
     project?.outcome,
     project?.paraphrase,
-    projectId,
+    openGuide,
     t,
     colors.text,
   ]);
@@ -194,18 +218,22 @@ export function ProjectHomeScreen({
       return;
     }
 
-    const isFirstDone =
-      !hasFirstCompletionShown &&
-      project.actions.every((a) => a.status !== 'done');
-
     setBusy(true);
     setError(null);
     try {
       await completeAction(action.id);
-      await refreshAfterMutation();
-      if (isFirstDone) {
-        markFirstCompletionShown(projectId);
-        setShowFirstCompletion(true);
+      clearBlockRuntime(action.id);
+      const detail = await refreshAfterMutation();
+      // D iterate: next executable Session stays in-Guide; else Continue.
+      if (detail.next_action) {
+        const nextTitle = detail.next_action.title?.trim();
+        showDoneFlash(
+          nextTitle
+            ? t('home.sessionNextToast', { title: nextTitle })
+            : t('home.sessionDoneToast'),
+        );
+      } else {
+        navigation.navigate('Continue');
       }
     } catch (e) {
       setError(e instanceof ApiError ? e.message : t('home.error'));
@@ -221,6 +249,7 @@ export function ProjectHomeScreen({
     setError(null);
     try {
       await skipAction(action.id);
+      clearBlockRuntime(action.id);
       await refreshAfterMutation();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : t('home.error'));
@@ -578,372 +607,407 @@ export function ProjectHomeScreen({
     );
   }
 
+  const isMultiDay = (currentDay?.horizon_days ?? 0) > 1;
+
   return (
     <>
-      <SafeScreen scroll>
-        {repairSummary ? (
-          <View
-            style={[
-              styles.repairBanner,
-              { backgroundColor: colors.surfaceMuted, borderColor: colors.border },
-            ]}
-          >
-            <Text style={[styles.repairBannerText, { color: colors.text }]}>
-              {repairSummary}
-            </Text>
-            <Pressable onPress={() => setRepairSummary(null)} hitSlop={8}>
-              <Text style={[styles.repairBannerClose, { color: colors.primary }]}>
-                {t('common.dismiss')}
-              </Text>
-            </Pressable>
-          </View>
-        ) : null}
-
-        {cycleFinished && project.cycle_result ? (
-          <View style={styles.doneBlock}>
-            <Text style={[styles.todayLabel, { color: colors.textMuted }]}>
-              {t('home.cycleDoneTitle')}
-            </Text>
-            {project.cycle_result.partial ? (
-              <Text
-                style={[styles.cyclePartial, { color: colors.textSecondary }]}
-              >
-                {t('home.cyclePartialBadge')}
-              </Text>
-            ) : null}
-            <Text style={[styles.doneTitle, { color: colors.text }]}>
-              {t('home.cycleResultDone', {
-                count: project.cycle_result.completed_steps,
-              })}
-            </Text>
-            <Text
-              style={[styles.waitingBody, { color: colors.textSecondary }]}
-            >
-              {t('home.cycleResultSkipped', {
-                count: project.cycle_result.skipped_steps,
-              })}
-            </Text>
-            {project.cycle_result.partial_notes ? (
-              <Text
-                style={[styles.waitingBody, { color: colors.textSecondary }]}
-              >
-                {project.cycle_result.partial_notes}
-              </Text>
-            ) : null}
-            {(project.cycles_history?.length ?? 0) > 0 ? (
-              <Text
-                style={[styles.historyHint, { color: colors.textMuted }]}
-              >
-                {t('home.cycleHistoryLabel', {
-                  n: project.cycles_history![
-                    project.cycles_history!.length - 1
-                  ].index,
-                })}
-              </Text>
-            ) : project.cycle?.index ? (
-              <Text
-                style={[styles.historyHint, { color: colors.textMuted }]}
-              >
-                {t('home.cycleHistoryLabel', { n: project.cycle.index })}
-              </Text>
-            ) : null}
-            <PrimaryButton
-              label={
-                continueKind === 'repeat'
-                  ? t('home.repeatCycle')
-                  : t('home.nextCycle')
-              }
-              loading={busy}
-              onPress={() => setNextCycleSheetVisible(true)}
-              style={styles.cycleCta}
-            />
-          </View>
-        ) : projectDone ? (
-          <View style={styles.doneBlock}>
-            <Text style={[styles.todayLabel, { color: colors.textMuted }]}>
-              {t('home.today')}
-            </Text>
-            <Text style={[styles.doneTitle, { color: colors.text }]}>
-              {t('home.allDone')}
-            </Text>
-          </View>
-        ) : waitingForNextDay && peek ? (
-          <View style={styles.doneBlock}>
-            <Text style={[styles.todayLabel, { color: colors.textMuted }]}>
-              {t('home.today')}
-            </Text>
-            <Text style={[styles.doneTitle, { color: colors.text }]}>
-              {t('home.waitingTitle')}
-            </Text>
-            <Text style={[styles.waitingBody, { color: colors.textSecondary }]}>
-              {unlockTiming === 'today'
-                ? t('home.opensToday')
-                : unlockTiming === 'tomorrow'
-                  ? t('home.opensTomorrow')
-                  : project?.next_unlock_date
-                    ? t('home.opensOn', { date: project.next_unlock_date })
-                    : t('home.opensLater')}
-            </Text>
-            <View
-              style={[
-                styles.peekCard,
-                { backgroundColor: colors.surface, borderColor: colors.border },
-              ]}
-            >
-              <Text style={[styles.peekLabel, { color: colors.textMuted }]}>
-                {peekDay
-                  ? t('home.dayOf', {
-                      n: peekDay.day_number,
-                      m: peekDay.horizon_days,
-                      kind: kindLabel(peekDay.kind),
-                    })
-                  : t('home.peekLabel')}
-              </Text>
-              <Text style={[styles.peekTitle, { color: colors.text }]}>
-                {peek.title}
-              </Text>
-              {peek.why ? (
-                <Text
-                  style={[styles.peekWhy, { color: colors.textSecondary }]}
-                >
-                  {peek.why}
-                </Text>
-              ) : null}
-            </View>
-          </View>
-        ) : next ? (
-          <>
-            {currentDay ? (
-              <Text style={[styles.dayOf, { color: colors.textSecondary }]}>
-                {t('home.dayOf', {
-                  n: currentDay.day_number,
-                  m: currentDay.horizon_days,
-                  kind: kindLabel(currentDay.kind),
-                })}
-              </Text>
-            ) : null}
-
-            {/* Session Stage — hero (~2/3 focus) */}
-            {isRestDay ? (
+      <PanGestureHandler {...panProps}>
+        <View style={styles.gestureRoot}>
+          <SafeScreen scroll>
+            {doneFlash ? (
               <View
                 style={[
-                  styles.restStage,
+                  styles.doneFlash,
                   {
-                    borderColor: colors.border,
                     backgroundColor: colors.surfaceMuted,
+                    borderColor: colors.border,
                   },
                 ]}
               >
-                <Text style={[styles.todayLabel, { color: colors.textMuted }]}>
-                  {todayLead()}
-                </Text>
-                {currentDay?.title ? (
-                  <Text style={[styles.restTitle, { color: colors.text }]}>
-                    {currentDay.title}
-                  </Text>
-                ) : null}
-                <Text style={[styles.restHint, { color: colors.textSecondary }]}>
-                  {currentDay?.summary || t('home.restHint')}
-                </Text>
-                <Text style={[styles.restStepTitle, { color: colors.text }]}>
-                  {next.title}
-                </Text>
-              </View>
-            ) : next.timeline ||
-              next.stepper ||
-              next.interval_plan ||
-              (next.timers?.length ?? 0) > 0 ||
-              next.counter ? (
-              <View style={styles.stage}>
-                {next.timeline ? (
-                  <TimelineProgress
-                    timeline={next.timeline}
-                    interactive
-                    disabled={busy}
-                  />
-                ) : null}
-                {next.stepper ? (
-                  <StepperPlayer
-                    stepper={next.stepper}
-                    interactive
-                    disabled={busy}
-                    onBeatCounterChange={(beatId, value) =>
-                      void onStepperBeatCounterChange(beatId, value)
-                    }
-                  />
-                ) : null}
-                {next.interval_plan ? (
-                  <IntervalPlayer
-                    plan={next.interval_plan}
-                    interactive
-                    disabled={busy}
-                  />
-                ) : null}
-                {!next.timeline &&
-                !next.stepper &&
-                !next.interval_plan &&
-                (next.timers?.length ?? 0) > 0 ? (
-                  <TimerStack
-                    timers={next.timers ?? []}
-                    interactive
-                    disabled={busy}
-                    onCompleteTimer={(timerId) => void onCompleteTimer(timerId)}
-                  />
-                ) : null}
-                {!next.timeline &&
-                !next.stepper &&
-                !next.interval_plan &&
-                next.counter ? (
-                  <CounterControl
-                    counter={next.counter}
-                    interactive
-                    disabled={busy}
-                    onChange={(value) => void onCounterChange(value)}
-                  />
-                ) : null}
-              </View>
-            ) : null}
-
-            {/* Support — short title / Now */}
-            <View style={styles.support}>
-              {!isRestDay ? (
-                <Text style={[styles.todayLabel, { color: colors.textMuted }]}>
-                  {todayLead()}
-                </Text>
-              ) : null}
-              {currentDay?.title && !isRestDay ? (
-                <Text style={[styles.groupLabel, { color: colors.textMuted }]}>
-                  {currentDay.title}
-                </Text>
-              ) : null}
-              {groupLabel && !isRestDay ? (
-                <Text style={[styles.groupLabel, { color: colors.textMuted }]}>
-                  {groupLabel}
-                </Text>
-              ) : null}
-              {!isRestDay ? (
-                <Text style={[styles.stepTitle, { color: colors.text }]}>
-                  {next.title}
-                </Text>
-              ) : null}
-              {next.estimate_min != null ? (
                 <Text
-                  style={[styles.estimate, { color: colors.textSecondary }]}
+                  style={[styles.doneFlashText, { color: colors.text }]}
+                  numberOfLines={2}
                 >
-                  {t('common.minutes', { count: next.estimate_min })}
+                  {doneFlash}
                 </Text>
-              ) : null}
-            </View>
-
-            {!isRestDay ? <WhyHero why={next.why} /> : null}
-            {isRestDay && next.why ? (
-              <Text style={[styles.restWhy, { color: colors.textSecondary }]}>
-                {next.why}
-              </Text>
-            ) : null}
-
-            {next.detail ? (
-              <Text style={[styles.detail, { color: colors.textSecondary }]}>
-                {next.detail}
-              </Text>
-            ) : null}
-
-            {next.checklist_items.length > 0 ? (
-              <View style={styles.checklist}>
-                <ChecklistList
-                  items={next.checklist_items}
-                  disabled={busy}
-                  onToggle={(item, done) =>
-                    void onToggleChecklist(item.id, done)
-                  }
-                />
               </View>
             ) : null}
 
-            {/* Isolated timers when a stage clock already owns the session */}
-            {(next.timeline || next.stepper || next.interval_plan) &&
-            (next.timers?.length ?? 0) > 0 ? (
-              <View style={styles.plugins}>
-                <TimerStack
-                  timers={next.timers ?? []}
-                  interactive
-                  disabled={busy}
-                  onCompleteTimer={(timerId) => void onCompleteTimer(timerId)}
-                />
-              </View>
-            ) : null}
-
-            {error ? (
-              <Text style={[styles.error, { color: colors.error }]}>
-                {error}
-              </Text>
-            ) : null}
-
-            {busy ? (
-              <View style={styles.busyRow}>
-                <ActivityIndicator color={colors.primary} />
-                <Text
-                  style={[styles.busyText, { color: colors.textSecondary }]}
-                >
-                  {t('home.working')}
+            {repairSummary ? (
+              <View
+                style={[
+                  styles.repairBanner,
+                  {
+                    backgroundColor: colors.surfaceMuted,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <Text style={[styles.repairBannerText, { color: colors.text }]}>
+                  {repairSummary}
                 </Text>
-                <Pressable
-                  onPress={() => {
-                    abortRef.current?.abort();
-                    setBusy(false);
-                  }}
-                  hitSlop={8}
-                >
-                  <Text style={{ color: colors.primary }}>
-                    {t('common.cancel')}
+                <Pressable onPress={() => setRepairSummary(null)} hitSlop={8}>
+                  <Text
+                    style={[styles.repairBannerClose, { color: colors.primary }]}
+                  >
+                    {t('common.dismiss')}
                   </Text>
                 </Pressable>
               </View>
             ) : null}
 
-            <View style={styles.actions}>
+            {cycleFinished && project.cycle_result ? (
+              <View style={styles.doneBlock}>
+                <Text style={[styles.todayLabel, { color: colors.textMuted }]}>
+                  {t('home.cycleDoneTitle')}
+                </Text>
+                {project.cycle_result.partial ? (
+                  <Text
+                    style={[styles.cyclePartial, { color: colors.textSecondary }]}
+                  >
+                    {t('home.cyclePartialBadge')}
+                  </Text>
+                ) : null}
+                <Text style={[styles.doneTitle, { color: colors.text }]}>
+                  {t('home.cycleResultDone', {
+                    count: project.cycle_result.completed_steps,
+                  })}
+                </Text>
+                <Text
+                  style={[styles.waitingBody, { color: colors.textSecondary }]}
+                >
+                  {t('home.cycleResultSkipped', {
+                    count: project.cycle_result.skipped_steps,
+                  })}
+                </Text>
+                {project.cycle_result.partial_notes ? (
+                  <Text
+                    style={[styles.waitingBody, { color: colors.textSecondary }]}
+                  >
+                    {project.cycle_result.partial_notes}
+                  </Text>
+                ) : null}
+                {(project.cycles_history?.length ?? 0) > 0 ? (
+                  <Text
+                    style={[styles.historyHint, { color: colors.textMuted }]}
+                  >
+                    {t('home.cycleHistoryLabel', {
+                      n: project.cycles_history![
+                        project.cycles_history!.length - 1
+                      ].index,
+                    })}
+                  </Text>
+                ) : project.cycle?.index ? (
+                  <Text
+                    style={[styles.historyHint, { color: colors.textMuted }]}
+                  >
+                    {t('home.cycleHistoryLabel', { n: project.cycle.index })}
+                  </Text>
+                ) : null}
+                <PrimaryButton
+                  label={
+                    continueKind === 'repeat'
+                      ? t('home.repeatCycle')
+                      : t('home.nextCycle')
+                  }
+                  loading={busy}
+                  onPress={() => setNextCycleSheetVisible(true)}
+                  style={styles.cycleCta}
+                />
+              </View>
+            ) : projectDone ? (
+              <View style={styles.doneBlock}>
+                <Text style={[styles.todayLabel, { color: colors.textMuted }]}>
+                  {t('home.today')}
+                </Text>
+                <Text style={[styles.doneTitle, { color: colors.text }]}>
+                  {t('home.allDone')}
+                </Text>
+              </View>
+            ) : waitingForNextDay && peek ? (
+              <View style={styles.doneBlock}>
+                <Text style={[styles.todayLabel, { color: colors.textMuted }]}>
+                  {t('home.today')}
+                </Text>
+                <Text style={[styles.doneTitle, { color: colors.text }]}>
+                  {t('home.waitingTitle')}
+                </Text>
+                <Text
+                  style={[styles.waitingBody, { color: colors.textSecondary }]}
+                >
+                  {unlockTiming === 'today'
+                    ? t('home.opensToday')
+                    : unlockTiming === 'tomorrow'
+                      ? t('home.opensTomorrow')
+                      : project?.next_unlock_date
+                        ? t('home.opensOn', { date: project.next_unlock_date })
+                        : t('home.opensLater')}
+                </Text>
+                <View
+                  style={[
+                    styles.peekCard,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.peekLabel, { color: colors.textMuted }]}>
+                    {peekDay
+                      ? t('home.dayOf', {
+                          n: peekDay.day_number,
+                          m: peekDay.horizon_days,
+                          kind: kindLabel(peekDay.kind),
+                        })
+                      : t('home.peekLabel')}
+                  </Text>
+                  <Text style={[styles.peekTitle, { color: colors.text }]}>
+                    {peek.title}
+                  </Text>
+                  {peek.why ? (
+                    <Text
+                      style={[styles.peekWhy, { color: colors.textSecondary }]}
+                    >
+                      {peek.why}
+                    </Text>
+                  ) : null}
+                </View>
+              </View>
+            ) : next ? (
+              <>
+                {/* Slice D layout: title → day N/M → Full Block → detail / why */}
+                <View style={styles.chrome}>
+                  <Text style={[styles.stepTitle, { color: colors.text }]}>
+                    {next.title}
+                  </Text>
+                  {isMultiDay && currentDay ? (
+                    <Text
+                      style={[styles.dayOf, { color: colors.textSecondary }]}
+                    >
+                      {t('home.dayOf', {
+                        n: currentDay.day_number,
+                        m: currentDay.horizon_days,
+                        kind: kindLabel(currentDay.kind),
+                      })}
+                    </Text>
+                  ) : null}
+                  {next.estimate_min != null ? (
+                    <Text
+                      style={[styles.estimate, { color: colors.textSecondary }]}
+                    >
+                      {t('common.minutes', { count: next.estimate_min })}
+                    </Text>
+                  ) : null}
+                </View>
+
+                {isRestDay ? (
+                  <View
+                    style={[
+                      styles.restStage,
+                      {
+                        borderColor: colors.border,
+                        backgroundColor: colors.surfaceMuted,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.todayLabel, { color: colors.textMuted }]}
+                    >
+                      {todayLead()}
+                    </Text>
+                    {currentDay?.title ? (
+                      <Text style={[styles.restTitle, { color: colors.text }]}>
+                        {currentDay.title}
+                      </Text>
+                    ) : null}
+                    <Text
+                      style={[styles.restHint, { color: colors.textSecondary }]}
+                    >
+                      {currentDay?.summary || t('home.restHint')}
+                    </Text>
+                  </View>
+                ) : next.timeline ||
+                  next.stepper ||
+                  next.interval_plan ||
+                  (next.timers?.length ?? 0) > 0 ||
+                  next.counter ? (
+                  <View style={styles.stage}>
+                    {next.timeline ? (
+                      <TimelineProgress
+                        timeline={next.timeline}
+                        interactive
+                        disabled={busy}
+                      />
+                    ) : null}
+                    {next.stepper ? (
+                      <StepperPlayer
+                        key={next.id}
+                        actionId={next.id}
+                        stepper={next.stepper}
+                        interactive
+                        disabled={busy}
+                        onBeatCounterChange={(beatId, value) =>
+                          void onStepperBeatCounterChange(beatId, value)
+                        }
+                      />
+                    ) : null}
+                    {next.interval_plan ? (
+                      <IntervalPlayer
+                        plan={next.interval_plan}
+                        interactive
+                        disabled={busy}
+                      />
+                    ) : null}
+                    {!next.timeline &&
+                    !next.stepper &&
+                    !next.interval_plan &&
+                    (next.timers?.length ?? 0) > 0 ? (
+                      <TimerStack
+                        timers={next.timers ?? []}
+                        interactive
+                        disabled={busy}
+                        onCompleteTimer={(timerId) =>
+                          void onCompleteTimer(timerId)
+                        }
+                      />
+                    ) : null}
+                    {!next.timeline &&
+                    !next.stepper &&
+                    !next.interval_plan &&
+                    next.counter ? (
+                      <CounterControl
+                        counter={next.counter}
+                        interactive
+                        disabled={busy}
+                        onChange={(value) => void onCounterChange(value)}
+                      />
+                    ) : null}
+                  </View>
+                ) : null}
+
+                {next.detail ? (
+                  <Text style={[styles.detail, { color: colors.textSecondary }]}>
+                    {next.detail}
+                  </Text>
+                ) : null}
+
+                {!isRestDay ? <WhyHero why={next.why} /> : null}
+                {isRestDay && next.why ? (
+                  <Text
+                    style={[styles.restWhy, { color: colors.textSecondary }]}
+                  >
+                    {next.why}
+                  </Text>
+                ) : null}
+
+                {groupLabel && !isRestDay ? (
+                  <Text
+                    style={[styles.groupLabel, { color: colors.textMuted }]}
+                  >
+                    {groupLabel}
+                  </Text>
+                ) : null}
+
+                {next.checklist_items.length > 0 ? (
+                  <View style={styles.checklist}>
+                    <ChecklistList
+                      items={next.checklist_items}
+                      disabled={busy}
+                      onToggle={(item, done) =>
+                        void onToggleChecklist(item.id, done)
+                      }
+                    />
+                  </View>
+                ) : null}
+
+                {(next.timeline || next.stepper || next.interval_plan) &&
+                (next.timers?.length ?? 0) > 0 ? (
+                  <View style={styles.plugins}>
+                    <TimerStack
+                      timers={next.timers ?? []}
+                      interactive
+                      disabled={busy}
+                      onCompleteTimer={(timerId) =>
+                        void onCompleteTimer(timerId)
+                      }
+                    />
+                  </View>
+                ) : null}
+
+                {error ? (
+                  <Text style={[styles.error, { color: colors.error }]}>
+                    {error}
+                  </Text>
+                ) : null}
+
+                {busy ? (
+                  <View style={styles.busyRow}>
+                    <ActivityIndicator color={colors.primary} />
+                    <Text
+                      style={[styles.busyText, { color: colors.textSecondary }]}
+                    >
+                      {t('home.working')}
+                    </Text>
+                    <Pressable
+                      onPress={() => {
+                        abortRef.current?.abort();
+                        setBusy(false);
+                      }}
+                      hitSlop={8}
+                    >
+                      <Text style={{ color: colors.primary }}>
+                        {t('common.cancel')}
+                      </Text>
+                    </Pressable>
+                  </View>
+                ) : null}
+
+                <View style={styles.actions}>
+                  <PrimaryButton
+                    label={isRestDay ? t('home.doneRest') : t('home.done')}
+                    loading={busy}
+                    onPress={() => void onComplete()}
+                    style={styles.actionBtn}
+                  />
+                  <PrimaryButton
+                    variant="secondary"
+                    label={t('home.skip')}
+                    disabled={busy}
+                    onPress={() => void onSkip()}
+                    style={styles.actionBtn}
+                  />
+                </View>
+
+                <Text
+                  style={[styles.swipeHint, { color: colors.textMuted }]}
+                >
+                  {t('home.swipeGuideHint')}
+                </Text>
+              </>
+            ) : null}
+
+            {!projectDone && !cycleFinished ? (
               <PrimaryButton
-                label={isRestDay ? t('home.doneRest') : t('home.done')}
-                loading={busy}
-                onPress={() => void onComplete()}
-                style={styles.actionBtn}
-              />
-              <PrimaryButton
-                variant="secondary"
-                label={t('home.skip')}
+                variant="ghost"
+                label={t('home.repair')}
                 disabled={busy}
-                onPress={() => void onSkip()}
-                style={styles.actionBtn}
+                onPress={onOpenRepair}
+                style={styles.pathBtn}
               />
-            </View>
-          </>
-        ) : null}
+            ) : null}
 
-        {!projectDone && !cycleFinished ? (
-          <PrimaryButton
-            variant="ghost"
-            label={t('home.repair')}
-            disabled={busy}
-            onPress={onOpenRepair}
-            style={styles.pathBtn}
-          />
-        ) : null}
-
-        {project?.can_finish_cycle && !cycleFinished ? (
-          <PrimaryButton
-            variant="ghost"
-            label={t('home.finishCycle')}
-            disabled={busy}
-            onPress={() => setFinishCycleSheetVisible(true)}
-            style={styles.pathBtn}
-          />
-        ) : null}
-      </SafeScreen>
-
-      <FirstCompletionOverlay
-        visible={showFirstCompletion}
-        onContinue={() => setShowFirstCompletion(false)}
-      />
+            {project?.can_finish_cycle && !cycleFinished ? (
+              <PrimaryButton
+                variant="ghost"
+                label={t('home.finishCycle')}
+                disabled={busy}
+                onPress={() => setFinishCycleSheetVisible(true)}
+                style={styles.pathBtn}
+              />
+            ) : null}
+          </SafeScreen>
+        </View>
+      </PanGestureHandler>
 
       <RepairSheet
         visible={repairSheetVisible}
@@ -972,9 +1036,15 @@ export function ProjectHomeScreen({
 }
 
 const styles = StyleSheet.create({
+  gestureRoot: {
+    flex: 1,
+  },
+  chrome: {
+    marginBottom: spacing.md,
+    gap: spacing.xs,
+  },
   dayOf: {
     ...typography.caption,
-    marginBottom: spacing.sm,
   },
   todayLabel: {
     ...typography.label,
@@ -995,15 +1065,10 @@ const styles = StyleSheet.create({
   },
   groupLabel: {
     ...typography.caption,
-    marginBottom: spacing.xs,
+    marginTop: spacing.sm,
   },
   stepTitle: {
     ...typography.hero,
-    marginBottom: spacing.xs,
-  },
-  restStepTitle: {
-    ...typography.subtitle,
-    marginBottom: spacing.xs,
   },
   estimate: {
     ...typography.caption,
@@ -1016,7 +1081,7 @@ const styles = StyleSheet.create({
   },
   stage: {
     marginBottom: spacing.lg,
-    minHeight: 240,
+    minHeight: 320,
     gap: spacing.md,
   },
   restStage: {
@@ -1027,12 +1092,13 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     minHeight: 160,
   },
-  support: {
-    marginBottom: spacing.md,
-    gap: 2,
-  },
   detail: {
     ...typography.body,
+    marginTop: spacing.md,
+  },
+  swipeHint: {
+    ...typography.caption,
+    textAlign: 'center',
     marginTop: spacing.md,
   },
   error: {
@@ -1101,6 +1167,16 @@ const styles = StyleSheet.create({
   peekWhy: {
     ...typography.body,
     marginTop: spacing.xs,
+  },
+  doneFlash: {
+    borderWidth: 1,
+    borderRadius: radii.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.md,
+  },
+  doneFlashText: {
+    ...typography.body,
   },
   repairBanner: {
     flexDirection: 'row',

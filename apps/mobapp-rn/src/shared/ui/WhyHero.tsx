@@ -9,7 +9,10 @@ type Props = {
   why: string;
 };
 
-/** Hero «Почему сейчас» — must be prominent, never a grey footnote. */
+/**
+ * “Why today” support copy — demoted below Full Block on Session
+ * (Slice D layout: title → day → Block → detail / why).
+ */
 export function WhyHero({ why }: Props) {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -21,22 +24,23 @@ export function WhyHero({ why }: Props) {
       <Text style={[styles.label, { color: colors.textMuted }]}>
         {t('home.whyNow')}
       </Text>
-      <Text style={[styles.why, { color: colors.text }]}>{trimmed}</Text>
+      <Text style={[styles.why, { color: colors.textSecondary }]}>
+        {trimmed}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
-    marginTop: spacing.lg,
-    gap: spacing.sm,
+    marginTop: spacing.md,
+    gap: spacing.xs,
   },
   label: {
     ...typography.label,
     textTransform: 'uppercase',
   },
   why: {
-    ...typography.title,
-    lineHeight: 30,
+    ...typography.body,
   },
 });
