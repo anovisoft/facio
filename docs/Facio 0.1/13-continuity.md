@@ -14,12 +14,18 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 | Prototype engine | `apps/` ≈ `docs/next` slices 1–5 **accepted** |
 | Carbonara dogfood | OK (timeline → finish → Repeat) |
 | Fitness multi-day E2E | Deferred — needs calendar week or **dev time travel** |
-| Facio 0.1 code shell | Slice A implemented — **awaiting PO dogfood** |
-| Instant Answer | Demote/remove in 0.1 happy path |
+| Facio 0.1 code shell | **Slice A accepted** (PO 2026-08-03). **Slice B code done** (Focus Engine v0 + Cover) — await PO dogfood |
+| Instant Answer | Off Create happy path (D5); screen may remain registered dead |
 
 ---
 
 ## Fragile knowledge (summary will drop this — keep here)
+
+### Roles & process
+
+- **PO** = human; **PM** = lead agent this chat; **Devs** = Task subagents (`cursor-grok-4.5-high` for impl; Composer only for cheap mechanical).
+- One slice per subagent run. Spec = `docs/Facio 0.1/`. Do **not** invent D1–D8.
+- After each accepted slice → update this status table.
 
 ### Doc pack roles
 
@@ -59,15 +65,57 @@ Conflict → **Facio 0.1 wins** on surface; keep next engine.
 | Code today | Product 0.1 |
 |------------|-------------|
 | `Project` | Guide |
-| `ProjectsScreen` | → Continue + drawer |
+| `ProjectsScreen` | → Continue + drawer (re-export / alias) |
 | `ProjectHomeScreen` | → Session |
 | `PathScreen` | → Guide roadmap |
-| `DraftStudioScreen` | → Guide Explore |
+| `DraftStudioScreen` | → GuideExplore |
 | `InstantAnswerScreen` | → cut from happy path |
+| `HistoryScreen` | → Archive |
 | plugins | UI Blocks |
 | `state_versions` | Undo foundation |
 
-Prefer **aliases / new screens** over big-bang DB rename.
+Prefer **aliases / new screens** over big-bang DB rename (D6).
+
+### Slice A — what landed (client)
+
+| Piece | Where |
+|-------|--------|
+| Root = Continue | `navigation/index.tsx` `initialRouteName="Continue"` |
+| Routes | Continue, Create, Session, Guide, GuideExplore, Archive, Settings (+ dead InstantAnswer) |
+| Continue home | `features/continue/ContinueScreen.tsx` |
+| Naive order (until B) | ~~`features/continue/naiveOrder.ts`~~ — replaced by Focus Engine in Slice B |
+| Guides under-sheet | ChatGPT reveal: Guides behind Continue; main translates ~82%; radius ~52; **no scale** |
+| Reveal gesture | `useGuidesRevealGesture.ts` — **PO OK (parallel session)**: finger-follow on `translateX` px; settle spring; `useNativeDriver: false` (native spring was teleport/hang source); `activeOffsetX` ignores micro-moves. Do not regress lightly |
+| Guides list + gear | `features/continue/GuidesDrawer.tsx` — contentWidth = reveal; Archive + glass Settings gear |
+| Glass chips | `shared/ui/GlassIconButton.tsx` + Ionicons (`menu-outline`, `settings-outline`) — not emoji |
+| Settings (theme) | `features/settings/SettingsScreen.tsx` |
+| Create | Instant Answer redirected off path (copy error); → GuideExplore |
+
+### Slice B — what landed (code; await PO)
+
+| Piece | Where |
+|-------|--------|
+| Focus Engine v0 | `features/continue/focusEngine.ts` — D1 tiers; documented in `features/continue/README.md` |
+| Cover columns | `projects.cover_emoji` / `cover_difficulty` / `cover_duration_summary` (Alembic `012`) |
+| Cover fill | Heuristic on `apply_contract` (`app/services/cover.py`) — no Anthropic grammar expansion |
+| Cover UI | Continue cards + Guides drawer via `coverDisplay.ts` (client fallback when null) |
+
+### Device / API landmine
+
+- Physical device needs Mac LAN IP in `apps/mobapp-rn/.env` → `EXPO_PUBLIC_API_URL`  
+- IP changes on network switch → infinite Continue loading while backend healthy on localhost  
+- Backend docker: `:8000`; postgres `:5435`
+
+### Guides drawer UX landmines (learned this wave)
+
+- **Not** RN `Modal` + `animationType="slide"` (feels like bottom sheet).  
+- Guides = sheet **under** Continue; Continue slides right (~82%).  
+- Do not drive finger math off stale `drawerOpen` boolean (openWidth+tx teleport after first close).  
+- Avoid scale-on-open (reads as resize). Radius ~52 ≈ iPhone continuous corner.  
+- Working gesture (PO): single `translateX` px + spring settle; **`useNativeDriver: false`** — native-driver springs don’t mirror to JS and caused teleports/mid hangs.  
+- If broken again → fix/rewrite `useGuidesRevealGesture.ts`, don’t stack ad-hoc patches in ContinueScreen.  
+- Stay on **Expo RN** — do not jump to Swift/Flutter for drawer polish.  
+- Device API: keep `EXPO_PUBLIC_API_URL` on current LAN IP.
 
 ### Success systems that must not be “later polish”
 
@@ -94,8 +142,8 @@ From [11](./11-success-systems.md): Focus Engine, Session complete beat, Session
 
 | Slice | Name | Status |
 |-------|------|--------|
-| A | IA shell (nav: Continue / Session / Guide / Create / drawer) | **awaiting PO dogfood** |
-| B | Focus Engine v0 + Cover on cards | pending |
+| A | IA shell (nav: Continue / Session / Guide / Create / drawer) | **accepted** (PO 2026-08-03) |
+| B | Focus Engine v0 + Cover on cards | **code done** — await PO dogfood |
 | C | Guide Explore trust (roadmap + Commitment; fold Draft) | pending |
 | D | Session atom + Session complete beat + swipe/≡ | pending |
 | E | Repair Diff + Undo | pending |
@@ -112,13 +160,13 @@ From [11](./11-success-systems.md): Focus Engine, Session complete beat, Session
 - Auth: `X-Device-Id`  
 - Docker: postgres `:5435`, backend `:8000`  
 
-Do not start Facio 0.1 by rewriting the backend runtime. Shell first.
+Do not start Facio 0.1 by rewriting the backend runtime. Shell first. Uncommitted Slice A work lives under `apps/mobapp-rn/` (incl. `features/continue/`, Settings, nav).
 
 ---
 
 ## After summarization — PM start here
 
-1. Read [README](./README.md) → [11](./11-success-systems.md) → this file → [14](./14-impl-plan.md)  
-2. Confirm with PO: start Slice A?  
-3. Dispatch subagent with Slice A brief from [14](./14-impl-plan.md)  
-4. Update this status table when done
+1. Read [README](./README.md) → [11](./11-success-systems.md) → **this file** → [14](./14-impl-plan.md)  
+2. Slice A **accepted**. Slice B **code done** — PO dogfood next (Focus reason + Covers).  
+3. On B accept → update status → dispatch **Slice C**.  
+4. Do **not** reopen Guides gesture unless PO reports regress.

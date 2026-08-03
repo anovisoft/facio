@@ -39,3 +39,6 @@ def test_apply_contract_copies_fields():
     assert project.cycle_status == "draft"
     assert project.schedule_days is not None
     assert project.schedule_days[0]["kind"] == "cook_session"
+    assert project.cover_emoji == "🍝"
+    assert project.cover_difficulty == "Easy"
+    assert project.cover_duration_summary == "1 evening, ~45 min"

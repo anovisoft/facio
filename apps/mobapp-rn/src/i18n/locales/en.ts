@@ -36,6 +36,10 @@ export default {
     draft: 'Draft',
     waiting: 'Up next: {{title}}',
     noSession: 'Open Guide',
+    focus: 'Focus',
+    reasonOverdue: 'Overdue',
+    reasonLastDay: 'Last day',
+    reasonShort: '5 min',
   },
   instantAnswer: {
     title: 'Answer',

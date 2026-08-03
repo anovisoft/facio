@@ -348,6 +348,10 @@ class ProjectSummary(BaseModel):
     horizon: str | None
     domain: str | None = None
     tags: list[str] = Field(default_factory=list)
+    # Guide Cover (Facio 0.1) — emoji/mark + effort + duration glance.
+    cover_emoji: str | None = None
+    cover_difficulty: str | None = None
+    cover_duration_summary: str | None = None
     cycle: CycleResponse | None = None
     current_day: CurrentDayResponse | None = None
     committed_at: datetime | None

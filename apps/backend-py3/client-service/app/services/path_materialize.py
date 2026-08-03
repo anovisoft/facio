@@ -14,6 +14,7 @@ from app.models import (
     Project,
 )
 from app.schemas.path_state import PathAction, PathState
+from app.services.cover import apply_cover_fallback
 
 
 def action_plugins_filled(action: PathAction) -> bool:
@@ -256,6 +257,7 @@ def apply_contract(project: Project, state: PathState) -> None:
     project.schedule_days = [
         day.model_dump(mode="json") for day in state.days
     ]
+    apply_cover_fallback(project, state)
 
 
 async def materialize_path(

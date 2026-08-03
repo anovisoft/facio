@@ -97,6 +97,14 @@ class Project(Base):
     horizon: Mapped[str | None] = mapped_column(Text, nullable=True)
     domain: Mapped[str | None] = mapped_column(String(32), nullable=True)
     tags: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    # Guide Cover (Facio 0.1 Slice B) — glance fields for Continue / drawer.
+    cover_emoji: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    cover_difficulty: Mapped[str | None] = mapped_column(
+        String(32), nullable=True
+    )
+    cover_duration_summary: Mapped[str | None] = mapped_column(
+        String(64), nullable=True
+    )
     cycle_index: Mapped[int | None] = mapped_column(Integer, nullable=True)
     cycle_horizon_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
     cycle_status: Mapped[str | None] = mapped_column(String(32), nullable=True)

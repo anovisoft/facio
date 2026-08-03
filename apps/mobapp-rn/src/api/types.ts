@@ -198,6 +198,10 @@ export interface ProjectSummary {
   horizon?: string | null;
   domain?: string | null;
   tags: string[];
+  /** Guide Cover — emoji/mark glance (Facio 0.1). */
+  cover_emoji?: string | null;
+  cover_difficulty?: string | null;
+  cover_duration_summary?: string | null;
   cycle?: CycleResponse | null;
   current_day?: CurrentDayResponse | null;
   committed_at?: string | null;

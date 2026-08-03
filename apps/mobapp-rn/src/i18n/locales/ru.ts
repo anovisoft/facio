@@ -36,6 +36,10 @@ export default {
     draft: 'Черновик',
     waiting: 'Дальше: {{title}}',
     noSession: 'Открыть Guide',
+    focus: 'Фокус',
+    reasonOverdue: 'Просрочено',
+    reasonLastDay: 'Последний день',
+    reasonShort: '5 мин',
   },
   instantAnswer: {
     title: 'Ответ',

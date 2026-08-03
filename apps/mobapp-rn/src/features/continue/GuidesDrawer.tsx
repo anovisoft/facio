@@ -14,6 +14,10 @@ import type { NavigationProp } from '@react-navigation/native';
 
 import { ApiError, type ProjectSummary } from '@/api/types';
 import { listProjects } from '@/api/projects';
+import {
+  coverMetaLine,
+  resolveGuideCover,
+} from '@/features/continue/coverDisplay';
 import type { RootStackParamList } from '@/navigation/types';
 import { trackProjectSwitched } from '@/services/beacons';
 import { GlassIconButton } from '@/shared/ui/GlassIconButton';
@@ -134,48 +138,60 @@ export function GuidesDrawer({
               {t('continue.guidesEmpty')}
             </Text>
           }
-          renderItem={({ item }) => (
-            <Pressable
-              style={[
-                styles.card,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
-              ]}
-              onPress={() => openGuide(item)}
-            >
-              <View style={styles.cardTop}>
-                <Text
-                  style={[styles.cardTitle, { color: colors.text }]}
-                  numberOfLines={2}
-                >
-                  {item.title || item.outcome || item.raw_intent}
-                </Text>
-                {item.status === 'draft' ? (
-                  <Text
-                    style={[
-                      styles.badge,
-                      {
-                        color: colors.primary,
-                        backgroundColor: colors.surfaceMuted,
-                      },
-                    ]}
-                  >
-                    {t('continue.draft')}
-                  </Text>
-                ) : null}
-              </View>
-              {item.horizon ? (
-                <Text
-                  style={[styles.cardSub, { color: colors.textSecondary }]}
-                  numberOfLines={1}
-                >
-                  {item.horizon}
-                </Text>
-              ) : null}
-            </Pressable>
-          )}
+          renderItem={({ item }) => {
+            const cover = resolveGuideCover(item);
+            const meta = coverMetaLine(cover);
+            return (
+              <Pressable
+                style={[
+                  styles.card,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                ]}
+                onPress={() => openGuide(item)}
+              >
+                <View style={styles.cardTop}>
+                  <Text style={styles.coverEmoji}>{cover.emoji}</Text>
+                  <View style={styles.cardBody}>
+                    <View style={styles.titleRow}>
+                      <Text
+                        style={[styles.cardTitle, { color: colors.text }]}
+                        numberOfLines={2}
+                      >
+                        {item.title || item.outcome || item.raw_intent}
+                      </Text>
+                      {item.status === 'draft' ? (
+                        <Text
+                          style={[
+                            styles.badge,
+                            {
+                              color: colors.primary,
+                              backgroundColor: colors.surfaceMuted,
+                            },
+                          ]}
+                        >
+                          {t('continue.draft')}
+                        </Text>
+                      ) : null}
+                    </View>
+                    {meta ? (
+                      <Text
+                        style={[
+                          styles.cardSub,
+                          { color: colors.textSecondary },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {meta}
+                      </Text>
+                    ) : null}
+                  </View>
+                </View>
+              </Pressable>
+            );
+          }}
         />
       )}
 
@@ -254,6 +270,21 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: spacing.sm,
   },
+  coverEmoji: {
+    fontSize: 24,
+    lineHeight: 30,
+    width: 32,
+    textAlign: 'center',
+  },
+  cardBody: {
+    flex: 1,
+    minWidth: 0,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
   cardTitle: {
     ...typography.subtitle,
     flex: 1,
@@ -267,7 +298,7 @@ const styles = StyleSheet.create({
   },
   cardSub: {
     ...typography.caption,
-    marginTop: spacing.xs,
+    marginTop: 2,
   },
   bottomBar: {
     flexDirection: 'row',

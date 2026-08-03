@@ -18,8 +18,15 @@ import { useTranslation } from 'react-i18next';
 import { ApiError, type ProjectSummary } from '@/api/types';
 import { listProjects } from '@/api/projects';
 import { blockTypeLabel } from '@/features/continue/blockTypeLabel';
+import {
+  coverMetaLine,
+  resolveGuideCover,
+} from '@/features/continue/coverDisplay';
+import {
+  rankContinueSessions,
+  type FocusReason,
+} from '@/features/continue/focusEngine';
 import { GuidesDrawer } from '@/features/continue/GuidesDrawer';
-import { orderContinueSessions } from '@/features/continue/naiveOrder';
 import {
   EDGE_WIDTH,
   useGuidesRevealGesture,
@@ -42,10 +49,15 @@ const OPEN_RATIO = 0.82;
  */
 const MAIN_RADIUS = 52;
 
+const REASON_I18N: Record<FocusReason, string> = {
+  overdue: 'continue.reasonOverdue',
+  lastDay: 'continue.reasonLastDay',
+  short: 'continue.reasonShort',
+};
+
 /**
  * Facio 0.1 Continue (home).
- * Slice A: one Session card per active Guide; naive order in naiveOrder.ts.
- * Focus Engine ranking is Slice B — not here.
+ * Slice B: Focus Engine ranks Sessions; Cover glance on cards.
  *
  * Guides sits under this screen; opening translates the main layer right.
  * Peek = translateX + radius + shadow — no scale.
@@ -78,6 +90,8 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
 
   const setLastProjectId = useSessionStore((s) => s.setLastProjectId);
   const [sessions, setSessions] = useState<ProjectSummary[]>([]);
+  const [focusId, setFocusId] = useState<string | null>(null);
+  const [focusReason, setFocusReason] = useState<FocusReason | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,7 +103,10 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
       setError(null);
       try {
         const rows = await listProjects('open');
-        setSessions(orderContinueSessions(rows));
+        const ranked = rankContinueSessions(rows);
+        setSessions(ranked.ordered);
+        setFocusId(ranked.focus?.id ?? null);
+        setFocusReason(ranked.reason);
       } catch (e) {
         const message =
           e instanceof ApiError ? e.message : t('continue.error');
@@ -210,6 +227,9 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
                   }
                   style={styles.listFlex}
                   renderItem={({ item }) => {
+                    const isFocus = item.id === focusId;
+                    const cover = resolveGuideCover(item);
+                    const meta = coverMetaLine(cover);
                     const block = blockTypeLabel(item.next_action);
                     const statusLine = item.next_action?.title
                       ? item.next_action.title
@@ -218,6 +238,10 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
                             title: item.peek_action.title,
                           })
                         : t('continue.noSession');
+                    const reasonLabel =
+                      isFocus && focusReason
+                        ? t(REASON_I18N[focusReason])
+                        : null;
                     return (
                       <Pressable
                         style={[
@@ -229,12 +253,46 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
                         ]}
                         onPress={() => openSession(item)}
                       >
-                        <Text
-                          style={[styles.cardTitle, { color: colors.text }]}
-                          numberOfLines={2}
-                        >
-                          {item.title || item.outcome || item.raw_intent}
-                        </Text>
+                        <View style={styles.cardHeader}>
+                          <Text style={styles.coverEmoji}>{cover.emoji}</Text>
+                          <View style={styles.cardHeaderText}>
+                            <View style={styles.titleRow}>
+                              <Text
+                                style={[
+                                  styles.cardTitle,
+                                  { color: colors.text },
+                                ]}
+                                numberOfLines={2}
+                              >
+                                {item.title || item.outcome || item.raw_intent}
+                              </Text>
+                              {reasonLabel ? (
+                                <Text
+                                  style={[
+                                    styles.reasonChip,
+                                    {
+                                      color: colors.primary,
+                                      backgroundColor: colors.surfaceMuted,
+                                    },
+                                  ]}
+                                >
+                                  {reasonLabel}
+                                </Text>
+                              ) : null}
+                            </View>
+                            {meta ? (
+                              <Text
+                                style={[
+                                  styles.coverMeta,
+                                  { color: colors.textSecondary },
+                                ]}
+                                numberOfLines={1}
+                              >
+                                {meta}
+                              </Text>
+                            ) : null}
+                          </View>
+                        </View>
                         <Text
                           style={[
                             styles.cardMeta,
@@ -355,8 +413,40 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.sm,
   },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
+  coverEmoji: {
+    fontSize: 28,
+    lineHeight: 34,
+    width: 36,
+    textAlign: 'center',
+  },
+  cardHeaderText: {
+    flex: 1,
+    minWidth: 0,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
   cardTitle: {
     ...typography.subtitle,
+    flex: 1,
+  },
+  reasonChip: {
+    ...typography.label,
+    overflow: 'hidden',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radii.pill,
+  },
+  coverMeta: {
+    ...typography.caption,
+    marginTop: 2,
   },
   cardMeta: {
     ...typography.caption,
