@@ -57,7 +57,7 @@ export function IntentScreen({ navigation }: RootScreenProps<'Create'>) {
         return;
       }
       setLastProjectId(result.project.id);
-      navigation.replace('GuideExplore', {
+      navigation.replace('Guide', {
         projectId: result.project.id,
         seed: result.project,
       });

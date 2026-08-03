@@ -147,6 +147,8 @@ Canon: [11](./11-success-systems.md). Process: [12](./12-process.md).
 
 **PO dogfood:** No Instant Answer; copy matches 0.1; morning sheet if signal.
 
+**Carry from polishing bugs:** #8 domain-neutral rest/day-kind copy (fitness phrases must not appear on cook/drawing/etc. Guides) — `path.restEmpty`, `dayKind.train`/`rest`, LLM day titles.
+
 ---
 
 ## Slice H — optional engine: time travel

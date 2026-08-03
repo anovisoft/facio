@@ -89,6 +89,7 @@ export function ProjectHomeScreen({
         t('home.today'),
       headerRight: () => (
         <GlassIconButton
+          variant="header"
           onPress={() => navigation.navigate('Guide', { projectId })}
           accessibilityLabel={t('home.menuPath')}
           size={GLASS_ICON_CHIP_SIZE}

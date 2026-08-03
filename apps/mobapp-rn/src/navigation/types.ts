@@ -3,9 +3,10 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { InstantAnswerResponse, ProjectDetail } from '@/api/types';
 
 /**
- * Facio 0.1 IA routes (Slice A).
+ * Facio 0.1 IA routes (Slice A+C).
  * Prototype aliases: Continue←Projects, Session←ProjectHome,
- * Guide←Path, GuideExplore←DraftStudio, Create←Intent, Archive←History.
+ * Guide←Path/DraftStudio (unified trust surface), Create←Intent, Archive←History.
+ * GuideExplore stays as a thin alias of Guide (same screen, optional seed).
  * InstantAnswer stays typed/registered but is off the Create happy path (D5).
  */
 export type RootStackParamList = {
@@ -13,11 +14,14 @@ export type RootStackParamList = {
   Create: undefined;
   /** Dead route — not linked from Create (D5). Screen kept for now. */
   InstantAnswer: { payload: InstantAnswerResponse };
-  /** Pre-commitment Guide Explore (prototype DraftStudio). */
+  /**
+   * Alias of Guide for Create soft-start with seed.
+   * Same GuideScreen chrome (Cover + roadmap + Start Guide).
+   */
   GuideExplore: { projectId: string; seed?: ProjectDetail };
   Session: { projectId: string };
-  /** Post-commitment Guide roadmap (prototype Path). */
-  Guide: { projectId: string };
+  /** Guide trust surface — draft Explore + active roadmap (Slice C). */
+  Guide: { projectId: string; seed?: ProjectDetail };
   Archive: undefined;
   Settings: undefined;
 };

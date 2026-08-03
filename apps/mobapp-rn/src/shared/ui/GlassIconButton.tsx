@@ -12,6 +12,11 @@ type Props = {
   children: ReactNode;
   /** Diameter; default = GLASS_ICON_CHIP_SIZE (slightly smaller than GlassFab 58). */
   size?: number;
+  /**
+   * `header` — native stack headerRight: Ionicons only, no GlassSurface border
+   * (avoids double outline against nav chrome). Continue/drawer keep `default`.
+   */
+  variant?: 'default' | 'header';
 };
 
 /** Circular liquid-glass chip for icon actions (☰, ⚙). */
@@ -20,6 +25,7 @@ export function GlassIconButton({
   accessibilityLabel,
   children,
   size = GLASS_ICON_CHIP_SIZE,
+  variant = 'default',
 }: Props) {
   return (
     <Pressable
@@ -29,11 +35,17 @@ export function GlassIconButton({
       hitSlop={8}
       style={({ pressed }) => [pressed && styles.pressed]}
     >
-      <GlassSurface
-        style={{ width: size, height: size, borderRadius: size / 2 }}
-      >
-        <View style={styles.inner}>{children}</View>
-      </GlassSurface>
+      {variant === 'header' ? (
+        <View style={[styles.headerHit, { width: size, height: size }]}>
+          {children}
+        </View>
+      ) : (
+        <GlassSurface
+          style={{ width: size, height: size, borderRadius: size / 2 }}
+        >
+          <View style={styles.inner}>{children}</View>
+        </GlassSurface>
+      )}
     </Pressable>
   );
 }
@@ -41,6 +53,10 @@ export function GlassIconButton({
 const styles = StyleSheet.create({
   inner: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerHit: {
     alignItems: 'center',
     justifyContent: 'center',
   },

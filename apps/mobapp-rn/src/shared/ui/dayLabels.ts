@@ -5,6 +5,12 @@ export function capitalizeLabel(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+/** Generic "day" / "День" kind or title — redundant next to "Day N · …". */
+export function isGenericDayLabel(value: string | null | undefined): boolean {
+  if (!value) return true;
+  return /^(день|day)$/i.test(value.trim());
+}
+
 export function dayKindLabel(
   kind: DayKind,
   t: (key: string) => string,

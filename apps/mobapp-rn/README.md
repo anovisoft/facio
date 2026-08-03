@@ -2,7 +2,7 @@
 
 MVP client for [client-service](../backend-py3/client-service).
 
-UI copy (localized): **Today / Done / Why now / Accept path** (EN) · **Сегодня / Сделано / Почему сейчас / Принять путь** (RU).
+UI copy (localized): **Continue / Guide / Start Guide / Start Session** (EN) · **Continue / Guide / Начать Guide / Начать Session** (RU).
 
 No AdMob, RevenueCat, or Firebase Analytics — UI beacons go to `POST /api/v1/events`.
 

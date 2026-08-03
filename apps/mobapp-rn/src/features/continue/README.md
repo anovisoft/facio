@@ -9,7 +9,7 @@ Product stack: Guide = path · Continue = focus · Session = Full Block execute 
 
 ChatGPT-style under-sheet: Guides sits behind Continue; opening translates the main layer right (~82%). Open via ☰ or a dedicated ~28px left-edge pan strip; close via swipe left on Continue (main-layer pan) or tap peek. Motion is finger-follow on `translateX` (px) with inertial spring settle — see `useGuidesRevealGesture.ts`. No RN `Modal`.
 
-**B2 compact rule:** each row is emoji/mark + title (+ thin `Draft` / `Waiting` status). No Cover difficulty · duration twin cards. Archive + Settings gear stay in the footer. Tap → Guide / GuideExplore (unchanged IA).
+**B2 compact rule:** each row is emoji/mark + title (+ thin `Draft` / `Waiting` status). No Cover difficulty · duration twin cards. Archive + Settings gear stay in the footer. Tap → Guide trust surface (draft or active — same Cover + roadmap chrome; Slice C).
 
 ## Attention filter (B2)
 
@@ -57,4 +57,14 @@ Helpers: `formatApproxMin`, `formatClock`. Entry: `HeroBlockPreview`.
 
 ## Cover display
 
-Guide Cover fields (`cover_emoji`, `cover_difficulty`, `cover_duration_summary`) persist on the API. Continue uses emoji as a thin context mark; Cover difficulty · duration belong on Guide page / archive (Slice C), not as Continue/drawer card bodies. When emoji is null, `coverDisplay.ts` falls back from `domain` / title. Server fills Cover on Path apply via heuristic (D7 fallback — no Anthropic grammar expansion).
+Guide Cover fields (`cover_emoji`, `cover_difficulty`, `cover_duration_summary`) persist on the API. Continue uses emoji as a thin context mark; Cover difficulty · duration belong on **Guide page** (`GuideCoverHeader` + contract glance + Compact roadmap — Slice C), not as Continue/drawer card bodies. When emoji is null, `coverDisplay.ts` falls back from `domain` / title. Server fills Cover on Path apply via heuristic (D7 fallback — no Anthropic grammar expansion).
+
+## Guide trust surface (Slice C)
+
+`features/guide/GuideScreen.tsx` — one surface for draft + active:
+
+- Cover + contract glance + Compact Summaries roadmap (`CompactRoadmap` / `buildCompactRoadmap`)
+- Pre-commit sticky **Start Guide** (commit → Session); clarify/refine preserved
+- Post-commit sticky **Start Session** when `next_action` exists
+- PathList only behind secondary “View full plan” expand (not the hero)
+- Progressive create `#1/#2/#3` unchanged on the client poll/commit path; backend schemas untouched

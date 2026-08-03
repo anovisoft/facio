@@ -14,7 +14,7 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 | Prototype engine | `apps/` ≈ `docs/next` slices 1–5 **accepted** |
 | Carbonara dogfood | OK (timeline → finish → Repeat) |
 | Fitness multi-day E2E | Deferred — needs calendar week or **dev time travel** |
-| Facio 0.1 code shell | **A+B+B2 accepted**. Hotfix burger+#lastDay **done**; next **Slice C** |
+| Facio 0.1 code shell | **A+B+B2+C accepted**. **Next = Slice D** (Session atom + complete + polishing #2 #6 #7) |
 | Instant Answer | Off Create happy path (D5); screen may remain registered dead |
 
 ---
@@ -79,8 +79,7 @@ Hero Preview is **read-only** in 0.1. Idle Guides (nothing today) → drawer onl
 | `Project` | Guide |
 | `ProjectsScreen` | → Continue + drawer (re-export / alias) |
 | `ProjectHomeScreen` | → Session |
-| `PathScreen` | → Guide roadmap |
-| `DraftStudioScreen` | → GuideExplore |
+| `PathScreen` / `DraftStudioScreen` | → **Guide** (unified trust; GuideExplore alias) |
 | `InstantAnswerScreen` | → cut from happy path |
 | `HistoryScreen` | → Archive |
 | plugins | UI Blocks |
@@ -167,8 +166,9 @@ From [11](./11-success-systems.md): Focus Engine, Session presentations (Hero/Fu
 | Guides search | Drawer search | Later polish |
 | Archive → status tags | Maybe replace Archive with status tags for repeat-cook cases | PO decision; Repeat path = Slice F |
 | Full UI chrome audit | Unify all controls beyond menu chips | After D Session recompose |
+| Domain-neutral rest / day kinds | Rest/train copy leaks fitness into non-sport Guides (e.g. drawing rest shows «без силовой нагрузки»; day kind «Тренировка»). Root: client `path.restEmpty` / `dayKind.*` + LLM day titles. Fix domain-aware copy or LLM prompts — **not Slice D**. | **Slice G** (copy) or create `#2` prompt pass |
 
-Tracked also in `docs/polishing bugs.txt`.
+Tracked also in `docs/polishing bugs.txt` (#8).
 
 ### Hotfix after B2 (**done**)
 
@@ -186,8 +186,8 @@ Tracked also in `docs/polishing bugs.txt`.
 | A | IA shell (nav: Continue / Session / Guide / Create / drawer) | **accepted** (PO 2026-08-03) |
 | B | Focus Engine v0 + Cover on cards | **accepted** (PO 2026-08-03) |
 | B2 | Hero Preview + drawer compact | **accepted** (PO 2026-08-03) |
-| C | Guide Explore trust (roadmap + Commitment; fold Draft) | **next** |
-| D | Session atom + Session complete beat + swipe/≡ | pending — **carries polishing #2 #6 #7** |
+| C | Guide Explore trust (roadmap + Commitment; fold Draft) | **accepted** (PO 2026-08-03, after iterate) |
+| D | Session atom + Session complete beat + swipe/≡ | **next** — carries polishing #2 #6 #7 |
 | E | Repair Diff + Undo | pending |
 | F | Identity + Finish Experience | pending |
 | G | Copy/i18n + kill Instant Answer + Morning Summary | pending |
@@ -209,7 +209,47 @@ Do not start Facio 0.1 by rewriting the backend runtime. Shell first. Uncommitte
 ## After summarization — PM start here
 
 1. Read [README](./README.md) → [11](./11-success-systems.md) (§9) → **this file** → [14](./14-impl-plan.md)  
-2. A+B+B2 **accepted**. Hotfix burger/lastDay **done** → dispatch **Slice C**.  
-3. Slice D must include polishing bugs #2 (stepper back), #6 (persist state), #7 (Session recompose) — see `docs/polishing bugs.txt`.  
+2. A+B+B2+C **accepted**. Next dispatch: **Slice D**.  
+3. Slice D must include polishing bugs #2 #6 #7 — see `docs/polishing bugs.txt`.  
 4. Do **not** reopen Guides gesture unless PO reports regress.  
-5. Do **not** invent deferred #3 (auto AI measure) or #5 (archive/tags/search).
+5. Do **not** invent deferred #3 (auto AI measure) or #5 (archive/tags/search).  
+6. Domain-neutral rest/day copy (#8) → Slice G or create-prompt pass — do not hardcode fitness rest on non-sport Guides.
+
+### Slice C iterate — PO dogfood (2026-08-03)
+
+**Reject reasons:** Explore feels like a nuclear control panel; softStart prefix doubles; Session ≡ double outline; path ready invisible while clarifying; footer has Back+Refine+Start+Save.
+
+**Locked UX for iterate (PM, PO-aligned):**
+
+1. **softStart once** — if `paraphrase` already contains the soft-start prefix, do not wrap again; do not show softStart line + Cover title that repeat the same string.
+2. **Day labels** — avoid `День N · День · title` (skip redundant kind when kind is generic "day").
+3. **Footer draft:** sticky **only Start Guide**. Back/undo version = header or text under clarify. Refine = next to clarify answers (not footer). Save-only = tertiary text link or omit (Start Guide is the commit).
+4. **Order:** Cover → path status/roadmap (skeleton while loading) → clarify below. When `path_ready` flips true, show clear **«Путь готов»** banner (and prefer roadmap visible above the fold / auto-scroll lightly).
+5. **Session GlassIconButton** — fix double outline in native header (no extra border on glass inside headerRight; or plain Ionicons without GlassSurface border when in stack header).
+6. Keep `#1/#2/#3` and Start Guide CTA (D4). No Identity/Finish.
+
+### Slice C iterate — what landed (client, 2026-08-03)
+
+| Piece | Where |
+|-------|--------|
+| softStart once | `softStartDisplay.ts` + GuideScreen: wrap only if bare; Cover title preferred (no twin softStart line) |
+| Day label hygiene | `PlanOutline` + `CompactRoadmap` + `isGenericDayLabel` — skip redundant «День» kind |
+| Draft footer declutter | sticky = Start Guide + tertiary «Save without starting»; Refine after clarify; version Back = text under Cover |
+| Path-ready signal | Cover → outline/roadmap → «Путь готов» banner (+ light flash on false→true) → clarify below |
+| Session ≡ | `GlassIconButton variant="header"` — no GlassSurface border in stack headerRight |
+
+**Status:** code done — **await PO dogfood again**. On accept → Slice D.
+
+### Slice C — what landed (client)
+
+| Piece | Where |
+|-------|--------|
+| Unified Guide | `features/guide/GuideScreen.tsx` — draft + active; Cover + contract + Compact roadmap + sticky CTA |
+| Compact Summaries | `features/guide/CompactRoadmap.tsx` + `buildCompactRoadmap.ts` |
+| Cover / contract | `GuideCoverHeader.tsx` / `GuideContractGlance.tsx` (reuse `coverDisplay`) |
+| Create → Guide | `IntentScreen` replaces into `Guide` with seed (not a different Draft UI) |
+| Drawer → Guide | drafts and actives both open `Guide` |
+| GuideExplore | thin alias route → same `GuideScreen` |
+| Path / DraftStudio | re-export `GuideScreen` |
+| Commitment (D4) | sticky **Start Guide** on Guide; no Accept duplicate map |
+| Progressive create | `#1/#2/#3` poll/refine/commit preserved; **no** backend schema expansion |

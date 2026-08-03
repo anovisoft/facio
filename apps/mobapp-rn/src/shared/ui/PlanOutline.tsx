@@ -3,7 +3,11 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import type { DayResponse } from '@/api/types';
-import { capitalizeLabel, dayKindLabel } from '@/shared/ui/dayLabels';
+import {
+  capitalizeLabel,
+  dayKindLabel,
+  isGenericDayLabel,
+} from '@/shared/ui/dayLabels';
 import { useTheme } from '@/theme/ThemeContext';
 import { spacing, typography } from '@/theme';
 
@@ -12,6 +16,25 @@ type Props = {
   /** Cap on rendered day rows — keeps the outline a glance, not a list. */
   maxRows?: number;
 };
+
+function outlineDayLabel(
+  day: DayResponse,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): string {
+  const n = day.day_index + 1;
+  const kindLabel = capitalizeLabel(dayKindLabel(day.kind, t));
+  const title = day.title?.trim() || null;
+  // Skip redundant "Day N · Day · Title" when kind is generic "day".
+  if (day.kind === 'other' || isGenericDayLabel(kindLabel)) {
+    if (title && !isGenericDayLabel(title)) {
+      return t('guide.dayHeader', { n, title });
+    }
+    return t('guide.dayOnly', { n });
+  }
+  const head = t('path.dayHeader', { n, kind: kindLabel });
+  if (title && !isGenericDayLabel(title)) return `${head} · ${title}`;
+  return head;
+}
 
 /**
  * Compact «план есть» preview: day labels + short titles only.
@@ -36,11 +59,7 @@ export function PlanOutline({ days, maxRows = 6 }: Props) {
           style={[styles.row, { color: colors.text }]}
           numberOfLines={1}
         >
-          {t('path.dayHeader', {
-            n: day.day_index + 1,
-            kind: capitalizeLabel(dayKindLabel(day.kind, t)),
-          })}
-          {day.title ? ` · ${day.title}` : ''}
+          {outlineDayLabel(day, t)}
         </Text>
       ))}
       {hasMore ? (

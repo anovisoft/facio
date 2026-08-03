@@ -38,7 +38,7 @@ type Props = {
 /**
  * Guides inventory (Slice B2) — compact navigation under Continue.
  * Row = emoji/mark + title (+ thin draft/waiting status). No Cover twin cards.
- * Selecting a Guide opens Guide / GuideExplore — not Session.
+ * Selecting a Guide (draft or active) opens the trust Guide surface — not Session.
  * Open/close motion lives in ContinueScreen (main layer slides right).
  */
 export function GuidesDrawer({
@@ -77,10 +77,6 @@ export function GuidesDrawer({
     setLastProjectId(guide.id);
     trackProjectSwitched(guide.id);
     onClose();
-    if (guide.status === 'draft') {
-      navigation.navigate('GuideExplore', { projectId: guide.id });
-      return;
-    }
     navigation.navigate('Guide', { projectId: guide.id });
   };
 

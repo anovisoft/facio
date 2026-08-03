@@ -11,12 +11,13 @@ Source dogfood notes. Status routed into Facio 0.1 slices. Canon: `docs/Facio 0.
 | 5 | Guides search; archive → status tags; repeat carbonara | **deferred** — search later; archive/tags = PO; Repeat → F | F + later |
 | 6 | Stepper state resets when leaving Session → Continue → back | **→ Slice D** (atom / same-day resume) | Session persist |
 | 7 | Recompose Session: title → day N/M → large Block → why lower | **→ Slice D** | Session Stage layout |
+| 8 | Rest / day-kind copy is fitness-flavored for all domains (e.g. drawing Guide rest: «без силовой нагрузки»; «Тренировка» on art days) | **→ Slice G** (copy) or create `#2` prompt pass — not D | `path.restEmpty`, `dayKind.*`, LLM day titles |
 
 ## Hotfix (1 + 4) — DoD
 
 1. One shared size for menu/settings glass chips (Continue, drawer gear, Session ≡); Session uses `GlassIconButton` + Ionicons, not emoji ☰.
 2. Focus reason `lastDay` only when `cycle.horizon_days > 1` and unlock is last day; 1-day Guides never show «Последний день».
 
-## Explicitly NOT in hotfix
+## Explicitly NOT now
 
-2, 6, 7 wait for **Slice D**. 3 and 5 stay deferred until PO reopens.
+2, 6, 7 wait for **Slice D**. 3 and 5 stay deferred. **#8** domain-neutral rest/day copy → G / prompts (PO noted on C accept 2026-08-03).
