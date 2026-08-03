@@ -31,4 +31,5 @@ MVP проверяет, есть ли у Facio право на жизнь.
 
 ## Дальше
 
-Следующий продуктовый срез (cycles, plugins, batch clarify, repair; эталоны карбонара / отжимания): [`../next/`](../next/README.md).
+- Срез cycles/plugins/repair (эталоны карбонара / отжимания): [`../next/`](../next/README.md) — принятый engine-этап  
+- **Актуальная точка истины продукта:** [`../Facio 0.1/`](../Facio%200.1/README.md) — Guide / Continue / Session; `mvp/` заморожен как эксперимент

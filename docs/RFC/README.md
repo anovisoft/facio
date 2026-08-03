@@ -75,9 +75,11 @@ Product name in docs: **Facio**. Repository folder may remain `fasio`. Decide br
 
 ## Related
 
-Product experiments:
+**Current product truth (UX / IA / terminology):** [`../Facio 0.1/`](../Facio%200.1/README.md)
 
-- Near-term first slice: [`../mvp/`](../mvp/README.md) (hypotheses, scope, metrics, go/no-go)
-- Next slice (cycles, plugins, executable plan): [`../next/`](../next/README.md)
+Historical product experiments:
 
-RFC remains the long-horizon architecture pack.
+- Near-term first slice: [`../mvp/`](../mvp/README.md) (hypotheses, scope, metrics, go/no-go) — frozen
+- Next slice (cycles, plugins, executable plan): [`../next/`](../next/README.md) — engine reference; UX superseded by Facio 0.1
+
+RFC remains the long-horizon architecture pack. On navigation, screens, and product nouns, **Facio 0.1 wins** if there is a conflict.

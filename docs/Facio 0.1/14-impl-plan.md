@@ -1,0 +1,156 @@
+# 14 — Implementation plan (slices)
+
+Ordered slices for Facio 0.1 shell over existing engine.  
+PO may reorder. PM dispatches **one slice** at a time. Status lives in [13](./13-continuity.md).
+
+Canon: [11](./11-success-systems.md). Process: [12](./12-process.md).
+
+---
+
+## Slice A — IA shell
+
+**Goal:** App opens on Continue; can open Session, Guide, Create, Guides drawer — wired to existing project data (even if ugly).
+
+**DoD:**
+
+- Root ≠ Projects list; root = Continue (may temporarily list one Session per active project)
+- Routes/screens exist: Continue, Session, Guide, Create, drawer
+- Existing ProjectHome / Path / Intent logic reachable through new names or wrappers
+- Instant Answer not linked from Create happy path (can leave dead code)
+- No Focus Engine polish required yet (stable but naive order OK if documented)
+
+**Non-goals:** Cover polish, Finish Experience, Diff UI, roadmap beauty.
+
+**Likely touch:** `apps/mobapp-rn/src/navigation/*`, `features/projects/*`, new `features/continue/*` or rename, thin wrappers.
+
+**PO dogfood:** Open app → see Continue → open a Session → open Guide → Create field visible from `+`.
+
+---
+
+## Slice B — Focus Engine v0 + Cover
+
+**Goal:** Continue order is intentional; cards feel like Guides (Cover glance).
+
+**DoD:**
+
+- Named Focus Engine module (client and/or API) with documented v0 rules (see D1 default in [13](./13-continuity.md))
+- First card = Focus; optional reason chip for top signals
+- Cover fields on Guide (emoji/mark, difficulty, duration_summary) — persist + show on Continue/drawer
+- Generate Cover on create (or sensible fallback from title/domain)
+
+**Non-goals:** Perfect weights, user pin, Morning Summary.
+
+**PO dogfood:** Two+ active Guides → top card reason makes sense; Covers visible.
+
+---
+
+## Slice C — Guide Explore + Commitment
+
+**Goal:** Trust before Start; DraftStudio folded into Guide.
+
+**DoD:**
+
+- Guide screen shows roadmap (not only PathList dump) + contract fields + Cover
+- Pre-commit: Start Guide CTA on Guide; path visible
+- Clarify/refine works on Guide Explore
+- No Accept duplicate full map
+- Progressive create `#1/#2/#3` preserved (do not break grammar split)
+
+**Non-goals:** Identity full stats, Finish Experience.
+
+**PO dogfood:** New Intent → see path → Start Guide → Session appears on Continue.
+
+---
+
+## Slice D — Session atom + complete beat + Guide gesture
+
+**Goal:** Execute feels like a victory atom; Guide one gesture away.
+
+**DoD:**
+
+- Session complete beat (copy + visual) before returning to Continue
+- Policy for incomplete: same-day resume only (D2 default); no multi-day resume happy path
+- Swipe up and/or ≡ Session → Guide; back down/back
+- Block hero retained (Session Stage spirit)
+
+**Non-goals:** Pencil hub, Morning Summary.
+
+**PO dogfood:** Finish carbonara Session → feel complete → land on Continue.
+
+---
+
+## Slice E — Repair Diff + Undo
+
+**Goal:** Mutations are visible and reversible.
+
+**DoD:**
+
+- Repair flow shows before→after Diff, then confirm
+- Undo restores prior `state_versions` (or equivalent) after Repair/AI Edit
+- No silent apply
+
+**Non-goals:** Domain-specific cook repair intents (can keep shift/lighten/rest + reason).
+
+**PO dogfood:** Repair → see Diff → apply → Undo works.
+
+---
+
+## Slice F — Identity + Finish Experience
+
+**Goal:** Guide is my path; ending is a story.
+
+**DoD:**
+
+- Identity on Guide: started, progress, counts (streak per D3 default)
+- Guide finite end triggers Finish Experience (stats + Repeat / Start next Guide)
+- Distinct from Next Cycle mid-Guide
+- Archive after celebration, not instead of it
+
+**PO dogfood:** Complete short Guide (carbonara) → Finish Experience → Repeat or done.
+
+---
+
+## Slice G — Copy, Instant Answer kill, Morning Summary
+
+**Goal:** Product language + cleanup.
+
+**DoD:**
+
+- i18n: Guide / Session / Continue / Start Guide / Session complete
+- Instant Answer removed from happy path (D5)
+- Morning Summary optional interstitial using Focus Engine
+
+**PO dogfood:** No Instant Answer; copy matches 0.1; morning sheet if signal.
+
+---
+
+## Slice H — optional engine: time travel
+
+**Goal:** Fitness multi-day dogfood without waiting a week.
+
+**DoD:** Dev-only local date override for physical day unlock.
+
+Only if PO prioritizes push-ups E2E over shell polish.
+
+---
+
+## Parallelism note
+
+Default **serial** A→B→C→D→E→F→G.  
+Possible parallel later: H alongside shell if different owners; not with A.
+
+---
+
+## Subagent brief template (PM fills)
+
+```text
+You are implementing Facio 0.1 Slice <X>.
+Read: docs/Facio 0.1/README.md, 11-success-systems.md, 13-continuity.md, this slice in 14-impl-plan.md.
+Also: docs/next/09-continuity.md for engine landmines if touching create/plugins/day unlock.
+Repo: apps/mobapp-rn + apps/backend-py3/client-service as needed.
+DoD: <paste>
+Non-goals: <paste>
+Do NOT invent answers to open decisions D1–D8; use continuity defaults.
+Do NOT expand Anthropic schemas in ways that risk grammar 400.
+When done: list files changed, how to dogfood, leftover risks.
+```
