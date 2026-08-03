@@ -6,7 +6,7 @@ import React, {
   useState,
 } from 'react';
 import {
-  ActivityIndicator,
+  Alert,
   Pressable,
   StyleSheet,
   Text,
@@ -77,6 +77,8 @@ export function ProjectHomeScreen({
   const abortRef = useRef<AbortController | null>(null);
   const shownActionIdRef = useRef<string | null>(null);
   const doneFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const projectRef = useRef<ProjectDetail | null>(null);
+  projectRef.current = project;
 
   const openGuide = useCallback(() => {
     navigation.navigate('Guide', { projectId, fromSession: true });
@@ -129,7 +131,8 @@ export function ProjectHomeScreen({
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
-    setLoading(true);
+    // Cold load only — keep Session layout stable on focus refresh (P3).
+    if (projectRef.current == null) setLoading(true);
     setError(null);
     try {
       const detail = await getProject(projectId, controller.signal);
@@ -201,33 +204,94 @@ export function ProjectHomeScreen({
     return detail;
   };
 
+  const finishAction = async (actionId: string) => {
+    await completeAction(actionId);
+    clearBlockRuntime(actionId);
+    const detail = await refreshAfterMutation();
+    // D iterate: next executable Session stays in-Guide; else Continue.
+    if (detail.next_action) {
+      const nextTitle = detail.next_action.title?.trim();
+      showDoneFlash(
+        nextTitle
+          ? t('home.sessionNextToast', { title: nextTitle })
+          : t('home.sessionDoneToast'),
+      );
+    } else {
+      navigation.navigate('Continue');
+    }
+  };
+
   const onComplete = async () => {
     if (!project?.next_action || busy) return;
     const action = project.next_action;
 
     const incomplete = action.checklist_items.filter((i) => !i.done);
     if (incomplete.length > 0) {
-      setError(t('home.checklistRequired', { count: incomplete.length }));
+      Alert.alert(
+        t('home.checklistConfirmTitle'),
+        t('home.checklistConfirmMessage', { count: incomplete.length }),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          {
+            text: t('home.checklistConfirmYes'),
+            onPress: () => {
+              void (async () => {
+                if (busy) return;
+                setBusy(true);
+                setError(null);
+                try {
+                  // Confirm → mark remaining done, then complete (P2).
+                  await Promise.all(
+                    incomplete.map((item) =>
+                      toggleChecklistItem(item.id, true),
+                    ),
+                  );
+                  setProject((prev) => {
+                    if (!prev?.next_action) return prev;
+                    const markDone = (items: typeof prev.next_action.checklist_items) =>
+                      items.map((item) =>
+                        incomplete.some((u) => u.id === item.id)
+                          ? { ...item, done: true }
+                          : item,
+                      );
+                    return {
+                      ...prev,
+                      next_action: {
+                        ...prev.next_action,
+                        checklist_items: markDone(
+                          prev.next_action.checklist_items,
+                        ),
+                      },
+                      actions: prev.actions.map((a) =>
+                        a.id !== prev.next_action?.id
+                          ? a
+                          : {
+                              ...a,
+                              checklist_items: markDone(a.checklist_items),
+                            },
+                      ),
+                    };
+                  });
+                  await finishAction(action.id);
+                } catch (e) {
+                  setError(
+                    e instanceof ApiError ? e.message : t('home.error'),
+                  );
+                } finally {
+                  setBusy(false);
+                }
+              })();
+            },
+          },
+        ],
+      );
       return;
     }
 
     setBusy(true);
     setError(null);
     try {
-      await completeAction(action.id);
-      clearBlockRuntime(action.id);
-      const detail = await refreshAfterMutation();
-      // D iterate: next executable Session stays in-Guide; else Continue.
-      if (detail.next_action) {
-        const nextTitle = detail.next_action.title?.trim();
-        showDoneFlash(
-          nextTitle
-            ? t('home.sessionNextToast', { title: nextTitle })
-            : t('home.sessionDoneToast'),
-        );
-      } else {
-        navigation.navigate('Continue');
-      }
+      await finishAction(action.id);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : t('home.error'));
     } finally {
@@ -255,37 +319,64 @@ export function ProjectHomeScreen({
     itemId: string,
     nextDone: boolean,
   ) => {
-    if (busy || !project?.next_action) return;
-    setBusy(true);
+    if (!project?.next_action || busy) return;
+    const previousDone = project.next_action.checklist_items.find(
+      (i) => i.id === itemId,
+    )?.done;
+    // Optimistic — no global busy / layout jump (P3).
+    setProject((prev) => {
+      if (!prev?.next_action) return prev;
+      return {
+        ...prev,
+        next_action: {
+          ...prev.next_action,
+          checklist_items: prev.next_action.checklist_items.map((item) =>
+            item.id === itemId ? { ...item, done: nextDone } : item,
+          ),
+        },
+        actions: prev.actions.map((action) =>
+          action.id !== prev.next_action?.id
+            ? action
+            : {
+                ...action,
+                checklist_items: action.checklist_items.map((item) =>
+                  item.id === itemId ? { ...item, done: nextDone } : item,
+                ),
+              },
+        ),
+      };
+    });
     setError(null);
     try {
       await toggleChecklistItem(itemId, nextDone);
-      setProject((prev) => {
-        if (!prev?.next_action) return prev;
-        return {
-          ...prev,
-          next_action: {
-            ...prev.next_action,
-            checklist_items: prev.next_action.checklist_items.map((item) =>
-              item.id === itemId ? { ...item, done: nextDone } : item,
-            ),
-          },
-          actions: prev.actions.map((action) =>
-            action.id !== prev.next_action?.id
-              ? action
-              : {
-                  ...action,
-                  checklist_items: action.checklist_items.map((item) =>
-                    item.id === itemId ? { ...item, done: nextDone } : item,
-                  ),
-                },
-          ),
-        };
-      });
     } catch (e) {
+      if (previousDone !== undefined) {
+        setProject((prev) => {
+          if (!prev?.next_action) return prev;
+          return {
+            ...prev,
+            next_action: {
+              ...prev.next_action,
+              checklist_items: prev.next_action.checklist_items.map((item) =>
+                item.id === itemId ? { ...item, done: previousDone } : item,
+              ),
+            },
+            actions: prev.actions.map((action) =>
+              action.id !== prev.next_action?.id
+                ? action
+                : {
+                    ...action,
+                    checklist_items: action.checklist_items.map((item) =>
+                      item.id === itemId
+                        ? { ...item, done: previousDone }
+                        : item,
+                    ),
+                  },
+            ),
+          };
+        });
+      }
       setError(e instanceof ApiError ? e.message : t('home.error'));
-    } finally {
-      setBusy(false);
     }
   };
 
@@ -312,7 +403,6 @@ export function ProjectHomeScreen({
     patchNextAction({
       counter: { ...action.counter, current: nextCurrent },
     });
-    setBusy(true);
     setError(null);
     try {
       const updated = await updateCounter(action.id, { current: nextCurrent });
@@ -328,8 +418,6 @@ export function ProjectHomeScreen({
         counter: { ...action.counter, current: previous },
       });
       setError(e instanceof ApiError ? e.message : t('home.error'));
-    } finally {
-      setBusy(false);
     }
   };
 
@@ -346,7 +434,6 @@ export function ProjectHomeScreen({
         : beat,
     );
     patchNextAction({ stepper: { beats: optimisticBeats } });
-    setBusy(true);
     setError(null);
     try {
       const updated = await updateStepperBeatCounter(action.id, beatId, {
@@ -362,8 +449,6 @@ export function ProjectHomeScreen({
     } catch (e) {
       patchNextAction({ stepper: previous });
       setError(e instanceof ApiError ? e.message : t('home.error'));
-    } finally {
-      setBusy(false);
     }
   };
 
@@ -931,28 +1016,6 @@ export function ProjectHomeScreen({
                   </Text>
                 ) : null}
 
-                {busy ? (
-                  <View style={styles.busyRow}>
-                    <ActivityIndicator color={colors.primary} />
-                    <Text
-                      style={[styles.busyText, { color: colors.textSecondary }]}
-                    >
-                      {t('home.working')}
-                    </Text>
-                    <Pressable
-                      onPress={() => {
-                        abortRef.current?.abort();
-                        setBusy(false);
-                      }}
-                      hitSlop={8}
-                    >
-                      <Text style={{ color: colors.primary }}>
-                        {t('common.cancel')}
-                      </Text>
-                    </Pressable>
-                  </View>
-                ) : null}
-
                 <View style={styles.actions}>
                   <PrimaryButton
                     label={isRestDay ? t('home.doneRest') : t('home.done')}
@@ -1081,16 +1144,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     marginTop: spacing.md,
     textAlign: 'center',
-  },
-  busyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-  },
-  busyText: {
-    ...typography.caption,
-    flex: 1,
   },
   actions: {
     flexDirection: 'row',

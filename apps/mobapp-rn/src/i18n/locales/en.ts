@@ -151,6 +151,10 @@ export default {
     pluginsError: 'Could not prepare session tools',
     error: 'Could not update the step',
     checklistRequired: 'Check all list items first ({{count}} left)',
+    checklistConfirmTitle: 'Finish session?',
+    checklistConfirmMessage:
+      '{{count}} items not checked — mark them done and finish?',
+    checklistConfirmYes: 'Mark done & finish',
     allDone: 'Path complete',
     waitingTitle: "Today's done",
     opensToday: 'The next step opens today.',

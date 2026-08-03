@@ -597,11 +597,17 @@ export function GuideScreen({ navigation, route }: Props) {
 
       {showDetail ? (
         <View style={styles.fullPlan}>
+          {/*
+            expandable: steps start collapsed — avoids N× Full Block / stepper
+            minHeight voids that felt like scroll-into-empty (P1).
+            Tap a step to expand detail; plugins stay preview-only.
+          */}
           <PathList
             groups={project.groups}
             actions={project.actions}
             days={project.days}
             cycle={project.cycle}
+            expandable
             pluginsInteractive={false}
           />
         </View>

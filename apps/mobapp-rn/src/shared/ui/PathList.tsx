@@ -603,6 +603,9 @@ export function PathList({
                           {action.stepper ? (
                             <StepperPlayer
                               stepper={action.stepper}
+                              // Preview on Guide: compact strip — no Session
+                              // minHeight:300 stage void inside PathList.
+                              compact={!pluginsInteractive}
                               interactive={
                                 pluginsInteractive &&
                                 action.status === 'pending' &&

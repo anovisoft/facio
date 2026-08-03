@@ -49,32 +49,41 @@ export function SafeScreen({
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
+  const scrollView = scroll ? (
+    <ScrollView
+      style={styles.flex}
+      contentContainerStyle={[styles.scrollContent, contentStyle]}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive"
+      automaticallyAdjustKeyboardInsets
+      // Bound scroll to content height — no flexGrow stretch / empty void.
+      // Android: never overscroll into empty; iOS: bounce only when scrollable.
+      bounces
+      overScrollMode="never"
+      alwaysBounceVertical={false}
+    >
+      {children}
+    </ScrollView>
+  ) : (
+    <View style={[styles.content, contentStyle]}>{children}</View>
+  );
+
   if (footer) {
     return (
       <SafeAreaView
         style={[styles.safe, { backgroundColor: colors.background }, style]}
         edges={edges}
       >
+        {/*
+          Scroll is NOT inside KeyboardAvoidingView padding — that combo
+          inflated content size / left users stranded in empty rubber-band void
+          (Guide + expanded PathList). Keyboard insets adjust the ScrollView;
+          KAV only lifts the sticky footer.
+        */}
+        <View style={styles.flex}>{scrollView}</View>
         <KeyboardAvoidingView
-          style={styles.flex}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          {scroll ? (
-            <ScrollView
-              style={styles.flex}
-              contentContainerStyle={[styles.scrollContent, contentStyle]}
-              keyboardShouldPersistTaps="handled"
-              keyboardDismissMode="interactive"
-              // Bound scroll to content — no flexGrow stretch / empty void.
-              bounces
-              overScrollMode="auto"
-              alwaysBounceVertical={false}
-            >
-              {children}
-            </ScrollView>
-          ) : (
-            <View style={[styles.content, contentStyle]}>{children}</View>
-          )}
           <View
             style={[
               styles.footer,
@@ -101,19 +110,7 @@ export function SafeScreen({
       edges={edges}
     >
       {scroll ? (
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={[styles.scrollContent, contentStyle]}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
-          automaticallyAdjustKeyboardInsets
-          // Bound scroll to content — no flexGrow stretch / empty void.
-          bounces
-          overScrollMode="auto"
-          alwaysBounceVertical={false}
-        >
-          {children}
-        </ScrollView>
+        scrollView
       ) : (
         <KeyboardAvoidingView
           style={styles.flex}

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -23,7 +23,10 @@ import {
   type FocusReason,
 } from '@/features/continue/focusEngine';
 import { GuidesDrawer } from '@/features/continue/GuidesDrawer';
-import { HeroBlockPreview } from '@/features/continue/heroPreview';
+import {
+  formatApproxMin,
+  HeroBlockPreview,
+} from '@/features/continue/heroPreview';
 import {
   EDGE_WIDTH,
   useGuidesRevealGesture,
@@ -93,12 +96,20 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** After first fetch settles — silent revalidate on focus (P4). */
+  const initialLoadDoneRef = useRef(false);
+  const sessionsRef = useRef(sessions);
+  sessionsRef.current = sessions;
 
   const load = useCallback(
     async (isRefresh = false) => {
+      const hasCache = sessionsRef.current.length > 0;
+      const cold =
+        !isRefresh && !initialLoadDoneRef.current && !hasCache;
       if (isRefresh) setRefreshing(true);
-      else setLoading(true);
-      setError(null);
+      else if (cold) setLoading(true);
+      // else: silent stale-while-revalidate — keep list visible (P4)
+      if (!hasCache) setError(null);
       try {
         const rows = await listProjects('open');
         setOpenGuideCount(rows.length);
@@ -106,11 +117,16 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
         setSessions(ranked.ordered);
         setFocusId(ranked.focus?.id ?? null);
         setFocusReason(ranked.reason);
+        setError(null);
       } catch (e) {
         const message =
           e instanceof ApiError ? e.message : t('continue.error');
-        setError(message);
+        // Keep stale list on silent/pull failure; only hard-error when empty.
+        if (sessionsRef.current.length === 0) {
+          setError(message);
+        }
       } finally {
+        initialLoadDoneRef.current = true;
         setLoading(false);
         setRefreshing(false);
       }
@@ -134,6 +150,9 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
     openGuideCount > 0
       ? t('continue.emptyAttention')
       : t('continue.empty');
+
+  // Full-screen spinner only on cold empty first load — not every focus (P4).
+  const showColdSpinner = loading && !refreshing && sessions.length === 0;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -182,14 +201,14 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
                 <View style={styles.headerSpacer} />
               </View>
 
-              {loading && !refreshing ? (
+              {showColdSpinner ? (
                 <View style={styles.center}>
                   <ActivityIndicator color={colors.primary} />
                   <Text style={[styles.muted, { color: colors.textSecondary }]}>
                     {t('continue.loading')}
                   </Text>
                 </View>
-              ) : error ? (
+              ) : error && sessions.length === 0 ? (
                 <View style={styles.center}>
                   <Text style={[styles.error, { color: colors.error }]}>
                     {error}
@@ -243,6 +262,12 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
                     if (!action) return null;
                     const isFocus = item.id === focusId;
                     const cover = resolveGuideCover(item);
+                    const guideGrit =
+                      item.title || item.outcome || item.raw_intent;
+                    const gritLine = guideGrit
+                      ? `${cover.emoji} ${guideGrit}`
+                      : null;
+                    const approx = formatApproxMin(action.estimate_min, t);
                     const reasonLabel =
                       isFocus && focusReason
                         ? t(REASON_I18N[focusReason])
@@ -258,39 +283,61 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
                         ]}
                         onPress={() => openSession(item)}
                       >
-                        <View style={styles.cardHeader}>
-                          <Text style={styles.contextMark}>{cover.emoji}</Text>
-                          <View style={styles.cardHeaderText}>
-                            <View style={styles.titleRow}>
+                        <View style={styles.titleRow}>
+                          <Text
+                            style={[
+                              styles.sessionTitle,
+                              { color: colors.text },
+                            ]}
+                            numberOfLines={2}
+                          >
+                            {action.title}
+                          </Text>
+                          {reasonLabel ? (
+                            <Text
+                              style={[
+                                styles.reasonChip,
+                                {
+                                  color: colors.primary,
+                                  backgroundColor: colors.surfaceMuted,
+                                },
+                              ]}
+                            >
+                              {reasonLabel}
+                            </Text>
+                          ) : null}
+                        </View>
+                        <HeroBlockPreview action={action} colors={colors} />
+                        {approx || gritLine ? (
+                          <View
+                            style={[
+                              styles.cardFooter,
+                              { borderTopColor: colors.border },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.footerLeft,
+                                { color: colors.textMuted },
+                              ]}
+                              numberOfLines={1}
+                            >
+                              {approx ?? ''}
+                            </Text>
+                            {gritLine ? (
                               <Text
                                 style={[
-                                  styles.sessionTitle,
-                                  { color: colors.text },
+                                  styles.footerGrit,
+                                  { color: colors.textMuted },
                                 ]}
-                                numberOfLines={2}
+                                numberOfLines={1}
+                                ellipsizeMode="tail"
                               >
-                                {action.title}
+                                {gritLine}
                               </Text>
-                              {reasonLabel ? (
-                                <Text
-                                  style={[
-                                    styles.reasonChip,
-                                    {
-                                      color: colors.primary,
-                                      backgroundColor: colors.surfaceMuted,
-                                    },
-                                  ]}
-                                >
-                                  {reasonLabel}
-                                </Text>
-                              ) : null}
-                            </View>
-                            <HeroBlockPreview
-                              action={action}
-                              colors={colors}
-                            />
+                            ) : null}
                           </View>
-                        </View>
+                        ) : null}
                       </Pressable>
                     );
                   }}
@@ -402,22 +449,6 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.sm,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-  },
-  contextMark: {
-    fontSize: 18,
-    lineHeight: 24,
-    width: 26,
-    textAlign: 'center',
-    marginTop: 2,
-  },
-  cardHeaderText: {
-    flex: 1,
-    minWidth: 0,
-  },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -433,5 +464,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: radii.pill,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  footerLeft: {
+    ...typography.caption,
+    flexShrink: 0,
+  },
+  footerGrit: {
+    ...typography.caption,
+    flex: 1,
+    minWidth: 0,
+    textAlign: 'right',
   },
 });

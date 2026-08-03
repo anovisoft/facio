@@ -151,6 +151,10 @@ export default {
     pluginsError: 'Не удалось собрать инструменты',
     error: 'Не удалось обновить шаг',
     checklistRequired: 'Отметьте все пункты списка (осталось {{count}})',
+    checklistConfirmTitle: 'Завершить сессию?',
+    checklistConfirmMessage:
+      '{{count}} не отмечены — проставить и завершить?',
+    checklistConfirmYes: 'Проставить и завершить',
     allDone: 'Путь пройден',
     waitingTitle: 'На сегодня всё',
     opensToday: 'Следующий шаг открывается сегодня.',

@@ -38,26 +38,43 @@ Within a tier: `updated_at` descending. No pin Focus. No time-of-day / streak / 
 
 `rankContinueSessions(projects) → { ordered, focus, reason }` — first card is Focus; optional reason chip (`overdue` / `lastDay` / `short`) only when a top-tier signal fired.
 
+## Continue card grid (PO locked)
+
+```text
+Session title                         [Focus chip if any]
+Hero fragment (≤2–3 lines, shared rhythm)
+────────────────────────────────────────
+≈N мин                 🍝 Guide grit
+```
+
+| Zone | Rule |
+|------|------|
+| **Session title** | Hero of the card (`next_action.title`). No Guide emoji beside it. |
+| **Focus chip** | Title row, right; muted/small; only when a top-tier Focus reason fired. |
+| **Hero Preview** | Read-only fragment under title — checklist ≤3 items (column, not wrap); stepper/timeline/timer one compact line. |
+| **Footer** | Single muted row: left `≈N мин` (if `estimate_min`); right `emoji + Guide grit` (`title \|\| outcome \|\| raw_intent`, 1-line ellipsis). |
+| **Not on card** | Cover difficulty · duration; Guide emoji next to title; separate grit-only bottom-right line. |
+
+Emoji for grit comes from `resolveGuideCover` (`coverDisplay.ts`). Entire card Pressable → Session.
+
 ## Hero Preview (`heroPreview/`)
 
-Read-only fragment of the current Session Block for Continue. **Not** a shrunk Full Block — separate views; do **not** import interactive plugin controls from `ActionPlugins`. Entire card Pressable → Session (Full Block).
+Read-only fragment of the current Session Block for Continue. **Not** a shrunk Full Block — separate views; do **not** import interactive plugin controls from `ActionPlugins`. ≈min is owned by the **card footer**, not the Hero body.
 
 | Block kind | Hero shows |
 |------------|------------|
-| **checklist** | Session title + up to 5 items with ☐/☑ + `N/M` + ≈min |
-| **stepper** | Session title + beat hint `1/N · kind · counter|clock` (+ beat title) + ≈min |
-| **timeline** | Session title + duration clock · marker count + ≈min |
-| **timer** | Session title + first timer clock · title or timer count + ≈min |
-| **fallback** | Session title + block type label (intervals / counter / hints / plain) + ≈min |
-
-Guide Cover emoji is a **small context mark** only; the card object is the **Session** (`next_action.title`), not Guide Cover meta.
+| **checklist** | Up to 3 ☐/☑ items (column) + `N/M` |
+| **stepper** | One line: beat hint `1/N · kind · counter\|clock` (+ beat title) |
+| **timeline** | One line: duration clock · marker count |
+| **timer** | One line: first timer clock · title or timer count |
+| **fallback** | Block type label (intervals / counter / hints / plain) |
 
 Detection: `detectHeroBlockKind` — stepper → timeline → timers → checklist → fallback.  
-Helpers: `formatApproxMin`, `formatClock`. Entry: `HeroBlockPreview`.
+Helpers: `formatApproxMin` (footer), `formatClock`. Entry: `HeroBlockPreview`.
 
 ## Cover display
 
-Guide Cover fields (`cover_emoji`, `cover_difficulty`, `cover_duration_summary`) persist on the API. Continue uses emoji as a thin context mark; Cover difficulty · duration belong on **Guide page** (`GuideCoverHeader` + contract glance + Compact roadmap — Slice C), not as Continue/drawer card bodies. When emoji is null, `coverDisplay.ts` falls back from `domain` / title. Server fills Cover on Path apply via heuristic (D7 fallback — no Anthropic grammar expansion).
+Guide Cover fields (`cover_emoji`, `cover_difficulty`, `cover_duration_summary`) persist on the API. Continue uses emoji only in the **footer grit** (`emoji + title`); Cover difficulty · duration belong on **Guide page** (`GuideCoverHeader` + contract glance + Compact roadmap — Slice C), not as Continue/drawer card bodies. When emoji is null, `coverDisplay.ts` falls back from `domain` / title. Server fills Cover on Path apply via heuristic (D7 fallback — no Anthropic grammar expansion).
 
 ## Guide trust surface (Slice C)
 
@@ -78,3 +95,7 @@ Guide Cover fields (`cover_emoji`, `cover_difficulty`, `cover_duration_summary`)
 - ≡ (`GlassIconButton variant="header"`) → Guide with `fromSession: true` (swipe-up removed). Back from Guide = sticky **Back to Session** / stack back.
 - Same-day Block runtime: MMKV/`useSessionStore.blockRuntimeByActionId` keyed by `actionId` + local date (D2). Stepper beatIndex (+ rest wall-clock) hydrates on remount; cross-day expires. Counters remain server-backed.
 - Stepper: Back + Next; rest cleared on step back.
+
+## Offline (future)
+
+Execute Continue + Session from local cache without a blocking spinner is a **future** target — not built in 0.1 polish (needs offline cache design).

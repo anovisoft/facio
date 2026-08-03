@@ -1,4 +1,4 @@
-/** Format Session estimate for Hero Preview footer (read-only). */
+/** Format Session estimate for Continue card footer (≈N min). */
 
 export function formatApproxMin(
   estimateMin: number | null | undefined,

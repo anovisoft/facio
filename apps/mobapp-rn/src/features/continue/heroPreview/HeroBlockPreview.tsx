@@ -2,6 +2,7 @@
  * Hero Preview — read-only fragment of Session Block state for Continue.
  * Not a shrunk Full Block: no toggles, Start, or plugin controls.
  * Data from ActionResponse / next_action only.
+ * ≈min lives in the card footer (ContinueScreen), not here.
  */
 
 import React from 'react';
@@ -11,14 +12,12 @@ import { useTranslation } from 'react-i18next';
 import type { ActionResponse, StepperBeatResponse } from '@/api/types';
 import { blockTypeLabel } from '@/features/continue/blockTypeLabel';
 import { detectHeroBlockKind } from '@/features/continue/heroPreview/detectBlockKind';
-import {
-  formatApproxMin,
-  formatClock,
-} from '@/features/continue/heroPreview/formatEstimate';
+import { formatClock } from '@/features/continue/heroPreview/formatEstimate';
 import type { ColorPalette } from '@/theme';
 import { spacing, typography } from '@/theme';
 
-const CHECKLIST_PREVIEW_MAX = 5;
+/** Prefer 3 items — shared ~2–3 line rhythm; avoid 5-item wrap chaos. */
+const CHECKLIST_PREVIEW_MAX = 3;
 
 type Props = {
   action: ActionResponse;
@@ -54,7 +53,7 @@ function ChecklistHero({
 
   return (
     <View style={styles.body}>
-      <View style={styles.checkRow}>
+      <View style={styles.checkCol}>
         {preview.map((item) => (
           <Text
             key={item.id}
@@ -86,7 +85,7 @@ function StepperHero({
     <View style={styles.body}>
       <Text
         style={[styles.fragment, { color: colors.textSecondary }]}
-        numberOfLines={2}
+        numberOfLines={1}
       >
         {beatHint(current, 0, beats.length)}
         {current.title ? ` · ${current.title}` : ''}
@@ -115,7 +114,7 @@ function TimelineHero({
     <View style={styles.body}>
       <Text
         style={[styles.fragment, { color: colors.textSecondary }]}
-        numberOfLines={2}
+        numberOfLines={1}
       >
         {markerLine ? `${clock} · ${markerLine}` : clock}
       </Text>
@@ -143,7 +142,7 @@ function TimerHero({
     <View style={styles.body}>
       <Text
         style={[styles.fragment, { color: colors.textSecondary }]}
-        numberOfLines={2}
+        numberOfLines={1}
       >
         {clock}
         {more ? ` · ${more}` : ''}
@@ -175,12 +174,10 @@ function FallbackHero({
 
 /**
  * Read-only Hero body under the Session title.
- * Parent owns emoji / title / Focus chip / Pressable → Session.
+ * Parent owns title / Focus chip / footer (≈min + Guide grit) / Pressable → Session.
  */
 export function HeroBlockPreview({ action, colors }: Props) {
-  const { t } = useTranslation();
   const kind = detectHeroBlockKind(action);
-  const approx = formatApproxMin(action.estimate_min, t);
 
   let body: React.ReactNode = null;
   switch (kind) {
@@ -205,16 +202,7 @@ export function HeroBlockPreview({ action, colors }: Props) {
     }
   }
 
-  return (
-    <View>
-      {body}
-      {approx ? (
-        <Text style={[styles.approx, { color: colors.textMuted }]}>
-          {approx}
-        </Text>
-      ) : null}
-    </View>
-  );
+  return <View>{body}</View>;
 }
 
 const styles = StyleSheet.create({
@@ -222,14 +210,11 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     gap: 2,
   },
-  checkRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
+  checkCol: {
+    gap: 2,
   },
   checkItem: {
     ...typography.caption,
-    maxWidth: '100%',
   },
   progress: {
     ...typography.label,
@@ -237,9 +222,5 @@ const styles = StyleSheet.create({
   },
   fragment: {
     ...typography.caption,
-  },
-  approx: {
-    ...typography.caption,
-    marginTop: spacing.xs,
   },
 });
