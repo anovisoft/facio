@@ -17,16 +17,13 @@ import { useTranslation } from 'react-i18next';
 
 import { ApiError, type ProjectSummary } from '@/api/types';
 import { listProjects } from '@/api/projects';
-import { blockTypeLabel } from '@/features/continue/blockTypeLabel';
-import {
-  coverMetaLine,
-  resolveGuideCover,
-} from '@/features/continue/coverDisplay';
+import { resolveGuideCover } from '@/features/continue/coverDisplay';
 import {
   rankContinueSessions,
   type FocusReason,
 } from '@/features/continue/focusEngine';
 import { GuidesDrawer } from '@/features/continue/GuidesDrawer';
+import { HeroBlockPreview } from '@/features/continue/heroPreview';
 import {
   EDGE_WIDTH,
   useGuidesRevealGesture,
@@ -34,7 +31,10 @@ import {
 import type { RootScreenProps } from '@/navigation/types';
 import { trackProjectSwitched } from '@/services/beacons';
 import { GlassFab } from '@/shared/ui/GlassFab';
-import { GlassIconButton } from '@/shared/ui/GlassIconButton';
+import {
+  GLASS_ICON_CHIP_SIZE,
+  GlassIconButton,
+} from '@/shared/ui/GlassIconButton';
 import { PrimaryButton } from '@/shared/ui/PrimaryButton';
 import { SafeScreen } from '@/shared/ui/SafeScreen';
 import { useSessionStore } from '@/store';
@@ -57,11 +57,8 @@ const REASON_I18N: Record<FocusReason, string> = {
 
 /**
  * Facio 0.1 Continue (home).
- * Slice B: Focus Engine ranks Sessions; Cover glance on cards.
- *
- * Guides sits under this screen; opening translates the main layer right.
- * Peek = translateX + radius + shadow — no scale.
- * Reveal gesture: see useGuidesRevealGesture.ts (px translateX, edge strip open).
+ * Slice B2: Focus-ranked Hero Previews (attention queue only).
+ * Guides drawer = compact inventory under this screen.
  */
 export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
   const { t } = useTranslation();
@@ -90,6 +87,7 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
 
   const setLastProjectId = useSessionStore((s) => s.setLastProjectId);
   const [sessions, setSessions] = useState<ProjectSummary[]>([]);
+  const [openGuideCount, setOpenGuideCount] = useState(0);
   const [focusId, setFocusId] = useState<string | null>(null);
   const [focusReason, setFocusReason] = useState<FocusReason | null>(null);
   const [loading, setLoading] = useState(true);
@@ -103,6 +101,7 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
       setError(null);
       try {
         const rows = await listProjects('open');
+        setOpenGuideCount(rows.length);
         const ranked = rankContinueSessions(rows);
         setSessions(ranked.ordered);
         setFocusId(ranked.focus?.id ?? null);
@@ -130,6 +129,11 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
     trackProjectSwitched(guide.id);
     navigation.push('Session', { projectId: guide.id });
   };
+
+  const emptyCopy =
+    openGuideCount > 0
+      ? t('continue.emptyAttention')
+      : t('continue.empty');
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -168,9 +172,9 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
                 <GlassIconButton
                   onPress={openDrawer}
                   accessibilityLabel={t('continue.openGuides')}
-                  size={36}
+                  size={GLASS_ICON_CHIP_SIZE}
                 >
-                  <Ionicons name="menu-outline" size={20} color={colors.text} />
+                  <Ionicons name="menu-outline" size={22} color={colors.text} />
                 </GlassIconButton>
                 <Text style={[styles.title, { color: colors.text }]}>
                   {t('continue.title')}
@@ -216,28 +220,29 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
                       <Text
                         style={[styles.muted, { color: colors.textSecondary }]}
                       >
-                        {t('continue.empty')}
+                        {emptyCopy}
                       </Text>
                       <PrimaryButton
-                        label={t('continue.emptyCta')}
-                        onPress={() => navigation.navigate('Create')}
+                        label={
+                          openGuideCount > 0
+                            ? t('continue.emptyAttentionCta')
+                            : t('continue.emptyCta')
+                        }
+                        onPress={() =>
+                          openGuideCount > 0
+                            ? openDrawer()
+                            : navigation.navigate('Create')
+                        }
                         style={styles.emptyCta}
                       />
                     </View>
                   }
                   style={styles.listFlex}
                   renderItem={({ item }) => {
+                    const action = item.next_action;
+                    if (!action) return null;
                     const isFocus = item.id === focusId;
                     const cover = resolveGuideCover(item);
-                    const meta = coverMetaLine(cover);
-                    const block = blockTypeLabel(item.next_action);
-                    const statusLine = item.next_action?.title
-                      ? item.next_action.title
-                      : item.peek_action?.title
-                        ? t('continue.waiting', {
-                            title: item.peek_action.title,
-                          })
-                        : t('continue.noSession');
                     const reasonLabel =
                       isFocus && focusReason
                         ? t(REASON_I18N[focusReason])
@@ -254,17 +259,17 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
                         onPress={() => openSession(item)}
                       >
                         <View style={styles.cardHeader}>
-                          <Text style={styles.coverEmoji}>{cover.emoji}</Text>
+                          <Text style={styles.contextMark}>{cover.emoji}</Text>
                           <View style={styles.cardHeaderText}>
                             <View style={styles.titleRow}>
                               <Text
                                 style={[
-                                  styles.cardTitle,
+                                  styles.sessionTitle,
                                   { color: colors.text },
                                 ]}
                                 numberOfLines={2}
                               >
-                                {item.title || item.outcome || item.raw_intent}
+                                {action.title}
                               </Text>
                               {reasonLabel ? (
                                 <Text
@@ -280,28 +285,12 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
                                 </Text>
                               ) : null}
                             </View>
-                            {meta ? (
-                              <Text
-                                style={[
-                                  styles.coverMeta,
-                                  { color: colors.textSecondary },
-                                ]}
-                                numberOfLines={1}
-                              >
-                                {meta}
-                              </Text>
-                            ) : null}
+                            <HeroBlockPreview
+                              action={action}
+                              colors={colors}
+                            />
                           </View>
                         </View>
-                        <Text
-                          style={[
-                            styles.cardMeta,
-                            { color: colors.textSecondary },
-                          ]}
-                          numberOfLines={2}
-                        >
-                          {block ? `${block} · ${statusLine}` : statusLine}
-                        </Text>
                       </Pressable>
                     );
                   }}
@@ -418,11 +407,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: spacing.sm,
   },
-  coverEmoji: {
-    fontSize: 28,
-    lineHeight: 34,
-    width: 36,
+  contextMark: {
+    fontSize: 18,
+    lineHeight: 24,
+    width: 26,
     textAlign: 'center',
+    marginTop: 2,
   },
   cardHeaderText: {
     flex: 1,
@@ -433,7 +423,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: spacing.sm,
   },
-  cardTitle: {
+  sessionTitle: {
     ...typography.subtitle,
     flex: 1,
   },
@@ -443,13 +433,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: radii.pill,
-  },
-  coverMeta: {
-    ...typography.caption,
-    marginTop: 2,
-  },
-  cardMeta: {
-    ...typography.caption,
-    marginTop: spacing.xs,
   },
 });

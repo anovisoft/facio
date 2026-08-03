@@ -14,7 +14,7 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 | Prototype engine | `apps/` ≈ `docs/next` slices 1–5 **accepted** |
 | Carbonara dogfood | OK (timeline → finish → Repeat) |
 | Fitness multi-day E2E | Deferred — needs calendar week or **dev time travel** |
-| Facio 0.1 code shell | **A+B accepted**. **Next = Slice B2** (Hero Preview + compact drawer) |
+| Facio 0.1 code shell | **A+B+B2 accepted**. Hotfix burger+#lastDay **done**; next **Slice C** |
 | Instant Answer | Off Create happy path (D5); screen may remain registered dead |
 
 ---
@@ -109,7 +109,17 @@ Prefer **aliases / new screens** over big-bang DB rename (D6).
 | Focus Engine v0 | `features/continue/focusEngine.ts` — D1 tiers; `README.md` |
 | Cover columns | `projects.cover_emoji` / `cover_difficulty` / `cover_duration_summary` (Alembic `012`) |
 | Cover fill | Heuristic on `apply_contract` (`app/services/cover.py`) — no Anthropic grammar expansion |
-| Cover UI | Today still on Continue + drawer cards — **B2 will move drawer to compact; Continue → Hero Preview** |
+| Cover UI | B2: Continue = Hero Preview; drawer = compact mark+title (Cover meta not card body) |
+
+### Slice B2 — what landed (code done, await PO dogfood)
+
+| Piece | Where |
+|-------|--------|
+| Hero Preview | `features/continue/heroPreview/` — checklist / stepper / timeline / timer + fallback |
+| Attention filter | `focusEngine.ts` `needsAttention` — waiting Guides off Continue |
+| Continue cards | `ContinueScreen.tsx` — Session Hero + Focus chip; Guide emoji = small mark |
+| Drawer compact | `GuidesDrawer.tsx` — mark + title + thin draft/waiting; no Cover twin cards |
+| Contract doc | `features/continue/README.md` |
 
 ### Device / API landmine
 
@@ -126,7 +136,7 @@ Prefer **aliases / new screens** over big-bang DB rename (D6).
 - Working gesture: `translateX` px + spring; **`useNativeDriver: false`**.  
 - If broken → fix `useGuidesRevealGesture.ts`, don’t stack patches in ContinueScreen.  
 - Stay on **Expo RN**.  
-- **PO (2026-08-03):** drawer must become **compact nav list** (B2) — current Cover-card rows twin Continue.
+- **PO (2026-08-03):** drawer = **compact nav list** (B2 code) — mark + title + thin status; not Cover twin of Continue.
 
 ### Success systems that must not be “later polish”
 
@@ -149,6 +159,24 @@ From [11](./11-success-systems.md): Focus Engine, Session presentations (Hero/Fu
 
 **Locked (not open):** Hero Preview read-only in 0.1; drawer compact vs Continue Hero; naming Hero/Full/Compact (not S/M/L).
 
+### Deferred / parked (PO 2026-08-03 — do not invent)
+
+| Item | Note | Reopen when |
+|------|------|-------------|
+| Auto AI after measure | Background plan modernize post-stepper measure | After E / explicit PO scope — not shell |
+| Guides search | Drawer search | Later polish |
+| Archive → status tags | Maybe replace Archive with status tags for repeat-cook cases | PO decision; Repeat path = Slice F |
+| Full UI chrome audit | Unify all controls beyond menu chips | After D Session recompose |
+
+Tracked also in `docs/polishing bugs.txt`.
+
+### Hotfix after B2 (**done**)
+
+| # | Fix |
+|---|-----|
+| 1 | Unify glass menu size (`GLASS_ICON_CHIP_SIZE = 40`); Session header → GlassIconButton + Ionicons |
+| 4 | `lastDay` chip only if `horizon_days > 1` AND unlock is last day |
+
 ---
 
 ## Slice status
@@ -157,9 +185,9 @@ From [11](./11-success-systems.md): Focus Engine, Session presentations (Hero/Fu
 |-------|------|--------|
 | A | IA shell (nav: Continue / Session / Guide / Create / drawer) | **accepted** (PO 2026-08-03) |
 | B | Focus Engine v0 + Cover on cards | **accepted** (PO 2026-08-03) |
-| B2 | Hero Preview + drawer compact | **next** |
-| C | Guide Explore trust (roadmap + Commitment; fold Draft) | pending |
-| D | Session atom + Session complete beat + swipe/≡ | pending |
+| B2 | Hero Preview + drawer compact | **accepted** (PO 2026-08-03) |
+| C | Guide Explore trust (roadmap + Commitment; fold Draft) | **next** |
+| D | Session atom + Session complete beat + swipe/≡ | pending — **carries polishing #2 #6 #7** |
 | E | Repair Diff + Undo | pending |
 | F | Identity + Finish Experience | pending |
 | G | Copy/i18n + kill Instant Answer + Morning Summary | pending |
@@ -180,8 +208,8 @@ Do not start Facio 0.1 by rewriting the backend runtime. Shell first. Uncommitte
 
 ## After summarization — PM start here
 
-1. Read [README](./README.md) → [11](./11-success-systems.md) (§9 presentations) → **this file** → [14](./14-impl-plan.md)  
-2. A+B **accepted**. Next dispatch: **Slice B2** (Hero Preview + compact drawer).  
-3. B2 brief: read-only Hero; drawer compact; idle Guides off Continue; no Full Block on home; no D1–D8 invention.  
+1. Read [README](./README.md) → [11](./11-success-systems.md) (§9) → **this file** → [14](./14-impl-plan.md)  
+2. A+B+B2 **accepted**. Hotfix burger/lastDay **done** → dispatch **Slice C**.  
+3. Slice D must include polishing bugs #2 (stepper back), #6 (persist state), #7 (Session recompose) — see `docs/polishing bugs.txt`.  
 4. Do **not** reopen Guides gesture unless PO reports regress.  
-5. On B2 accept → Slice **C**.
+5. Do **not** invent deferred #3 (auto AI measure) or #5 (archive/tags/search).

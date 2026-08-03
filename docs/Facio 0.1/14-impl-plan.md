@@ -94,7 +94,13 @@ Canon: [11](./11-success-systems.md). Process: [12](./12-process.md).
 
 **Non-goals:** Pencil hub, Morning Summary.
 
-**PO dogfood:** Finish carbonara Session → feel complete → land on Continue.
+**Carry from polishing bugs** (`docs/polishing bugs.txt` — PO 2026-08-03):
+
+- Stepper **step back** (bug #2)
+- Persist stepper / Session Block state across leave→return same day (bug #6) — aligns with D2
+- Recompose Session layout (bug #7): title → day N/M (if multi-day) → large Full Block (bigger controls/icons) → description / “why today” lower (copy TBD)
+
+**PO dogfood:** Finish carbonara Session → feel complete → land on Continue; leave mid-stepper → return same day → state kept; Session chrome matches Continue glass menu size.
 
 ---
 

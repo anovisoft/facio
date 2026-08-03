@@ -40,6 +40,12 @@ export default {
     reasonOverdue: 'Overdue',
     reasonLastDay: 'Last day',
     reasonShort: '5 min',
+    approxMin: '≈{{count}} min',
+    heroMarkers: '{{count}} markers',
+    heroTimers: '{{count}} timers',
+    waitingStatus: 'Waiting',
+    emptyAttention: 'Nothing needs attention right now. Open Guides or create a new one.',
+    emptyAttentionCta: 'Open Guides',
   },
   instantAnswer: {
     title: 'Answer',

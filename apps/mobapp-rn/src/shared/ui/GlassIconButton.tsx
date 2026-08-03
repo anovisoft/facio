@@ -3,11 +3,14 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { GlassSurface } from '@/shared/ui/GlassSurface';
 
+/** Canonical diameter for header/menu glass chips (Continue ☰, Session ≡, drawer ⚙). */
+export const GLASS_ICON_CHIP_SIZE = 40;
+
 type Props = {
   onPress: () => void;
   accessibilityLabel: string;
   children: ReactNode;
-  /** Diameter; default slightly smaller than GlassFab (58). */
+  /** Diameter; default = GLASS_ICON_CHIP_SIZE (slightly smaller than GlassFab 58). */
   size?: number;
 };
 
@@ -16,7 +19,7 @@ export function GlassIconButton({
   onPress,
   accessibilityLabel,
   children,
-  size = 40,
+  size = GLASS_ICON_CHIP_SIZE,
 }: Props) {
   return (
     <Pressable

@@ -40,6 +40,12 @@ export default {
     reasonOverdue: 'Просрочено',
     reasonLastDay: 'Последний день',
     reasonShort: '5 мин',
+    approxMin: '≈{{count}} мин',
+    heroMarkers: '{{count}} меток',
+    heroTimers: '{{count}} таймеров',
+    waitingStatus: 'Ждёт',
+    emptyAttention: 'Сейчас ничего не требует внимания. Откройте Guides или создайте новый.',
+    emptyAttentionCta: 'Открыть Guides',
   },
   instantAnswer: {
     title: 'Ответ',

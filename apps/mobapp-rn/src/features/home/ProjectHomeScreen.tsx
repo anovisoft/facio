@@ -12,6 +12,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
@@ -41,6 +42,10 @@ import {
   TimerStack,
 } from '@/shared/ui/ActionPlugins';
 import { ChecklistList } from '@/shared/ui/ChecklistList';
+import {
+  GLASS_ICON_CHIP_SIZE,
+  GlassIconButton,
+} from '@/shared/ui/GlassIconButton';
 import { PrimaryButton } from '@/shared/ui/PrimaryButton';
 import { SafeScreen } from '@/shared/ui/SafeScreen';
 import { WhyHero } from '@/shared/ui/WhyHero';
@@ -83,14 +88,13 @@ export function ProjectHomeScreen({
         project?.paraphrase ||
         t('home.today'),
       headerRight: () => (
-        <Pressable
+        <GlassIconButton
           onPress={() => navigation.navigate('Guide', { projectId })}
           accessibilityLabel={t('home.menuPath')}
-          hitSlop={10}
-          style={{ paddingHorizontal: spacing.sm }}
+          size={GLASS_ICON_CHIP_SIZE}
         >
-          <Text style={{ fontSize: 22, color: colors.text }}>☰</Text>
-        </Pressable>
+          <Ionicons name="menu-outline" size={22} color={colors.text} />
+        </GlassIconButton>
       ),
     });
   }, [

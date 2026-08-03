@@ -1,27 +1,60 @@
 # Continue (Facio 0.1)
 
-Home = **Continue**, not the Projects list.
+Home = **Continue** — Focus-ranked **Hero Previews** of Sessions that need attention.  
+Guides drawer = **compact inventory**, not a second Continue.
 
-## Guides drawer
+Product stack: Guide = path · Continue = focus · Session = Full Block execute · Drawer = nav.
 
-ChatGPT-style under-sheet: Guides sits behind Continue; opening translates the main layer right (~82%). Open via ☰ or a dedicated ~28px left-edge pan strip; close via swipe left on Continue (main-layer pan) or tap peek. Motion is finger-follow on `translateX` (px) with inertial spring settle (fling or midpoint) — see `useGuidesRevealGesture.ts`. Micro-moves ignored via `activeOffsetX`. No RN `Modal`. Guides content is sized to the reveal width; Continue peeks as a rounded card. Theme lives in Settings (gear in Guides footer), not inline in the drawer.
+## Guides drawer (compact)
+
+ChatGPT-style under-sheet: Guides sits behind Continue; opening translates the main layer right (~82%). Open via ☰ or a dedicated ~28px left-edge pan strip; close via swipe left on Continue (main-layer pan) or tap peek. Motion is finger-follow on `translateX` (px) with inertial spring settle — see `useGuidesRevealGesture.ts`. No RN `Modal`.
+
+**B2 compact rule:** each row is emoji/mark + title (+ thin `Draft` / `Waiting` status). No Cover difficulty · duration twin cards. Archive + Settings gear stay in the footer. Tap → Guide / GuideExplore (unchanged IA).
+
+## Attention filter (B2)
+
+Continue shows only Sessions that **need attention**:
+
+- `status === 'active'` **and** executable `next_action != null`
+- Idle / waiting Guides (`next_action == null`, peek-only) → **drawer only**
+- Drafts → drawer only
+
+Empty Continue while open Guides exist in the drawer is OK (`continue.emptyAttention`).
+
+`needsAttention(project)` + `rankContinueSessions` in `focusEngine.ts`.
 
 ## Focus Engine v0 (`focusEngine.ts`)
 
-Named product component. Ranking is deterministic (D1 in `docs/Facio 0.1/13-continuity.md`):
+Named product component. Ranking is deterministic (D1 in `docs/Facio 0.1/13-continuity.md`) over the **attention set**:
 
 | Priority | Signal | Predicate |
 |----------|--------|-----------|
 | 1 | Overdue | `next_action.day_offset < unlocked_day_index` (catch-up debt) |
-| 2 | Last day | `unlocked_day_index >= cycle.horizon_days - 1` |
+| 2 | Last day | `horizon_days > 1` AND `unlocked_day_index >= horizon_days - 1` (1-day Guides excluded) |
 | 3 | Short ≤5 min | `next_action.estimate_min != null && <= 5` |
-| 4 | Others | Active Guides with executable `next_action` |
-| 5 | Waiting | Active Guides without `next_action` (after all executable) |
+| 4 | Others | Remaining attention candidates |
 
-Within a tier: `updated_at` descending. Drafts stay drawer-only. No pin Focus. No time-of-day / streak / ML weights in v0.
+Within a tier: `updated_at` descending. No pin Focus. No time-of-day / streak / ML weights in v0.
 
 `rankContinueSessions(projects) → { ordered, focus, reason }` — first card is Focus; optional reason chip (`overdue` / `lastDay` / `short`) only when a top-tier signal fired.
 
+## Hero Preview (`heroPreview/`)
+
+Read-only fragment of the current Session Block for Continue. **Not** a shrunk Full Block — separate views; do **not** import interactive plugin controls from `ActionPlugins`. Entire card Pressable → Session (Full Block).
+
+| Block kind | Hero shows |
+|------------|------------|
+| **checklist** | Session title + up to 5 items with ☐/☑ + `N/M` + ≈min |
+| **stepper** | Session title + beat hint `1/N · kind · counter|clock` (+ beat title) + ≈min |
+| **timeline** | Session title + duration clock · marker count + ≈min |
+| **timer** | Session title + first timer clock · title or timer count + ≈min |
+| **fallback** | Session title + block type label (intervals / counter / hints / plain) + ≈min |
+
+Guide Cover emoji is a **small context mark** only; the card object is the **Session** (`next_action.title`), not Guide Cover meta.
+
+Detection: `detectHeroBlockKind` — stepper → timeline → timers → checklist → fallback.  
+Helpers: `formatApproxMin`, `formatClock`. Entry: `HeroBlockPreview`.
+
 ## Cover display
 
-Guide Cover fields (`cover_emoji`, `cover_difficulty`, `cover_duration_summary`) persist on the API. Continue cards and Guides drawer rows show emoji + difficulty · duration. When fields are null (older Guides), `coverDisplay.ts` falls back from `domain` / title / `horizon`. Server fills Cover on Path apply via heuristic (no Anthropic grammar expansion — D7 fallback path).
+Guide Cover fields (`cover_emoji`, `cover_difficulty`, `cover_duration_summary`) persist on the API. Continue uses emoji as a thin context mark; Cover difficulty · duration belong on Guide page / archive (Slice C), not as Continue/drawer card bodies. When emoji is null, `coverDisplay.ts` falls back from `domain` / title. Server fills Cover on Path apply via heuristic (D7 fallback — no Anthropic grammar expansion).

@@ -14,13 +14,13 @@ import type { NavigationProp } from '@react-navigation/native';
 
 import { ApiError, type ProjectSummary } from '@/api/types';
 import { listProjects } from '@/api/projects';
-import {
-  coverMetaLine,
-  resolveGuideCover,
-} from '@/features/continue/coverDisplay';
+import { resolveGuideCover } from '@/features/continue/coverDisplay';
 import type { RootStackParamList } from '@/navigation/types';
 import { trackProjectSwitched } from '@/services/beacons';
-import { GlassIconButton } from '@/shared/ui/GlassIconButton';
+import {
+  GLASS_ICON_CHIP_SIZE,
+  GlassIconButton,
+} from '@/shared/ui/GlassIconButton';
 import { PrimaryButton } from '@/shared/ui/PrimaryButton';
 import { useSessionStore } from '@/store';
 import { useTheme } from '@/theme/ThemeContext';
@@ -36,10 +36,10 @@ type Props = {
 };
 
 /**
- * Guides index sheet (Slice A) — sits UNDER Continue.
- * Selecting a Guide opens Guide / GuideExplore — not Session (IA: drawer → Guide page).
+ * Guides inventory (Slice B2) — compact navigation under Continue.
+ * Row = emoji/mark + title (+ thin draft/waiting status). No Cover twin cards.
+ * Selecting a Guide opens Guide / GuideExplore — not Session.
  * Open/close motion lives in ContinueScreen (main layer slides right).
- * Content column is sized to the reveal width so cards never sit under the peek.
  */
 export function GuidesDrawer({
   contentWidth,
@@ -140,55 +140,40 @@ export function GuidesDrawer({
           }
           renderItem={({ item }) => {
             const cover = resolveGuideCover(item);
-            const meta = coverMetaLine(cover);
+            const waiting =
+              item.status === 'active' && item.next_action == null;
+            const statusLabel =
+              item.status === 'draft'
+                ? t('continue.draft')
+                : waiting
+                  ? t('continue.waitingStatus')
+                  : null;
             return (
               <Pressable
-                style={[
-                  styles.card,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
-                  },
-                ]}
+                style={styles.row}
                 onPress={() => openGuide(item)}
+                accessibilityRole="button"
               >
-                <View style={styles.cardTop}>
-                  <Text style={styles.coverEmoji}>{cover.emoji}</Text>
-                  <View style={styles.cardBody}>
-                    <View style={styles.titleRow}>
-                      <Text
-                        style={[styles.cardTitle, { color: colors.text }]}
-                        numberOfLines={2}
-                      >
-                        {item.title || item.outcome || item.raw_intent}
-                      </Text>
-                      {item.status === 'draft' ? (
-                        <Text
-                          style={[
-                            styles.badge,
-                            {
-                              color: colors.primary,
-                              backgroundColor: colors.surfaceMuted,
-                            },
-                          ]}
-                        >
-                          {t('continue.draft')}
-                        </Text>
-                      ) : null}
-                    </View>
-                    {meta ? (
-                      <Text
-                        style={[
-                          styles.cardSub,
-                          { color: colors.textSecondary },
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {meta}
-                      </Text>
-                    ) : null}
-                  </View>
-                </View>
+                <Text style={styles.mark}>{cover.emoji}</Text>
+                <Text
+                  style={[styles.rowTitle, { color: colors.text }]}
+                  numberOfLines={1}
+                >
+                  {item.title || item.outcome || item.raw_intent}
+                </Text>
+                {statusLabel ? (
+                  <Text
+                    style={[
+                      styles.status,
+                      {
+                        color: colors.textMuted,
+                        backgroundColor: colors.surfaceMuted,
+                      },
+                    ]}
+                  >
+                    {statusLabel}
+                  </Text>
+                ) : null}
               </Pressable>
             );
           }}
@@ -209,7 +194,7 @@ export function GuidesDrawer({
         <GlassIconButton
           onPress={goSettings}
           accessibilityLabel={t('settings.open')}
-          size={40}
+          size={GLASS_ICON_CHIP_SIZE}
         >
           <Ionicons name="settings-outline" size={22} color={colors.text} />
         </GlassIconButton>
@@ -259,46 +244,30 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
   },
-  card: {
-    borderRadius: radii.md,
-    borderWidth: 1,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  cardTop: {
+  row: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: spacing.sm,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.xs,
   },
-  coverEmoji: {
-    fontSize: 24,
-    lineHeight: 30,
-    width: 32,
+  mark: {
+    fontSize: 18,
+    lineHeight: 22,
+    width: 26,
     textAlign: 'center',
   },
-  cardBody: {
+  rowTitle: {
+    ...typography.body,
     flex: 1,
     minWidth: 0,
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-  },
-  cardTitle: {
-    ...typography.subtitle,
-    flex: 1,
-  },
-  badge: {
+  status: {
     ...typography.label,
     overflow: 'hidden',
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: radii.pill,
-  },
-  cardSub: {
-    ...typography.caption,
-    marginTop: 2,
   },
   bottomBar: {
     flexDirection: 'row',
