@@ -4,7 +4,7 @@ Home = **Continue**, not the Projects list.
 
 ## Guides drawer
 
-ChatGPT-style under-sheet: Guides sits behind Continue; opening translates the main layer right (~82%). Open via ☰ or a dedicated ~28px left-edge pan strip; close via swipe left on Continue (main-layer pan) or tap peek. Motion is a single `progress` ∈ [0, 1] (snap at 0.5) — see `useGuidesRevealGesture.ts`. No RN `Modal`. Guides content is sized to the reveal width; Continue peeks as a rounded card. Theme lives in Settings (gear in Guides footer), not inline in the drawer.
+ChatGPT-style under-sheet: Guides sits behind Continue; opening translates the main layer right (~82%). Open via ☰ or a dedicated ~28px left-edge pan strip; close via swipe left on Continue (main-layer pan) or tap peek. Motion is finger-follow on `translateX` (px) with inertial spring settle (fling or midpoint) — see `useGuidesRevealGesture.ts`. Micro-moves ignored via `activeOffsetX`. No RN `Modal`. Guides content is sized to the reveal width; Continue peeks as a rounded card. Theme lives in Settings (gear in Guides footer), not inline in the drawer.
 
 ## Naive order (until Slice B Focus Engine)
 

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -49,7 +49,7 @@ const MAIN_RADIUS = 52;
  *
  * Guides sits under this screen; opening translates the main layer right.
  * Peek = translateX + radius + shadow — no scale.
- * Reveal gesture: see useGuidesRevealGesture.ts (progress ∈ [0,1], edge strip open).
+ * Reveal gesture: see useGuidesRevealGesture.ts (px translateX, edge strip open).
  */
 export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
   const { t } = useTranslation();
@@ -65,6 +65,16 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
     edgePanProps,
     closePanProps,
   } = useGuidesRevealGesture({ openWidth });
+
+  const shadowOpacity = useMemo(
+    () =>
+      translateX.interpolate({
+        inputRange: [0, openWidth],
+        outputRange: [0, 0.22],
+        extrapolate: 'clamp',
+      }),
+    [translateX, openWidth],
+  );
 
   const setLastProjectId = useSessionStore((s) => s.setLastProjectId);
   const [sessions, setSessions] = useState<ProjectSummary[]>([]);
@@ -128,7 +138,7 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
               transform: [{ translateX }],
               shadowColor: '#000',
               shadowOffset: { width: -2, height: 0 },
-              shadowOpacity: isOpen ? 0.22 : 0,
+              shadowOpacity,
               shadowRadius: 14,
               elevation: isOpen ? 14 : 0,
             },
