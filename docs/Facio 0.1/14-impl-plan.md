@@ -40,7 +40,26 @@ Canon: [11](./11-success-systems.md). Process: [12](./12-process.md).
 
 **Non-goals:** Perfect weights, user pin, Morning Summary.
 
-**PO dogfood:** Two+ active Guides → top card reason makes sense; Covers visible.
+**PO dogfood:** Two+ active Guides → top card reason makes sense; Cover fields persist (Guide surfaces / data).
+
+---
+
+## Slice B2 — Hero Preview + drawer compact
+
+**Goal:** Continue and Guides drawer stop twinning; Continue becomes a living workspace.
+
+**DoD:**
+
+- Guides drawer = **compact navigation** (emoji/mark + title [+ thin status]); no large Cover twin cards
+- Continue cards = **Hero Preview** for current Session (read-only fragment of Block state — checklist rows / set progress / timer readout — not “Checklist · title” only)
+- Continue shows only Sessions that **need attention** (executable / overdue); idle waiting Guides drawer-only
+- Focus reason chip retained; Guide emoji may be a small context mark
+- Hero Preview is **not** interactive Full Block (tap → Session)
+- Document per-Block Hero contract in continue feature README (start with checklist + stepper + timeline/timer; others may fallback gracefully)
+
+**Non-goals:** Interactive ☐ on Continue; Guide roadmap beauty (Slice C); Session complete beat (Slice D); perfect Hero for every Block type day one.
+
+**PO dogfood:** Open drawer vs Continue — clearly different. Continue cards show action fragments; tap opens Full Block Session.
 
 ---
 
@@ -136,8 +155,9 @@ Only if PO prioritizes push-ups E2E over shell polish.
 
 ## Parallelism note
 
-Default **serial** A→B→C→D→E→F→G.  
-Possible parallel later: H alongside shell if different owners; not with A.
+Default **serial** A→B→B2→C→D→E→F→G.  
+Possible parallel later: H alongside shell if different owners; not with A.  
+Compact Summary on Guide roadmap lands primarily in **C** (roadmap); B2 owns Hero + drawer.
 
 ---
 

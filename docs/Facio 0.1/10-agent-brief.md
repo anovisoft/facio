@@ -17,18 +17,20 @@ If conflict: **Facio 0.1 wins** on product surface; keep next/RFC engine ideas w
 
 ## Before any PR, confirm
 
-- [ ] Does this help Guide (*where/why*) or Session (*what now*) or Continue/Focus (*which now*)?
+- [ ] Does this help Guide (*where?*) / Continue (*focus now?*) / Session (*execute how?*)?
 - [ ] Can the user see a roadmap before Commitment?
-- [ ] Is Home still Continue with **Focus Engine**, not a Guides list / `updated_at` dump?
+- [ ] Is Home Continue with **Focus Engine** + **Hero Preview**, not a Guides inventory / `updated_at` dump?
+- [ ] Is Guides drawer **compact nav** (not twin Cover cards of Continue)?
+- [ ] Right Session presentation for the surface (Hero / Full / Compact)?
 - [ ] Is AI still not the home screen?
 - [ ] Are UI Blocks a closed client enum?
 - [ ] Does daily Execute work without a new LLM call?
 - [ ] Session = one opening + Session complete beat?
 - [ ] Guide finite + Finish Experience on completion?
 - [ ] Repair/AI Edit = Diff + Undo?
-- [ ] Cover / Identity touched where lists and Guide header need emotion?
+- [ ] Cover / Identity on Guide surfaces (page / archive / thin drawer mark)?
 - [ ] Did you avoid Instant Answer / chat-home / Accept-map duplicate?
-- [ ] Read [11 — Success systems](./11-success-systems.md)?
+- [ ] Read [11 — Success systems](./11-success-systems.md) incl. §9?
 
 ---
 

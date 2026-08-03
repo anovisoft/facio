@@ -1,6 +1,6 @@
 # 11 — Success systems (lock before heavy code)
 
-Eight product systems that determine whether Facio feels like a **guide**, not a plan list.  
+Eight product systems that determine whether Facio feels like a **guide**, not a plan list — plus **Session presentations** (§9) that keep Continue / Guide / Session visually distinct.  
 Treat as **canonical**. Do not ship Continue/Guide/Session shell without a clear stance on each.
 
 ---
@@ -193,9 +193,9 @@ Examples:
 
 ## 7. Guide Cover (emotional identity card)
 
-A Guide is not only text. It has a **Cover** — the emotional face used on Continue cards, drawer, and Guide header.
+A Guide is not only text. It has a **Cover** — the emotional face for **Guide surfaces**: Guide page header, Archive, and a **thin** mark in the Guides drawer.
 
-Example:
+Example (Guide page / Archive):
 
 ```text
 🍝  Carbonara
@@ -215,7 +215,9 @@ Example:
 | Duration summary | Sessions or days or minutes |
 | Optional accent color | Living list, not gray rows |
 
-Cover makes Guides **alive** in lists. Roadmap remains for depth; Cover is the glance layer.
+**Continue does not use Cover as the card body.** Continue cards are **Hero Previews** of the current Session ([§9](#9-session-presentations-hero--full--compact)). Drawer stays compact (mark + title), not full Cover cards — otherwise Continue and Guides twin each other.
+
+Roadmap remains for depth; Cover is the Guide glance layer.
 
 ---
 
@@ -284,19 +286,49 @@ Last Session complete
 
 ---
 
-## How these eight connect
+## 9. Session presentations (Hero / Full / Compact)
+
+Same Session, **three contexts** — not one card reused everywhere. This is what separates Continue from Guides drawer and from Session execute.
+
+| Name | Surface | Shows | Interactive (0.1) |
+|------|---------|-------|-------------------|
+| **Hero Preview** | Continue | Fragment of action (e.g. 3–5 checklist rows, set N/M + reps, timer readout) + ~duration + Focus chip | **No** — tap opens Session |
+| **Full Block** | Session | Complete executable Block | **Yes** |
+| **Compact Summary** | Guide roadmap | Title + status among many Sessions | No (tap → Session when allowed) |
+
+### Why Hero Preview
+
+Planner apps show labels (*Checklist · Buy groceries*). Facio shows a **slice of the real action** so the brain gets it in ~0.2s. That is “Guides you” on the home screen.
+
+### Hard rules
+
+- Hero Preview ≠ shrunk Full Block. Separate **read-only** view per Block type — avoid dual-execute implementations.  
+- Making ☐ tappable on Continue later must not fork architecture — only flip interactivity on Hero.  
+- Guides drawer stays **compact navigation** (inventory). Do not put Hero Previews or full Cover cards there.  
+- Continue shows only Sessions that **need attention**; idle Guides live in the drawer.
+
+### Naming (prefer over S/M/L)
+
+Use **Hero Preview / Full Block / Compact Summary** in specs and code comments. Size letters confused “screen importance” with “object detail.”
+
+---
+
+## How these systems connect
 
 ```text
-Focus Engine     → which Session now (Continue)
-Atomic Session   → one opening → Session complete beat
-Guide finite     → path has an end
-Identity         → my path while active
-Cover            → emotional recognition
-Repair Diff+Undo → trust when life breaks the plan
-Finish Experience→ story closes
+Focus Engine          → which Session now (Continue)
+Hero Preview          → see the action on Continue (not a text label)
+Full Block            → execute on Session
+Compact Summary       → Session as a point on the Guide map
+Atomic Session        → one opening → Session complete beat
+Guide finite          → path has an end
+Identity              → my path while active
+Cover                 → Guide recognition (page / archive / thin drawer mark)
+Repair Diff+Undo      → trust when life breaks the plan
+Finish Experience     → story closes
 ```
 
-If any one is missing, Facio risks feeling like a sorted todo list with timers.
+If Continue and Guides drawer look the same, presentations failed. If Continue only shows “Checklist · …”, Hero Preview failed.
 
 ---
 
@@ -305,11 +337,12 @@ If any one is missing, Facio risks feeling like a sorted todo list with timers.
 | # | System | Lock in design/API early? |
 |---|--------|---------------------------|
 | 1 | Focus Engine | **Yes** — Continue is empty without it |
+| 9 | Hero / Full / Compact | **Yes** — Continue vs drawer vs Guide must not twin |
 | 3 | Session atomicity | **Yes** — affects Session model & resume policy |
 | 4 | Guide finite end | **Yes** — contract / success criteria |
 | 5–6 | Repair Diff + Undo | **Yes** — reuse state_versions |
 | 2 | Session complete beat | UI must-have in Session slice |
-| 7 | Cover | Schema + generate on create |
+| 7 | Cover | Schema + generate on create (Guide surfaces) |
 | 8 | Identity + Finish | Guide model + end flow |
 
 Weights and polish can iterate; **existence and rules** above are not optional for 0.1 success.

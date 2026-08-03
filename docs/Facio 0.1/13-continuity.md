@@ -10,11 +10,11 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 
 | Layer | State |
 |-------|--------|
-| Product vector | Facio 0.1 locked (Continue / Guide / Session + success systems) |
+| Product vector | Facio 0.1 locked — **Guide = path / Continue = focus / Session = execute** + Hero/Full/Compact presentations |
 | Prototype engine | `apps/` ≈ `docs/next` slices 1–5 **accepted** |
 | Carbonara dogfood | OK (timeline → finish → Repeat) |
 | Fitness multi-day E2E | Deferred — needs calendar week or **dev time travel** |
-| Facio 0.1 code shell | **Slice A accepted** (PO 2026-08-03). **Slice B code done** (Focus Engine v0 + Cover) — await PO dogfood |
+| Facio 0.1 code shell | **A+B accepted**. **Next = Slice B2** (Hero Preview + compact drawer) |
 | Instant Answer | Off Create happy path (D5); screen may remain registered dead |
 
 ---
@@ -37,6 +37,18 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 | `docs/RFC/` | Long-horizon Outcome OS — do not override 0.1 UX |
 
 Conflict → **Facio 0.1 wins** on surface; keep next engine.
+
+### Product stack (PO locked 2026-08-03)
+
+```text
+Guide     → path (strategy)     — page with Compact Summaries
+Continue  → focus (tactics)     — Hero Preview attention stack
+Session   → execution           — Full Block interactive
+Drawer    → inventory nav       — compact list (not twin Continue)
+```
+
+Presentations (prefer names over S/M/L): **Hero Preview** / **Full Block** / **Compact Summary** — see [11 §9](./11-success-systems.md).  
+Hero Preview is **read-only** in 0.1. Idle Guides (nothing today) → drawer only, not Continue.
 
 ### Anthropic structured output landmine
 
@@ -83,22 +95,21 @@ Prefer **aliases / new screens** over big-bang DB rename (D6).
 | Root = Continue | `navigation/index.tsx` `initialRouteName="Continue"` |
 | Routes | Continue, Create, Session, Guide, GuideExplore, Archive, Settings (+ dead InstantAnswer) |
 | Continue home | `features/continue/ContinueScreen.tsx` |
-| Naive order (until B) | ~~`features/continue/naiveOrder.ts`~~ — replaced by Focus Engine in Slice B |
 | Guides under-sheet | ChatGPT reveal: Guides behind Continue; main translates ~82%; radius ~52; **no scale** |
-| Reveal gesture | `useGuidesRevealGesture.ts` — **PO OK (parallel session)**: finger-follow on `translateX` px; settle spring; `useNativeDriver: false` (native spring was teleport/hang source); `activeOffsetX` ignores micro-moves. Do not regress lightly |
-| Guides list + gear | `features/continue/GuidesDrawer.tsx` — contentWidth = reveal; Archive + glass Settings gear |
-| Glass chips | `shared/ui/GlassIconButton.tsx` + Ionicons (`menu-outline`, `settings-outline`) — not emoji |
+| Reveal gesture | `useGuidesRevealGesture.ts` — **PO OK**; `useNativeDriver: false`; do not regress lightly |
+| Guides list + gear | `features/continue/GuidesDrawer.tsx` — Archive + glass Settings gear |
+| Glass chips | `shared/ui/GlassIconButton.tsx` + Ionicons |
 | Settings (theme) | `features/settings/SettingsScreen.tsx` |
-| Create | Instant Answer redirected off path (copy error); → GuideExplore |
+| Create | Instant Answer off happy path → GuideExplore |
 
-### Slice B — what landed (code; await PO)
+### Slice B — what landed (accepted)
 
 | Piece | Where |
 |-------|--------|
-| Focus Engine v0 | `features/continue/focusEngine.ts` — D1 tiers; documented in `features/continue/README.md` |
+| Focus Engine v0 | `features/continue/focusEngine.ts` — D1 tiers; `README.md` |
 | Cover columns | `projects.cover_emoji` / `cover_difficulty` / `cover_duration_summary` (Alembic `012`) |
 | Cover fill | Heuristic on `apply_contract` (`app/services/cover.py`) — no Anthropic grammar expansion |
-| Cover UI | Continue cards + Guides drawer via `coverDisplay.ts` (client fallback when null) |
+| Cover UI | Today still on Continue + drawer cards — **B2 will move drawer to compact; Continue → Hero Preview** |
 
 ### Device / API landmine
 
@@ -110,16 +121,16 @@ Prefer **aliases / new screens** over big-bang DB rename (D6).
 
 - **Not** RN `Modal` + `animationType="slide"` (feels like bottom sheet).  
 - Guides = sheet **under** Continue; Continue slides right (~82%).  
-- Do not drive finger math off stale `drawerOpen` boolean (openWidth+tx teleport after first close).  
-- Avoid scale-on-open (reads as resize). Radius ~52 ≈ iPhone continuous corner.  
-- Working gesture (PO): single `translateX` px + spring settle; **`useNativeDriver: false`** — native-driver springs don’t mirror to JS and caused teleports/mid hangs.  
-- If broken again → fix/rewrite `useGuidesRevealGesture.ts`, don’t stack ad-hoc patches in ContinueScreen.  
-- Stay on **Expo RN** — do not jump to Swift/Flutter for drawer polish.  
-- Device API: keep `EXPO_PUBLIC_API_URL` on current LAN IP.
+- Do not drive finger math off stale `drawerOpen` boolean.  
+- Avoid scale-on-open. Radius ~52.  
+- Working gesture: `translateX` px + spring; **`useNativeDriver: false`**.  
+- If broken → fix `useGuidesRevealGesture.ts`, don’t stack patches in ContinueScreen.  
+- Stay on **Expo RN**.  
+- **PO (2026-08-03):** drawer must become **compact nav list** (B2) — current Cover-card rows twin Continue.
 
 ### Success systems that must not be “later polish”
 
-From [11](./11-success-systems.md): Focus Engine, Session complete beat, Session atom, finite Guide, Repair Diff, Undo, Cover, Identity, Finish Experience.
+From [11](./11-success-systems.md): Focus Engine, Session presentations (Hero/Full/Compact), Session complete beat, Session atom, finite Guide, Repair Diff, Undo, Cover, Identity, Finish Experience.
 
 ---
 
@@ -133,8 +144,10 @@ From [11](./11-success-systems.md): Focus Engine, Session complete beat, Session
 | D4 | Commitment separate route? | Sticky CTA on Guide (no separate route) |
 | D5 | Instant Answer? | Remove from happy path (hide or delete) |
 | D6 | `project`→`guide` rename when? | After shell works; aliases first |
-| D7 | Cover generation? | LLM fills emoji+difficulty+duration_summary on create #1/#2 |
+| D7 | Cover generation? | LLM fills emoji+difficulty+duration_summary on create #1/#2 (v0 = heuristic fallback OK) |
 | D8 | Finish vs Next Cycle confusion in UI? | Next Cycle = chapter; Finish = Guide success criteria met |
+
+**Locked (not open):** Hero Preview read-only in 0.1; drawer compact vs Continue Hero; naming Hero/Full/Compact (not S/M/L).
 
 ---
 
@@ -143,7 +156,8 @@ From [11](./11-success-systems.md): Focus Engine, Session complete beat, Session
 | Slice | Name | Status |
 |-------|------|--------|
 | A | IA shell (nav: Continue / Session / Guide / Create / drawer) | **accepted** (PO 2026-08-03) |
-| B | Focus Engine v0 + Cover on cards | **code done** — await PO dogfood |
+| B | Focus Engine v0 + Cover on cards | **accepted** (PO 2026-08-03) |
+| B2 | Hero Preview + drawer compact | **next** |
 | C | Guide Explore trust (roadmap + Commitment; fold Draft) | pending |
 | D | Session atom + Session complete beat + swipe/≡ | pending |
 | E | Repair Diff + Undo | pending |
@@ -156,17 +170,18 @@ From [11](./11-success-systems.md): Focus Engine, Session complete beat, Session
 ## Engineering pointers (apps)
 
 - Client: `apps/mobapp-rn` — Expo RN, nav in `src/navigation/`  
-- API: `apps/backend-py3/client-service` — FastAPI, Alembic through `011`  
+- API: `apps/backend-py3/client-service` — FastAPI, Alembic through `012`  
 - Auth: `X-Device-Id`  
 - Docker: postgres `:5435`, backend `:8000`  
 
-Do not start Facio 0.1 by rewriting the backend runtime. Shell first. Uncommitted Slice A work lives under `apps/mobapp-rn/` (incl. `features/continue/`, Settings, nav).
+Do not start Facio 0.1 by rewriting the backend runtime. Shell first. Uncommitted A/B work under `apps/mobapp-rn/` + backend cover migration.
 
 ---
 
 ## After summarization — PM start here
 
-1. Read [README](./README.md) → [11](./11-success-systems.md) → **this file** → [14](./14-impl-plan.md)  
-2. Slice A **accepted**. Slice B **code done** — PO dogfood next (Focus reason + Covers).  
-3. On B accept → update status → dispatch **Slice C**.  
-4. Do **not** reopen Guides gesture unless PO reports regress.
+1. Read [README](./README.md) → [11](./11-success-systems.md) (§9 presentations) → **this file** → [14](./14-impl-plan.md)  
+2. A+B **accepted**. Next dispatch: **Slice B2** (Hero Preview + compact drawer).  
+3. B2 brief: read-only Hero; drawer compact; idle Guides off Continue; no Full Block on home; no D1–D8 invention.  
+4. Do **not** reopen Guides gesture unless PO reports regress.  
+5. On B2 accept → Slice **C**.

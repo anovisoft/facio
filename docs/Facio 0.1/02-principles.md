@@ -15,18 +15,22 @@ Optimize for:
 
 Do **not** optimize for message volume, chat fluency, or “plans generated”.
 
-## P2 — Guide vs Session (core split)
+## P2 — Guide / Continue / Session (core split)
 
-> **Guide answers: “Why and where?”**  
-> **Session answers: “What now?”**
+> **Guide determines the path.** (*Where am I going?*)  
+> **Continue determines the focus.** (*What matters now?*)  
+> **Session ensures execution.** (*How do I do it?*)
 
 | Need | Surface |
 |------|---------|
-| Evaluate the path, volume, trust before starting | **Guide** |
-| Perform the next executable unit | **Session** |
-| See all ready work across Guides | **Continue** (home) |
+| Evaluate the path, volume, trust before starting | **Guide** (page) |
+| Browse / switch which paths I am on | **Guides drawer** (compact inventory) |
+| See ready work that needs attention **now** | **Continue** (home — Hero Preview stack) |
+| Perform the next executable unit | **Session** (Full Block) |
 
-**Placement rule:** if you cannot decide where new info goes — ask which question it answers. If neither, it probably does not belong.
+**Placement rule:** if you cannot decide where new info goes — ask which question it answers. If none, it probably does not belong.
+
+**Do not twin Continue and Guides drawer** with the same Guide-Cover cards. Drawer = navigation rows; Continue = Session workspace.
 
 ## P3 — Explore Mode vs Execute Mode
 

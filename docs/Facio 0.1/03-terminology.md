@@ -77,6 +77,20 @@ Facio ≠ todo list because Sessions are **block-driven**, not text-driven.
 
 Prototype plugins (timeline, stepper, …) are the seed of UI Blocks.
 
+### Session presentations (same Session, three contexts)
+
+Not S/M/L size confusion — **roles**:
+
+| Name | Where | Job |
+|------|-------|-----|
+| **Hero Preview** | Continue | See the action with eyes (fragment of Block state). **Read-only** in 0.1 |
+| **Full Block** | Session | Complete interactive execute |
+| **Compact Summary** | Guide roadmap | Point on the path among many Sessions |
+
+Every Block type **must** be able to render Hero Preview + Full Block; Compact Summary may be title + status mark on the roadmap.
+
+Hero Preview ≠ shrunk Full Block (separate read-only view — avoids dual-execute code). Interactable checkboxes on Continue are a later option; architecture stays the same.
+
 ## Repair
 
 When the user drifts from the plan, the Guide is repaired.

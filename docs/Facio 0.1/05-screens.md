@@ -6,19 +6,22 @@ Page inventory for Facio 0.1. Each screen has **one job**.
 
 ## 1. Continue (Home)
 
-**Job:** Show Focus-ranked ready Sessions; answer *which one now?*; one tap into Execute.
+**Job:** Attention stack / workspace — Focus-ranked Sessions that need action **now**; one tap into Execute.
 
 **Contains:**
 
 - **Focus** Session first (Focus Engine)
-- Session cards: **Cover** + UI Block type + short status + optional reason chip (*Overdue*, *5 min*, *Last day*)
+- Large **Hero Preview** cards (Session as object): fragment of Block state + ~duration + optional reason chip (*Overdue*, *5 min*, *Last day*). Guide emoji may appear as context mark — card is still about the Session, not Guide Cover twin
+- Only Sessions requiring attention (executable / overdue) — idle Guides stay in drawer
 - FAB `+` → Create
-- Entry to Guides drawer
+- Entry to Guides drawer (compact inventory)
 - Optional Morning Summary gate (aligned with same Focus Engine)
 
-**Does not contain:** full roadmaps, chat, settings dump, archive as primary content, arbitrary sort.
+**Does not contain:** full roadmaps, Guide-Cover twin cards, interactive Full Block, idle Guides, chat, settings dump, archive as primary content, arbitrary sort.
 
 **Empty state:** short prompt + Create (*What do you want?*).
+
+Presentations: [11 §9](./11-success-systems.md).
 
 ---
 
@@ -55,11 +58,11 @@ Page inventory for Facio 0.1. Each screen has **one job**.
 - Access to Repair / AI Edit / manual structure edit (always via Diff + Undo)
 - Archive / abandon (secondary)
 
-**Visual bar:** Cover + roadmap / journey — not spreadsheet PathList. User should grasp the whole path in ~5 seconds.
+**Visual bar:** Cover + roadmap of **Compact Summaries** — not spreadsheet PathList, not stacked Full Blocks. User should grasp the whole path in ~5 seconds.
 
-**Progressive content:** map and narrative can appear before live UI Block payloads; badges/hints for upcoming Block types are OK.
+**Progressive content:** map and narrative can appear before live UI Block payloads; Compact Summaries / badges OK before plugins materialize.
 
-**Does not contain:** live Timer/Stepper as the hero of the whole Guide (those belong in Session).
+**Does not contain:** Full Block execute as the Guide hero (that belongs in Session); Hero Preview stack (that belongs on Continue).
 
 ---
 
@@ -82,16 +85,16 @@ May be the bottom of the Guide page (preferred) rather than a duplicate full-map
 
 ## 5. Session (Execute)
 
-**Job:** Answer *What now?* with executable UI Blocks. Maximize doability.
+**Job:** Answer *How do I do it?* with **Full Block** execute. Maximize doability.
 
 **Layout direction (from prototype Session Stage — keep spirit):**
 
-- UI Block stage as visual hero (~2/3)
+- **Full Block** stage as visual hero (~2/3) — interactive
 - Short support: title / “now” line
 - Done / Skip / Repair entry as secondary chrome
 - Affordance to open Guide (swipe up + ≡)
 
-**Contains:** only the current Session’s Blocks + completion controls.
+**Contains:** only the current Session’s Full Block(s) + completion controls.
 
 **On complete:** **Session complete** beat (progress resolve + copy + brief celebration) → then Continue / next Focus.  
 Session is an **atom** — one opening; see [11 §2–3](./11-success-systems.md).
@@ -102,10 +105,12 @@ Session is an **atom** — one opening; see [11 §2–3](./11-success-systems.md
 
 ## 6. Guides drawer
 
-**Job:** Index of Guides + Archive + Settings entry.
+**Job:** Compact **navigation inventory** — which paths am I on? (ChatGPT sidebar / Finder list — not a second Continue.)
 
-Each row uses **Cover** (mark + title + duration/progress glance).  
-Selecting a Guide → Guide screen (Identity + roadmap).
+Each row: emoji/mark + title (+ optional thin status). **Not** large Cover cards twinning Continue.  
+All active Guides appear here (including idle / waiting). Archive + Settings entry in footer.
+
+Selecting a Guide → Guide screen (Identity + roadmap with Compact Summaries).
 
 ---
 

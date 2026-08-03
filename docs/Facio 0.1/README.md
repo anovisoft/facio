@@ -52,20 +52,29 @@ Not: AI planner, task manager, coach chat, habit tracker, ChatGPT for goals.
 11. [11 — Success systems](./11-success-systems.md) — **lock before heavy code**: Focus Engine, atomic Session, Cover, Identity, Finish…  
 12. [12 — Process](./12-process.md) — PO / PM / subagent cadence  
 13. [13 — Continuity](./13-continuity.md) — fragile memory after chat summary + slice status  
-14. [14 — Impl plan](./14-impl-plan.md) — slices A–H with DoD  
+14. [14 — Impl plan](./14-impl-plan.md) — slices A→B→**B2**→C… with DoD  
 
 ---
 
 ## Product rule (memorize)
 
-> **Guide answers: “Why and where?”**  
-> **Session answers: “What now?”**
+> **Guide determines the path.**  
+> **Continue determines the focus.**  
+> **Session ensures execution.**
 
-Home (**Continue**) answers: “Which Session **now**?” — via **Focus Engine**, not arbitrary order.
+Or by question:
+
+> **Guide** — *Where am I going?*  
+> **Continue** — *What matters now?*  
+> **Session** — *How do I do it?*
+
+Home (**Continue**) is the **workspace**: Focus-ranked Session **Hero Previews** (fragments of real action) — not a Guides inventory and not Full Block execute.
 
 If a piece of UI/info helps **evaluate the path** → Guide.  
-If it helps **perform the next step** → Session.  
-If it picks or ranks ready work across Guides → **Focus Engine / Continue**.
+If it helps **perform the next step** → Session (Full Block).  
+If it picks or ranks ready work across Guides → **Focus Engine / Continue** (Hero Preview).
+
+Each UI Block must render in three **contexts** (see [11 §9](./11-success-systems.md)): Hero Preview / Full Block / Compact Summary.
 
 **Before writing a lot of code:** read [11](./11-success-systems.md).  
 **After chat summarization:** PM starts at [13](./13-continuity.md) + [14](./14-impl-plan.md).
@@ -80,7 +89,8 @@ Guide    →  “Show me the whole path.”   (Explore / trust)
 Session  →  “Lead me now.”              (Execute)
 ```
 
-Continue is the **execution home**, not the project list.
+Continue is the **execution home / attention stack**, not the project list.  
+Guides drawer is **compact navigation** (inventory), not a second Continue.
 
 ---
 

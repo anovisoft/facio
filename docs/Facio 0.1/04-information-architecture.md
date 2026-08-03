@@ -8,7 +8,15 @@
 3. Session    “Lead me now.”              (Execute)
 ```
 
-Plus **Continue** — the default home after the user has active Guides.
+Plus **Continue** — the default home / attention stack after the user has active Guides.
+
+One-line product stack:
+
+```text
+Guide     → path (strategy)
+Continue  → focus (tactics)
+Session   → execution (operations)
+```
 
 The user chooses when to move from understand → do.
 
@@ -19,43 +27,45 @@ The user chooses when to move from understand → do.
 Intentionally short:
 
 ```text
-Continue
+Continue  (workspace — Hero Preview stack)
    ↓ open a Session card
-Session
+Session   (Full Block execute)
    ↓ swipe up / ≡ / affordance
-Guide
+Guide     (roadmap — Compact Summaries)
 ```
 
 Create is entered from Continue FAB (`+`) or empty state.  
-Guides index is a **drawer** (swipe from left or GPT-style button) — not the home. Rows use **Cover**.
+Guides index is a **drawer** (ChatGPT-style under-sheet) — **compact navigation inventory**, not the home and not a twin of Continue.
 
 ---
 
-## Home = Continue
+## Home = Continue (workspace)
 
-Shows **Focus-ranked** ready Sessions across Guides. First card = **Focus** (Focus Engine).
+Shows **Focus-ranked Sessions that need attention now** (attention queue — not every active Guide). First card = **Focus** (Focus Engine).
+
+Each card is a **Hero Preview** of the current Session (fragment of real action), not a Guide-Cover twin and not Full Block.
 
 Example:
 
 ```text
-🍝 Carbonara          ← Focus (e.g. short / today)
-Timeline · 25 min
-Continue
+🍝 Carbonara                    ← Focus · Last day
+   Купить продукты
+   ☐ Бекон  ☐ Яйца  ☑ Пармезан
+   ≈10 мин
 ────────────────
 🏋️ Push-ups
-Stepper · Last day
-────────────────
-🇬🇧 English A1
-Flashcards · 12 left
+   Set 1 / 4 · 20 reps
+   ≈15 мин
 ```
 
-Each row/card = Cover mark + Session ready to run (UI Block type + short status + optional Focus reason chip).
+Guides with nothing to do today (waiting / next unlock tomorrow) stay in the **drawer only** — not on Continue.
 
 FAB `+` bottom-right → Create.
 
-**Not on Continue:** full Guide maps, archive browsing, chat, news, marketing widgets, unsorted dump by `updated_at`.
+**Not on Continue:** full Guide maps, idle Guides, archive browsing, chat, news, marketing widgets, unsorted dump by `updated_at`, interactive Full Block execute.
 
-Ordering rules: [11 §1 Focus Engine](./11-success-systems.md).
+Ordering rules: [11 §1 Focus Engine](./11-success-systems.md).  
+Presentations: [11 §9](./11-success-systems.md).
 
 ---
 
@@ -63,7 +73,8 @@ Ordering rules: [11 §1 Focus Engine](./11-success-systems.md).
 
 Every Guide has a full page — **beautiful roadmap**, not a dense PathList.
 
-Job: trust and orientation in ≤ ~5 seconds.
+Job: trust and orientation in ≤ ~5 seconds.  
+Roadmap rows use **Compact Summary** per Session (many Sessions → each stays small). Cover + Identity live here — not as twin cards on Continue.
 
 Example skeleton:
 
@@ -77,8 +88,9 @@ Duration · Difficulty
 1 session · Easy
 
 ──────────────
-Path map (roadmap)
-Shopping → Cooking → Serving
+Path map (roadmap — Compact Summaries)
+Day 1  ☑ Купить продукты
+Day 1  ○ Готовить
 or Cycle 1 → days → Cycle 2 → Complete
 
 Progress
@@ -103,7 +115,8 @@ Guide is never “gone” after Start — it stopped being the homepage.
 
 ## Session is the execute surface
 
-On open: **only the current Session** + its UI Blocks → **Session complete** beat.
+On open: **only the current Session** + its **Full Block** (interactive) → **Session complete** beat.  
+This is not Hero Preview — full execute lives only here.
 
 Examples:
 
