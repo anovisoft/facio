@@ -13,7 +13,7 @@ import type { RootStackParamList } from '@/navigation/types';
 export function renderReliableHeaderBack(
   navigation: NavigationProp<RootStackParamList>,
   props: NativeStackHeaderBackProps,
-  fallback: 'Projects' = 'Projects',
+  fallback: 'Continue' = 'Continue',
 ) {
   if (!props.canGoBack) return null;
 

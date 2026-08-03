@@ -7,19 +7,26 @@ import {
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+import { ContinueScreen } from '@/features/continue/ContinueScreen';
 import { DraftStudioScreen } from '@/features/draft/DraftStudioScreen';
 import { ProjectHomeScreen } from '@/features/home/ProjectHomeScreen';
 import { InstantAnswerScreen } from '@/features/intent/InstantAnswerScreen';
 import { IntentScreen } from '@/features/intent/IntentScreen';
 import { PathScreen } from '@/features/path/PathScreen';
 import { HistoryScreen } from '@/features/projects/HistoryScreen';
-import { ProjectsScreen } from '@/features/projects/ProjectsScreen';
+import { SettingsScreen } from '@/features/settings/SettingsScreen';
 import { renderReliableHeaderBack } from '@/navigation/reliableBack';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTheme } from '@/theme/ThemeContext';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+/**
+ * Facio 0.1 IA shell (Slice A).
+ * Root = Continue. Session / Guide / Create / GuideExplore / Archive are
+ * aliases over existing ProjectHome / Path / Intent / DraftStudio / History.
+ * Settings is thin (theme) — ChatGPT gear destination from Guides.
+ */
 export default function AppNavigator() {
   const { colors, effectiveTheme } = useTheme();
 
@@ -43,7 +50,7 @@ export default function AppNavigator() {
   return (
     <NavigationContainer theme={navTheme}>
       <Stack.Navigator
-        initialRouteName="Projects"
+        initialRouteName="Continue"
         screenOptions={({ navigation }) => ({
           headerShown: true,
           headerShadowVisible: false,
@@ -55,23 +62,25 @@ export default function AppNavigator() {
           // Opaque header — avoid headerBlurEffect with headerTransparent:false;
           // the blur overlay has been linked to dead back-button taps on iOS 26.
           headerLeft: (props) =>
-            renderReliableHeaderBack(navigation, props, 'Projects'),
+            renderReliableHeaderBack(navigation, props, 'Continue'),
         })}
       >
         <Stack.Screen
-          name="Projects"
-          component={ProjectsScreen}
+          name="Continue"
+          component={ContinueScreen}
           options={{
             headerShown: false,
-            title: 'Projects',
+            title: 'Continue',
           }}
         />
-        <Stack.Screen name="Intent" component={IntentScreen} />
+        <Stack.Screen name="Create" component={IntentScreen} />
+        {/* InstantAnswer kept registered but off Create happy path (D5). */}
         <Stack.Screen name="InstantAnswer" component={InstantAnswerScreen} />
-        <Stack.Screen name="DraftStudio" component={DraftStudioScreen} />
-        <Stack.Screen name="ProjectHome" component={ProjectHomeScreen} />
-        <Stack.Screen name="Path" component={PathScreen} />
-        <Stack.Screen name="History" component={HistoryScreen} />
+        <Stack.Screen name="GuideExplore" component={DraftStudioScreen} />
+        <Stack.Screen name="Session" component={ProjectHomeScreen} />
+        <Stack.Screen name="Guide" component={PathScreen} />
+        <Stack.Screen name="Archive" component={HistoryScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

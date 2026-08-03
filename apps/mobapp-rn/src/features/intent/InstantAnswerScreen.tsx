@@ -47,7 +47,7 @@ export function InstantAnswerScreen({
         return;
       }
       setLastProjectId(result.project.id);
-      navigation.replace('DraftStudio', {
+      navigation.replace('GuideExplore', {
         projectId: result.project.id,
         seed: result.project,
       });

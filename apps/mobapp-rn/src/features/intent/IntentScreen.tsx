@@ -25,7 +25,8 @@ const EXAMPLE_INTENTS = [
   'Подготовиться к собеседованию',
 ] as const;
 
-export function IntentScreen({ navigation }: RootScreenProps<'Intent'>) {
+/** Create screen (Facio 0.1) — IntentScreen alias. Instant Answer off happy path (D5). */
+export function IntentScreen({ navigation }: RootScreenProps<'Create'>) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const setLastProjectId = useSessionStore((s) => s.setLastProjectId);
@@ -50,12 +51,13 @@ export function IntentScreen({ navigation }: RootScreenProps<'Intent'>) {
     setError(null);
     try {
       const result = await createProject(trimmed, controller.signal);
+      // D5: Instant Answer removed from Create happy path — ask for a goal.
       if (result.kind === 'instant_answer') {
-        navigation.replace('InstantAnswer', { payload: result });
+        setError(t('intent.instantAnswerRedirect'));
         return;
       }
       setLastProjectId(result.project.id);
-      navigation.replace('DraftStudio', {
+      navigation.replace('GuideExplore', {
         projectId: result.project.id,
         seed: result.project,
       });

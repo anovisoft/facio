@@ -37,7 +37,8 @@ function statusLabel(
   }
 }
 
-export function HistoryScreen(_props: RootScreenProps<'History'>) {
+/** Archive screen (Facio 0.1) — HistoryScreen alias. */
+export function HistoryScreen(_props: RootScreenProps<'Archive'>) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const [items, setItems] = useState<ProjectSummary[]>([]);

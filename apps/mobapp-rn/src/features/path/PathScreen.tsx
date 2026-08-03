@@ -24,7 +24,8 @@ import { SafeScreen } from '@/shared/ui/SafeScreen';
 import { useTheme } from '@/theme/ThemeContext';
 import { spacing, typography } from '@/theme';
 
-export function PathScreen({ navigation, route }: RootScreenProps<'Path'>) {
+/** Guide screen (Facio 0.1) — PathScreen alias (roadmap). */
+export function PathScreen({ navigation, route }: RootScreenProps<'Guide'>) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { projectId } = route.params;

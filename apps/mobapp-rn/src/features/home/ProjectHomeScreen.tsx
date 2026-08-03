@@ -48,10 +48,11 @@ import { useSessionStore } from '@/store';
 import { useTheme } from '@/theme/ThemeContext';
 import { radii, spacing, typography } from '@/theme';
 
+/** Session screen (Facio 0.1) — ProjectHomeScreen alias. */
 export function ProjectHomeScreen({
   navigation,
   route,
-}: RootScreenProps<'ProjectHome'>) {
+}: RootScreenProps<'Session'>) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { projectId } = route.params;
@@ -83,7 +84,7 @@ export function ProjectHomeScreen({
         t('home.today'),
       headerRight: () => (
         <Pressable
-          onPress={() => navigation.navigate('Path', { projectId })}
+          onPress={() => navigation.navigate('Guide', { projectId })}
           accessibilityLabel={t('home.menuPath')}
           hitSlop={10}
           style={{ paddingHorizontal: spacing.sm }}

@@ -14,7 +14,7 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 | Prototype engine | `apps/` ≈ `docs/next` slices 1–5 **accepted** |
 | Carbonara dogfood | OK (timeline → finish → Repeat) |
 | Fitness multi-day E2E | Deferred — needs calendar week or **dev time travel** |
-| Facio 0.1 code shell | **Not started** — docs only |
+| Facio 0.1 code shell | Slice A implemented — **awaiting PO dogfood** |
 | Instant Answer | Demote/remove in 0.1 happy path |
 
 ---
@@ -94,7 +94,7 @@ From [11](./11-success-systems.md): Focus Engine, Session complete beat, Session
 
 | Slice | Name | Status |
 |-------|------|--------|
-| A | IA shell (nav: Continue / Session / Guide / Create / drawer) | **in progress** |
+| A | IA shell (nav: Continue / Session / Guide / Create / drawer) | **awaiting PO dogfood** |
 | B | Focus Engine v0 + Cover on cards | pending |
 | C | Guide Explore trust (roadmap + Commitment; fold Draft) | pending |
 | D | Session atom + Session complete beat + swipe/≡ | pending |

@@ -12,12 +12,30 @@ export default {
     nextAction: 'Сегодня: {{title}}',
   },
   intent: {
-    title: 'Что вы хотите сделать?',
+    title: 'Что вы хотите?',
     placeholder: 'Например: приготовить карбонару',
     submit: 'Дальше',
     examplesLabel: 'Примеры',
     working: 'Собираю старт…',
     error: 'Не удалось создать цель',
+    instantAnswerRedirect:
+      'Похоже на быстрый вопрос. Сформулируйте, чего хотите добиться.',
+  },
+  continue: {
+    title: 'Продолжить',
+    loading: 'Загрузка…',
+    error: 'Не удалось загрузить сессии',
+    retry: 'Повторить',
+    empty: 'Что вы хотите?',
+    emptyCta: 'Создать Guide',
+    openGuides: 'Guides',
+    guidesTitle: 'Guides',
+    guidesEmpty: 'Пока нет Guides.',
+    guidesError: 'Не удалось загрузить Guides',
+    archive: 'Архив',
+    draft: 'Черновик',
+    waiting: 'Дальше: {{title}}',
+    noSession: 'Открыть Guide',
   },
   instantAnswer: {
     title: 'Ответ',
@@ -177,6 +195,11 @@ export default {
     loading: 'Загрузка…',
     error: 'Не удалось загрузить архив',
     retry: 'Повторить',
+  },
+  settings: {
+    title: 'Настройки',
+    theme: 'Тема',
+    open: 'Настройки',
   },
   theme: {
     system: 'Авто',

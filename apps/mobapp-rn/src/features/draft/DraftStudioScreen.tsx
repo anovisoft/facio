@@ -52,10 +52,11 @@ function isAbortError(e: unknown): boolean {
 
 type CommitIntent = 'start' | 'save';
 
+/** Guide Explore (Facio 0.1) — DraftStudioScreen alias (pre-commitment). */
 export function DraftStudioScreen({
   navigation,
   route,
-}: RootScreenProps<'DraftStudio'>) {
+}: RootScreenProps<'GuideExplore'>) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const setLastProjectId = useSessionStore((s) => s.setLastProjectId);
@@ -334,15 +335,15 @@ export function DraftStudioScreen({
         navigation.reset({
           index: 1,
           routes: [
-            { name: 'Projects' },
-            { name: 'ProjectHome', params: { projectId: detail.id } },
+            { name: 'Continue' },
+            { name: 'Session', params: { projectId: detail.id } },
           ],
         });
         return;
       }
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Projects' }],
+        routes: [{ name: 'Continue' }],
       });
     } catch (e) {
       setError(e instanceof ApiError ? e.message : t('draft.startError'));

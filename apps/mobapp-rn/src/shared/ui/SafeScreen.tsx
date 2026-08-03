@@ -23,7 +23,7 @@ type Props = {
   contentStyle?: ViewStyle;
   /**
    * Safe-area edges. Default omits `top` so stack screens with a nav header
-   * don't double-apply the status-bar inset. Headerless screens (e.g. Projects)
+   * don't double-apply the status-bar inset. Headerless screens (e.g. Continue)
    * should pass `['top', 'left', 'right']`.
    */
   edges?: Edge[];

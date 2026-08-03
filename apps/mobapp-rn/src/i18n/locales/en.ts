@@ -12,12 +12,30 @@ export default {
     nextAction: 'Today: {{title}}',
   },
   intent: {
-    title: 'What do you want to do?',
+    title: 'What do you want?',
     placeholder: 'e.g. cook carbonara',
     submit: 'Continue',
     examplesLabel: 'Examples',
     working: 'Getting started…',
     error: 'Could not create goal',
+    instantAnswerRedirect:
+      'That looks like a quick question. Try stating what you want to achieve.',
+  },
+  continue: {
+    title: 'Continue',
+    loading: 'Loading…',
+    error: 'Could not load sessions',
+    retry: 'Retry',
+    empty: 'What do you want?',
+    emptyCta: 'Create a Guide',
+    openGuides: 'Guides',
+    guidesTitle: 'Guides',
+    guidesEmpty: 'No Guides yet.',
+    guidesError: 'Could not load Guides',
+    archive: 'Archive',
+    draft: 'Draft',
+    waiting: 'Up next: {{title}}',
+    noSession: 'Open Guide',
   },
   instantAnswer: {
     title: 'Answer',
@@ -177,6 +195,11 @@ export default {
     loading: 'Loading…',
     error: 'Could not load archive',
     retry: 'Retry',
+  },
+  settings: {
+    title: 'Settings',
+    theme: 'Theme',
+    open: 'Settings',
   },
   theme: {
     system: 'Auto',
