@@ -15,7 +15,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { PanGestureHandler } from 'react-native-gesture-handler';
 
 import {
   completeAction,
@@ -30,7 +29,6 @@ import { ApiError, type DayKind, type ProjectDetail, type RepairIntent } from '@
 import { FinishCycleSheet } from '@/features/home/FinishCycleSheet';
 import { NextCycleSheet } from '@/features/home/NextCycleSheet';
 import { RepairSheet } from '@/features/home/RepairSheet';
-import { useSessionGuideSwipe } from '@/features/home/useSessionGuideSwipe';
 import type { RootScreenProps } from '@/navigation/types';
 import { trackActionShown } from '@/services/beacons';
 import { classifyUnlockDate } from '@/services/localDate';
@@ -81,13 +79,8 @@ export function ProjectHomeScreen({
   const doneFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const openGuide = useCallback(() => {
-    navigation.navigate('Guide', { projectId });
+    navigation.navigate('Guide', { projectId, fromSession: true });
   }, [navigation, projectId]);
-
-  const { panProps } = useSessionGuideSwipe({
-    enabled: !repairSheetVisible,
-    onOpenGuide: openGuide,
-  });
 
   const showDoneFlash = useCallback((message: string) => {
     setDoneFlash(message);
@@ -611,50 +604,48 @@ export function ProjectHomeScreen({
 
   return (
     <>
-      <PanGestureHandler {...panProps}>
-        <View style={styles.gestureRoot}>
-          <SafeScreen scroll>
-            {doneFlash ? (
-              <View
-                style={[
-                  styles.doneFlash,
-                  {
-                    backgroundColor: colors.surfaceMuted,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <Text
-                  style={[styles.doneFlashText, { color: colors.text }]}
-                  numberOfLines={2}
-                >
-                  {doneFlash}
-                </Text>
-              </View>
-            ) : null}
+      <SafeScreen scroll>
+        {doneFlash ? (
+          <View
+            style={[
+              styles.doneFlash,
+              {
+                backgroundColor: colors.surfaceMuted,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text
+              style={[styles.doneFlashText, { color: colors.text }]}
+              numberOfLines={2}
+            >
+              {doneFlash}
+            </Text>
+          </View>
+        ) : null}
 
-            {repairSummary ? (
-              <View
-                style={[
-                  styles.repairBanner,
-                  {
-                    backgroundColor: colors.surfaceMuted,
-                    borderColor: colors.border,
-                  },
-                ]}
+        {repairSummary ? (
+          <View
+            style={[
+              styles.repairBanner,
+              {
+                backgroundColor: colors.surfaceMuted,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.repairBannerText, { color: colors.text }]}>
+              {repairSummary}
+            </Text>
+            <Pressable onPress={() => setRepairSummary(null)} hitSlop={8}>
+              <Text
+                style={[styles.repairBannerClose, { color: colors.primary }]}
               >
-                <Text style={[styles.repairBannerText, { color: colors.text }]}>
-                  {repairSummary}
-                </Text>
-                <Pressable onPress={() => setRepairSummary(null)} hitSlop={8}>
-                  <Text
-                    style={[styles.repairBannerClose, { color: colors.primary }]}
-                  >
-                    {t('common.dismiss')}
-                  </Text>
-                </Pressable>
-              </View>
-            ) : null}
+                {t('common.dismiss')}
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
 
             {cycleFinished && project.cycle_result ? (
               <View style={styles.doneBlock}>
@@ -978,11 +969,6 @@ export function ProjectHomeScreen({
                   />
                 </View>
 
-                <Text
-                  style={[styles.swipeHint, { color: colors.textMuted }]}
-                >
-                  {t('home.swipeGuideHint')}
-                </Text>
               </>
             ) : null}
 
@@ -1006,8 +992,6 @@ export function ProjectHomeScreen({
               />
             ) : null}
           </SafeScreen>
-        </View>
-      </PanGestureHandler>
 
       <RepairSheet
         visible={repairSheetVisible}
@@ -1036,9 +1020,6 @@ export function ProjectHomeScreen({
 }
 
 const styles = StyleSheet.create({
-  gestureRoot: {
-    flex: 1,
-  },
   chrome: {
     marginBottom: spacing.md,
     gap: spacing.xs,
@@ -1094,11 +1075,6 @@ const styles = StyleSheet.create({
   },
   detail: {
     ...typography.body,
-    marginTop: spacing.md,
-  },
-  swipeHint: {
-    ...typography.caption,
-    textAlign: 'center',
     marginTop: spacing.md,
   },
   error: {

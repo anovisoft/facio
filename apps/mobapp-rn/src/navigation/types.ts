@@ -18,10 +18,19 @@ export type RootStackParamList = {
    * Alias of Guide for Create soft-start with seed.
    * Same GuideScreen chrome (Cover + roadmap + Start Guide).
    */
-  GuideExplore: { projectId: string; seed?: ProjectDetail };
+  GuideExplore: {
+    projectId: string;
+    seed?: ProjectDetail;
+    fromSession?: boolean;
+  };
   Session: { projectId: string };
   /** Guide trust surface — draft Explore + active roadmap (Slice C). */
-  Guide: { projectId: string; seed?: ProjectDetail };
+  Guide: {
+    projectId: string;
+    seed?: ProjectDetail;
+    /** Opened via Session ≡ — hide Start Session; expand full plan. */
+    fromSession?: boolean;
+  };
   Archive: undefined;
   Settings: undefined;
 };

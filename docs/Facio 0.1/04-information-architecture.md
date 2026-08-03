@@ -30,7 +30,7 @@ Intentionally short:
 Continue  (workspace — Hero Preview stack)
    ↓ open a Session card
 Session   (Full Block execute)
-   ↓ swipe up / ≡ / affordance
+   ↓ ≡ (primary affordance; swipe-up deferred/removed)
 Guide     (roadmap — Compact Summaries)
 ```
 
@@ -106,8 +106,8 @@ Post-Commitment: user rarely *needs* this daily, but it must stay one gesture aw
 
 ### Access to Guide from Session
 
-- **Primary gesture (target):** swipe up on Session → Guide; swipe down → back to Session  
-- **Explicit affordance:** ≡ or “path” control (discoverability; do not rely on swipe alone)
+- **Primary affordance (0.1):** ≡ / “path” control on Session → Guide  
+- **Swipe up Session → Guide:** deferred / removed in D-chrome iterate (scroll conflict); may return later as an explicit edge strip if PO wants it
 
 Guide is never “gone” after Start — it stopped being the homepage.
 

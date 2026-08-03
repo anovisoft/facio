@@ -75,6 +75,6 @@ Guide Cover fields (`cover_emoji`, `cover_difficulty`, `cover_duration_summary`)
 
 - Layout: **title → Day N/M (if `horizon_days > 1`) → large Block → detail / why** (Why demoted)
 - Done → if same Guide still has `next_action` → stay on Session (light «Next: …» flash); else → **Continue**. No modal / progress bar.
-- ≡ (`GlassIconButton variant="header"`) and **swipe up** → Guide (`useSessionGuideSwipe` — upward `activeOffsetY` so scroll still works). Back from Guide = stack back.
+- ≡ (`GlassIconButton variant="header"`) → Guide with `fromSession: true` (swipe-up removed). Back from Guide = sticky **Back to Session** / stack back.
 - Same-day Block runtime: MMKV/`useSessionStore.blockRuntimeByActionId` keyed by `actionId` + local date (D2). Stepper beatIndex (+ rest wall-clock) hydrates on remount; cross-day expires. Counters remain server-backed.
 - Stepper: Back + Next; rest cleared on step back.

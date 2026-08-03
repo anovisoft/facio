@@ -65,6 +65,10 @@ export function SafeScreen({
               contentContainerStyle={[styles.scrollContent, contentStyle]}
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="interactive"
+              // Bound scroll to content — no flexGrow stretch / empty void.
+              bounces
+              overScrollMode="auto"
+              alwaysBounceVertical={false}
             >
               {children}
             </ScrollView>
@@ -98,10 +102,15 @@ export function SafeScreen({
     >
       {scroll ? (
         <ScrollView
+          style={styles.flex}
           contentContainerStyle={[styles.scrollContent, contentStyle]}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="interactive"
           automaticallyAdjustKeyboardInsets
+          // Bound scroll to content — no flexGrow stretch / empty void.
+          bounces
+          overScrollMode="auto"
+          alwaysBounceVertical={false}
         >
           {children}
         </ScrollView>
@@ -130,9 +139,12 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
   },
   scrollContent: {
+    // Do not set flexGrow:1 — that stretches short content and leaves a
+    // rubber-band dead zone below the last item ("content flies away").
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.xxl,
+    flexGrow: 0,
   },
   footer: {
     borderTopWidth: StyleSheet.hairlineWidth,

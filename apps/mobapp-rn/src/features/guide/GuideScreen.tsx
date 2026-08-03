@@ -69,6 +69,7 @@ export function GuideScreen({ navigation, route }: Props) {
   const setLastProjectId = useSessionStore((s) => s.setLastProjectId);
   const { projectId } = route.params;
   const seed = 'seed' in route.params ? route.params.seed : undefined;
+  const fromSession = route.params.fromSession === true;
 
   const [project, setProject] = useState<ProjectDetail | null>(
     () => seed ?? null,
@@ -80,7 +81,8 @@ export function GuideScreen({ navigation, route }: Props) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [comment, setComment] = useState('');
   const [canGoBack, setCanGoBack] = useState(false);
-  const [detailExpanded, setDetailExpanded] = useState(false);
+  // From Session ≡ → full plan open by default; drawer/Create stay compact-first.
+  const [detailExpanded, setDetailExpanded] = useState(fromSession);
   const [queuedRefine, setQueuedRefine] = useState(false);
   const [pathReadyFlash, setPathReadyFlash] = useState(false);
   const undoStackRef = useRef<number[]>([]);
@@ -445,6 +447,8 @@ export function GuideScreen({ navigation, route }: Props) {
   const showOutlineWhileLoading = isDraft && !pathReady;
 
   // Sticky footer: Start Guide only (+ optional tertiary save). No Back/Refine.
+  // Active + from Session: Back to Session (Start Session is useless — stack back).
+  // Active from drawer/Continue/Create: Start Session when next_action exists.
   const stickyFooter = isDraft ? (
     <>
       <PrimaryButton
@@ -477,6 +481,12 @@ export function GuideScreen({ navigation, route }: Props) {
         </Text>
       </Pressable>
     </>
+  ) : fromSession ? (
+    <PrimaryButton
+      variant="secondary"
+      label={t('guide.backToSession')}
+      onPress={() => navigation.goBack()}
+    />
   ) : project.next_action ? (
     <PrimaryButton
       label={t('guide.startSession')}
