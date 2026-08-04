@@ -5,13 +5,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import {
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -21,20 +15,31 @@ import {
   completeTimer,
   skipAction,
   toggleChecklistItem,
+  uncompleteAction,
   updateCounter,
   updateStepperBeatCounter,
 } from '@/api/actions';
-import { getProject, rematerializePlugins, repairProject, repairProjectPreview, restoreState, completeCycle, startNextCycle } from '@/api/projects';
+import {
+  abandonProject,
+  completeCycle,
+  getProject,
+  postponeDay,
+  rematerializePlugins,
+  startNextCycle,
+} from '@/api/projects';
 import {
   ApiError,
+  type ActionResponse,
   type DayKind,
   type ProjectDetail,
-  type RepairIntent,
-  type RepairPreviewResponse,
 } from '@/api/types';
 import { FinishCycleSheet } from '@/features/home/FinishCycleSheet';
 import { NextCycleSheet } from '@/features/home/NextCycleSheet';
-import { RepairSheet } from '@/features/home/RepairSheet';
+import {
+  SessionMenuSheet,
+  type SessionMenuAction,
+} from '@/features/home/SessionMenuSheet';
+import { goBackOrContinue } from '@/navigation/reliableBack';
 import type { RootScreenProps } from '@/navigation/types';
 import { trackActionShown } from '@/services/beacons';
 import { classifyUnlockDate } from '@/services/localDate';
@@ -58,6 +63,28 @@ import { useSessionStore } from '@/store';
 import { useTheme } from '@/theme/ThemeContext';
 import { radii, spacing, typography } from '@/theme';
 
+function sameDayActions(
+  actions: ActionResponse[],
+  dayOffset: number | null | undefined,
+): ActionResponse[] {
+  const day = dayOffset ?? 0;
+  return actions.filter((a) => (a.day_offset ?? 0) === day);
+}
+
+function previousClosedSameDay(
+  actions: ActionResponse[],
+  current: ActionResponse,
+): ActionResponse | null {
+  const day = sameDayActions(actions, current.day_offset);
+  const idx = day.findIndex((a) => a.id === current.id);
+  if (idx <= 0) return null;
+  for (let i = idx - 1; i >= 0; i -= 1) {
+    const a = day[i];
+    if (a.status === 'done' || a.status === 'skipped') return a;
+  }
+  return null;
+}
+
 /** Brief non-blocking Done flash — no modal / progress bar (D iterate). */
 const DONE_FLASH_MS = 1800;
 
@@ -76,16 +103,9 @@ export function ProjectHomeScreen({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [doneFlash, setDoneFlash] = useState<string | null>(null);
-  const [repairSheetVisible, setRepairSheetVisible] = useState(false);
-  const [repairSummary, setRepairSummary] = useState<string | null>(null);
-  const [repairUndoVersion, setRepairUndoVersion] = useState<number | null>(
-    null,
-  );
-  const [repairPreview, setRepairPreview] =
-    useState<RepairPreviewResponse | null>(null);
-  const [repairIntent, setRepairIntent] = useState<RepairIntent | null>(null);
   const [nextCycleSheetVisible, setNextCycleSheetVisible] = useState(false);
   const [finishCycleSheetVisible, setFinishCycleSheetVisible] = useState(false);
+  const [sessionMenuVisible, setSessionMenuVisible] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const shownActionIdRef = useRef<string | null>(null);
   const doneFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -110,34 +130,6 @@ export function ProjectHomeScreen({
       if (doneFlashTimerRef.current) clearTimeout(doneFlashTimerRef.current);
     };
   }, []);
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      title:
-        project?.title ||
-        project?.outcome ||
-        project?.paraphrase ||
-        t('home.today'),
-      headerRight: () => (
-        <GlassIconButton
-          variant="header"
-          onPress={openGuide}
-          accessibilityLabel={t('home.menuPath')}
-          size={GLASS_ICON_CHIP_SIZE}
-        >
-          <Ionicons name="menu-outline" size={22} color={colors.text} />
-        </GlassIconButton>
-      ),
-    });
-  }, [
-    navigation,
-    project?.title,
-    project?.outcome,
-    project?.paraphrase,
-    openGuide,
-    t,
-    colors.text,
-  ]);
 
   const load = useCallback(async () => {
     abortRef.current?.abort();
@@ -216,12 +208,15 @@ export function ProjectHomeScreen({
     return detail;
   };
 
-  const finishAction = async (actionId: string) => {
+  const finishAction = async (
+    actionId: string,
+    opts: { preferContinue: boolean },
+  ) => {
     await completeAction(actionId);
     clearBlockRuntime(actionId);
     const detail = await refreshAfterMutation();
-    // D iterate: next executable Session stays in-Guide; else Continue.
-    if (detail.next_action) {
+    // Last Done / daily Done → Continue; intermediate Next → toast + stay.
+    if (!opts.preferContinue && detail.next_action) {
       const nextTitle = detail.next_action.title?.trim();
       showDoneFlash(
         nextTitle
@@ -233,77 +228,114 @@ export function ProjectHomeScreen({
     }
   };
 
-  const onComplete = async () => {
+  const markRemainingAndComplete = async (
+    action: ActionResponse,
+    opts: { preferContinue: boolean },
+  ) => {
+    const incomplete = action.checklist_items.filter((i) => !i.done);
+    if (incomplete.length > 0) {
+      await Promise.all(
+        incomplete.map((item) => toggleChecklistItem(item.id, true)),
+      );
+      setProject((prev) => {
+        if (!prev?.next_action) return prev;
+        const markDone = (
+          items: typeof prev.next_action.checklist_items,
+        ) =>
+          items.map((item) =>
+            incomplete.some((u) => u.id === item.id)
+              ? { ...item, done: true }
+              : item,
+          );
+        return {
+          ...prev,
+          next_action: {
+            ...prev.next_action,
+            checklist_items: markDone(prev.next_action.checklist_items),
+          },
+          actions: prev.actions.map((a) =>
+            a.id !== prev.next_action?.id
+              ? a
+              : {
+                  ...a,
+                  checklist_items: markDone(a.checklist_items),
+                },
+          ),
+        };
+      });
+    }
+    await finishAction(action.id, opts);
+  };
+
+  const runComplete = async (opts: {
+    preferContinue: boolean;
+    withAssurance: boolean;
+  }) => {
     if (!project?.next_action || busy) return;
     const action = project.next_action;
-
     const incomplete = action.checklist_items.filter((i) => !i.done);
+
+    const execute = () => {
+      void (async () => {
+        if (busy) return;
+        setBusy(true);
+        setError(null);
+        try {
+          await markRemainingAndComplete(action, {
+            preferContinue: opts.preferContinue,
+          });
+        } catch (e) {
+          setError(e instanceof ApiError ? e.message : t('home.error'));
+        } finally {
+          setBusy(false);
+        }
+      })();
+    };
+
+    if (!opts.withAssurance) {
+      execute();
+      return;
+    }
+
     if (incomplete.length > 0) {
       Alert.alert(
         t('home.checklistConfirmTitle'),
         t('home.checklistConfirmMessage', { count: incomplete.length }),
         [
           { text: t('common.cancel'), style: 'cancel' },
-          {
-            text: t('home.checklistConfirmYes'),
-            onPress: () => {
-              void (async () => {
-                if (busy) return;
-                setBusy(true);
-                setError(null);
-                try {
-                  // Confirm → mark remaining done, then complete (P2).
-                  await Promise.all(
-                    incomplete.map((item) =>
-                      toggleChecklistItem(item.id, true),
-                    ),
-                  );
-                  setProject((prev) => {
-                    if (!prev?.next_action) return prev;
-                    const markDone = (items: typeof prev.next_action.checklist_items) =>
-                      items.map((item) =>
-                        incomplete.some((u) => u.id === item.id)
-                          ? { ...item, done: true }
-                          : item,
-                      );
-                    return {
-                      ...prev,
-                      next_action: {
-                        ...prev.next_action,
-                        checklist_items: markDone(
-                          prev.next_action.checklist_items,
-                        ),
-                      },
-                      actions: prev.actions.map((a) =>
-                        a.id !== prev.next_action?.id
-                          ? a
-                          : {
-                              ...a,
-                              checklist_items: markDone(a.checklist_items),
-                            },
-                      ),
-                    };
-                  });
-                  await finishAction(action.id);
-                } catch (e) {
-                  setError(
-                    e instanceof ApiError ? e.message : t('home.error'),
-                  );
-                } finally {
-                  setBusy(false);
-                }
-              })();
-            },
-          },
+          { text: t('home.checklistConfirmYes'), onPress: execute },
         ],
       );
       return;
     }
 
+    Alert.alert(t('home.finishConfirmTitle'), t('home.finishConfirmMessage'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('home.finishConfirmYes'), onPress: execute },
+    ]);
+  };
+
+  const onNext = () => {
+    // Intermediate same-day: complete → next Session; no modal.
+    void runComplete({ preferContinue: false, withAssurance: false });
+  };
+
+  const onDone = () => {
+    // Daily Done + last same-day step: always-on assurance modal.
+    void runComplete({ preferContinue: true, withAssurance: true });
+  };
+
+  const onBack = async () => {
+    const action = project?.next_action;
+    if (!action || busy) return;
+    const prev = previousClosedSameDay(project.actions, action);
+    if (!prev) return;
     setBusy(true);
     setError(null);
     try {
-      await finishAction(action.id);
+      await uncompleteAction(prev.id);
+      clearBlockRuntime(prev.id);
+      await refreshAfterMutation();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : t('home.error'));
     } finally {
@@ -319,13 +351,159 @@ export function ProjectHomeScreen({
     try {
       await skipAction(action.id);
       clearBlockRuntime(action.id);
-      await refreshAfterMutation();
+      const detail = await refreshAfterMutation();
+      if (detail.next_action) {
+        const nextTitle = detail.next_action.title?.trim();
+        showDoneFlash(
+          nextTitle
+            ? t('home.sessionNextToast', { title: nextTitle })
+            : t('home.sessionDoneToast'),
+        );
+      } else {
+        navigation.navigate('Continue');
+      }
     } catch (e) {
       setError(e instanceof ApiError ? e.message : t('home.error'));
     } finally {
       setBusy(false);
     }
   };
+
+  const onPostpone = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const detail = await postponeDay(projectId);
+      setProject(detail);
+      navigation.navigate('Continue');
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t('home.postponeError'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onArchive = () => {
+    Alert.alert(
+      t('home.archiveConfirmTitle'),
+      t('home.archiveConfirmMessage'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('home.archiveConfirmYes'),
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              if (busy) return;
+              setBusy(true);
+              setError(null);
+              try {
+                await abandonProject(projectId);
+                navigation.navigate('Continue');
+              } catch (e) {
+                setError(
+                  e instanceof ApiError ? e.message : t('home.archiveError'),
+                );
+              } finally {
+                setBusy(false);
+              }
+            })();
+          },
+        },
+      ],
+    );
+  };
+
+  const openSessionMenu = () => {
+    if (busy) return;
+    setSessionMenuVisible(true);
+  };
+
+  const onSessionMenuAction = (action: SessionMenuAction) => {
+    switch (action) {
+      case 'fullGuide':
+        openGuide();
+        break;
+      case 'editSession':
+        Alert.alert(t('home.editSession'), t('home.editSessionSoon'));
+        break;
+      case 'postpone':
+        void onPostpone();
+        break;
+      case 'skip':
+        void onSkip();
+        break;
+      case 'finishCycle':
+        setFinishCycleSheetVisible(true);
+        break;
+      case 'archive':
+        onArchive();
+        break;
+      default: {
+        const _exhaustive: never = action;
+        return _exhaustive;
+      }
+    }
+  };
+
+  const sessionHorizon =
+    project?.current_day?.horizon_days ?? project?.cycle?.horizon_days ?? 1;
+  const sessionMenuIsDaily = sessionHorizon > 1;
+  const sessionMenuCanFinish = project?.can_finish_cycle === true;
+
+  useLayoutEffect(() => {
+    const title =
+      project?.title ||
+      project?.outcome ||
+      project?.paraphrase ||
+      t('home.today');
+
+    // Icon-only chips in stack header: iOS 26 supplies one system liquid-glass
+    // capsule. Do NOT use unstable_header*Items type button/menu — our
+    // react-native-screens@4.16 does not render those bar-button items (buttons
+    // vanish). Custom bordered chips + system glass = double outline.
+    navigation.setOptions({
+      title,
+      headerBackButtonDisplayMode: 'minimal',
+      headerBackTitle: '',
+      // Clear any previous unstable items from earlier dogfood builds.
+      unstable_headerLeftItems: undefined,
+      unstable_headerRightItems: undefined,
+      headerLeft: () => (
+        <View style={styles.headerNavSlot}>
+          <GlassIconButton
+            variant="header"
+            onPress={() => goBackOrContinue(navigation)}
+            accessibilityLabel={t('home.back')}
+            size={GLASS_ICON_CHIP_SIZE}
+          >
+            <Ionicons name="chevron-back" size={22} color={colors.text} />
+          </GlassIconButton>
+        </View>
+      ),
+      headerRight: () => (
+        <View style={styles.headerNavSlot}>
+          <GlassIconButton
+            variant="header"
+            onPress={openSessionMenu}
+            accessibilityLabel={t('home.menuPath')}
+            size={GLASS_ICON_CHIP_SIZE}
+          >
+            <Ionicons name="ellipsis-vertical" size={22} color={colors.text} />
+          </GlassIconButton>
+        </View>
+      ),
+    });
+  }, [
+    navigation,
+    project?.title,
+    project?.outcome,
+    project?.paraphrase,
+    busy,
+    t,
+    colors.text,
+  ]);
 
   const onToggleChecklist = async (
     itemId: string,
@@ -481,117 +659,6 @@ export function ProjectHomeScreen({
     }
   };
 
-  const onOpenRepair = () => {
-    if (busy) return;
-    setError(null);
-    setRepairPreview(null);
-    setRepairIntent(null);
-    setRepairSheetVisible(true);
-  };
-
-  const onPickRepairIntent = async (intent: RepairIntent) => {
-    if (busy) return;
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-    setBusy(true);
-    setError(null);
-    setRepairIntent(intent);
-    setRepairPreview(null);
-    try {
-      const preview = await repairProjectPreview(
-        projectId,
-        { intent, reason: t('home.repairReason') },
-        controller.signal,
-      );
-      setRepairPreview(preview);
-    } catch (e) {
-      if (controller.signal.aborted) return;
-      setError(e instanceof ApiError ? e.message : t('home.repairError'));
-      setRepairIntent(null);
-    } finally {
-      if (!controller.signal.aborted) setBusy(false);
-    }
-  };
-
-  const onConfirmRepair = async () => {
-    if (busy || !repairPreview || !repairIntent) return;
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-    setBusy(true);
-    setError(null);
-    setRepairSummary(null);
-    setRepairUndoVersion(null);
-    try {
-      const detail = await repairProject(
-        projectId,
-        {
-          intent: repairIntent,
-          reason: t('home.repairReason'),
-          proposed_state: repairPreview.proposed_state,
-          before_version: repairPreview.before_version,
-        },
-        controller.signal,
-      );
-      setProject(detail);
-      setRepairSheetVisible(false);
-      setRepairPreview(null);
-      setRepairIntent(null);
-      if (detail.repair_summary) {
-        setRepairSummary(detail.repair_summary);
-      } else {
-        setRepairSummary(t('home.repairApplied'));
-      }
-      if (detail.undo_version != null) {
-        setRepairUndoVersion(detail.undo_version);
-      }
-      const nextId = detail.next_action?.id ?? null;
-      if (nextId) {
-        shownActionIdRef.current = nextId;
-        trackActionShown(projectId, nextId);
-      }
-    } catch (e) {
-      if (controller.signal.aborted) return;
-      setError(e instanceof ApiError ? e.message : t('home.repairError'));
-    } finally {
-      if (!controller.signal.aborted) setBusy(false);
-    }
-  };
-
-  const onUndoRepair = async () => {
-    if (busy || repairUndoVersion == null) return;
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-    setBusy(true);
-    setError(null);
-    try {
-      const detail = await restoreState(
-        projectId,
-        repairUndoVersion,
-        controller.signal,
-      );
-      setProject(detail);
-      setRepairSummary(null);
-      setRepairUndoVersion(null);
-      const nextId = detail.next_action?.id ?? null;
-      if (nextId) {
-        shownActionIdRef.current = nextId;
-        trackActionShown(projectId, nextId);
-      }
-    } catch (e) {
-      if (controller.signal.aborted) return;
-      setError(e instanceof ApiError ? e.message : t('home.repairUndoError'));
-    } finally {
-      if (!controller.signal.aborted) setBusy(false);
-    }
-  };
-
-  const clearRepairDiff = () => {
-    setRepairPreview(null);
-    setRepairIntent(null);
-  };
   const onFinishCycle = async (partialNotes: string) => {
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -770,11 +837,58 @@ export function ProjectHomeScreen({
     );
   }
 
-  const isMultiDay = (currentDay?.horizon_days ?? 0) > 1;
+  const horizonDays =
+    currentDay?.horizon_days ?? project.cycle?.horizon_days ?? 1;
+  const isSameDayPlan = horizonDays <= 1;
+  const isMultiDay = horizonDays > 1;
+  const dayPeers = next
+    ? sameDayActions(project.actions, next.day_offset)
+    : [];
+  const pendingSameDay = dayPeers.filter((a) => a.status === 'pending');
+  const isLastSameDayStep =
+    next != null &&
+    pendingSameDay.length === 1 &&
+    pendingSameDay[0]?.id === next.id;
+  const canGoBackSession =
+    next != null && previousClosedSameDay(project.actions, next) != null;
+  const showSessionFooter =
+    next != null && !projectDone && !cycleFinished;
+
+  const stickyFooter = showSessionFooter ? (
+    isSameDayPlan ? (
+      <View style={styles.footerRow}>
+        <PrimaryButton
+          variant="secondary"
+          label={t('home.back')}
+          disabled={busy || !canGoBackSession}
+          onPress={() => void onBack()}
+          style={styles.actionBtn}
+        />
+        <PrimaryButton
+          label={
+            isLastSameDayStep
+              ? isRestDay
+                ? t('home.doneRest')
+                : t('home.done')
+              : t('home.next')
+          }
+          loading={busy}
+          onPress={isLastSameDayStep ? onDone : onNext}
+          style={styles.actionBtn}
+        />
+      </View>
+    ) : (
+      <PrimaryButton
+        label={isRestDay ? t('home.doneRest') : t('home.done')}
+        loading={busy}
+        onPress={onDone}
+      />
+    )
+  ) : null;
 
   return (
     <>
-      <SafeScreen scroll>
+      <SafeScreen scroll footer={stickyFooter}>
         {doneFlash ? (
           <View
             style={[
@@ -791,44 +905,6 @@ export function ProjectHomeScreen({
             >
               {doneFlash}
             </Text>
-          </View>
-        ) : null}
-
-        {repairSummary ? (
-          <View
-            style={[
-              styles.repairBanner,
-              {
-                backgroundColor: colors.surfaceMuted,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <Text style={[styles.repairBannerText, { color: colors.text }]}>
-              {repairSummary}
-            </Text>
-            {repairUndoVersion != null ? (
-              <Pressable onPress={() => void onUndoRepair()} hitSlop={8}>
-                <Text
-                  style={[styles.repairBannerClose, { color: colors.primary }]}
-                >
-                  {t('home.repairUndo')}
-                </Text>
-              </Pressable>
-            ) : null}
-            <Pressable
-              onPress={() => {
-                setRepairSummary(null);
-                setRepairUndoVersion(null);
-              }}
-              hitSlop={8}
-            >
-              <Text
-                style={[styles.repairBannerClose, { color: colors.textMuted }]}
-              >
-                {t('common.dismiss')}
-              </Text>
-            </Pressable>
           </View>
         ) : null}
 
@@ -1115,59 +1191,22 @@ export function ProjectHomeScreen({
                     {error}
                   </Text>
                 ) : null}
-
-                <View style={styles.actions}>
-                  <PrimaryButton
-                    label={isRestDay ? t('home.doneRest') : t('home.done')}
-                    loading={busy}
-                    onPress={() => void onComplete()}
-                    style={styles.actionBtn}
-                  />
-                  <PrimaryButton
-                    variant="secondary"
-                    label={t('home.skip')}
-                    disabled={busy}
-                    onPress={() => void onSkip()}
-                    style={styles.actionBtn}
-                  />
-                </View>
-
               </>
             ) : null}
 
-            {!projectDone && !cycleFinished ? (
-              <PrimaryButton
-                variant="ghost"
-                label={t('home.repair')}
-                disabled={busy}
-                onPress={onOpenRepair}
-                style={styles.pathBtn}
-              />
-            ) : null}
-
-            {project?.can_finish_cycle && !cycleFinished ? (
-              <PrimaryButton
-                variant="ghost"
-                label={t('home.finishCycle')}
-                disabled={busy}
-                onPress={() => setFinishCycleSheetVisible(true)}
-                style={styles.pathBtn}
-              />
+            {!next && error ? (
+              <Text style={[styles.error, { color: colors.error }]}>
+                {error}
+              </Text>
             ) : null}
           </SafeScreen>
 
-      <RepairSheet
-        visible={repairSheetVisible}
-        busy={busy}
-        diff={repairPreview?.diff ?? null}
-        summary={repairPreview?.summary}
-        onPick={(intent) => void onPickRepairIntent(intent)}
-        onConfirm={() => void onConfirmRepair()}
-        onClearDiff={clearRepairDiff}
-        onClose={() => {
-          clearRepairDiff();
-          setRepairSheetVisible(false);
-        }}
+      <SessionMenuSheet
+        visible={sessionMenuVisible}
+        isDaily={sessionMenuIsDaily}
+        canFinish={sessionMenuCanFinish}
+        onAction={onSessionMenuAction}
+        onClose={() => setSessionMenuVisible(false)}
       />
 
       <FinishCycleSheet
@@ -1190,6 +1229,13 @@ export function ProjectHomeScreen({
 }
 
 const styles = StyleSheet.create({
+  headerNavSlot: {
+    width: GLASS_ICON_CHIP_SIZE,
+    height: GLASS_ICON_CHIP_SIZE,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   chrome: {
     marginBottom: spacing.md,
     gap: spacing.xs,
@@ -1252,16 +1298,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     textAlign: 'center',
   },
-  actions: {
+  footerRow: {
     flexDirection: 'row',
     gap: spacing.sm,
-    marginTop: spacing.xl,
   },
   actionBtn: {
     flex: 1,
-  },
-  pathBtn: {
-    marginTop: spacing.lg,
   },
   doneBlock: {
     marginBottom: spacing.md,
@@ -1313,21 +1355,5 @@ const styles = StyleSheet.create({
   },
   doneFlashText: {
     ...typography.body,
-  },
-  repairBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderRadius: radii.md,
-    padding: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  repairBannerText: {
-    ...typography.body,
-    flex: 1,
-  },
-  repairBannerClose: {
-    ...typography.caption,
   },
 });

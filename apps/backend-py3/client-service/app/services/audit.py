@@ -39,7 +39,9 @@ class EventType(str, enum.Enum):
     committed = "committed"
     action_done = "action_done"
     action_skipped = "action_skipped"
+    action_uncompleted = "action_uncompleted"
     first_completion = "first_completion"
+    day_postponed = "day_postponed"
     repair_requested = "repair_requested"
     repair_applied = "repair_applied"
     # Extra server-side (not all are client beacons)

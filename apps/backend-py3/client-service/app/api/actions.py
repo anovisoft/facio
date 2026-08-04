@@ -45,6 +45,20 @@ async def skip_action(
     return serialize_action(action)
 
 
+@router.post("/actions/{action_id}/uncomplete", response_model=ActionResponse)
+async def uncomplete_action(
+    action_id: UUID,
+    user: CurrentUser,
+    db: DbSession,
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
+) -> ActionResponse:
+    """Re-open a done/skipped action as pending (Session Back)."""
+    action = await ActionService(db).uncomplete(
+        user, action_id, local_date=local_date
+    )
+    return serialize_action(action)
+
+
 @router.post(
     "/checklist-items/{item_id}/toggle",
     response_model=ChecklistItemResponse,

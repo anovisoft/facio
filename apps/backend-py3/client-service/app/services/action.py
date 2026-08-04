@@ -202,6 +202,40 @@ class ActionService:
         await self.db.commit()
         return (await self._get_owned_action(user, action_id))[0]
 
+    async def uncomplete(
+        self, user: User, action_id: UUID, *, local_date: str | None = None
+    ) -> Action:
+        """Re-open a done/skipped Session as pending (Session chrome Back).
+
+        Keeps checklist / counter / stepper / timer runtime. Physical-day
+        gate still applies. Does not rewrite PathState.
+        """
+        action, project = await self._get_owned_action(user, action_id)
+        self._require_active(project)
+        if action.status not in {ActionStatus.done, ActionStatus.skipped}:
+            raise ConflictError(
+                f"Action is {action.status.value}; only done/skipped "
+                "can be uncompleted"
+            )
+        self._require_unlocked(action, project, local_date)
+
+        previous = action.status.value
+        action.status = ActionStatus.pending
+        await self.db.flush()
+
+        await self.audit.add_event(
+            event_type=EventType.action_uncompleted,
+            user_id=user.id,
+            project_id=project.id,
+            payload={
+                "action_id": str(action.id),
+                "previous_status": previous,
+                "new_status": action.status.value,
+            },
+        )
+        await self.db.commit()
+        return (await self._get_owned_action(user, action_id))[0]
+
     async def toggle_checklist_item(
         self,
         user: User,

@@ -222,6 +222,24 @@ async def abandon_project(
     return await service.to_detail(project, local_date=local_date)
 
 
+@router.post("/{project_id}/postpone-day", response_model=ProjectDetail)
+async def postpone_day(
+    project_id: UUID,
+    user: CurrentUser,
+    db: DbSession,
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
+) -> ProjectDetail:
+    """Deterministic postpone: bump today's pending actions +1 day (no LLM)."""
+    service = PathService(db)
+    try:
+        project = await service.postpone_day(
+            user, project_id, local_date=local_date
+        )
+    except AppError as exc:
+        await _commit_on_app_error(db, exc)
+    return await ProjectService(db).to_detail(project, local_date=local_date)
+
+
 @router.post("/{project_id}/restore-state", response_model=ProjectDetail)
 async def restore_state(
     project_id: UUID,

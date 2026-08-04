@@ -87,19 +87,23 @@ May be the bottom of the Guide page (preferred) rather than a duplicate full-map
 
 **Job:** Answer *How do I do it?* with **Full Block** execute. Maximize doability.
 
-**Layout direction (from prototype Session Stage — keep spirit):**
+**Layout direction (Session chrome lock — PO 2026-08-04):**
 
 - **Full Block** stage as visual hero (~2/3) — interactive
-- Short support: title / “now” line
-- Done / Skip / Repair entry as secondary chrome
-- Affordance to open Guide (swipe up + ≡)
+- Short support: title / day N/M when multi-day
+- Sticky footer by Guide shape (`horizon_days`):
+  - **Same-day** (`horizon_days === 1`): **Back** + **Next**; last step of the day → **Back** + **Done**
+  - **Daily** (`horizon_days > 1`): one **Done**
+- Header: back **‹** only (no “Continue” title); right **kebab** (not burger)
+- Kebab: Full Guide · Edit Session (stub) · Postpone to tomorrow (daily only) · Skip · Finish cycle (if allowed) · Archive
+- AI Repair / lighten / rest — **not** on Session happy path (`RepairSheet` kept for future Edit Session)
 
-**Contains:** only the current Session’s Full Block(s) + completion controls.
+**Contains:** only the current Session’s Full Block(s) + completion chrome above.
 
-**On complete:** **Session complete** beat (progress resolve + copy + brief celebration) → then Continue / next Focus.  
+**On complete:** intermediate same-day **Next** → complete → next Session (toast, no modal). **Done** (daily or last same-day) → always-on “Finish session?” assurance → Continue when no next Session.  
 Session is an **atom** — one opening; see [11 §2–3](./11-success-systems.md).
 
-**Does not contain:** entire Cycle list as the main scroll body; chat; multi-Guide switcher as the center; Identity stats as the hero.
+**Does not contain:** entire Cycle list as the main scroll body; chat; multi-Guide switcher as the center; Identity stats as the hero; inline Repair CTA.
 
 ---
 

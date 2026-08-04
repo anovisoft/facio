@@ -47,6 +47,7 @@ class StateSource(str, enum.Enum):
     llm_repair = "llm_repair"
     llm_next_cycle = "llm_next_cycle"
     user_restore = "user_restore"
+    user_edit = "user_edit"
 
 
 class User(Base):

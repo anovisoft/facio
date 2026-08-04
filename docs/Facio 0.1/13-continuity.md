@@ -6,34 +6,34 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 
 ---
 
-## Snapshot (2026-08-03 evening)
+## Snapshot (2026-08-04)
 
 | Layer | State |
 |-------|--------|
 | Product vector | Facio 0.1 locked — **Guide = path / Continue = focus / Session = execute** + Hero/Full/Compact |
 | Prototype engine | `apps/` ≈ `docs/next` slices 1–5 **accepted** |
-| Facio 0.1 shell | **A–D accepted** (incl. C/D iterates + chrome + evening polish P1–P4). **E implemented / awaiting PO dogfood**. **Next after accept = Slice F** |
-| Carbonara / multi-Session same day | Complete routing: next Session in-place (no modal→Continue) |
-| Fitness multi-day E2E | Deferred — calendar week or **Slice H** time travel |
+| Facio 0.1 shell | **A–D accepted**. **E implemented / awaiting PO dogfood**. **Session chrome cleanup implemented / awaiting PO dogfood**. **Next after E accept = Slice F** |
+| Carbonara / multi-Session same day | Sticky **Back** + **Next**/**Done**; Next stays in-Guide; last Done → assurance → Continue |
+| Fitness multi-day E2E | Daily sticky **Done** + assurance; kebab Postpone (deterministic); deferred calendar week / **H** |
 | Instant Answer | Off Create happy path (D5) |
-| Uncommitted work | Large client+backend under `apps/mobapp-rn/` + cover Alembic `012` — **not committed** (incl. Slice E Repair Diff+Undo) |
+| Uncommitted work | Client+backend under `apps/` — Session chrome + E Repair + Alembic `013` — **not committed** |
 
 ---
 
 ## After summarization — PM start here
 
 1. Read [README](./README.md) → [11](./11-success-systems.md) (esp. §5–6 Diff/Undo, §9 presentations) → **this file** → [14](./14-impl-plan.md).  
-2. Confirm with PO: **dogfood Slice E?** then accept → dispatch **Slice F** (Identity + Finish).  
+2. Confirm with PO: **dogfood Slice E + Session chrome?** then accept → dispatch **Slice F** (Identity + Finish).  
 3. Slice E landed (awaiting PO dogfood — not accepted yet):
    - Repair: intent → **preview Diff** → confirm → apply (no silent apply).
    - API: `POST .../repair/preview` + apply with `proposed_state` / `before_version`; response `undo_version`.
    - Undo: `restore-state` works on **active** (materialize merge) as well as draft.
-   - Session banner: summary + **Undo** CTA after apply.
    - **Landmine fixed:** lighten/rest strip plugin payloads + rematerialize phase-3 (shift still preserves). Do **not** re-introduce blind `_preserve_plugins` on all repairs.
    - Do **not** expand Anthropic schemas.
-4. Do **not** invent D1–D8 / deferred parked items.  
-5. Do **not** reopen Continuereveal (`useGuidesRevealGesture`, `useNativeDriver: false`) unless PO reports regress.  
-6. After E accept → **F** (Identity + Finish).
+4. **Session chrome cleanup** landed (awaiting PO dogfood — not accepted): see lock below. Repair removed from Session happy path (sheet kept for Edit Session later).
+5. Do **not** invent D1–D8 / deferred parked items.  
+6. Do **not** reopen Guides reveal (`useGuidesRevealGesture`, `useNativeDriver: false`) unless PO reports regress.  
+7. After E (+ chrome) accept → **F** (Identity + Finish).
 
 ---
 
@@ -81,7 +81,20 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 
 - Execute only `day_index ≤ unlocked_day_index`  
 - D2: incomplete Block runtime resume = **same calendar day only** (`blockRuntimeByActionId` + `localDate`)  
-- Complete routing: if same Guide still has `next_action` → **stay on next Session** (light toast); else → Continue. **No** Session-complete modal / progress bar on Done.
+- Complete routing: intermediate same-day **Next** → stay on next Session (toast); **Done** (daily / last same-day) → Continue after assurance.
+
+### Session chrome lock (PO 2026-08-04) — implemented / awaiting dogfood
+
+| Mode | When | Sticky footer |
+|------|------|----------------|
+| Same-day plan | `horizon_days === 1` | **Back** + **Next**; last step → **Back** + **Done** |
+| Daily Guide | `horizon_days > 1` | one **Done** |
+
+- **Next** (not last) = `complete` → open next; no modal; undo = **Back** (`POST /actions/{id}/uncomplete`).
+- **Done** (daily + last same-day) = always-on “Finish session?” → Cancel / Done; checklist note if unchecked items remain. Counter never incomplete-gates.
+- Header: `GlassIconButton variant="header"` (icon only) in `headerLeft`/`headerRight` — iOS 26 draws **one** system glass; bordered/`nav` chips double it. Menu = `SessionMenuSheet`. Do **not** use `unstable_header*Items` `button`/`menu` on screens@4.16 (bar-button items unsupported → buttons vanish). Continue ☰ stays `default` LiquidGlass in-content.
+- Kebab options: Full Guide · Edit Session (stub) · Postpone to tomorrow (daily only, `POST /projects/{id}/postpone-day`, no LLM) · Skip · Finish cycle · Archive (destructive).
+- Repair / lighten / rest off Session happy path; keep `RepairSheet.tsx` for future Edit Session.
 
 ### Guides drawer reveal landmines
 
@@ -144,7 +157,8 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 | C | Guide Explore + Commitment | **accepted** (after Explore UX iterate) |
 | D | Session atom + complete + ≡ Guide | **accepted** (after complete-routing + chrome + P1–P4 polish) |
 | E | Repair Diff + Undo | **implemented / awaiting PO dogfood** |
-| F | Identity + Finish Experience | **next** (after E accept) |
+| — | Session chrome cleanup | **implemented / awaiting PO dogfood** (not a lettered slice) |
+| F | Identity + Finish Experience | **next** (after E + chrome accept) |
 | G | Copy / IA kill / Morning Summary (+ #8) | pending |
 | H | Time travel (optional) | pending |
 
@@ -158,9 +172,10 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 | Guides reveal | `useGuidesRevealGesture.ts` + `GuidesDrawer.tsx` |
 | Cover | Alembic `012`, `cover.py`, `coverDisplay.ts` |
 | Guide trust | `features/guide/GuideScreen.tsx` (+ CompactRoadmap, Cover, contract, softStart) |
-| Session | `features/home/ProjectHomeScreen.tsx` — layout, complete routing, checklist confirm, optimistic toggles |
+| Session | `features/home/ProjectHomeScreen.tsx` — sticky footer by horizon, kebab, Back/Next/Done, checklist/Done assurance |
+| Session APIs | `POST /actions/{id}/uncomplete`; `POST /projects/{id}/postpone-day` (Alembic `013` `user_edit`) |
 | Stepper persist/back | `ActionPlugins.tsx` + store `blockRuntimeByActionId` |
-| Glass chips | `GlassIconButton` — `GLASS_ICON_CHIP_SIZE`; Session ≡ `variant="header"` |
+| Glass chips | `GlassIconButton` — `GLASS_ICON_CHIP_SIZE`; Session header = `header` icons + `SessionMenuSheet`; Continue ☰ = `default` |
 | Scroll | `SafeScreen` — scroll outside KAV; `flexGrow: 0`; PathList expandable on Guide |
 | Repair Diff + Undo (E) | `RepairSheet` Diff confirm; preview/apply; active Undo; lighten/rest strip plugins + phase-3 rematerialize (shift preserves) |
 
@@ -183,7 +198,7 @@ Implemented 2026-08-03; lighten rematerialize fix 2026-08-04:
 ## Engineering pointers
 
 - Client: `apps/mobapp-rn`  
-- API: `apps/backend-py3/client-service` — Alembic through **012**  
+- API: `apps/backend-py3/client-service` — Alembic through **013**  
 - Prefer aliases over big-bang DB rename  
 
-Do not rewrite backend runtime to start Facio 0.1 — shell + trust mutations next (E).
+Do not rewrite backend runtime to start Facio 0.1 — shell + trust mutations next (F after E/chrome accept).

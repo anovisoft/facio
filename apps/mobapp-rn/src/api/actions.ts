@@ -24,6 +24,17 @@ export function skipAction(
   });
 }
 
+export function uncompleteAction(
+  actionId: string,
+  signal?: AbortSignal,
+): Promise<ActionResponse> {
+  return apiRequest(`/actions/${actionId}/uncomplete`, {
+    method: 'POST',
+    query: { local_date: getLocalDate() },
+    signal,
+  });
+}
+
 export function toggleChecklistItem(
   itemId: string,
   done?: boolean | null,

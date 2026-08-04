@@ -77,7 +77,14 @@ export default function AppNavigator() {
         {/* InstantAnswer kept registered but off Create happy path (D5). */}
         <Stack.Screen name="InstantAnswer" component={InstantAnswerScreen} />
         <Stack.Screen name="GuideExplore" component={GuideScreen} />
-        <Stack.Screen name="Session" component={ProjectHomeScreen} />
+        <Stack.Screen
+          name="Session"
+          component={ProjectHomeScreen}
+          options={{
+            headerBackButtonDisplayMode: 'minimal',
+            headerBackTitle: '',
+          }}
+        />
         <Stack.Screen name="Guide" component={GuideScreen} />
         <Stack.Screen name="Archive" component={HistoryScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />

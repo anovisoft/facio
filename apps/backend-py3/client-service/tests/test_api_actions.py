@@ -136,6 +136,116 @@ async def test_skip_action(client, auth_headers, enqueue_path, db_session):
     assert len(skipped) == 1
 
 
+async def test_uncomplete_done_and_skipped(
+    client, auth_headers, enqueue_path, db_session
+):
+    """Session Back: done/skipped → pending; checklist runtime kept."""
+    project = await _create_and_commit(client, auth_headers, enqueue_path)
+    buy = next(a for a in project["actions"] if a["key"] == "buy")
+
+    for item in buy["checklist_items"]:
+        await client.post(
+            f"/api/v1/checklist-items/{item['id']}/toggle",
+            headers=auth_headers,
+            json={"done": True},
+        )
+    done = await client.post(
+        f"/api/v1/actions/{buy['id']}/complete",
+        headers=auth_headers,
+    )
+    assert done.status_code == 200
+    assert done.json()["status"] == "done"
+    assert all(i["done"] for i in done.json()["checklist_items"])
+
+    reopened = await client.post(
+        f"/api/v1/actions/{buy['id']}/uncomplete",
+        headers=auth_headers,
+    )
+    assert reopened.status_code == 200
+    body = reopened.json()
+    assert body["status"] == "pending"
+    assert all(i["done"] for i in body["checklist_items"])
+
+    events = set(
+        (
+            await db_session.execute(
+                select(Event.type).where(Event.project_id == project["id"])
+            )
+        ).scalars().all()
+    )
+    assert "action_uncompleted" in events
+
+    # Skip then uncomplete also works.
+    skipped = await client.post(
+        f"/api/v1/actions/{buy['id']}/skip",
+        headers=auth_headers,
+    )
+    assert skipped.status_code == 200
+    again = await client.post(
+        f"/api/v1/actions/{buy['id']}/uncomplete",
+        headers=auth_headers,
+    )
+    assert again.status_code == 200
+    assert again.json()["status"] == "pending"
+
+    # Pending cannot be uncompleted.
+    bad = await client.post(
+        f"/api/v1/actions/{buy['id']}/uncomplete",
+        headers=auth_headers,
+    )
+    assert bad.status_code == 409
+
+
+async def test_uncomplete_rejected_on_locked_day(
+    client, auth_headers, enqueue_fitness
+):
+    """Physical-day gate: cannot uncomplete a future day's action."""
+    from datetime import date, timedelta
+
+    from tests.conftest import wait_path_ready, wait_plugins_ready
+
+    enqueue_fitness()
+    created = await client.post(
+        "/api/v1/projects",
+        headers=auth_headers,
+        json={"intent": "Хочу научиться делать 30 отжиманий"},
+    )
+    project = await wait_path_ready(
+        client, auth_headers, created.json()["project"]["id"]
+    )
+    committed = await client.post(
+        f"/api/v1/projects/{project['id']}/commit",
+        headers=auth_headers,
+        json={"first_step_when": "today"},
+    )
+    assert committed.status_code == 200
+    project = await wait_plugins_ready(
+        client, auth_headers, committed.json()["id"]
+    )
+    d0 = next(a for a in project["actions"] if a["day_offset"] == 0)
+    future = next(a for a in project["actions"] if a["day_offset"] == 1)
+    assert (
+        await client.post(
+            f"/api/v1/actions/{d0['id']}/skip", headers=auth_headers
+        )
+    ).status_code == 200
+    tomorrow = (date.today() + timedelta(days=1)).isoformat()
+    assert (
+        await client.post(
+            f"/api/v1/actions/{future['id']}/skip",
+            headers=auth_headers,
+            params={"local_date": tomorrow},
+        )
+    ).status_code == 200
+    locked = await client.post(
+        f"/api/v1/actions/{future['id']}/uncomplete",
+        headers=auth_headers,
+        params={"local_date": date.today().isoformat()},
+    )
+    assert locked.status_code == 409
+    assert "open yet" in locked.json()["detail"].lower()
+
+
 async def test_completing_all_actions_completes_project(
     client, auth_headers, enqueue_path, db_session
 ):

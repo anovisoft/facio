@@ -55,7 +55,14 @@ from app.schemas.create_response import (
     InstantAnswerPayload,
     PathStartSurface,
 )
-from app.schemas.path_state import PathAction, PathState
+from app.schemas.path_state import (
+    FITNESS_HORIZON_TARGET,
+    HORIZON_HARD_CAP,
+    PathAction,
+    PathDay,
+    PathState,
+    _is_fitness_like,
+)
 from app.services.audit import AuditService, EventType
 from app.services.cycle import (
     archive_cycle_entry,
@@ -89,6 +96,7 @@ from app.services.path_materialize import (
 from app.services.project import ProjectService
 from app.services.repair_diff import build_repair_diff
 from app.services.schedule import parse_local_date
+from app.services.schedule import unlocked_day_index as compute_unlocked_day_index
 from app.services.serializers import action_queue_key
 
 logger = logging.getLogger("app.path")
@@ -1232,6 +1240,134 @@ class PathService:
         )
         repaired = await self.projects.get_project(user, project.id)
         return repaired, result.state.paraphrase or None, undo_version
+
+    async def postpone_day(
+        self,
+        user: User,
+        project_id: UUID,
+        *,
+        local_date: str | None = None,
+    ) -> Project:
+        """Deterministic postpone: bump today's pending actions +1 day.
+
+        Multi-day Guides only (horizon > 1). No LLM. Writes a new
+        state_version (user_edit) and rematerializes with merge_progress.
+        """
+        project = await self.projects.get_project(
+            user, project_id, for_update=True
+        )
+        if project.status != ProjectStatus.active:
+            raise ConflictError("Only active Guides can postpone a day")
+        horizon = int(project.cycle_horizon_days or 1)
+        if horizon <= 1:
+            raise ConflictError(
+                "Postpone is only for multi-day Guides (horizon > 1)"
+            )
+
+        version_no, current = await self.projects.get_latest_state(project.id)
+        if current is None or version_no is None:
+            raise ConflictError("Project has no Path state to postpone")
+
+        unlocked = compute_unlocked_day_index(
+            anchor=project.cycle_anchor_date,
+            horizon_days=horizon,
+            local_today=parse_local_date(local_date),
+        )
+        if unlocked < 0:
+            raise ConflictError("Nothing to postpone yet")
+
+        pending_keys = {
+            action.key
+            for action in project.actions
+            if action.status == ActionStatus.pending
+            and action.day_offset == unlocked
+        }
+        if not pending_keys:
+            raise ConflictError("No pending steps today to postpone")
+
+        cap = (
+            FITNESS_HORIZON_TARGET
+            if _is_fitness_like(current.domain, list(current.tags))
+            else HORIZON_HARD_CAP
+        )
+        new_actions: list[PathAction] = []
+        for item in current.actions:
+            key = item.id or ""
+            if key in pending_keys:
+                old_off = item.day_offset if item.day_offset is not None else 0
+                new_off = old_off + 1
+                if new_off >= cap:
+                    raise ConflictError(
+                        "Can't postpone past the end of this cycle"
+                    )
+                new_actions.append(
+                    item.model_copy(update={"day_offset": new_off})
+                )
+            else:
+                new_actions.append(item)
+
+        max_offset = max(
+            (a.day_offset for a in new_actions if a.day_offset is not None),
+            default=0,
+        )
+        new_horizon = max(current.cycle.horizon_days, max_offset + 1)
+        if new_horizon > cap:
+            raise ConflictError("Can't postpone past the end of this cycle")
+
+        day_by_index = {d.day_index: d for d in current.days}
+        source_day = day_by_index.get(unlocked)
+        new_days = list(current.days)
+        for day_index in range(new_horizon):
+            if day_index in day_by_index:
+                continue
+            new_days.append(
+                PathDay(
+                    day_index=day_index,
+                    kind=source_day.kind if source_day else "other",
+                    title=source_day.title if source_day else None,
+                    summary=source_day.summary if source_day else None,
+                )
+            )
+        new_days.sort(key=lambda d: d.day_index)
+
+        state = PathState.model_validate(
+            current.model_copy(
+                update={
+                    "actions": new_actions,
+                    "days": new_days,
+                    "cycle": current.cycle.model_copy(
+                        update={"horizon_days": new_horizon}
+                    ),
+                }
+            ).model_dump(mode="json")
+        )
+
+        result = await self._commit_path_state(
+            project=project,
+            state=state,
+            source=StateSource.user_edit,
+            materialize="merge",
+        )
+        await self.audit.add_event(
+            event_type=EventType.day_postponed,
+            user_id=user.id,
+            project_id=project.id,
+            payload={
+                "from_day": unlocked,
+                "action_keys": sorted(pending_keys),
+                "version": result.version,
+                "horizon_days": new_horizon,
+            },
+        )
+        await self.db.commit()
+        logger.info(
+            "postpone_day project=%s from_day=%s keys=%s version=%s",
+            project.id,
+            unlocked,
+            sorted(pending_keys),
+            result.version,
+        )
+        return await self.projects.get_project(user, project.id)
 
     async def _commit_path_state(
         self,
