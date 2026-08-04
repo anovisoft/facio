@@ -251,6 +251,7 @@ async def test_repair_with_intent_only_returns_summary(
     assert response.status_code == 200
     body = response.json()
     assert body["repair_summary"] == "Сдвинули готовку на завтра"
+    assert body["undo_version"] == project["current_version"]
     # Repair must not unlock future execute incorrectly: anchor stays fixed.
     assert body["cycle_anchor_date"] == project["cycle_anchor_date"]
 
@@ -293,3 +294,197 @@ async def test_repair_rest_intent_still_returns_new_today(
     assert body["id"] == project["id"]
     assert body["status"] == "active"
     assert body["next_action"] is not None
+
+
+async def test_repair_preview_then_apply_and_undo_on_active(
+    client, auth_headers, enqueue_path, enqueue_repair
+):
+    """Slice E: Diff preview → confirm apply → Undo on active Guide."""
+    project = await _create_and_commit_carbonara(client, auth_headers, enqueue_path)
+    before_version = project["current_version"]
+    buy_title = next(a["title"] for a in project["actions"] if a["key"] == "buy")
+
+    repaired_state = sample_path_state(
+        questions=[],
+        paraphrase="Сдвинули готовку на завтра",
+    )
+    # Visible Diff: rename buy step.
+    for action in repaired_state["actions"]:
+        if action["id"] == "buy":
+            action["title"] = "Купить продукты завтра"
+            action["day_offset"] = 1
+    repaired_state["cycle"]["horizon_days"] = 2
+    repaired_state["days"] = [
+        {
+            "day_index": 0,
+            "kind": "cook_session",
+            "title": "Пауза",
+            "summary": "",
+        },
+        {
+            "day_index": 1,
+            "kind": "cook_session",
+            "title": "Вечер готовки",
+            "summary": "",
+        },
+    ]
+
+    enqueue_repair(repaired_state)
+    preview = await client.post(
+        f"/api/v1/projects/{project['id']}/repair/preview",
+        headers=auth_headers,
+        json={"intent": "shift"},
+    )
+    assert preview.status_code == 200
+    preview_body = preview.json()
+    assert preview_body["before_version"] == before_version
+    assert preview_body["summary"] == "Сдвинули готовку на завтра"
+    assert preview_body["diff"]
+    assert any(
+        "завтра" in line["after"].lower() or line["before"] != line["after"]
+        for line in preview_body["diff"]
+    )
+    assert "proposed_state" in preview_body
+
+    # Preview must not bump state version.
+    still = await client.get(
+        f"/api/v1/projects/{project['id']}",
+        headers=auth_headers,
+    )
+    assert still.json()["current_version"] == before_version
+
+    applied = await client.post(
+        f"/api/v1/projects/{project['id']}/repair",
+        headers=auth_headers,
+        json={
+            "intent": "shift",
+            "proposed_state": preview_body["proposed_state"],
+            "before_version": preview_body["before_version"],
+        },
+    )
+    assert applied.status_code == 200
+    applied_body = applied.json()
+    assert applied_body["repair_summary"] == "Сдвинули готовку на завтра"
+    assert applied_body["undo_version"] == before_version
+    assert applied_body["current_version"] == before_version + 1
+    assert applied_body["status"] == "active"
+    new_buy = next(
+        a["title"] for a in applied_body["actions"] if a["key"] == "buy"
+    )
+    assert new_buy == "Купить продукты завтра"
+
+    undone = await client.post(
+        f"/api/v1/projects/{project['id']}/restore-state",
+        headers=auth_headers,
+        json={"version": applied_body["undo_version"]},
+    )
+    assert undone.status_code == 200
+    undone_body = undone.json()
+    assert undone_body["status"] == "active"
+    assert undone_body["current_version"] == before_version + 2
+    restored_buy = next(
+        a["title"] for a in undone_body["actions"] if a["key"] == "buy"
+    )
+    assert restored_buy == buy_title
+
+
+async def test_repair_apply_rejects_stale_before_version(
+    client, auth_headers, enqueue_path, enqueue_repair
+):
+    project = await _create_and_commit_carbonara(client, auth_headers, enqueue_path)
+    enqueue_repair(
+        sample_path_state(questions=[], paraphrase="Сдвинули готовку на завтра")
+    )
+    preview = await client.post(
+        f"/api/v1/projects/{project['id']}/repair/preview",
+        headers=auth_headers,
+        json={"intent": "shift"},
+    )
+    assert preview.status_code == 200
+    preview_body = preview.json()
+
+    # One-shot repair advances version so preview is stale.
+    enqueue_repair(
+        sample_path_state(questions=[], paraphrase="Облегчили план")
+    )
+    raced = await client.post(
+        f"/api/v1/projects/{project['id']}/repair",
+        headers=auth_headers,
+        json={"intent": "lighten"},
+    )
+    assert raced.status_code == 200
+
+    stale = await client.post(
+        f"/api/v1/projects/{project['id']}/repair",
+        headers=auth_headers,
+        json={
+            "intent": "shift",
+            "proposed_state": preview_body["proposed_state"],
+            "before_version": preview_body["before_version"],
+        },
+    )
+    assert stale.status_code == 409
+
+
+async def test_repair_lighten_preview_strips_stepper_on_fitness(
+    client, auth_headers, enqueue_fitness, enqueue_repair, llm
+):
+    """lighten must not keep old push-up stepper; rematerialize after apply."""
+    from tests.factories import (
+        sample_fitness_path_state,
+        sample_fitness_plugins_materialize,
+    )
+    from tests.conftest import wait_plugins_ready
+
+    project = await _create_and_commit_fitness(
+        client, auth_headers, enqueue_fitness
+    )
+    d0_before = next(a for a in project["actions"] if a["key"] == "d0")
+    assert d0_before.get("stepper") is not None
+
+    lightened = sample_fitness_path_state(
+        questions=[],
+        paraphrase="Облегчили сегодняшнюю нагрузку",
+    )
+    for action in lightened["actions"]:
+        if action["id"] == "d0":
+            action["title"] = "Лёгкая силовая"
+            action["detail"] = "Короче: замер + 1 подход."
+        action["stepper"] = None
+
+    enqueue_repair(lightened)
+    preview = await client.post(
+        f"/api/v1/projects/{project['id']}/repair/preview",
+        headers=auth_headers,
+        json={"intent": "lighten"},
+    )
+    assert preview.status_code == 200
+    body = preview.json()
+    proposed = body["proposed_state"]
+    d0 = next(a for a in proposed["actions"] if a.get("id") == "d0")
+    assert d0.get("stepper") is None
+    assert d0.get("plugin_hints") == ["stepper"]
+    assert any(
+        line["before"] == "Previous load (sets)" for line in body["diff"]
+    )
+
+    llm.enqueue("plugins", sample_fitness_plugins_materialize())
+    applied = await client.post(
+        f"/api/v1/projects/{project['id']}/repair",
+        headers=auth_headers,
+        json={
+            "intent": "lighten",
+            "proposed_state": proposed,
+            "before_version": body["before_version"],
+        },
+    )
+    assert applied.status_code == 200
+    applied_body = applied.json()
+    assert applied_body["plugins_ready"] is False
+
+    ready = await wait_plugins_ready(
+        client, auth_headers, project["id"]
+    )
+    assert ready["plugins_ready"] is True
+    d0_after = next(a for a in ready["actions"] if a["key"] == "d0")
+    assert d0_after.get("stepper") is not None

@@ -122,23 +122,60 @@ class NextCycleRequest(BaseModel):
         return self.model_copy(update={"comment": comment})
 
 
+class RepairDiffLine(BaseModel):
+    """One human-readable before → after row for Repair confirm."""
+
+    before: str
+    after: str
+
+
+class RepairPreviewResponse(BaseModel):
+    """Dry-run Repair: Diff + proposed PathState, nothing persisted."""
+
+    before_version: int = Field(
+        description="Current state_version; pass back on confirm apply.",
+    )
+    summary: str | None = Field(
+        default=None,
+        description="Repair-flavored paraphrase for the Diff header.",
+    )
+    diff: list[RepairDiffLine] = Field(default_factory=list)
+    proposed_state: dict[str, Any] = Field(
+        description="Validated PathState JSON to send on POST .../repair apply.",
+    )
+
+
 class RepairProjectRequest(BaseModel):
     """Structured «Не могу» gesture: pick an intent and/or free reason.
 
-    At least one of ``intent`` / ``reason`` is required. ``intent`` maps to
-    a repair playbook (shift the blocked day / lighten load / swap for rest);
-    ``reason`` is optional free text appended for the LLM.
+    Two-phase (Facio 0.1 Slice E): preview first, then apply with
+    ``proposed_state`` + ``before_version``. One-shot (intent/reason only)
+    still runs LLM + commit for back-compat / scripts.
     """
 
     intent: RepairIntent | None = None
     reason: str | None = Field(default=None, max_length=4000)
+    proposed_state: dict[str, Any] | None = Field(
+        default=None,
+        description="From POST .../repair/preview — apply without re-running LLM.",
+    )
+    before_version: int | None = Field(
+        default=None,
+        ge=1,
+        description="Required with proposed_state; rejects if Guide moved.",
+    )
 
     @model_validator(mode="after")
     def require_one(self) -> "RepairProjectRequest":
+        if self.proposed_state is not None:
+            if self.before_version is None:
+                raise ValueError(
+                    "before_version is required when applying proposed_state"
+                )
+            return self
         if self.intent is None and not (self.reason or "").strip():
             raise ValueError("Provide intent and/or reason")
         return self
-
 
 class CommitProjectRequest(BaseModel):
     first_step_when: Literal["today", "tomorrow"] = "today"
@@ -445,6 +482,13 @@ class ProjectDetail(ProjectSummary):
             "«what changed» summary (repair-flavored paraphrase) for a "
             "confirmation toast/banner. Not persisted / not present on "
             "plain GET."
+        ),
+    )
+    undo_version: int | None = Field(
+        default=None,
+        description=(
+            "Set only on POST .../repair apply: state_version to restore "
+            "via POST .../restore-state for Undo."
         ),
     )
     cycle_result: CycleResultResponse | None = Field(

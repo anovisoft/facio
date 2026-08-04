@@ -12,23 +12,24 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 |-------|--------|
 | Product vector | Facio 0.1 locked — **Guide = path / Continue = focus / Session = execute** + Hero/Full/Compact |
 | Prototype engine | `apps/` ≈ `docs/next` slices 1–5 **accepted** |
-| Facio 0.1 shell | **A–D accepted** (incl. C/D iterates + chrome + evening polish P1–P4). **Next = Slice E** |
+| Facio 0.1 shell | **A–D accepted** (incl. C/D iterates + chrome + evening polish P1–P4). **E implemented / awaiting PO dogfood**. **Next after accept = Slice F** |
 | Carbonara / multi-Session same day | Complete routing: next Session in-place (no modal→Continue) |
 | Fitness multi-day E2E | Deferred — calendar week or **Slice H** time travel |
 | Instant Answer | Off Create happy path (D5) |
-| Uncommitted work | Large client+backend under `apps/mobapp-rn/` + cover Alembic `012` — **not committed** |
+| Uncommitted work | Large client+backend under `apps/mobapp-rn/` + cover Alembic `012` — **not committed** (incl. Slice E Repair Diff+Undo) |
 
 ---
 
 ## After summarization — PM start here
 
 1. Read [README](./README.md) → [11](./11-success-systems.md) (esp. §5–6 Diff/Undo, §9 presentations) → **this file** → [14](./14-impl-plan.md).  
-2. Confirm with PO if needed: **dispatch Slice E?** (Repair Diff + Undo).  
-3. Slice E brief essentials (from explore — do not invent beyond DoD):
-   - Today: Repair intent → **silent apply** + `repair_summary` banner — **violates** Diff-before-confirm.
-   - Undo: `restore-state` exists but **draft-only**; Repair runs on **active** — need active undo (or extend restore).
-   - `state_versions` stores full `state_json`; list API is metadata-only — may need preview/diff endpoint or client before/after snapshot.
-   - No AI Edit UI yet — Scope E = Repair Diff + Undo on Session/Home; refine draft undo already exists on Guide.
+2. Confirm with PO: **dogfood Slice E?** then accept → dispatch **Slice F** (Identity + Finish).  
+3. Slice E landed (awaiting PO dogfood — not accepted yet):
+   - Repair: intent → **preview Diff** → confirm → apply (no silent apply).
+   - API: `POST .../repair/preview` + apply with `proposed_state` / `before_version`; response `undo_version`.
+   - Undo: `restore-state` works on **active** (materialize merge) as well as draft.
+   - Session banner: summary + **Undo** CTA after apply.
+   - **Landmine fixed:** lighten/rest strip plugin payloads + rematerialize phase-3 (shift still preserves). Do **not** re-introduce blind `_preserve_plugins` on all repairs.
    - Do **not** expand Anthropic schemas.
 4. Do **not** invent D1–D8 / deferred parked items.  
 5. Do **not** reopen Continuereveal (`useGuidesRevealGesture`, `useNativeDriver: false`) unless PO reports regress.  
@@ -142,8 +143,8 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 | B2 | Hero Preview + drawer compact | **accepted** |
 | C | Guide Explore + Commitment | **accepted** (after Explore UX iterate) |
 | D | Session atom + complete + ≡ Guide | **accepted** (after complete-routing + chrome + P1–P4 polish) |
-| E | Repair Diff + Undo | **next** |
-| F | Identity + Finish Experience | pending |
+| E | Repair Diff + Undo | **implemented / awaiting PO dogfood** |
+| F | Identity + Finish Experience | **next** (after E accept) |
 | G | Copy / IA kill / Morning Summary (+ #8) | pending |
 | H | Time travel (optional) | pending |
 
@@ -161,19 +162,21 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 | Stepper persist/back | `ActionPlugins.tsx` + store `blockRuntimeByActionId` |
 | Glass chips | `GlassIconButton` — `GLASS_ICON_CHIP_SIZE`; Session ≡ `variant="header"` |
 | Scroll | `SafeScreen` — scroll outside KAV; `flexGrow: 0`; PathList expandable on Guide |
-| Repair today (pre-E) | `RepairSheet` → immediate apply + summary — **E must add Diff + Undo** |
+| Repair Diff + Undo (E) | `RepairSheet` Diff confirm; preview/apply; active Undo; lighten/rest strip plugins + phase-3 rematerialize (shift preserves) |
 
 ---
 
-## Slice E — known gaps (for next PM brief)
+## Slice E — landed (awaiting PO dogfood)
 
-1. Repair: intent → apply immediately — need **Diff preview → confirm → apply**.  
-2. Undo after Repair on **active** Guide — `restore_state` is draft-only today.  
-3. Optional: post-apply Undo CTA on Session (obvious, not buried).  
-4. AI Edit UI out of scope unless already exists — focus Repair.  
-5. Non-goals: domain-specific new repair intents; grammar expand; Continuereveal; #8 copy.
+Implemented 2026-08-03; lighten rematerialize fix 2026-08-04:
 
-**PO dogfood E:** Repair → see Diff → apply → Undo works.
+1. **Diff before apply:** intent → `POST /repair/preview` (no persist) → Diff sheet → Confirm → `POST /repair` with `proposed_state` + `before_version`.  
+2. **Undo on active:** `restore-state` rematerializes with `merge_progress` for active Guides; apply returns `undo_version`.  
+3. **Session CTA:** post-apply banner shows summary + **Undo** (not debug-only).  
+4. **Plugin landmine (fixed):** Repair wire is hints-only (like create #2). `_preserve_plugins` used to copy old stepper/counter onto matching ids — so lighten Diff could change titles while Session kept the old push-up load. Now `_prepare_repair_state`: **shift** preserves plugins; **lighten/rest** strip payloads + keep hints → `plugins_ready=false` → phase-3 enqueue on apply (same as commit). Diff adds `Previous load (sets) → Lighter load (tool updates)` when tools were stripped.  
+5. Still out of scope: AI Edit UI, new repair intents, #8 copy, grammar expand.
+
+**PO dogfood E:** Repair → see Diff (incl. load line on lighten) → apply → stepper updates → Undo works → then accept.
 
 ---
 

@@ -16,6 +16,7 @@ from app.schemas.path import (
     ProjectDetail,
     ProjectSummary,
     RefineProjectRequest,
+    RepairPreviewResponse,
     RepairProjectRequest,
     RestoreStateRequest,
     StateVersionSummary,
@@ -235,18 +236,21 @@ async def restore_state(
     return await ProjectService(db).to_detail(project, local_date=local_date)
 
 
-@router.post("/{project_id}/repair", response_model=ProjectDetail)
-async def repair_project(
+@router.post(
+    "/{project_id}/repair/preview",
+    response_model=RepairPreviewResponse,
+)
+async def repair_project_preview(
     project_id: UUID,
     body: RepairProjectRequest,
     user: CurrentUser,
     db: DbSession,
     llm: LLM,
-    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
-) -> ProjectDetail:
+) -> RepairPreviewResponse:
+    """Dry-run Repair: Diff + proposed_state, no persist (Facio 0.1 Slice E)."""
     service = PathService(db, llm=llm)
     try:
-        project, repair_summary = await service.repair(
+        return await service.repair_preview(
             user,
             project_id,
             reason=body.reason,
@@ -254,8 +258,44 @@ async def repair_project(
         )
     except AppError as exc:
         await _commit_on_app_error(db, exc)
+
+
+@router.post("/{project_id}/repair", response_model=ProjectDetail)
+async def repair_project(
+    project_id: UUID,
+    body: RepairProjectRequest,
+    user: CurrentUser,
+    db: DbSession,
+    llm: LLM,
+    background_tasks: BackgroundTasks,
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
+) -> ProjectDetail:
+    service = PathService(db, llm=llm)
+    try:
+        project, repair_summary, undo_version = await service.repair(
+            user,
+            project_id,
+            reason=body.reason,
+            intent=body.intent,
+            proposed_state=body.proposed_state,
+            before_version=body.before_version,
+        )
+    except AppError as exc:
+        await _commit_on_app_error(db, exc)
     detail = await ProjectService(db).to_detail(project, local_date=local_date)
-    return detail.model_copy(update={"repair_summary": repair_summary})
+    # lighten/rest strip steppers → phase-3 rematerialize (same as commit).
+    if await service.needs_plugin_materialize(user, project.id):
+        background_tasks.add_task(
+            complete_materialize_plugins_job,
+            project_id=project.id,
+            user_id=user.id,
+        )
+    return detail.model_copy(
+        update={
+            "repair_summary": repair_summary,
+            "undo_version": undo_version,
+        }
+    )
 
 
 @router.post("/{project_id}/complete-cycle", response_model=ProjectDetail)

@@ -24,8 +24,14 @@ import {
   updateCounter,
   updateStepperBeatCounter,
 } from '@/api/actions';
-import { getProject, rematerializePlugins, repairProject, completeCycle, startNextCycle } from '@/api/projects';
-import { ApiError, type DayKind, type ProjectDetail, type RepairIntent } from '@/api/types';
+import { getProject, rematerializePlugins, repairProject, repairProjectPreview, restoreState, completeCycle, startNextCycle } from '@/api/projects';
+import {
+  ApiError,
+  type DayKind,
+  type ProjectDetail,
+  type RepairIntent,
+  type RepairPreviewResponse,
+} from '@/api/types';
 import { FinishCycleSheet } from '@/features/home/FinishCycleSheet';
 import { NextCycleSheet } from '@/features/home/NextCycleSheet';
 import { RepairSheet } from '@/features/home/RepairSheet';
@@ -72,6 +78,12 @@ export function ProjectHomeScreen({
   const [doneFlash, setDoneFlash] = useState<string | null>(null);
   const [repairSheetVisible, setRepairSheetVisible] = useState(false);
   const [repairSummary, setRepairSummary] = useState<string | null>(null);
+  const [repairUndoVersion, setRepairUndoVersion] = useState<number | null>(
+    null,
+  );
+  const [repairPreview, setRepairPreview] =
+    useState<RepairPreviewResponse | null>(null);
+  const [repairIntent, setRepairIntent] = useState<RepairIntent | null>(null);
   const [nextCycleSheetVisible, setNextCycleSheetVisible] = useState(false);
   const [finishCycleSheetVisible, setFinishCycleSheetVisible] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -472,6 +484,8 @@ export function ProjectHomeScreen({
   const onOpenRepair = () => {
     if (busy) return;
     setError(null);
+    setRepairPreview(null);
+    setRepairIntent(null);
     setRepairSheetVisible(true);
   };
 
@@ -482,17 +496,55 @@ export function ProjectHomeScreen({
     abortRef.current = controller;
     setBusy(true);
     setError(null);
-    setRepairSummary(null);
+    setRepairIntent(intent);
+    setRepairPreview(null);
     try {
-      const detail = await repairProject(
+      const preview = await repairProjectPreview(
         projectId,
         { intent, reason: t('home.repairReason') },
         controller.signal,
       );
+      setRepairPreview(preview);
+    } catch (e) {
+      if (controller.signal.aborted) return;
+      setError(e instanceof ApiError ? e.message : t('home.repairError'));
+      setRepairIntent(null);
+    } finally {
+      if (!controller.signal.aborted) setBusy(false);
+    }
+  };
+
+  const onConfirmRepair = async () => {
+    if (busy || !repairPreview || !repairIntent) return;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setBusy(true);
+    setError(null);
+    setRepairSummary(null);
+    setRepairUndoVersion(null);
+    try {
+      const detail = await repairProject(
+        projectId,
+        {
+          intent: repairIntent,
+          reason: t('home.repairReason'),
+          proposed_state: repairPreview.proposed_state,
+          before_version: repairPreview.before_version,
+        },
+        controller.signal,
+      );
       setProject(detail);
       setRepairSheetVisible(false);
+      setRepairPreview(null);
+      setRepairIntent(null);
       if (detail.repair_summary) {
         setRepairSummary(detail.repair_summary);
+      } else {
+        setRepairSummary(t('home.repairApplied'));
+      }
+      if (detail.undo_version != null) {
+        setRepairUndoVersion(detail.undo_version);
       }
       const nextId = detail.next_action?.id ?? null;
       if (nextId) {
@@ -507,6 +559,39 @@ export function ProjectHomeScreen({
     }
   };
 
+  const onUndoRepair = async () => {
+    if (busy || repairUndoVersion == null) return;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setBusy(true);
+    setError(null);
+    try {
+      const detail = await restoreState(
+        projectId,
+        repairUndoVersion,
+        controller.signal,
+      );
+      setProject(detail);
+      setRepairSummary(null);
+      setRepairUndoVersion(null);
+      const nextId = detail.next_action?.id ?? null;
+      if (nextId) {
+        shownActionIdRef.current = nextId;
+        trackActionShown(projectId, nextId);
+      }
+    } catch (e) {
+      if (controller.signal.aborted) return;
+      setError(e instanceof ApiError ? e.message : t('home.repairUndoError'));
+    } finally {
+      if (!controller.signal.aborted) setBusy(false);
+    }
+  };
+
+  const clearRepairDiff = () => {
+    setRepairPreview(null);
+    setRepairIntent(null);
+  };
   const onFinishCycle = async (partialNotes: string) => {
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -722,9 +807,24 @@ export function ProjectHomeScreen({
             <Text style={[styles.repairBannerText, { color: colors.text }]}>
               {repairSummary}
             </Text>
-            <Pressable onPress={() => setRepairSummary(null)} hitSlop={8}>
+            {repairUndoVersion != null ? (
+              <Pressable onPress={() => void onUndoRepair()} hitSlop={8}>
+                <Text
+                  style={[styles.repairBannerClose, { color: colors.primary }]}
+                >
+                  {t('home.repairUndo')}
+                </Text>
+              </Pressable>
+            ) : null}
+            <Pressable
+              onPress={() => {
+                setRepairSummary(null);
+                setRepairUndoVersion(null);
+              }}
+              hitSlop={8}
+            >
               <Text
-                style={[styles.repairBannerClose, { color: colors.primary }]}
+                style={[styles.repairBannerClose, { color: colors.textMuted }]}
               >
                 {t('common.dismiss')}
               </Text>
@@ -1059,8 +1159,15 @@ export function ProjectHomeScreen({
       <RepairSheet
         visible={repairSheetVisible}
         busy={busy}
+        diff={repairPreview?.diff ?? null}
+        summary={repairPreview?.summary}
         onPick={(intent) => void onPickRepairIntent(intent)}
-        onClose={() => setRepairSheetVisible(false)}
+        onConfirm={() => void onConfirmRepair()}
+        onClearDiff={clearRepairDiff}
+        onClose={() => {
+          clearRepairDiff();
+          setRepairSheetVisible(false);
+        }}
       />
 
       <FinishCycleSheet

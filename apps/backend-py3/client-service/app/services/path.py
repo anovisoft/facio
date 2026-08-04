@@ -44,7 +44,9 @@ from app.schemas.api import (
     CreateIntentResponse,
     InstantAnswerResponse,
     PathCreatedResponse,
+    RepairDiffLine,
     RepairIntent,
+    RepairPreviewResponse,
     TimelineEntry,
     TimelineResponse,
 )
@@ -53,7 +55,7 @@ from app.schemas.create_response import (
     InstantAnswerPayload,
     PathStartSurface,
 )
-from app.schemas.path_state import PathState
+from app.schemas.path_state import PathAction, PathState
 from app.services.audit import AuditService, EventType
 from app.services.cycle import (
     archive_cycle_entry,
@@ -85,6 +87,7 @@ from app.services.path_materialize import (
     path_plugins_ready,
 )
 from app.services.project import ProjectService
+from app.services.repair_diff import build_repair_diff
 from app.services.schedule import parse_local_date
 from app.services.serializers import action_queue_key
 
@@ -99,6 +102,10 @@ _INTENT_REASON_HINTS: dict[RepairIntent, str] = {
     "lighten": "Today's plan is too much — lighten the load.",
     "rest": "Swap today for a light rest day.",
 }
+
+# lighten / rest change load — old stepper/counter payloads must not stick.
+# shift keeps the same workout on a new day → preserve plugins.
+_REMATERIALIZE_REPAIR_INTENTS: frozenset[str] = frozenset({"lighten", "rest"})
 
 
 @dataclass
@@ -226,6 +233,88 @@ def _preserve_plugins(prior: PathState, new: PathState) -> PathState:
             )
         )
     return new.model_copy(update={"actions": actions})
+
+
+def _action_has_filled_plugins(action: PathAction) -> bool:
+    return bool(
+        action.timers
+        or action.counter is not None
+        or action.timeline is not None
+        or action.interval_plan is not None
+        or action.stepper is not None
+    )
+
+
+def _infer_plugin_hints(action: PathAction) -> list[str]:
+    """Hints from explicit list, else from filled payloads (legacy states)."""
+    if action.plugin_hints:
+        return list(action.plugin_hints)
+    hints: list[str] = []
+    if action.stepper is not None:
+        hints.append("stepper")
+    if action.timeline is not None:
+        hints.append("timeline")
+    if action.interval_plan is not None:
+        hints.append("interval")
+    if action.counter is not None and action.stepper is None:
+        hints.append("counter")
+    if action.timers and action.timeline is None:
+        hints.append("timers")
+    return hints
+
+
+def _strip_plugins_for_rematerialize(
+    prior: PathState, new: PathState
+) -> PathState:
+    """Clear plugin payloads so phase-3 rematerialize can fill a new load.
+
+    Keeps / restores ``plugin_hints`` from the LLM wire or the prior action
+    (including inferring hints when prior had a filled stepper but empty hints).
+    """
+    prior_by_id = {
+        (a.id or f"a{i}"): a for i, a in enumerate(prior.actions)
+    }
+    actions = []
+    for index, item in enumerate(new.actions):
+        key = item.id or f"a{index}"
+        old = prior_by_id.get(key)
+        hints = list(item.plugin_hints or [])
+        if not hints and old is not None:
+            hints = _infer_plugin_hints(old)
+        if not hints and not (
+            old is not None and _action_has_filled_plugins(old)
+        ):
+            # No tools on this step — leave as-is (e.g. shopping checklist).
+            actions.append(item)
+            continue
+        actions.append(
+            item.model_copy(
+                update={
+                    "timers": [],
+                    "counter": None,
+                    "timeline": None,
+                    "interval_plan": None,
+                    "stepper": None,
+                    "plugin_hints": hints,
+                }
+            )
+        )
+    return new.model_copy(update={"actions": actions})
+
+
+def _prepare_repair_state(
+    prior: PathState,
+    new: PathState,
+    intent: RepairIntent | str | None,
+) -> PathState:
+    """Merge LLM repair wire with prior plugins according to intent.
+
+    ``shift`` / None / unknown → preserve filled plugins (same workout, new day).
+    ``lighten`` / ``rest`` → strip payloads + keep hints so phase-3 rematerializes.
+    """
+    if intent in _REMATERIALIZE_REPAIR_INTENTS:
+        return _strip_plugins_for_rematerialize(prior, new)
+    return _preserve_plugins(prior, new)
 
 
 def path_state_from_start(start: PathStartSurface) -> PathState:
@@ -909,18 +998,15 @@ class PathService:
         )
         return await self.projects.get_project(user, project.id)
 
-    async def repair(
+    async def repair_preview(
         self,
         user: User,
         project_id: UUID,
         *,
         reason: str | None = None,
         intent: RepairIntent | None = None,
-    ) -> tuple[Project, str | None]:
-        """Structured «Не могу» repair. Returns ``(project, repair_summary)``
-        where ``repair_summary`` is the repair-flavored paraphrase for a
-        one-line confirmation toast (docs/next/05 Repair UX).
-        """
+    ) -> RepairPreviewResponse:
+        """LLM dry-run Repair: Diff + proposed state, nothing committed."""
         if intent is None and not (reason or "").strip():
             raise ConflictError("Provide intent and/or reason to repair")
         effective_reason = reason or _INTENT_REASON_HINTS.get(intent, "")
@@ -930,6 +1016,156 @@ class PathService:
         )
         if project.status not in {ProjectStatus.active, ProjectStatus.draft}:
             raise ConflictError("Project cannot be repaired in current status")
+
+        version_no, current = await self.projects.get_latest_state(project.id)
+        if current is None or version_no is None:
+            raise ConflictError("Project has no Path state to repair")
+
+        await self.audit.add_event(
+            event_type=EventType.repair_requested,
+            user_id=user.id,
+            project_id=project.id,
+            payload={
+                "reason": effective_reason,
+                "intent": intent,
+                "preview": True,
+            },
+        )
+
+        state, _raw, llm_call_id = await self._llm_generate_validated(
+            user=user,
+            project_id=project.id,
+            purpose="repair",
+            messages=messages_for_repair(
+                current_state=current.model_dump(mode="json"),
+                reason=effective_reason,
+                project_status=project.status.value,
+                intent=intent,
+            ),
+            response_schema=PATH_RESPONSE_SCHEMA,
+            parse=_parse_path_payload,
+            invalid_message="Invalid Path from LLM",
+        )
+        state = _prepare_repair_state(current, state, intent)
+        state = ensure_action_keys(state)
+
+        # Persist LLM call audit only — no state_version / materialize.
+        await self.db.commit()
+        logger.info(
+            "repair_preview project=%s before_version=%s intent=%s llm=%s",
+            project.id,
+            version_no,
+            intent,
+            llm_call_id,
+        )
+        diff_rows = build_repair_diff(current, state)
+        return RepairPreviewResponse(
+            before_version=version_no,
+            summary=state.paraphrase or None,
+            diff=[RepairDiffLine(**row) for row in diff_rows],
+            proposed_state=state.model_dump(mode="json"),
+        )
+
+    async def repair(
+        self,
+        user: User,
+        project_id: UUID,
+        *,
+        reason: str | None = None,
+        intent: RepairIntent | None = None,
+        proposed_state: dict[str, Any] | None = None,
+        before_version: int | None = None,
+    ) -> tuple[Project, str | None, int]:
+        """Apply Repair. Returns ``(project, repair_summary, undo_version)``.
+
+        With ``proposed_state`` (from preview): persist without re-running LLM.
+        Without: one-shot LLM + commit (back-compat).
+        """
+        project = await self.projects.get_project(
+            user, project_id, for_update=True
+        )
+        if project.status not in {ProjectStatus.active, ProjectStatus.draft}:
+            raise ConflictError("Project cannot be repaired in current status")
+
+        version_no, current = await self.projects.get_latest_state(project.id)
+        if current is None or version_no is None:
+            raise ConflictError("Project has no Path state to repair")
+        undo_version = version_no
+
+        if proposed_state is not None:
+            if before_version is None:
+                raise ConflictError(
+                    "before_version is required when applying proposed_state"
+                )
+            if before_version != undo_version:
+                raise ConflictError(
+                    "Guide changed since preview — preview again"
+                )
+            try:
+                state = ensure_action_keys(
+                    PathState.model_validate(proposed_state)
+                )
+            except ValidationError as exc:
+                raise ValidationAppError(
+                    f"Invalid proposed_state: {exc}"
+                ) from exc
+            state = _prepare_repair_state(current, state, intent)
+
+            effective_reason = reason or _INTENT_REASON_HINTS.get(intent, "")
+            await self.audit.add_turn(
+                user_id=user.id,
+                project_id=project.id,
+                role=ConversationRole.user,
+                content=effective_reason or "confirm repair",
+                meta={"kind": "repair_reason", "intent": intent, "confirm": True},
+            )
+            materialize: MaterializeMode = (
+                "merge" if project.status == ProjectStatus.active else "none"
+            )
+            result = await self._commit_path_state(
+                project=project,
+                state=state,
+                source=StateSource.llm_repair,
+                materialize=materialize,
+            )
+            await self.audit.add_turn(
+                user_id=user.id,
+                project_id=project.id,
+                role=ConversationRole.assistant,
+                content=result.state.paraphrase,
+                meta={
+                    "kind": "repair_result",
+                    "state_version": result.version,
+                    "source": StateSource.llm_repair.value,
+                    "intent": intent,
+                    "from_preview": True,
+                },
+            )
+            await self.audit.add_event(
+                event_type=EventType.repair_applied,
+                user_id=user.id,
+                project_id=project.id,
+                payload={
+                    "version": result.version,
+                    "intent": intent,
+                    "undo_version": undo_version,
+                    "from_preview": True,
+                },
+            )
+            await self.db.commit()
+            logger.info(
+                "repair_apply project=%s version=%s undo=%s intent=%s",
+                project.id,
+                result.version,
+                undo_version,
+                intent,
+            )
+            repaired = await self.projects.get_project(user, project.id)
+            return repaired, result.state.paraphrase or None, undo_version
+
+        if intent is None and not (reason or "").strip():
+            raise ConflictError("Provide intent and/or reason to repair")
+        effective_reason = reason or _INTENT_REASON_HINTS.get(intent, "")
 
         await self.audit.add_turn(
             user_id=user.id,
@@ -945,11 +1181,7 @@ class PathService:
             payload={"reason": effective_reason, "intent": intent},
         )
 
-        _, current = await self.projects.get_latest_state(project.id)
-        if current is None:
-            raise ConflictError("Project has no Path state to repair")
-
-        materialize: MaterializeMode = (
+        materialize = (
             "merge" if project.status == ProjectStatus.active else "none"
         )
         result = await self._run_llm_mutation(
@@ -964,6 +1196,7 @@ class PathService:
             ),
             source=StateSource.llm_repair,
             materialize=materialize,
+            repair_intent=intent,
         )
         await self.audit.add_turn(
             user_id=user.id,
@@ -982,19 +1215,52 @@ class PathService:
             event_type=EventType.repair_applied,
             user_id=user.id,
             project_id=project.id,
-            payload={"version": result.version, "intent": intent},
+            payload={
+                "version": result.version,
+                "intent": intent,
+                "undo_version": undo_version,
+            },
         )
         await self.db.commit()
         logger.info(
-            "repair project=%s version=%s status=%s intent=%s",
+            "repair project=%s version=%s status=%s intent=%s undo=%s",
             project.id,
             result.version,
             project.status.value,
             intent,
+            undo_version,
         )
         repaired = await self.projects.get_project(user, project.id)
-        return repaired, result.state.paraphrase or None
+        return repaired, result.state.paraphrase or None, undo_version
 
+    async def _commit_path_state(
+        self,
+        *,
+        project: Project,
+        state: PathState,
+        source: StateSource,
+        materialize: MaterializeMode,
+    ) -> ApplyResult:
+        """Persist a validated PathState (+ optional materialize). No LLM."""
+        version = await self._next_version(project.id)
+        await self.audit.add_state_version(
+            project_id=project.id,
+            version=version,
+            state_json=state.model_dump(mode="json"),
+            source=source,
+        )
+        apply_contract(project, state)
+        if materialize == "merge":
+            await materialize_path(
+                self.db, project, state, merge_progress=True
+            )
+        # Synthetic id when apply skips LLM — callers that need a real
+        # llm_call_id use _run_llm_mutation instead.
+        return ApplyResult(
+            state=state,
+            version=version,
+            llm_call_id=project.id,
+        )
     async def finish_cycle(
         self,
         user: User,
@@ -1301,12 +1567,19 @@ class PathService:
         *,
         version: int,
     ) -> Project:
-        """Append a restored PathState snapshot (draft JSON SoT only)."""
+        """Append a restored PathState snapshot.
+
+        Draft: JSON SoT only (Explore undo).
+        Active: also re-materialize Path + plugins with merge_progress so
+        Undo after Repair restores an executable Guide (Facio 0.1 Slice E).
+        """
         project = await self.projects.get_project(
             user, project_id, for_update=True
         )
-        if project.status != ProjectStatus.draft:
-            raise ConflictError("Only draft projects can restore a prior state")
+        if project.status not in {ProjectStatus.draft, ProjectStatus.active}:
+            raise ConflictError(
+                "Only draft or active projects can restore a prior state"
+            )
 
         result = await self.db.execute(
             select(StateVersion).where(
@@ -1335,6 +1608,12 @@ class PathService:
             state_json=state.model_dump(mode="json"),
             source=StateSource.user_restore,
         )
+
+        if project.status == ProjectStatus.active:
+            await materialize_path(
+                self.db, project, state, merge_progress=True
+            )
+
         await self.audit.add_turn(
             user_id=user.id,
             project_id=project.id,
@@ -1345,6 +1624,7 @@ class PathService:
                 "restored_from_version": version,
                 "state_version": new_version,
                 "source": StateSource.user_restore.value,
+                "project_status": project.status.value,
             },
         )
         await self.audit.add_event(
@@ -1354,6 +1634,7 @@ class PathService:
             payload={
                 "restored_from_version": version,
                 "new_version": new_version,
+                "project_status": project.status.value,
             },
         )
         await self.db.commit()
@@ -1491,6 +1772,7 @@ class PathService:
         messages: list[dict[str, Any]],
         source: StateSource,
         materialize: MaterializeMode,
+        repair_intent: RepairIntent | None = None,
     ) -> ApplyResult:
         """Refine/repair/next_cycle: validated Path → state version (+ optional merge)."""
         state, _raw, llm_call_id = await self._llm_generate_validated(
@@ -1503,13 +1785,17 @@ class PathService:
             invalid_message="Invalid Path from LLM",
         )
 
-        # Preserve existing plugin payloads across refine/repair when the
-        # wire returns hints-only (same action id). Fresh next_cycle keeps
-        # hints-only until phase-3 materialize.
-        if purpose in {"refine", "repair"}:
+        # Preserve existing plugin payloads across refine when the wire
+        # returns hints-only. Repair: shift preserves; lighten/rest strip
+        # so phase-3 rematerialize can rebuild load (Slice E dogfood fix).
+        if purpose == "refine":
             _, prior = await self.projects.get_latest_state(project.id)
             if prior is not None:
                 state = _preserve_plugins(prior, state)
+        elif purpose == "repair":
+            _, prior = await self.projects.get_latest_state(project.id)
+            if prior is not None:
+                state = _prepare_repair_state(prior, state, repair_intent)
 
         version = await self._next_version(project.id)
         await self.audit.add_state_version(

@@ -322,9 +322,12 @@ Return Path JSON only.
 - intent=shift (or illness / sick) → push the blocked day's actions to a
   later day_offset (usually +1); keep ids and content otherwise unchanged
 - intent=lighten (or no time / too hard) → shrink today's actions to the
-  minimal viable next steps (fewer actions, shorter detail); never shame
+  minimal viable next steps (fewer actions, shorter detail, lower volume
+  in titles+detail); never shame. Emit plugin_hints only — full plugin
+  objects (stepper/counter/…) are rematerialized separately after apply
 - intent=rest → replace today's pending actions with a single light rest /
-  recovery action for that day_offset; keep other days untouched
+  recovery action for that day_offset; keep other days untouched. Emit
+  plugin_hints only when a tool is needed; payloads rematerialize later
 - always preserve completed progress via the same action ids where the step remains
 - never move a day_offset backward relative to the project's cycle_anchor
   (do not unlock execute for a day that hasn't opened yet)

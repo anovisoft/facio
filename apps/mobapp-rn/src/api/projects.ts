@@ -7,6 +7,7 @@ import type {
   ProjectSummary,
   RefineAnswerItem,
   RepairIntent,
+  RepairPreviewResponse,
   StateVersionSummary,
 } from '@/api/types';
 import { getLocalDate } from '@/services/localDate';
@@ -115,15 +116,43 @@ export function abandonProject(
   });
 }
 
-export function repairProject(
+export function repairProjectPreview(
   projectId: string,
   payload: { intent?: RepairIntent; reason?: string },
   signal?: AbortSignal,
-): Promise<ProjectDetail> {
+): Promise<RepairPreviewResponse> {
   const body: { intent?: RepairIntent; reason?: string } = {};
   if (payload.intent) body.intent = payload.intent;
   const reason = payload.reason?.trim();
   if (reason) body.reason = reason;
+  return apiRequest(`/projects/${projectId}/repair/preview`, {
+    method: 'POST',
+    body,
+    signal,
+  });
+}
+
+export function repairProject(
+  projectId: string,
+  payload: {
+    intent?: RepairIntent;
+    reason?: string;
+    proposed_state?: Record<string, unknown>;
+    before_version?: number;
+  },
+  signal?: AbortSignal,
+): Promise<ProjectDetail> {
+  const body: {
+    intent?: RepairIntent;
+    reason?: string;
+    proposed_state?: Record<string, unknown>;
+    before_version?: number;
+  } = {};
+  if (payload.intent) body.intent = payload.intent;
+  const reason = payload.reason?.trim();
+  if (reason) body.reason = reason;
+  if (payload.proposed_state) body.proposed_state = payload.proposed_state;
+  if (payload.before_version != null) body.before_version = payload.before_version;
   return apiRequest(`/projects/${projectId}/repair`, {
     method: 'POST',
     body,

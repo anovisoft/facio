@@ -19,6 +19,18 @@ export type FirstStepWhen = 'today' | 'tomorrow';
 
 export type RepairIntent = 'shift' | 'lighten' | 'rest';
 
+export interface RepairDiffLine {
+  before: string;
+  after: string;
+}
+
+export interface RepairPreviewResponse {
+  before_version: number;
+  summary?: string | null;
+  diff: RepairDiffLine[];
+  proposed_state: Record<string, unknown>;
+}
+
 export type ContinueKind = 'next' | 'repeat';
 
 export interface CycleResultResponse {
@@ -252,6 +264,11 @@ export interface ProjectDetail extends ProjectSummary {
    * changed" summary for a confirmation toast/banner. Not present on GET.
    */
   repair_summary?: string | null;
+  /**
+   * Set only on POST .../repair apply: state_version to pass to
+   * restore-state for Undo.
+   */
+  undo_version?: number | null;
   /** Structured summary when the current cycle is finished. */
   cycle_result?: CycleResultResponse | null;
   /** Archived prior cycles (lean) — cycle 1 stays visible. */
