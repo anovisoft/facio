@@ -140,6 +140,24 @@ Canon: [15](./15-edit-surfaces.md).
 
 ---
 
+## Slice E2a-iterate — Create Plan Feed discoverability (#9)
+
+**Goal:** External tester could not expand the plan and answered questions without pressing refine. Make Create feel stepped and obvious.
+
+**DoD (from tester + PM):**
+
+1. **Plan detail expanded by default** on every plan card (`PathList` visible; collapse optional, not required to discover).
+2. **Stepped clarify:** when clarifying questions exist, present them as a clear step with primary CTA to refine **and** a secondary **«Build / update path without answers»** (empty answers + empty comment allowed) so refine is never a hidden requirement.
+3. After a plan card is ready, questions sit **below** that plan (end of the step), not competing as the only visible surface while the plan looks “closed”.
+4. i18n en/ru for the skip/build-without-answers control.
+5. Preserve: append-only feed, Start CTA on card, MMKV history, Manual «Edit tools», progressive `#1/#2/#3`. Do not start Active AI Feed (E2c).
+
+**Non-goals:** Server-side feed turns; Active pencil/Save-with-AI (#10 → E2c); inventing new Block types.
+
+**PO dogfood:** Create Guide → see full plan without hunting expand → answer or skip questions → path updates → Start from card.
+
+---
+
 ## Slice E2b — Manual editor (all UI Block tools)
 
 **Goal:** Manual edit of checklist / stepper / counter / … on Create and Active.

@@ -50,7 +50,8 @@ class RefineProjectRequest(BaseModel):
     )
 
     @model_validator(mode="after")
-    def normalize_and_require_payload(self) -> "RefineProjectRequest":
+    def normalize_payload(self) -> "RefineProjectRequest":
+        """Normalize legacy fields. Empty answers+comment is allowed (skip CTA)."""
         answers = list(self.answers)
         if self.answer is not None:
             answers.append(
@@ -60,10 +61,6 @@ class RefineProjectRequest(BaseModel):
                 )
             )
         comment = (self.comment or "").strip() or None
-        if not answers and not comment:
-            raise ValueError(
-                "Provide answers[] and/or comment (or legacy answer)"
-            )
         return self.model_copy(
             update={"answers": answers, "comment": comment}
         )

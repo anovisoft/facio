@@ -111,6 +111,8 @@ export default {
     senseLabel: 'Смысл',
     composerLabel: 'Заметка или правка плана',
     composerPlaceholder: 'Ограничения, предпочтения, заметки…',
+    buildWithoutAnswers: 'Собрать путь без ответов',
+    updateWithoutAnswers: 'Обновить путь без ответов',
   },
   manualEdit: {
     titleCreate: 'Правка инструментов',

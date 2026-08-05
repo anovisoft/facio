@@ -251,33 +251,33 @@ export function usePlanFeed(projectId: string) {
         // Clarify can appear during soft-start (#1) before Path v1 is ready —
         // do not gate chips on pathReady (PO dogfood). Notes-only block waits
         // until a plan card exists. Refine still waits for path in Explore.
+        // Always place questions after the latest plan card (end of that step).
+        // Soft-start may show questions while path loads; once a new plan
+        // appends, re-append questions below it even if roundKey is unchanged.
         const upsertQuestionsItem = (
           qKey: string,
           qs: ClarifyQuestion[],
         ) => {
-          if (qKey !== lastQuestionsKeyRef.current) {
-            lastQuestionsKeyRef.current = qKey;
-            ensure((list) => {
-              const withoutActive = list.filter((i) => i.kind !== 'questions');
-              return [
-                ...withoutActive,
-                {
-                  id: nextId('questions'),
-                  kind: 'questions',
-                  questions: qs,
-                  roundKey: qKey,
-                },
-              ];
-            });
-          } else {
-            ensure((list) =>
-              list.map((item) =>
-                item.kind === 'questions' && item.roundKey === qKey
-                  ? { ...item, questions: qs }
-                  : item,
-              ),
+          const keyChanged = qKey !== lastQuestionsKeyRef.current;
+          lastQuestionsKeyRef.current = qKey;
+          ensure((list) => {
+            const existing = list.find(
+              (i) => i.kind === 'questions' && i.roundKey === qKey,
             );
-          }
+            const withoutActive = list.filter((i) => i.kind !== 'questions');
+            return [
+              ...withoutActive,
+              {
+                id:
+                  !keyChanged && existing
+                    ? existing.id
+                    : nextId('questions'),
+                kind: 'questions' as const,
+                questions: qs,
+                roundKey: qKey,
+              },
+            ];
+          });
         };
 
         if (questions.length > 0) {

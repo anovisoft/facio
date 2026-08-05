@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import type { ClarifyQuestion } from '@/api/types';
@@ -13,16 +13,22 @@ type Props = {
   answers: Record<string, string>;
   comment: string;
   disabled: boolean;
+  /** Primary refine — gated on having answers or a comment. */
   canSubmit: boolean;
+  /** Skip CTA — available whenever refine is not busy / pathError. */
+  canSkip: boolean;
   pathWaiting: boolean;
   onSelectAnswer: (questionId: string, value: string) => void;
   onChangeComment: (value: string) => void;
   onSubmit: () => void;
+  /** Refine with empty answers + empty comment (build/update without answers). */
+  onSkip: () => void;
 };
 
 /**
  * Clarifying turn in Plan Feed: optional chips + free-form note in one block.
- * Answers are never required — free-form alone can drive refine.
+ * Answers are never required — free-form alone can drive refine; skip CTA
+ * always offers build/update without answering (#9).
  */
 export function PlanFeedQuestions({
   questions,
@@ -30,14 +36,19 @@ export function PlanFeedQuestions({
   comment,
   disabled,
   canSubmit,
+  canSkip,
   pathWaiting,
   onSelectAnswer,
   onChangeComment,
   onSubmit,
+  onSkip,
 }: Props) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const hasQuestions = questions.length > 0;
+  const skipLabel = pathWaiting
+    ? t('planFeed.buildWithoutAnswers')
+    : t('planFeed.updateWithoutAnswers');
 
   return (
     <View
@@ -98,6 +109,24 @@ export function PlanFeedQuestions({
         disabled={!canSubmit}
         onPress={onSubmit}
       />
+      <Pressable
+        accessibilityRole="button"
+        disabled={!canSkip}
+        onPress={onSkip}
+        hitSlop={8}
+        style={styles.skipLink}
+      >
+        <Text
+          style={[
+            styles.skipLinkText,
+            {
+              color: canSkip ? colors.textSecondary : colors.textMuted,
+            },
+          ]}
+        >
+          {skipLabel}
+        </Text>
+      </Pressable>
     </View>
   );
 }
@@ -131,5 +160,13 @@ const styles = StyleSheet.create({
   },
   hint: {
     ...typography.caption,
+  },
+  skipLink: {
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
+  },
+  skipLinkText: {
+    ...typography.caption,
+    fontWeight: '600',
   },
 });

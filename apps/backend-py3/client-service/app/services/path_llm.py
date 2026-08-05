@@ -292,6 +292,8 @@ The user payload has:
 
 Rules:
 - Apply ALL answers and the comment in ONE pass — do not ignore any.
+- If answers and comment are both empty, the user chose to proceed without \
+  clarifying — keep the plan useful; clear leftover questions when possible.
 - Do NOT invent constraints/slots the user did not provide.
 - If clarify changes the contract → update title, summary, outcome, \
   success_criteria, horizon, and paraphrase explicitly.

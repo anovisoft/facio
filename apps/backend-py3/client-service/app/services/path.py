@@ -942,7 +942,12 @@ class PathService:
         ]
         if comment:
             answer_lines.append(f"comment: {comment}")
-        turn_content = "\n".join(answer_lines) if answer_lines else (comment or "")
+        # Empty refine = skip CTA (build/update without answers).
+        turn_content = (
+            "\n".join(answer_lines)
+            if answer_lines
+            else (comment or "(proceed without answers)")
+        )
 
         await self.audit.add_turn(
             user_id=user.id,

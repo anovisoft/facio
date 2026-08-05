@@ -137,9 +137,9 @@ export function PlanFeedExplore({
 
   const hasAnyAnswer = questions.some((q) => Boolean(answers[q.id]?.trim()));
   const hasComment = Boolean(comment.trim());
-  // Chips are optional — free-form alone (or any subset of answers) is enough.
-  const canRefine =
-    !pathError && !busy && committing == null && (hasAnyAnswer || hasComment);
+  // Skip CTA always available when not busy / pathError; primary needs input.
+  const canSkipRefine = !pathError && !busy && committing == null;
+  const canRefine = canSkipRefine && (hasAnyAnswer || hasComment);
 
   const waitForPathReady = async (
     signal: AbortSignal,
@@ -189,11 +189,13 @@ export function PlanFeedExplore({
     return lines.join('\n');
   };
 
-  const runRefine = async () => {
+  const runRefine = async (opts?: { allowEmpty?: boolean }) => {
     if (busy || pathError || committing != null) return;
-    if (!hasAnyAnswer && !hasComment) return;
+    const allowEmpty = opts?.allowEmpty === true;
+    if (!allowEmpty && !hasAnyAnswer && !hasComment) return;
 
     // Only send filled answers — unanswered chips are skipped on purpose.
+    // Skip CTA may send empty answers + empty comment (build/update without answers).
     const answersPayload = questions
       .map((q) => {
         const value = answers[q.id]?.trim();
@@ -388,10 +390,12 @@ export function PlanFeedExplore({
                   comment={comment}
                   disabled={busy || committing != null}
                   canSubmit={canRefine}
+                  canSkip={canSkipRefine}
                   pathWaiting={!pathReady && !pathError}
                   onSelectAnswer={selectAnswer}
                   onChangeComment={setComment}
                   onSubmit={() => void runRefine()}
+                  onSkip={() => void runRefine({ allowEmpty: true })}
                 />
               );
             case 'system_note':

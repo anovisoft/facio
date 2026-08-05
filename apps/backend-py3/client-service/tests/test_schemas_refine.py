@@ -1,8 +1,5 @@
 """Refine request accepts batch answers + comment (and legacy single answer)."""
 
-import pytest
-from pydantic import ValidationError
-
 from app.schemas.api import RefineProjectRequest
 
 
@@ -35,11 +32,14 @@ def test_legacy_answer_normalized():
     assert body.answers[0].value == "2"
 
 
-def test_empty_payload_rejected():
-    with pytest.raises(ValidationError):
-        RefineProjectRequest.model_validate({})
+def test_empty_payload_ok_for_skip():
+    """Create Plan Feed skip CTA may refine with no answers/comment."""
+    body = RefineProjectRequest.model_validate({})
+    assert body.answers == []
+    assert body.comment is None
 
 
-def test_blank_comment_alone_rejected():
-    with pytest.raises(ValidationError):
-        RefineProjectRequest.model_validate({"comment": "   "})
+def test_blank_comment_alone_normalizes_to_empty():
+    body = RefineProjectRequest.model_validate({"comment": "   "})
+    assert body.answers == []
+    assert body.comment is None

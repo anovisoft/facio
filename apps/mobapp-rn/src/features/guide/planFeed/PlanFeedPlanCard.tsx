@@ -37,7 +37,8 @@ export function PlanFeedPlanCard({
 }: Props) {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const [detailExpanded, setDetailExpanded] = useState(false);
+  // Expanded by default so PathList is discoverable without hunting «view detail» (#9).
+  const [detailExpanded, setDetailExpanded] = useState(true);
 
   const guideForCover = {
     id: `plan-v${planIndex}`,

@@ -12,6 +12,18 @@ Source dogfood notes. Status routed into Facio 0.1 slices. Canon: `docs/Facio 0.
 | 6 | Stepper state resets when leaving Session → Continue → back | **done** (Slice D) | same-day `blockRuntimeByActionId` |
 | 7 | Recompose Session: title → day N/M → large Block → why lower | **done** (Slice D) | Session Stage layout |
 | 8 | Rest / day-kind copy is fitness-flavored for all domains (e.g. drawing Guide rest: «без силовой нагрузки»; «Тренировка» on art days) | **→ Slice G** (copy) or create `#2` prompt pass — not D | `path.restEmpty`, `dayKind.*`, LLM day titles |
+| 9 | Create: user didn’t see expandable plan; answered questions but never hit «Update path» | **landed** E2a-iterate (await PO dogfood) | Plan expanded by default + skip without answers |
+| 10 | Active: Manual remove ingredient → expected whole plan cascade; couldn’t find path back to plan dialog | **→ E2c** (+ entry polish) | AI Feed «Save with AI»; pencil/back → Edit; Diff + preserve progress |
+
+## External dogfood (2026-08-05) — triage
+
+**#9 Create discoverability (E2a-iterate, before or thin ahead of E2c)**
+- Symptom: plan collapsed / «Update path» invisible → user stuck after answering chips.
+- Fix direction (tester): step the feed — questions first with skip «Build plan without answers»; when plan exists, keep roadmap **expanded** (no hide-by-default).
+
+**#10 Manual ≠ cascade (validates E2c)**
+- Symptom: removed shopping item via Manual; expected recipe texts + later steps to update; looked for back-to-chat, didn’t find it.
+- Fix direction: Guide/Session entry to plan Edit (back on early step + pencil near kebab); edit latest plan; accept new plan as current with progress merge; Manual → **«Save with AI»** seeds AI Feed with the local change so whole Guide rebuilds → Diff → Undo.
 
 ## Hotfix (1 + 4) — DoD
 

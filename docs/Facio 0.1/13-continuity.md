@@ -12,29 +12,24 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 |-------|--------|
 | Product vector | Facio 0.1 locked — **Guide / Continue / Session** + Hero/Full/Compact + **Plan Feed · Manual · Micro** ([15](./15-edit-surfaces.md)) |
 | Prototype engine | `apps/` ≈ `docs/next` slices 1–5 **accepted** |
-| Facio 0.1 shell | **A–E2a accepted**. **E2b Manual editor landed** (awaiting PO dogfood) → E2c Active AI Feed → F |
+| Facio 0.1 shell | **A–E2b accepted**. **E2a-iterate landed** (await PO dogfood #9). Next after accept = **E2c** (#10) → F → G |
 | Edit surfaces lock | Create = Plan Feed + Manual (CTA on plan card, no sticky Start). Active = Manual + Micro + AI Feed. Canon [15](./15-edit-surfaces.md) |
 | Carbonara / multi-Session same day | Same-day **Back/Next = browse**; **Done** completes live step (assurance); last Done → Continue |
 | Fitness multi-day E2E | Daily sticky **Done** + assurance; kebab Postpone (deterministic); deferred calendar week / **H** |
 | Instant Answer | Off Create happy path (D5) |
-| Uncommitted work | Client+backend under `apps/` — Session chrome + E Repair + Alembic `013` — **not committed** |
+| Uncommitted work | Large client+backend under `apps/` (E→E2b, chrome, planFeed, manualEdit, Alembic `013`) — **not committed** |
 
 ---
 
 ## After summarization — PM start here
 
-1. Read [README](./README.md) → [11](./11-success-systems.md) (esp. §5–6 Diff/Undo, §9 presentations) → **this file** → [14](./14-impl-plan.md).  
-2. **E2a accepted** (PO 2026-08-05). **E2b Manual** implemented — dogfood then accept → **E2c**.  
-3. Slice E accepted — keep landmines:
-   - Repair: intent → **preview Diff** → confirm → apply (no silent apply).
-   - API: `POST .../repair/preview` + apply with `proposed_state` / `before_version`; response `undo_version`.
-   - Undo: `restore-state` works on **active** (materialize merge) as well as draft.
-   - **Landmine:** lighten/rest strip plugin payloads + rematerialize phase-3 (shift still preserves). Do **not** re-introduce blind `_preserve_plugins` on all repairs.
-   - Do **not** expand Anthropic schemas. E APIs become backbone of Active AI Feed (E2c).
-4. Session chrome accepted — see lock below. Repair off Session happy path → Edit surfaces ([15](./15-edit-surfaces.md)).
-5. **Edit surfaces locked** ([15](./15-edit-surfaces.md)): Plan Feed + Manual + Micro. Next code after E2b dogfood: **E2c** → F.
-6. Do **not** invent D1–D8 / deferred parked items.  
-7. Do **not** reopen Guides reveal (`useGuidesRevealGesture`, `useNativeDriver: false`) unless PO reports regress.
+1. Read [README](./README.md) → [15](./15-edit-surfaces.md) → [11](./11-success-systems.md) (§5–6 Diff/Undo, §9) → **this file** → [14](./14-impl-plan.md).  
+2. **E2a-iterate landed** (await PO dogfood). On accept → dispatch **E2c**.  
+
+3. Do **not** invent D1–D8 / deferred parked items.  
+4. Do **not** reopen Guides reveal (`useGuidesRevealGesture`, `useNativeDriver: false`) unless PO reports regress.  
+5. Do **not** expand Anthropic schemas. Repair landmines (lighten/rest strip plugins) still apply — E APIs backbone of E2c.  
+6. Plan Feed history is **client MMKV** only — server-side turns = known follow-up (not blocking E2c unless PO prioritizes).
 
 ---
 
@@ -161,8 +156,9 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 | E | Repair Diff + Undo | **accepted** (PO 2026-08-05) |
 | — | Session chrome cleanup | **accepted** (PO 2026-08-05) |
 | E2a | Create Plan Feed | **accepted** (PO 2026-08-05) |
-| E2b | Manual editor (all tools) | **landed** (awaiting PO dogfood) |
-| E2c | Active AI Feed + Diff | pending |
+| E2b | Manual editor (all tools) | **accepted** (PO 2026-08-05; checklist drag UI polish included) |
+| E2a-iterate | Create Plan Feed discoverability (#9) | **landed** (await PO dogfood) |
+| E2c | Active AI Feed + Diff (#10) | **next** after E2a-iterate accept |
 | F | Identity + Finish Experience | pending (after E2*) |
 | G | Copy / IA kill / Morning Summary (+ #8) | pending |
 | H | Time travel (optional) | pending |
@@ -183,20 +179,8 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 | Glass chips | `GlassIconButton` — `GLASS_ICON_CHIP_SIZE`; Session header = `header` icons + native Alert kebab; Continue ☰ = `default` |
 | Scroll | `SafeScreen` — scroll outside KAV; `flexGrow: 0`; PathList expandable on Guide |
 | Repair Diff + Undo (E) | `RepairSheet` Diff confirm; preview/apply; active Undo; lighten/rest strip plugins + phase-3 rematerialize (shift preserves) |
-
----
-
-## Slice E — landed (awaiting PO dogfood)
-
-Implemented 2026-08-03; lighten rematerialize fix 2026-08-04:
-
-1. **Diff before apply:** intent → `POST /repair/preview` (no persist) → Diff sheet → Confirm → `POST /repair` with `proposed_state` + `before_version`.  
-2. **Undo on active:** `restore-state` rematerializes with `merge_progress` for active Guides; apply returns `undo_version`.  
-3. **Session CTA:** post-apply banner shows summary + **Undo** (not debug-only).  
-4. **Plugin landmine (fixed):** Repair wire is hints-only (like create #2). `_preserve_plugins` used to copy old stepper/counter onto matching ids — so lighten Diff could change titles while Session kept the old push-up load. Now `_prepare_repair_state`: **shift** preserves plugins; **lighten/rest** strip payloads + keep hints → `plugins_ready=false` → phase-3 enqueue on apply (same as commit). Diff adds `Previous load (sets) → Lighter load (tool updates)` when tools were stripped.  
-5. Still out of scope: AI Edit UI, new repair intents, #8 copy, grammar expand.
-
-**PO dogfood E:** Repair → see Diff (incl. load line on lighten) → apply → stepper updates → Undo works → then accept.
+| Plan Feed (E2a) | `features/guide/planFeed/*` — append-only лента; MMKV `planFeedByProjectId` |
+| Manual editor (E2b) | `features/manualEdit/*` — Create «Edit tools» + Active Edit Session; `GET path-state` / `POST manual-edit` |
 
 ---
 
@@ -205,8 +189,9 @@ Implemented 2026-08-03; lighten rematerialize fix 2026-08-04:
 - Client: `apps/mobapp-rn`  
 - API: `apps/backend-py3/client-service` — Alembic through **013**  
 - Prefer aliases over big-bang DB rename  
+- Subagent model slug in this env: `cursor-grok-4.5-high-fast` (not `cursor-grok-4.5-high`)
 
-Do not rewrite backend runtime to start Facio 0.1 — next after E2b dogfood = **E2c Active AI Feed** ([15](./15-edit-surfaces.md)), then F.
+Do not rewrite backend runtime — next lettered slice = **E2c Active AI Feed** ([15](./15-edit-surfaces.md)), then F.
 
 ### Edit surfaces lock (PO 2026-08-05)
 
@@ -214,12 +199,38 @@ Do not rewrite backend runtime to start Facio 0.1 — next after E2b dogfood = *
 - Active = Manual + Micro (skip/postpone chrome) + AI Feed; AI apply → Diff → Undo.
 - Manual must edit **all** UI Block tools (checklist/stepper/…).
 - New AI plan = append card; may ask questions without new plan.
-- Canon doc: [15](./15-edit-surfaces.md).
+- Clarify = optional chips + free-form **in same feed block**; chip answers not required.
+- Canon: [15](./15-edit-surfaces.md).
 
-### E2a Plan Feed (client) — accepted (PO 2026-08-05)
+### Session chrome lock (browse fix) — accepted
 
-Draft Guide Explore is an append-only лента — user intent, sense, versioned plan cards (Cover + contract + CompactRoadmap + Start on card), clarify block (optional chips + free-form **in the same card**); no sticky Start / no separate notes footer. Chip answers not required — note alone can refine. **Questions show during soft-start** before Path v1 ready (refine waits for path). Prior cards remain after refine; Start on an older card restores that `state_version` then commits. Feed history persisted client-side per project (MMKV); server-side turns = follow-up. Progressive create unchanged. Code: `features/guide/planFeed/*`.
+- Same-day **Back/Next = browse only** (no complete, no uncomplete, no auto-check). Peek → read-only Block + hint.
+- **Done** = complete live `next_action` only (assurance). Daily Guide = single Done.
+- Header: `GlassIconButton variant="header"`; kebab = native `Alert.alert`. Do **not** use `unstable_header*Items` on screens@4.16.
+- Terminal exits (Done/Skip/Postpone/Archive) → `resetToContinue`, not `navigate('Continue')`.
 
-### E2b Manual editor — landed (awaiting PO dogfood)
+### E2a Plan Feed — accepted
 
-Shared Manual editor for closed UI Block tool fields (checklist add/remove/edit; stepper targets/labels/rest duration; counter target/label; timer/timeline/interval scalars when present; hints-only graceful note). **Create:** plan card «Edit tools» loads that card’s `state_version` read-only (`GET .../path-state?version=`), Save restores tip if needed then `POST .../manual-edit` (`user_edit` + `proposed_state` / `before_version`, `undo_version`); feed card updates in place. **Active:** Session kebab Edit Session → Manual scoped to live/browse action key; apply → Undo banner via `restore-state`. No AI Feed (E2c). Code: `features/manualEdit/*`, backend `manual_edit` / `path-state`. Tests: `tests/test_manual_edit.py`.
+Append-only лента; questions during soft-start; refine waits for path; Start on card; feed history **client MMKV** (server turns = follow-up). Code: `features/guide/planFeed/*`.
+
+### E2b Manual editor — accepted (PO 2026-08-05)
+
+Shared Manual for closed Block tools. Create: plan card «Edit tools». Active: Session kebab → Manual + Undo. API: `GET .../path-state`, `POST .../manual-edit` (`user_edit`). Checklist UI: drag handle left, red X delete, slot-shift preview while dragging (`ManualBlockEditor.tsx`). Code: `features/manualEdit/*`. Tests: `tests/test_manual_edit.py`.
+
+### External dogfood triage (PO paste 2026-08-05)
+
+| # | Finding | Bucket | Slice |
+|---|---------|--------|-------|
+| 9 | Create: didn’t expand plan; answered Qs but never «Update path» | Create polish | **E2a-iterate** — questions-first step + skip «build without answers»; plan cards **expanded by default** |
+| 10 | Manual removed ingredient; expected whole-plan cascade; no path back to plan dialog | Product gap = E2c | **E2c** — pencil/back → Edit/AI Feed; Manual **«Save with AI»** seeds rebuild; Diff + accept with progress preserve |
+
+**PM read:** #10 is exactly why Active AI Feed exists — Manual alone patches tools, not the narrative path. #9 is Create UX, not E2c.
+
+### E2a-iterate — landed (await PO dogfood)
+
+Create discoverability (#9): plan `PathList` **expanded by default**; secondary **Build/Update without answers** (empty refine allowed client+API); questions always re-appended **below** latest plan card. Code: `planFeed/*`, i18n `planFeed.buildWithoutAnswers` / `updateWithoutAnswers`, schema empty refine + `test_schemas_refine.py`.
+
+### Pending
+
+1. PO dogfood E2a-iterate → accept → dispatch **E2c**.  
+2. Known parked: server-side Plan Feed turns; #8 → G; offline P5.

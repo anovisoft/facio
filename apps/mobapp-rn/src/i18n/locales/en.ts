@@ -111,6 +111,8 @@ export default {
     senseLabel: 'Sense',
     composerLabel: 'Add a note or ask to change the plan',
     composerPlaceholder: 'Extra constraints, preferences, notes…',
+    buildWithoutAnswers: 'Build path without answers',
+    updateWithoutAnswers: 'Update path without answers',
   },
   manualEdit: {
     titleCreate: 'Edit tools',
