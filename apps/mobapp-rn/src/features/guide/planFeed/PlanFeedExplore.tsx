@@ -145,12 +145,10 @@ export function PlanFeedExplore({
   const hasAnyAnswer = questions.some((q) => Boolean(answers[q.id]?.trim()));
   const hasComment = Boolean(comment.trim());
   // Skip only when meaningful:
-  // - clarify_first while path not ready → reveal / build without answers
+  // - clarify_first → reveal background Intent plan (even if Path already ready)
   // - after reveal, only if real questions remain → update without answers
   // Notes-only + ready plan (typical Guides reopen) → no skip CTA.
-  const showSkipRefine =
-    (clarifyFirst && !pathReady) ||
-    (!clarifyFirst && questions.length > 0);
+  const showSkipRefine = clarifyFirst || questions.length > 0;
   const canSkipRefine =
     showSkipRefine && !pathError && !busy && committing == null;
   const canRefine =

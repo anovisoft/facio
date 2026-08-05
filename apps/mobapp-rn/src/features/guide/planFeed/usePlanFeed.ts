@@ -141,8 +141,13 @@ export function usePlanFeed(projectId: string) {
             lastQuestionsKeyRef.current = stored.lastQuestionsKey;
             planCountRef.current = stored.planCount;
             next = stored.items;
+            // Prefer inferred: if feed already has plan cards, never re-enter
+            // clarify_first. Otherwise keep stored mode (or infer from questions).
+            const inferred = inferRevealMode(stored.items);
             planRevealModeRef.current =
-              stored.planRevealMode ?? inferRevealMode(stored.items);
+              inferred === 'revealed'
+                ? 'revealed'
+                : (stored.planRevealMode ?? inferred);
           } else {
             lastPlanFpRef.current = null;
             lastQuestionsKeyRef.current = '';
@@ -197,13 +202,9 @@ export function usePlanFeed(projectId: string) {
         const pathError = project.path_error ?? null;
 
         // No questions from gate/refine: never trap in clarify_first.
+        // Do NOT auto-reveal when Path becomes ready in the background —
+        // questions-first waits for skip or answered refine (E2a-iterate).
         if (questions.length === 0 && planRevealModeRef.current === 'hidden') {
-          planRevealModeRef.current = 'revealed';
-        }
-        // Reopen via Guides (or MMKV still "hidden"): if Path already exists
-        // on the server, show it — don't re-enter questions-first / «Собрать
-        // путь без ответов».
-        if ((ready || pathError) && planRevealModeRef.current === 'hidden') {
           planRevealModeRef.current = 'revealed';
         }
 
