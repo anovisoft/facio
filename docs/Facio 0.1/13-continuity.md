@@ -12,9 +12,9 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 |-------|--------|
 | Product vector | Facio 0.1 locked — **Guide / Continue / Session** + Hero/Full/Compact + **Plan Feed · Manual · Micro** ([15](./15-edit-surfaces.md)) |
 | Prototype engine | `apps/` ≈ `docs/next` slices 1–5 **accepted** |
-| Facio 0.1 shell | **A–D accepted**. **E + Session chrome** implemented / awaiting PO dogfood. **Next after E accept = E2a Plan Feed** (then E2b Manual, E2c Active AI Feed, then F) |
-| Edit surfaces lock | Create = Plan Feed + Manual (CTA on plan card, no sticky Start). Active = Manual + Micro + AI Feed (Diff on AI apply). Docs written; code not started |
-| Carbonara / multi-Session same day | Sticky **Back** + **Next**/**Done**; Next stays in-Guide; last Done → assurance → Continue |
+| Facio 0.1 shell | **A–E2a accepted**. **Next = E2b Manual editor** → E2c Active AI Feed → F |
+| Edit surfaces lock | Create = Plan Feed + Manual (CTA on plan card, no sticky Start). Active = Manual + Micro + AI Feed. Canon [15](./15-edit-surfaces.md) |
+| Carbonara / multi-Session same day | Same-day **Back/Next = browse**; **Done** completes live step (assurance); last Done → Continue |
 | Fitness multi-day E2E | Daily sticky **Done** + assurance; kebab Postpone (deterministic); deferred calendar week / **H** |
 | Instant Answer | Off Create happy path (D5) |
 | Uncommitted work | Client+backend under `apps/` — Session chrome + E Repair + Alembic `013` — **not committed** |
@@ -24,18 +24,17 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 ## After summarization — PM start here
 
 1. Read [README](./README.md) → [11](./11-success-systems.md) (esp. §5–6 Diff/Undo, §9 presentations) → **this file** → [14](./14-impl-plan.md).  
-2. Confirm with PO: **dogfood Slice E + Session chrome?** then accept → dispatch **E2a** (Create Plan Feed), not F yet.  
-3. Slice E landed (awaiting PO dogfood — not accepted yet):
+2. **E2a accepted** (PO 2026-08-05). Dispatch / land **E2b** (Manual editor).  
+3. Slice E accepted — keep landmines:
    - Repair: intent → **preview Diff** → confirm → apply (no silent apply).
    - API: `POST .../repair/preview` + apply with `proposed_state` / `before_version`; response `undo_version`.
    - Undo: `restore-state` works on **active** (materialize merge) as well as draft.
-   - **Landmine fixed:** lighten/rest strip plugin payloads + rematerialize phase-3 (shift still preserves). Do **not** re-introduce blind `_preserve_plugins` on all repairs.
+   - **Landmine:** lighten/rest strip plugin payloads + rematerialize phase-3 (shift still preserves). Do **not** re-introduce blind `_preserve_plugins` on all repairs.
    - Do **not** expand Anthropic schemas. E APIs become backbone of Active AI Feed (E2c).
-4. **Session chrome cleanup** landed (awaiting PO dogfood — not accepted): see lock below. Repair off Session happy path → Edit surfaces ([15](./15-edit-surfaces.md)).
-5. **Edit surfaces locked in docs** ([15](./15-edit-surfaces.md)): Plan Feed + Manual + Micro. Code slices E2a→E2b→E2c before F.
+4. Session chrome accepted — see lock below. Repair off Session happy path → Edit surfaces ([15](./15-edit-surfaces.md)).
+5. **Edit surfaces locked** ([15](./15-edit-surfaces.md)): Plan Feed + Manual + Micro. Next code: E2a→E2b→E2c→F.
 6. Do **not** invent D1–D8 / deferred parked items.  
-7. Do **not** reopen Guides reveal (`useGuidesRevealGesture`, `useNativeDriver: false`) unless PO reports regress.  
-8. After E (+ chrome) accept → **E2a** → E2b → E2c → **F**.
+7. Do **not** reopen Guides reveal (`useGuidesRevealGesture`, `useNativeDriver: false`) unless PO reports regress.
 
 ---
 
@@ -83,17 +82,17 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 
 - Execute only `day_index ≤ unlocked_day_index`  
 - D2: incomplete Block runtime resume = **same calendar day only** (`blockRuntimeByActionId` + `localDate`)  
-- Complete routing: intermediate same-day **Next** → stay on next Session (toast); **Done** (daily / last same-day) → Continue after assurance.
+- Complete routing: same-day **Done** on a non-last live step → stay on next Session (toast); **Done** (daily / last same-day) → Continue after assurance. Same-day Back/Next never complete.
 
-### Session chrome lock (PO 2026-08-04) — implemented / awaiting dogfood
+### Session chrome lock (PO 2026-08-04 / browse fix 2026-08-05) — implemented / awaiting dogfood
 
 | Mode | When | Sticky footer |
 |------|------|----------------|
-| Same-day plan | `horizon_days === 1` | **Back** + **Next**; last step → **Back** + **Done** |
+| Same-day plan | `horizon_days <= 1` | **Back** + **Next** browse peers; live step also **Done** (last pending → **Back** + **Done**; not last → **Done** full-width + **Back**\|**Next**) |
 | Daily Guide | `horizon_days > 1` | one **Done** |
 
-- **Next** (not last) = `complete` → open next; no modal; undo = **Back** (`POST /actions/{id}/uncomplete`).
-- **Done** (daily + last same-day) = always-on “Finish session?” → Cancel / Done; checklist note if unchecked items remain. Counter never incomplete-gates.
+- Same-day **Back** / **Next** = browse only among same-day Sessions (no `complete`, no `uncomplete`, no checkbox auto-mark). Peeking → Full Block read-only + browse hint.
+- **Done** = complete the live `next_action` only (assurance: “Finish session?” → Cancel / Done; checklist note if unchecked items remain). Counter never incomplete-gates. After complete, browse clears to the new live next.
 - Header: `GlassIconButton variant="header"` (icon only) in `headerLeft`/`headerRight` — iOS 26 draws **one** system glass; bordered/`nav` chips double it. Kebab menu = native `Alert.alert` (compact UIAlertController). Do **not** use `unstable_header*Items` `button`/`menu` on screens@4.16 (unsupported → buttons vanish). Continue ☰ stays `default` LiquidGlass in-content.
 - Kebab options: Full Guide · Edit Session (stub) · Postpone to tomorrow (daily only, `POST /projects/{id}/postpone-day`, no LLM) · Skip · Finish cycle · Archive (destructive).
 - Repair / lighten / rest off Session happy path; keep `RepairSheet.tsx` for future Edit Session.
@@ -159,9 +158,10 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 | B2 | Hero Preview + drawer compact | **accepted** |
 | C | Guide Explore + Commitment | **accepted** (after Explore UX iterate) |
 | D | Session atom + complete + ≡ Guide | **accepted** (after complete-routing + chrome + P1–P4 polish) |
-| E | Repair Diff + Undo | **implemented / awaiting PO dogfood** |
-| — | Session chrome cleanup | **implemented / awaiting PO dogfood** (not a lettered slice) |
-| E2a | Create Plan Feed | **next** after E + chrome accept — docs locked in [15](./15-edit-surfaces.md) |
+| E | Repair Diff + Undo | **accepted** (PO 2026-08-05) |
+| — | Session chrome cleanup | **accepted** (PO 2026-08-05) |
+| E2a | Create Plan Feed | **accepted** (PO 2026-08-05) |
+| E2b | Manual editor (all tools) | **in progress** |
 | E2b | Manual editor (all tools) | pending |
 | E2c | Active AI Feed + Diff | pending |
 | F | Identity + Finish Experience | pending (after E2*) |
@@ -216,3 +216,7 @@ Do not rewrite backend runtime to start Facio 0.1 — next after E/chrome accept
 - Manual must edit **all** UI Block tools (checklist/stepper/…).
 - New AI plan = append card; may ask questions without new plan.
 - Canon doc: [15](./15-edit-surfaces.md).
+
+### E2a Plan Feed (client) — awaiting dogfood
+
+Draft Guide Explore is an append-only лента — user intent, sense, versioned plan cards (Cover + contract + CompactRoadmap + Start on card), clarify block (optional chips + free-form **in the same card**); no sticky Start / no separate notes footer. Chip answers not required — note alone can refine. **Questions show during soft-start** before Path v1 ready (refine waits for path). Prior cards remain after refine; Start on an older card restores that `state_version` then commits. Feed history persisted client-side per project (MMKV); server-side turns = follow-up. Progressive create unchanged. Code: `features/guide/planFeed/*`. Next after accept: **E2b Manual editor**.

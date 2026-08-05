@@ -15,7 +15,6 @@ import {
   completeTimer,
   skipAction,
   toggleChecklistItem,
-  uncompleteAction,
   updateCounter,
   updateStepperBeatCounter,
 } from '@/api/actions';
@@ -67,18 +66,26 @@ function sameDayActions(
   return actions.filter((a) => (a.day_offset ?? 0) === day);
 }
 
-function previousClosedSameDay(
+/** Earlier same-day Session peer (browse Back — no uncomplete). */
+function earlierSameDayPeer(
   actions: ActionResponse[],
   current: ActionResponse,
 ): ActionResponse | null {
   const day = sameDayActions(actions, current.day_offset);
   const idx = day.findIndex((a) => a.id === current.id);
   if (idx <= 0) return null;
-  for (let i = idx - 1; i >= 0; i -= 1) {
-    const a = day[i];
-    if (a.status === 'done' || a.status === 'skipped') return a;
-  }
-  return null;
+  return day[idx - 1] ?? null;
+}
+
+/** Later same-day Session peer (browse Next — no complete). */
+function laterSameDayPeer(
+  actions: ActionResponse[],
+  current: ActionResponse,
+): ActionResponse | null {
+  const day = sameDayActions(actions, current.day_offset);
+  const idx = day.findIndex((a) => a.id === current.id);
+  if (idx < 0 || idx >= day.length - 1) return null;
+  return day[idx + 1] ?? null;
 }
 
 /** Brief non-blocking Done flash — no modal / progress bar (D iterate). */
@@ -101,6 +108,8 @@ export function ProjectHomeScreen({
   const [doneFlash, setDoneFlash] = useState<string | null>(null);
   const [nextCycleSheetVisible, setNextCycleSheetVisible] = useState(false);
   const [finishCycleSheetVisible, setFinishCycleSheetVisible] = useState(false);
+  /** Same-day browse peek — null follows live `next_action`. */
+  const [browseActionId, setBrowseActionId] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const shownActionIdRef = useRef<string | null>(null);
   const doneFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -125,6 +134,11 @@ export function ProjectHomeScreen({
       if (doneFlashTimerRef.current) clearTimeout(doneFlashTimerRef.current);
     };
   }, []);
+
+  // After a real complete, follow the new live next (drop browse peek).
+  useEffect(() => {
+    setBrowseActionId(null);
+  }, [project?.next_action?.id]);
 
   const load = useCallback(async () => {
     abortRef.current?.abort();
@@ -209,8 +223,9 @@ export function ProjectHomeScreen({
   ) => {
     await completeAction(actionId);
     clearBlockRuntime(actionId);
+    setBrowseActionId(null);
     const detail = await refreshAfterMutation();
-    // Last Done / daily Done → Continue; intermediate Next → toast + stay.
+    // Done (daily / last same-day / assurance) → Continue; else toast + stay.
     if (!opts.preferContinue && detail.next_action) {
       const nextTitle = detail.next_action.title?.trim();
       showDoneFlash(
@@ -310,32 +325,23 @@ export function ProjectHomeScreen({
     ]);
   };
 
-  const onNext = () => {
-    // Intermediate same-day: complete → next Session; no modal.
-    void runComplete({ preferContinue: false, withAssurance: false });
-  };
-
   const onDone = () => {
-    // Daily Done + last same-day step: always-on assurance modal.
-    void runComplete({ preferContinue: true, withAssurance: true });
-  };
-
-  const onBack = async () => {
-    const action = project?.next_action;
-    if (!action || busy) return;
-    const prev = previousClosedSameDay(project.actions, action);
-    if (!prev) return;
-    setBusy(true);
-    setError(null);
-    try {
-      await uncompleteAction(prev.id);
-      clearBlockRuntime(prev.id);
-      await refreshAfterMutation();
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : t('home.error'));
-    } finally {
-      setBusy(false);
+    // Live next_action only — assurance complete. Last same-day / daily →
+    // Continue; intermediate same-day → stay on the new live next.
+    const p = projectRef.current;
+    if (!p?.next_action) return;
+    const action = p.next_action;
+    const horizon =
+      p.current_day?.horizon_days ?? p.cycle?.horizon_days ?? 1;
+    let preferContinue = true;
+    if (horizon <= 1) {
+      const peers = sameDayActions(p.actions, action.day_offset);
+      const pending = peers.filter((a) => a.status === 'pending');
+      const isLast =
+        pending.length === 1 && pending[0]?.id === action.id;
+      preferContinue = isLast;
     }
+    void runComplete({ preferContinue, withAssurance: true });
   };
 
   const onSkip = async () => {
@@ -519,7 +525,14 @@ export function ProjectHomeScreen({
     itemId: string,
     nextDone: boolean,
   ) => {
+    // Browse peek is read-only — only the live next_action can toggle.
     if (!project?.next_action || busy) return;
+    if (
+      browseActionId != null &&
+      browseActionId !== project.next_action.id
+    ) {
+      return;
+    }
     const previousDone = project.next_action.checklist_items.find(
       (i) => i.id === itemId,
     )?.done;
@@ -726,12 +739,37 @@ export function ProjectHomeScreen({
   };
 
   const next = project?.next_action ?? null;
+  const displayed =
+    browseActionId != null
+      ? (project?.actions.find((a) => a.id === browseActionId) ?? next)
+      : next;
+  const sessionLive =
+    displayed != null && next != null && displayed.id === next.id;
+  const onBrowseNext = () => {
+    const action = displayed;
+    if (!project || !action || busy) return;
+    const later = laterSameDayPeer(project.actions, action);
+    if (!later) return;
+    // Landing on live next clears browse; otherwise peek ahead.
+    if (later.id === project.next_action?.id) {
+      setBrowseActionId(null);
+    } else {
+      setBrowseActionId(later.id);
+    }
+  };
+  const onBrowseBack = () => {
+    const action = displayed;
+    if (!project || !action || busy) return;
+    const earlier = earlierSameDayPeer(project.actions, action);
+    if (!earlier) return;
+    setBrowseActionId(earlier.id);
+  };
   const peek = project?.peek_action ?? null;
   const peekDay = project?.peek_day ?? null;
   const currentDay = project?.current_day ?? null;
   const dayKind = currentDay?.kind ?? null;
   const isRestDay = dayKind === 'rest';
-  const groupLabel = next?.group_title ?? null;
+  const groupLabel = displayed?.group_title ?? null;
   // Waiting: today's executable work is done, but the plan continues
   // tomorrow — distinct from a fully finished project (docs/next/05).
   const waitingForNextDay =
@@ -859,34 +897,64 @@ export function ProjectHomeScreen({
     next != null &&
     pendingSameDay.length === 1 &&
     pendingSameDay[0]?.id === next.id;
-  const canGoBackSession =
-    next != null && previousClosedSameDay(project.actions, next) != null;
+  const canBrowseBack =
+    displayed != null &&
+    earlierSameDayPeer(project.actions, displayed) != null;
+  const canBrowseNext =
+    displayed != null &&
+    laterSameDayPeer(project.actions, displayed) != null;
   const showSessionFooter =
     next != null && !projectDone && !cycleFinished;
 
+  const sameDayBrowseRow = (
+    <View style={styles.footerRow}>
+      <PrimaryButton
+        variant="secondary"
+        label={t('home.back')}
+        disabled={busy || !canBrowseBack}
+        onPress={onBrowseBack}
+        style={styles.actionBtn}
+      />
+      <PrimaryButton
+        variant="secondary"
+        label={t('home.next')}
+        disabled={busy || !canBrowseNext}
+        onPress={onBrowseNext}
+        style={styles.actionBtn}
+      />
+    </View>
+  );
+
   const stickyFooter = showSessionFooter ? (
     isSameDayPlan ? (
-      <View style={styles.footerRow}>
-        <PrimaryButton
-          variant="secondary"
-          label={t('home.back')}
-          disabled={busy || !canGoBackSession}
-          onPress={() => void onBack()}
-          style={styles.actionBtn}
-        />
-        <PrimaryButton
-          label={
-            isLastSameDayStep
-              ? isRestDay
-                ? t('home.doneRest')
-                : t('home.done')
-              : t('home.next')
-          }
-          loading={busy}
-          onPress={isLastSameDayStep ? onDone : onNext}
-          style={styles.actionBtn}
-        />
-      </View>
+      sessionLive && isLastSameDayStep ? (
+        <View style={styles.footerRow}>
+          <PrimaryButton
+            variant="secondary"
+            label={t('home.back')}
+            disabled={busy || !canBrowseBack}
+            onPress={onBrowseBack}
+            style={styles.actionBtn}
+          />
+          <PrimaryButton
+            label={isRestDay ? t('home.doneRest') : t('home.done')}
+            loading={busy}
+            onPress={onDone}
+            style={styles.actionBtn}
+          />
+        </View>
+      ) : sessionLive ? (
+        <View style={styles.footerColumn}>
+          <PrimaryButton
+            label={isRestDay ? t('home.doneRest') : t('home.done')}
+            loading={busy}
+            onPress={onDone}
+          />
+          {sameDayBrowseRow}
+        </View>
+      ) : (
+        sameDayBrowseRow
+      )
     ) : (
       <PrimaryButton
         label={isRestDay ? t('home.doneRest') : t('home.done')}
@@ -1035,12 +1103,12 @@ export function ProjectHomeScreen({
                   ) : null}
                 </View>
               </View>
-            ) : next ? (
+            ) : displayed ? (
               <>
                 {/* Slice D layout: title → day N/M → Full Block → detail / why */}
                 <View style={styles.chrome}>
                   <Text style={[styles.stepTitle, { color: colors.text }]}>
-                    {next.title}
+                    {displayed.title}
                   </Text>
                   {isMultiDay && currentDay ? (
                     <Text
@@ -1053,11 +1121,18 @@ export function ProjectHomeScreen({
                       })}
                     </Text>
                   ) : null}
-                  {next.estimate_min != null ? (
+                  {displayed.estimate_min != null ? (
                     <Text
                       style={[styles.estimate, { color: colors.textSecondary }]}
                     >
-                      {t('common.minutes', { count: next.estimate_min })}
+                      {t('common.minutes', { count: displayed.estimate_min })}
+                    </Text>
+                  ) : null}
+                  {!sessionLive ? (
+                    <Text
+                      style={[styles.browseHint, { color: colors.textMuted }]}
+                    >
+                      {t('home.browseHint')}
                     </Text>
                   ) : null}
                 </View>
@@ -1088,77 +1163,77 @@ export function ProjectHomeScreen({
                       {currentDay?.summary || t('home.restHint')}
                     </Text>
                   </View>
-                ) : next.timeline ||
-                  next.stepper ||
-                  next.interval_plan ||
-                  (next.timers?.length ?? 0) > 0 ||
-                  next.counter ? (
+                ) : displayed.timeline ||
+                  displayed.stepper ||
+                  displayed.interval_plan ||
+                  (displayed.timers?.length ?? 0) > 0 ||
+                  displayed.counter ? (
                   <View style={styles.stage}>
-                    {next.timeline ? (
+                    {displayed.timeline ? (
                       <TimelineProgress
-                        timeline={next.timeline}
-                        interactive
-                        disabled={busy}
+                        timeline={displayed.timeline}
+                        interactive={sessionLive}
+                        disabled={busy || !sessionLive}
                       />
                     ) : null}
-                    {next.stepper ? (
+                    {displayed.stepper ? (
                       <StepperPlayer
-                        key={next.id}
-                        actionId={next.id}
-                        stepper={next.stepper}
-                        interactive
-                        disabled={busy}
+                        key={displayed.id}
+                        actionId={displayed.id}
+                        stepper={displayed.stepper}
+                        interactive={sessionLive}
+                        disabled={busy || !sessionLive}
                         onBeatCounterChange={(beatId, value) =>
                           void onStepperBeatCounterChange(beatId, value)
                         }
                       />
                     ) : null}
-                    {next.interval_plan ? (
+                    {displayed.interval_plan ? (
                       <IntervalPlayer
-                        plan={next.interval_plan}
-                        interactive
-                        disabled={busy}
+                        plan={displayed.interval_plan}
+                        interactive={sessionLive}
+                        disabled={busy || !sessionLive}
                       />
                     ) : null}
-                    {!next.timeline &&
-                    !next.stepper &&
-                    !next.interval_plan &&
-                    (next.timers?.length ?? 0) > 0 ? (
+                    {!displayed.timeline &&
+                    !displayed.stepper &&
+                    !displayed.interval_plan &&
+                    (displayed.timers?.length ?? 0) > 0 ? (
                       <TimerStack
-                        timers={next.timers ?? []}
-                        interactive
-                        disabled={busy}
+                        timers={displayed.timers ?? []}
+                        interactive={sessionLive}
+                        disabled={busy || !sessionLive}
                         onCompleteTimer={(timerId) =>
                           void onCompleteTimer(timerId)
                         }
                       />
                     ) : null}
-                    {!next.timeline &&
-                    !next.stepper &&
-                    !next.interval_plan &&
-                    next.counter ? (
+                    {!displayed.timeline &&
+                    !displayed.stepper &&
+                    !displayed.interval_plan &&
+                    displayed.counter ? (
                       <CounterControl
-                        counter={next.counter}
-                        interactive
-                        disabled={busy}
+                        counter={displayed.counter}
+                        interactive={sessionLive}
+                        disabled={busy || !sessionLive}
                         onChange={(value) => void onCounterChange(value)}
                       />
                     ) : null}
                   </View>
                 ) : null}
 
-                {next.detail ? (
+                {displayed.detail ? (
                   <Text style={[styles.detail, { color: colors.textSecondary }]}>
-                    {next.detail}
+                    {displayed.detail}
                   </Text>
                 ) : null}
 
-                {!isRestDay ? <WhyHero why={next.why} /> : null}
-                {isRestDay && next.why ? (
+                {!isRestDay ? <WhyHero why={displayed.why} /> : null}
+                {isRestDay && displayed.why ? (
                   <Text
                     style={[styles.restWhy, { color: colors.textSecondary }]}
                   >
-                    {next.why}
+                    {displayed.why}
                   </Text>
                 ) : null}
 
@@ -1170,25 +1245,30 @@ export function ProjectHomeScreen({
                   </Text>
                 ) : null}
 
-                {next.checklist_items.length > 0 ? (
+                {displayed.checklist_items.length > 0 ? (
                   <View style={styles.checklist}>
                     <ChecklistList
-                      items={next.checklist_items}
-                      disabled={busy}
-                      onToggle={(item, done) =>
-                        void onToggleChecklist(item.id, done)
+                      items={displayed.checklist_items}
+                      disabled={busy || !sessionLive}
+                      onToggle={
+                        sessionLive
+                          ? (item, done) =>
+                              void onToggleChecklist(item.id, done)
+                          : undefined
                       }
                     />
                   </View>
                 ) : null}
 
-                {(next.timeline || next.stepper || next.interval_plan) &&
-                (next.timers?.length ?? 0) > 0 ? (
+                {(displayed.timeline ||
+                  displayed.stepper ||
+                  displayed.interval_plan) &&
+                (displayed.timers?.length ?? 0) > 0 ? (
                   <View style={styles.plugins}>
                     <TimerStack
-                      timers={next.timers ?? []}
-                      interactive
-                      disabled={busy}
+                      timers={displayed.timers ?? []}
+                      interactive={sessionLive}
+                      disabled={busy || !sessionLive}
                       onCompleteTimer={(timerId) =>
                         void onCompleteTimer(timerId)
                       }
@@ -1304,8 +1384,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
   },
+  footerColumn: {
+    gap: spacing.sm,
+  },
   actionBtn: {
     flex: 1,
+  },
+  browseHint: {
+    ...typography.caption,
+    marginTop: spacing.xs,
   },
   doneBlock: {
     marginBottom: spacing.md,

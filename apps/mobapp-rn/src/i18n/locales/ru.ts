@@ -55,8 +55,8 @@ export default {
     title: 'Ваш Guide',
     softStart: 'Ок — ведём к: {{paraphrase}}',
     pathLabel: 'Черновик пути',
-    clarifyLabel: 'Чтобы путь был точнее — ответь сразу',
-    commentLabel: 'Ещё важно (необязательно)',
+    clarifyLabel: 'По желанию — ответь на что нужно, или только заметку',
+    commentLabel: 'Ограничения, предпочтения, заметки',
     commentPlaceholder: 'Ограничения, предпочтения, заметки…',
     freeTextPlaceholder: 'Свой ответ',
     readyHint: 'Путь готов — уточните ещё или начните.',
@@ -105,6 +105,13 @@ export default {
     readyHint: 'Путь готов — уточните ещё или Начать Guide.',
     pathReady: 'Путь готов',
   },
+  planFeed: {
+    title: 'Лента плана',
+    planVersion: 'План v{{n}}',
+    senseLabel: 'Смысл',
+    composerLabel: 'Заметка или правка плана',
+    composerPlaceholder: 'Ограничения, предпочтения, заметки…',
+  },
   dayKind: {
     train: 'тренировка',
     rest: 'отдых',
@@ -135,6 +142,8 @@ export default {
     doneRest: 'Отметить отдых',
     next: 'Дальше',
     back: 'Назад',
+    browseHint:
+      'Просмотр — чтобы выполнять, вернитесь к текущему шагу',
     skip: 'Пропустить',
     fullPath: 'Весь путь',
     fullGuide: 'Весь Guide',

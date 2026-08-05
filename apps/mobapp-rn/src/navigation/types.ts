@@ -16,7 +16,7 @@ export type RootStackParamList = {
   InstantAnswer: { payload: InstantAnswerResponse };
   /**
    * Alias of Guide for Create soft-start with seed.
-   * Same GuideScreen chrome (Cover + roadmap + Start Guide).
+   * Draft → Plan Feed (E2a); same GuideScreen as Guide.
    */
   GuideExplore: {
     projectId: string;

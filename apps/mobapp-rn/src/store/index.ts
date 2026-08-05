@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import type { PlanFeedItem } from '@/features/guide/planFeed/types';
 import { getLocalDate } from '@/services/localDate';
 import { buildZustandStorage } from '@/services/storage';
 import type { ThemeMode } from '@/theme';
@@ -24,6 +25,14 @@ export type BlockRuntimeEntry = {
   rest?: BlockRuntimeRest | null;
 };
 
+/** Persisted Create Plan Feed history keyed by draft project id (E2a). */
+export type PlanFeedPersisted = {
+  items: PlanFeedItem[];
+  lastPlanFp: string | null;
+  lastQuestionsKey: string;
+  planCount: number;
+};
+
 interface SessionState {
   /** Last focused project for beacons / resume hints. */
   lastProjectId: string | null;
@@ -43,6 +52,10 @@ interface SessionState {
     patch: Omit<BlockRuntimeEntry, 'localDate'> & { localDate?: string },
   ) => void;
   clearBlockRuntime: (actionId: string) => void;
+  /** Append-only Plan Feed per draft project (survives reopen). */
+  planFeedByProjectId: Record<string, PlanFeedPersisted>;
+  setPlanFeed: (projectId: string, data: PlanFeedPersisted) => void;
+  clearPlanFeed: (projectId: string) => void;
 }
 
 export const useSessionStore = create<SessionState>()(
@@ -88,6 +101,21 @@ export const useSessionStore = create<SessionState>()(
           delete next[actionId];
           return { blockRuntimeByActionId: next };
         }),
+      planFeedByProjectId: {},
+      setPlanFeed: (projectId, data) =>
+        set((state) => ({
+          planFeedByProjectId: {
+            ...state.planFeedByProjectId,
+            [projectId]: data,
+          },
+        })),
+      clearPlanFeed: (projectId) =>
+        set((state) => {
+          if (!(projectId in state.planFeedByProjectId)) return state;
+          const next = { ...state.planFeedByProjectId };
+          delete next[projectId];
+          return { planFeedByProjectId: next };
+        }),
     }),
     {
       name: 'facio-session',
@@ -96,6 +124,7 @@ export const useSessionStore = create<SessionState>()(
         lastProjectId: state.lastProjectId,
         themeMode: state.themeMode,
         blockRuntimeByActionId: state.blockRuntimeByActionId,
+        planFeedByProjectId: state.planFeedByProjectId,
       }),
     },
   ),

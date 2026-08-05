@@ -137,10 +137,11 @@ Mid-Guide chapter end remains **Next Cycle** (flow F) — different from Guide F
 
 ## Clarify UX (inside Plan Feed)
 
-- Batch questions as a feed item + always-available free-form at bottom of feed.
+- One feed block: optional chip questions + free-form note (same card). No separate footer composer.
+- Chip answers are **optional** — free-form alone is enough to refine (may fully redirect the plan).
 - Do not: one question → full LLM wait → next question as the only loop.
 - Answers must not wipe when a plan card finishes loading (preserve by question id set).
-- After answers: new plan card **or** more questions only (AI choice).
+- After submit: new plan card **or** more questions only (AI choice).
 
 ---
 

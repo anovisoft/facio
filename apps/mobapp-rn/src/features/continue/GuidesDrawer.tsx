@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -54,17 +54,24 @@ export function GuidesDrawer({
   const [guides, setGuides] = useState<ProjectSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasRowsRef = useRef(false);
+  hasRowsRef.current = guides.length > 0;
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    const silent = opts?.silent === true;
+    if (!silent) setLoading(true);
+    if (!silent) setError(null);
     try {
       const rows = await listProjects('open');
       setGuides(rows);
+      setError(null);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : t('continue.guidesError'));
+      // Keep existing rows visible on background refresh failure.
+      if (!silent || !hasRowsRef.current) {
+        setError(e instanceof ApiError ? e.message : t('continue.guidesError'));
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [t]);
 
@@ -72,6 +79,12 @@ export function GuidesDrawer({
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Refresh when the drawer opens (e.g. new draft after Create/Explore).
+  useEffect(() => {
+    if (!interactive) return;
+    void load({ silent: hasRowsRef.current });
+  }, [interactive, load]);
 
   const openGuide = (guide: ProjectSummary) => {
     setLastProjectId(guide.id);

@@ -35,7 +35,7 @@ Lenta like a chat, but system turns are:
 
 - New AI revision = **new card below** — never overwrite a previous plan card in place.
 - After user answers, AI may emit a new plan card **or** only more questions (no plan change).
-- Bottom of feed: free-form input always available.
+- Clarify turn = optional chips **plus** free-form note in the **same** feed block (not a separate footer). Chip answers are **not required** — free-form alone can steer the next revision.
 - Closed item set: `user_*`, `sense`, `plan_card`, `questions`, `system_note`.
 
 **Create:** each `plan_card` has its own CTA (**Start Guide** / Use this plan). **No sticky page-bottom CTA.**

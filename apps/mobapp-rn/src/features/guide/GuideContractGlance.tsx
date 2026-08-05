@@ -56,10 +56,14 @@ export function GuideContractGlance({ guide }: Props) {
 
 const styles = StyleSheet.create({
   root: {
+    width: '100%',
+    alignSelf: 'stretch',
     gap: spacing.md,
     marginBottom: spacing.lg,
   },
   block: {
+    width: '100%',
+    alignSelf: 'stretch',
     gap: spacing.xs,
   },
   label: {
@@ -67,5 +71,7 @@ const styles = StyleSheet.create({
   },
   body: {
     ...typography.body,
+    width: '100%',
+    flexShrink: 1,
   },
 });
