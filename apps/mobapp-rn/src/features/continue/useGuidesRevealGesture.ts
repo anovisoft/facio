@@ -1,10 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Gesture } from 'react-native-gesture-handler';
 import {
-  State,
-  type PanGestureHandlerGestureEvent,
-  type PanGestureHandlerStateChangeEvent,
-} from 'react-native-gesture-handler';
+  cancelAnimation,
+  Extrapolation,
+  interpolate,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  type SharedValue,
+} from 'react-native-reanimated';
 
 /** Left-edge strip that starts an open drag (does not wrap the FlatList). */
 export const EDGE_WIDTH = 28;
@@ -14,7 +19,7 @@ export const FAIL_OFFSET_Y = 24;
 const ACTIVE_OFFSET_X = 18;
 /** |vx| above this (px/s) commits open/close regardless of midpoint. */
 const FLING_VX = 550;
-/** Spring — iOS-ish drawer settle without bounce. */
+
 const SPRING = {
   stiffness: 220,
   damping: 28,
@@ -22,208 +27,205 @@ const SPRING = {
   overshootClamping: true,
   restDisplacementThreshold: 0.4,
   restSpeedThreshold: 0.4,
-  /**
-   * JS driver on purpose: native-driver springs do not mirror to JS, so
-   * stopAnimation/origin sync races and causes teleports / mid hangs.
-   * One translateX is cheap enough at 60fps.
-   */
-  useNativeDriver: false as const,
-};
+} as const;
 
 function clamp(n: number, min: number, max: number) {
+  'worklet';
   return Math.max(min, Math.min(max, n));
+}
+
+function buildRevealPan(options: {
+  enabled: boolean;
+  /** Positive = open (right); negative = close (left). */
+  activeOffsetX: number;
+  translateX: SharedValue<number>;
+  openWidthSV: SharedValue<number>;
+  dragOrigin: SharedValue<number>;
+  dragging: SharedValue<boolean>;
+  setOpenState: (open: boolean) => void;
+}) {
+  const {
+    enabled,
+    activeOffsetX,
+    translateX,
+    openWidthSV,
+    dragOrigin,
+    dragging,
+    setOpenState,
+  } = options;
+
+  return Gesture.Pan()
+    .enabled(enabled)
+    .activeOffsetX(activeOffsetX)
+    .failOffsetY([-FAIL_OFFSET_Y, FAIL_OFFSET_Y])
+    .shouldCancelWhenOutside(false)
+    .cancelsTouchesInView(false)
+    .onStart((e) => {
+      'worklet';
+      cancelAnimation(translateX);
+      const current = clamp(translateX.value, 0, openWidthSV.value);
+      // Absorb activation travel so the panel does not jump by ~activeOffset.
+      dragOrigin.value = current - e.translationX;
+      dragging.value = true;
+      translateX.value = clamp(
+        dragOrigin.value + e.translationX,
+        0,
+        openWidthSV.value,
+      );
+    })
+    .onUpdate((e) => {
+      'worklet';
+      if (!dragging.value) return;
+      translateX.value = clamp(
+        dragOrigin.value + e.translationX,
+        0,
+        openWidthSV.value,
+      );
+    })
+    .onEnd((e) => {
+      'worklet';
+      if (!dragging.value) return;
+      const width = openWidthSV.value;
+      const pos = translateX.value;
+      if (width <= 0) {
+        dragging.value = false;
+        return;
+      }
+      const velocityX = e.velocityX;
+      let open: boolean;
+      if (velocityX > FLING_VX) open = true;
+      else if (velocityX < -FLING_VX) open = false;
+      else open = pos > width * 0.5;
+
+      dragging.value = false;
+      cancelAnimation(translateX);
+      translateX.value = withSpring(
+        open ? width : 0,
+        { ...SPRING, velocity: velocityX },
+        (finished) => {
+          if (!finished) return;
+          // Flip only after settle — mid-spring enabled toggles used to hang pans.
+          runOnJS(setOpenState)(open);
+        },
+      );
+    })
+    .onFinalize((_, success) => {
+      'worklet';
+      if (success || !dragging.value) return;
+      const width = openWidthSV.value;
+      const open = translateX.value > width * 0.5;
+      dragging.value = false;
+      cancelAnimation(translateX);
+      translateX.value = withSpring(
+        open ? width : 0,
+        { ...SPRING, velocity: 0 },
+        (finished) => {
+          if (!finished) return;
+          runOnJS(setOpenState)(open);
+        },
+      );
+    });
 }
 
 type Options = {
   openWidth: number;
 };
 
-type SettleTarget = 'open' | 'closed';
-
 /**
  * ChatGPT-style Guides reveal on Continue.
  *
- * Finger-follow while dragging; inertial spring to open/closed on release.
- * Micro-moves ignored via activeOffsetX. Single px position is the source of truth.
+ * Finger-follow on a Reanimated shared value; spring settle on release.
+ * Micro-moves ignored via activeOffsetX. UI-thread position — no JS Animated
+ * listener / useNativeDriver: false races.
  */
 export function useGuidesRevealGesture({ openWidth }: Options) {
-  const translateX = useRef(new Animated.Value(0)).current;
-  const openWidthRef = useRef(openWidth);
-  const positionRef = useRef(0);
-  const dragOriginRef = useRef(0);
-  const draggingRef = useRef(false);
-  const animatingRef = useRef(false);
+  const translateX = useSharedValue(0);
+  const openWidthSV = useSharedValue(openWidth);
+  const dragOrigin = useSharedValue(0);
+  const dragging = useSharedValue(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  openWidthRef.current = openWidth;
-
-  // JS-driver mirror — always know where the panel is (drag + spring).
   useEffect(() => {
-    const id = translateX.addListener(({ value }) => {
-      positionRef.current = value;
-    });
-    return () => {
-      translateX.removeListener(id);
-    };
-  }, [translateX]);
+    openWidthSV.value = openWidth;
+    if (!isOpen || dragging.value) return;
+    translateX.value = openWidth;
+  }, [dragging, isOpen, openWidth, openWidthSV, translateX]);
 
-  // If width changes while open (rotation), keep the panel fully revealed.
-  useEffect(() => {
-    if (!isOpen || draggingRef.current || animatingRef.current) return;
-    positionRef.current = openWidth;
-    translateX.setValue(openWidth);
-  }, [isOpen, openWidth, translateX]);
+  const setOpenState = useCallback((open: boolean) => {
+    setIsOpen(open);
+  }, []);
 
-  const animateTo = useCallback(
-    (target: SettleTarget, velocityX = 0) => {
-      const width = openWidthRef.current;
-      const toValue = target === 'open' ? width : 0;
-      animatingRef.current = true;
-      draggingRef.current = false;
-      translateX.stopAnimation();
-      Animated.spring(translateX, {
-        ...SPRING,
+  /** JS-thread open/close (☰ / peek tap). withSpring from JS is supported. */
+  const springTo = useCallback(
+    (open: boolean, velocityX = 0) => {
+      const width = openWidthSV.value;
+      const toValue = open ? width : 0;
+      dragging.value = false;
+      cancelAnimation(translateX);
+      translateX.value = withSpring(
         toValue,
-        // Keep fling momentum into the settle spring (px/s).
-        velocity: velocityX,
-      }).start(({ finished }) => {
-        animatingRef.current = false;
-        if (!finished) return;
-        positionRef.current = toValue;
-        setIsOpen(target === 'open');
-      });
+        { ...SPRING, velocity: velocityX },
+        (finished) => {
+          if (!finished) return;
+          runOnJS(setOpenState)(open);
+        },
+      );
     },
-    [translateX],
+    [dragging, openWidthSV, setOpenState, translateX],
   );
 
   const openDrawer = useCallback(() => {
-    animateTo('open');
-  }, [animateTo]);
+    springTo(true);
+  }, [springTo]);
 
   const closeDrawer = useCallback(() => {
-    animateTo('closed');
-  }, [animateTo]);
+    springTo(false);
+  }, [springTo]);
 
-  /**
-   * Start finger-follow at ACTIVE (after activeOffset), not BEGAN.
-   * Origin absorbs activation travel so the panel does not jump by ~18px.
-   */
-  const beginDrag = useCallback(
-    (translationX: number) => {
-      if (draggingRef.current) return;
-      draggingRef.current = true;
-      animatingRef.current = false;
-      translateX.stopAnimation((value) => {
-        const current = clamp(value, 0, openWidthRef.current);
-        positionRef.current = current;
-        dragOriginRef.current = current - translationX;
-      });
-    },
-    [translateX],
+  const edgeGesture = useMemo(
+    () =>
+      buildRevealPan({
+        enabled: !isOpen,
+        activeOffsetX: ACTIVE_OFFSET_X,
+        translateX,
+        openWidthSV,
+        dragOrigin,
+        dragging,
+        setOpenState,
+      }),
+    [dragOrigin, dragging, isOpen, openWidthSV, setOpenState, translateX],
   );
 
-  const followFinger = useCallback(
-    (translationX: number) => {
-      if (!draggingRef.current) return;
-      const next = clamp(
-        dragOriginRef.current + translationX,
-        0,
-        openWidthRef.current,
-      );
-      positionRef.current = next;
-      translateX.setValue(next);
-    },
-    [translateX],
+  const closeGesture = useMemo(
+    () =>
+      buildRevealPan({
+        enabled: isOpen,
+        activeOffsetX: -ACTIVE_OFFSET_X,
+        translateX,
+        openWidthSV,
+        dragOrigin,
+        dragging,
+        setOpenState,
+      }),
+    [dragOrigin, dragging, isOpen, openWidthSV, setOpenState, translateX],
   );
 
-  const settle = useCallback(
-    (velocityX: number) => {
-      const width = openWidthRef.current;
-      const pos = positionRef.current;
-      if (width <= 0) {
-        draggingRef.current = false;
-        return;
-      }
-
-      let target: SettleTarget;
-      if (velocityX > FLING_VX) {
-        target = 'open';
-      } else if (velocityX < -FLING_VX) {
-        target = 'closed';
-      } else {
-        target = pos > width * 0.5 ? 'open' : 'closed';
-      }
-
-      // isOpen flips only in animateTo's finished callback — never mid-spring,
-      // otherwise PanGestureHandler enabled toggles and the settle can hang.
-      animateTo(target, velocityX);
-    },
-    [animateTo],
-  );
-
-  const cancelDrag = useCallback(() => {
-    if (!draggingRef.current) return;
-    draggingRef.current = false;
-    const width = openWidthRef.current;
-    const target: SettleTarget =
-      positionRef.current > width * 0.5 ? 'open' : 'closed';
-    animateTo(target, 0);
-  }, [animateTo]);
-
-  const onGestureEvent = useCallback(
-    (e: PanGestureHandlerGestureEvent) => {
-      followFinger(e.nativeEvent.translationX);
-    },
-    [followFinger],
-  );
-
-  const onHandlerStateChange = useCallback(
-    (e: PanGestureHandlerStateChangeEvent) => {
-      const { state, velocityX, translationX } = e.nativeEvent;
-
-      // ACTIVE = passed activeOffset — real drag start (not BEGAN / micro-touch).
-      if (state === State.ACTIVE) {
-        beginDrag(translationX);
-        followFinger(translationX);
-        return;
-      }
-
-      if (state === State.CANCELLED || state === State.FAILED) {
-        cancelDrag();
-        return;
-      }
-
-      if (state === State.END) {
-        if (!draggingRef.current) return;
-        settle(velocityX);
-      }
-    },
-    [beginDrag, cancelDrag, followFinger, settle],
-  );
+  const mainLayerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+    shadowOpacity: interpolate(
+      translateX.value,
+      [0, Math.max(openWidthSV.value, 1)],
+      [0, 0.22],
+      Extrapolation.CLAMP,
+    ),
+  }));
 
   return {
-    translateX,
     isOpen,
     openDrawer,
     closeDrawer,
-    edgePanProps: {
-      enabled: !isOpen,
-      onGestureEvent,
-      onHandlerStateChange,
-      activeOffsetX: ACTIVE_OFFSET_X,
-      failOffsetY: [-FAIL_OFFSET_Y, FAIL_OFFSET_Y] as [number, number],
-      shouldCancelWhenOutside: false,
-      cancelsTouchesInView: false,
-    },
-    closePanProps: {
-      enabled: isOpen,
-      onGestureEvent,
-      onHandlerStateChange,
-      // Only a clear left drag starts close; right / micro-moves ignored.
-      activeOffsetX: -ACTIVE_OFFSET_X,
-      failOffsetY: [-FAIL_OFFSET_Y, FAIL_OFFSET_Y] as [number, number],
-      shouldCancelWhenOutside: false,
-      cancelsTouchesInView: false,
-    },
+    edgeGesture,
+    closeGesture,
+    mainLayerStyle,
   };
 }

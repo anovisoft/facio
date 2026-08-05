@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import Animated, { useAnimatedRef } from 'react-native-reanimated';
 
 import {
   getPathState,
@@ -33,6 +34,7 @@ export function ManualEditScreen({
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { projectId, stateVersion, planIndex, actionKey, mode } = route.params;
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -147,6 +149,7 @@ export function ManualEditScreen({
   return (
     <SafeScreen
       scroll
+      scrollRef={scrollRef}
       footer={
         <View style={styles.footer}>
           <PrimaryButton
@@ -173,6 +176,7 @@ export function ManualEditScreen({
           actions={edits}
           onChange={setEdits}
           disabled={saving}
+          scrollableRef={scrollRef}
         />
       )}
 

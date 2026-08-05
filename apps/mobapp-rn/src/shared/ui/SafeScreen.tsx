@@ -7,6 +7,7 @@ import {
   View,
   type ViewStyle,
 } from 'react-native';
+import Animated, { type AnimatedRef } from 'react-native-reanimated';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -35,6 +36,11 @@ type Props = {
    */
   footer?: ReactNode;
   footerStyle?: ViewStyle;
+  /**
+   * Optional Reanimated scroll ref (e.g. for nested drag auto-scroll).
+   * When set with `scroll`, uses Animated.ScrollView.
+   */
+  scrollRef?: AnimatedRef<Animated.ScrollView>;
 };
 
 export function SafeScreen({
@@ -45,25 +51,32 @@ export function SafeScreen({
   edges = ['left', 'right'],
   footer,
   footerStyle,
+  scrollRef,
 }: Props) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
+  const scrollProps = {
+    style: styles.flex,
+    contentContainerStyle: [styles.scrollContent, contentStyle],
+    keyboardShouldPersistTaps: 'handled' as const,
+    keyboardDismissMode: 'interactive' as const,
+    automaticallyAdjustKeyboardInsets: true,
+    // Bound scroll to content height — no flexGrow stretch / empty void.
+    // Android: never overscroll into empty; iOS: bounce only when scrollable.
+    bounces: true,
+    overScrollMode: 'never' as const,
+    alwaysBounceVertical: false,
+  };
+
   const scrollView = scroll ? (
-    <ScrollView
-      style={styles.flex}
-      contentContainerStyle={[styles.scrollContent, contentStyle]}
-      keyboardShouldPersistTaps="handled"
-      keyboardDismissMode="interactive"
-      automaticallyAdjustKeyboardInsets
-      // Bound scroll to content height — no flexGrow stretch / empty void.
-      // Android: never overscroll into empty; iOS: bounce only when scrollable.
-      bounces
-      overScrollMode="never"
-      alwaysBounceVertical={false}
-    >
-      {children}
-    </ScrollView>
+    scrollRef ? (
+      <Animated.ScrollView ref={scrollRef} {...scrollProps}>
+        {children}
+      </Animated.ScrollView>
+    ) : (
+      <ScrollView {...scrollProps}>{children}</ScrollView>
+    )
   ) : (
     <View style={[styles.content, contentStyle]}>{children}</View>
   );

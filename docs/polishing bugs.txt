@@ -16,7 +16,7 @@ Source dogfood notes. Status routed into Facio 0.1 slices. Canon: `docs/Facio 0.
 | 10 | Active: Manual remove ingredient → expected whole plan cascade; couldn’t find path back to plan dialog | **→ E2c** (+ entry polish) | AI Feed «Save with AI»; pencil/back → Edit; Diff + preserve progress |
 | 11 | Create clarify free-form: typed text misaligned in answer field | **landed** E2b-iterate (await PO dogfood) | `PlanFeedQuestions` / ClarifyChips TextInput |
 | 12 | Edit affordance: not session-global — pencil+Edit on the specific checklist/block (top-right) | **landed** E2b-iterate (await PO dogfood) | `BlockEditButton` on checklist/stepper/counter |
-| 13 | Checklist Manual drag: jerky anim; row flew up once; first row keeps outline after other drags | **landed** E2b-iterate (await PO dogfood) | `ManualBlockEditor` dragEpoch reset |
+| 13 | Checklist Manual drag: jerky anim; row flew up once; first row keeps outline after other drags | **landed** E2b-iterate (await PO dogfood) | `react-native-sortables` in `ManualBlockEditor` |
 
 ## External dogfood (2026-08-05) — triage
 

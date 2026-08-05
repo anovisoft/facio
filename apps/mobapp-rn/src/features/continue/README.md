@@ -7,7 +7,7 @@ Product stack: Guide = path · Continue = focus · Session = Full Block execute 
 
 ## Guides drawer (compact)
 
-ChatGPT-style under-sheet: Guides sits behind Continue; opening translates the main layer right (~82%). Open via ☰ or a dedicated ~28px left-edge pan strip; close via swipe left on Continue (main-layer pan) or tap peek. Motion is finger-follow on `translateX` (px) with inertial spring settle — see `useGuidesRevealGesture.ts`. No RN `Modal`.
+ChatGPT-style under-sheet: Guides sits behind Continue; opening translates the main layer right (~82%). Open via ☰ or a dedicated ~28px left-edge pan strip; close via swipe left on Continue (main-layer pan) or tap peek. Motion is finger-follow on a Reanimated `translateX` shared value with inertial spring settle (`Gesture` API) — see `useGuidesRevealGesture.ts`. No RN `Modal`.
 
 **B2 compact rule:** each row is emoji/mark + title (+ thin `Draft` / `Waiting` status). No Cover difficulty · duration twin cards. Archive + Settings gear stay in the footer. Tap → Guide trust surface (draft or active — same Cover + roadmap chrome; Slice C).
 

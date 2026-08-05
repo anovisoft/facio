@@ -99,7 +99,7 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 ### Guides drawer reveal landmines
 
 - Not RN Modal bottom-sheet. Guides **under** Continue; translateX ~82%; radius ~52; **no scale**.  
-- `useGuidesRevealGesture.ts`: `useNativeDriver: false`; don’t drive mid-drag off stale `drawerOpen`.  
+- `useGuidesRevealGesture.ts`: Reanimated shared `translateX` + Gesture API (`GestureDetector`); flip `isOpen` only after spring settle (don’t enable/disable pans mid-spring).  
 - Stay Expo RN.
 - **Session → Continue terminal exit:** Done / Skip (no next) / Postpone / Archive must `resetToContinue` (`reliableBack.tsx`), not `navigate('Continue')`. Otherwise Session stays under Continue and iOS edge-swipe returns to Session instead of opening Guides.
 
@@ -220,7 +220,7 @@ Append-only лента; questions during soft-start; refine waits for path; Star
 
 ### E2b Manual editor — accepted (PO 2026-08-05)
 
-Shared Manual for closed Block tools. Create: plan card «Edit tools». Active: Session kebab → Manual + Undo. API: `GET .../path-state`, `POST .../manual-edit` (`user_edit`). Checklist UI: drag handle left, red X delete, slot-shift preview while dragging (`ManualBlockEditor.tsx`). Code: `features/manualEdit/*`. Tests: `tests/test_manual_edit.py`.
+Shared Manual for closed Block tools. Create: plan card «Edit tools». Active: Session kebab → Manual + Undo. API: `GET .../path-state`, `POST .../manual-edit` (`user_edit`). Checklist UI: drag handle left, red X delete, reorder via `react-native-sortables` (`ManualBlockEditor.tsx`). Code: `features/manualEdit/*`. Tests: `tests/test_manual_edit.py`.
 
 ### External dogfood triage (PO paste 2026-08-05)
 
@@ -252,7 +252,7 @@ Questions-first Create; `planRevealMode`; skip→Intent plan+Qs; answers→refin
 
 ### E2b-iterate — landed (await PO dogfood; #13 rewrite)
 
-#11 clarify TextInput; #12 Block Edit+pencil; #13 checklist drag **rewritten** (absolute overlay + margin gap — prior native/JS transform mix left dragged row stuck / floating). Re-dogfood drag 4→1.
+#11 clarify TextInput; #12 Block Edit+pencil; #13 checklist reorder via **`react-native-sortables`** (custom PanGesture overlay removed — stale chrome / wrong slots). Re-dogfood drag 4→1.
 
 ### Pending
 

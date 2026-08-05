@@ -191,7 +191,7 @@ Canon: [15](./15-edit-surfaces.md).
 
 1. **#11** — Create clarify free-form `TextInput` in `PlanFeedQuestions`: typed text aligned correctly (padding / lineHeight / `textAlignVertical` on iOS).
 2. **#12** — Edit affordance on the **specific** checklist/block: top-right **Edit + pencil** (not only plan-card «Edit tools» / Session kebab). Opens `ManualEdit` scoped by `actionKey` (already supported). Demote or remove redundant global «Edit tools» on plan card if Block-level entry covers it; Session kebab «Edit Session» may remain as fallback or also route to current action — prefer Block-level as primary.
-3. **#13** — Checklist drag in `ManualBlockEditor`: smoother slot-shift; no flying rows; clear drag outline/shadow on **all** rows after release (esp. first item).
+3. **#13** — Checklist drag in `ManualBlockEditor`: replace custom gesture with `react-native-sortables` (handle-only, light active chrome; no leftover outline / stale order).
 4. Preserve Manual apply + Undo; no E2c AI Feed.
 
 **Non-goals:** Save with AI / Active AI Feed (#10 → E2c); inventing Block types.

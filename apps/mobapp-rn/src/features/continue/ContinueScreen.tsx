@@ -1,7 +1,6 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Animated,
   FlatList,
   Pressable,
   RefreshControl,
@@ -10,7 +9,8 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import { GestureDetector } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -70,23 +70,13 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
   const openWidth = windowWidth * OPEN_RATIO;
 
   const {
-    translateX,
     isOpen,
     openDrawer,
     closeDrawer,
-    edgePanProps,
-    closePanProps,
+    edgeGesture,
+    closeGesture,
+    mainLayerStyle,
   } = useGuidesRevealGesture({ openWidth });
-
-  const shadowOpacity = useMemo(
-    () =>
-      translateX.interpolate({
-        inputRange: [0, openWidth],
-        outputRange: [0, 0.22],
-        extrapolate: 'clamp',
-      }),
-    [translateX, openWidth],
-  );
 
   const setLastProjectId = useSessionStore((s) => s.setLastProjectId);
   const [sessions, setSessions] = useState<ProjectSummary[]>([]);
@@ -168,17 +158,16 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
         Edge open is a dedicated full-height strip — always mounted,
         enabled only when closed — so FlatList vertical scroll is untouched.
       */}
-      <PanGestureHandler {...closePanProps}>
+      <GestureDetector gesture={closeGesture}>
         <Animated.View
           style={[
             styles.mainLayer,
+            mainLayerStyle,
             {
               backgroundColor: colors.background,
               borderRadius: MAIN_RADIUS,
-              transform: [{ translateX }],
               shadowColor: '#000',
               shadowOffset: { width: -2, height: 0 },
-              shadowOpacity,
               shadowRadius: 14,
               elevation: isOpen ? 14 : 0,
             },
@@ -356,16 +345,16 @@ export function ContinueScreen({ navigation }: RootScreenProps<'Continue'>) {
             ) : null}
 
             {/* Dedicated edge strip — always mounted; enabled/pointerEvents when closed. */}
-            <PanGestureHandler {...edgePanProps}>
+            <GestureDetector gesture={edgeGesture}>
               <Animated.View
                 style={[styles.edgeStrip, { width: EDGE_WIDTH }]}
                 pointerEvents={isOpen ? 'none' : 'auto'}
                 collapsable={false}
               />
-            </PanGestureHandler>
+            </GestureDetector>
           </View>
         </Animated.View>
-      </PanGestureHandler>
+      </GestureDetector>
     </View>
   );
 }
