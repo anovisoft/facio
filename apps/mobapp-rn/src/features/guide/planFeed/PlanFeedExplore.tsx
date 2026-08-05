@@ -311,12 +311,17 @@ export function PlanFeedExplore({
     }, [projectId, setProject, syncFromProject, updatePlanCard]),
   );
 
-  const onEditTools = (snapshot: PlanSnapshot, planIndex: number) => {
+  const onEditAction = (
+    snapshot: PlanSnapshot,
+    planIndex: number,
+    actionKey: string,
+  ) => {
     navigation.navigate('ManualEdit', {
       projectId,
       mode: 'create',
       stateVersion: snapshot.stateVersion,
       planIndex,
+      actionKey,
     });
   };
 
@@ -421,8 +426,8 @@ export function PlanFeedExplore({
                     committing != null && committingPlanIndex === item.planIndex
                   }
                   disabled={busy || committing != null}
-                  onEditTools={() =>
-                    onEditTools(item.snapshot, item.planIndex)
+                  onEditAction={(actionKey) =>
+                    onEditAction(item.snapshot, item.planIndex, actionKey)
                   }
                   onStart={() =>
                     void onCommitFromCard(item.snapshot, item.planIndex, 'start')

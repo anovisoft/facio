@@ -17,6 +17,7 @@ import {
   scheduleTimerNotification,
   signalTimerComplete,
 } from '@/services/timerSignals';
+import { BlockEditButton } from '@/shared/ui/BlockEditButton';
 import { useSessionStore } from '@/store';
 import { useTheme } from '@/theme/ThemeContext';
 import { radii, spacing, typography } from '@/theme';
@@ -759,6 +760,8 @@ type CounterControlProps = {
   interactive?: boolean;
   disabled?: boolean;
   onChange?: (nextCurrent: number) => void;
+  /** Manual entry for this counter Block (E2b-iterate #12). */
+  onEdit?: () => void;
 };
 
 export function CounterControl({
@@ -766,6 +769,7 @@ export function CounterControl({
   interactive = false,
   disabled = false,
   onChange,
+  onEdit,
 }: CounterControlProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -789,9 +793,18 @@ export function CounterControl({
         { borderColor: colors.border, backgroundColor: colors.surface },
       ]}
     >
-      <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
-        {label}
-      </Text>
+      <View style={styles.blockHeader}>
+        <Text
+          style={[
+            styles.sectionLabel,
+            styles.blockHeaderLabel,
+            { color: colors.textMuted },
+          ]}
+        >
+          {label}
+        </Text>
+        {onEdit ? <BlockEditButton onPress={onEdit} /> : null}
+      </View>
       <View style={styles.counterRow}>
         {interactive ? (
           <Pressable
@@ -857,6 +870,8 @@ type StepperPlayerProps = {
    * Omit in preview / Hero contexts.
    */
   actionId?: string;
+  /** Manual entry for this stepper Block (E2b-iterate #12). */
+  onEdit?: () => void;
 };
 
 function formatMmSs(totalSec: number): string {
@@ -918,6 +933,7 @@ export function StepperPlayer({
   onBeatCounterChange,
   compact = false,
   actionId,
+  onEdit,
 }: StepperPlayerProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -1114,6 +1130,20 @@ export function StepperPlayer({
           { borderColor: colors.border, backgroundColor: colors.surface },
         ]}
       >
+        {onEdit ? (
+          <View style={styles.blockHeader}>
+            <Text
+              style={[
+                styles.sectionLabel,
+                styles.blockHeaderLabel,
+                { color: colors.textMuted },
+              ]}
+            >
+              {t('plugins.stepper')}
+            </Text>
+            <BlockEditButton onPress={onEdit} />
+          </View>
+        ) : null}
         {strip}
         <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
           {sessionDone
@@ -1144,9 +1174,18 @@ export function StepperPlayer({
         { borderColor: colors.border, backgroundColor: colors.surface },
       ]}
     >
-      <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
-        {t('plugins.stepper')}
-      </Text>
+      <View style={styles.blockHeader}>
+        <Text
+          style={[
+            styles.sectionLabel,
+            styles.blockHeaderLabel,
+            { color: colors.textMuted },
+          ]}
+        >
+          {t('plugins.stepper')}
+        </Text>
+        {onEdit ? <BlockEditButton onPress={onEdit} /> : null}
+      </View>
       {strip}
       <Text style={[styles.beatMeta, { color: colors.textSecondary }]}>
         {sessionDone
@@ -1223,6 +1262,17 @@ const styles = StyleSheet.create({
     ...typography.label,
     textTransform: 'uppercase',
     marginBottom: spacing.xs,
+  },
+  blockHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  blockHeaderLabel: {
+    marginBottom: 0,
+    flex: 1,
   },
   row: {
     borderWidth: 1,

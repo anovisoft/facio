@@ -158,6 +158,7 @@ export function PlanFeedQuestions({
         onChangeText={onChangeComment}
         editable={!disabled}
         multiline
+        textAlignVertical="top"
         placeholder={commentPlaceholder}
         placeholderTextColor={colors.textMuted}
         style={[
@@ -226,13 +227,17 @@ const styles = StyleSheet.create({
   noteLabel: {
     ...typography.label,
   },
+  // Avoid typography.body.lineHeight on multiline TextInput — iOS misaligns
+  // the caret/text when typing starts (#11). Match Manual checklist pattern.
   input: {
-    ...typography.body,
+    fontSize: typography.body.fontSize,
+    fontWeight: typography.body.fontWeight,
     borderWidth: 1,
     borderRadius: radii.md,
-    padding: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
     minHeight: 64,
-    textAlignVertical: 'top',
   },
   hint: {
     ...typography.caption,

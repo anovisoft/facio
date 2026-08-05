@@ -796,6 +796,15 @@ export function ProjectHomeScreen({
       : next;
   const sessionLive =
     displayed != null && next != null && displayed.id === next.id;
+  const openManualEditFor = (action: ActionResponse | null | undefined) => {
+    const actionKey =
+      action?.key?.trim() || project?.next_action?.key?.trim() || null;
+    navigation.navigate('ManualEdit', {
+      projectId,
+      mode: 'active',
+      actionKey,
+    });
+  };
   const onBrowseNext = () => {
     const action = displayed;
     if (!project || !action || busy) return;
@@ -1262,6 +1271,7 @@ export function ProjectHomeScreen({
                         stepper={displayed.stepper}
                         interactive={sessionLive}
                         disabled={busy || !sessionLive}
+                        onEdit={() => openManualEditFor(displayed)}
                         onBeatCounterChange={(beatId, value) =>
                           void onStepperBeatCounterChange(beatId, value)
                         }
@@ -1295,6 +1305,7 @@ export function ProjectHomeScreen({
                         counter={displayed.counter}
                         interactive={sessionLive}
                         disabled={busy || !sessionLive}
+                        onEdit={() => openManualEditFor(displayed)}
                         onChange={(value) => void onCounterChange(value)}
                       />
                     ) : null}
@@ -1329,6 +1340,7 @@ export function ProjectHomeScreen({
                     <ChecklistList
                       items={displayed.checklist_items}
                       disabled={busy || !sessionLive}
+                      onEdit={() => openManualEditFor(displayed)}
                       onToggle={
                         sessionLive
                           ? (item, done) =>

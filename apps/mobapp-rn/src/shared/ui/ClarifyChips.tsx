@@ -88,6 +88,7 @@ export function ClarifyChips({
           value={value}
           onChangeText={onSelect}
           editable={!disabled}
+          textAlignVertical="center"
           placeholder={
             customPlaceholder ?? t('draft.freeTextPlaceholder')
           }
@@ -125,12 +126,15 @@ const styles = StyleSheet.create({
   label: {
     ...typography.caption,
   },
+  // No typography.body.lineHeight — same iOS TextInput alignment fix as #11.
   input: {
-    ...typography.body,
+    fontSize: typography.body.fontSize,
+    fontWeight: typography.body.fontWeight,
     borderWidth: 1,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
     minHeight: 44,
   },
 });

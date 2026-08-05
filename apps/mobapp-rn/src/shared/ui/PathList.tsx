@@ -34,6 +34,11 @@ type Props = {
   checklistDisabled?: boolean;
   /** When true, timers/counters can run (live). Default false = preview. */
   pluginsInteractive?: boolean;
+  /**
+   * Manual entry for a specific action’s Block tools (path-state action id /
+   * ActionResponse.key). Create plan card + Active Session.
+   */
+  onEditAction?: (actionKey: string) => void;
   onToggleChecklist?: (
     item: ChecklistItemResponse,
     nextDone: boolean,
@@ -233,6 +238,7 @@ export function PathList({
   expandable = false,
   checklistDisabled,
   pluginsInteractive = false,
+  onEditAction,
   onToggleChecklist,
   onCounterChange,
   onStepperBeatCounterChange,
@@ -255,8 +261,42 @@ export function PathList({
     return null;
   }
 
+  const hasEditableBlock = (action: ActionResponse): boolean =>
+    action.checklist_items.length > 0 ||
+    Boolean(action.counter) ||
+    Boolean(action.stepper);
+
+  const isActionOpen = (action: ActionResponse): boolean => {
+    if (!expandable) return true;
+    if (openIds[action.id] !== undefined) return Boolean(openIds[action.id]);
+    // With Block Edit, open tool-bearing steps by default so Edit+pencil is
+    // visible without hunting «expand» (#12).
+    return onEditAction != null && hasEditableBlock(action);
+  };
+
   const toggleOpen = (id: string) => {
-    setOpenIds((prev) => ({ ...prev, [id]: !prev[id] }));
+    setOpenIds((prev) => {
+      const action = actions.find((a) => a.id === id);
+      const currentlyOpen =
+        prev[id] !== undefined
+          ? Boolean(prev[id])
+          : onEditAction != null &&
+            action != null &&
+            hasEditableBlock(action);
+      return { ...prev, [id]: !currentlyOpen };
+    });
+  };
+
+  const editKeyFor = (action: ActionResponse): string | null => {
+    const key = action.key?.trim();
+    return key || null;
+  };
+
+  const editHandler = (action: ActionResponse): (() => void) | undefined => {
+    if (!onEditAction) return undefined;
+    const key = editKeyFor(action);
+    if (!key) return undefined;
+    return () => onEditAction(key);
   };
 
   return (
@@ -386,9 +426,7 @@ export function PathList({
               {section.actions.map((action, index) => {
                 const status = statusLabel(action, t);
                 const isLocked = Boolean(action.day_locked);
-                const isOpen = expandable
-                  ? Boolean(openIds[action.id])
-                  : true;
+                const isOpen = isActionOpen(action);
                 const canExpand =
                   expandable &&
                   Boolean(
@@ -535,6 +573,7 @@ export function PathList({
                                 action.status !== 'pending' ||
                                 isLocked
                               }
+                              onEdit={editHandler(action)}
                               onToggle={
                                 onToggleChecklist &&
                                 action.status === 'pending' &&
@@ -592,6 +631,7 @@ export function PathList({
                                 !isLocked
                               }
                               disabled={checklistDisabled}
+                              onEdit={editHandler(action)}
                               onChange={
                                 onCounterChange
                                   ? (next) =>
@@ -612,6 +652,7 @@ export function PathList({
                                 !isLocked
                               }
                               disabled={checklistDisabled}
+                              onEdit={editHandler(action)}
                               onBeatCounterChange={
                                 onStepperBeatCounterChange
                                   ? (beatId, next) =>

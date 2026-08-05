@@ -12,7 +12,7 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 |-------|--------|
 | Product vector | Facio 0.1 locked — **Guide / Continue / Session** + Hero/Full/Compact + **Plan Feed · Manual · Micro** ([15](./15-edit-surfaces.md)) |
 | Prototype engine | `apps/` ≈ `docs/next` slices 1–5 **accepted** |
-| Facio 0.1 shell | **A–E2b accepted**. **E2a-iterate re-impl landed** (await PO dogfood). Then **E2c** → F → G |
+| Facio 0.1 shell | **A–E2b + E2a-iterate accepted**. **E2b-iterate landed** (await PO dogfood #11–13) → then **E2c** → F → G |
 | Edit surfaces lock | Create = Plan Feed + Manual (CTA on plan card, no sticky Start). Active = Manual + Micro + AI Feed. Canon [15](./15-edit-surfaces.md) |
 | Carbonara / multi-Session same day | Same-day **Back/Next = browse**; **Done** completes live step (assurance); last Done → Continue |
 | Fitness multi-day E2E | Daily sticky **Done** + assurance; kebab Postpone (deterministic); deferred calendar week / **H** |
@@ -24,7 +24,9 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 ## After summarization — PM start here
 
 1. Read [README](./README.md) → [15](./15-edit-surfaces.md) → [11](./11-success-systems.md) (§5–6 Diff/Undo, §9) → **this file** → [14](./14-impl-plan.md).  
-2. **E2a-iterate** re-spec (PO 2026-08-05): questions-first, background `#2`, skip→Intent plan+Qs, answers→refine plan, AI `selection` single|multi. LLM session model unchanged.  
+2. **E2b-iterate landed** (await PO dogfood #11–13). On accept → **E2c**.  
+
+
 
 
 3. Do **not** invent D1–D8 / deferred parked items.  
@@ -159,8 +161,9 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 | — | Session chrome cleanup | **accepted** (PO 2026-08-05) |
 | E2a | Create Plan Feed | **accepted** (PO 2026-08-05) |
 | E2b | Manual editor (all tools) | **accepted** (PO 2026-08-05; checklist drag UI polish included) |
-| E2a-iterate | Create questions-first + bg path + selection (#9) | **landed** (await PO dogfood) |
-| E2c | Active AI Feed + Diff (#10) | **next** after E2a-iterate accept |
+| E2a-iterate | Create questions-first + bg path + selection (#9) | **accepted** (PO 2026-08-05) |
+| E2b-iterate | Manual entry + checklist polish (#11–13) | **landed** (await PO dogfood) |
+| E2c | Active AI Feed + Diff (#10) | **next** after E2b-iterate accept |
 | F | Identity + Finish Experience | pending (after E2*) |
 | G | Copy / IA kill / Morning Summary (+ #8) | pending |
 | H | Time travel (optional) | pending |
@@ -243,11 +246,15 @@ B) Skip «without answers» → reveal Intent-only plan when ready
 - Plan expanded when shown. No change to LLM “session” (still `current_state` per call).
 - Compact history into refine prompts = **parked** (PO).
 
-### E2a-iterate — landed (await PO dogfood)
+### E2a-iterate — accepted (PO 2026-08-05)
 
-Questions-first Create; `planRevealMode` hidden→revealed (MMKV); skip reveals Intent plan (no empty refine); answers wait `#2`→refine→reveal (no flash); `selection` single|multi schema→chips; plan expanded when shown. Code: `planFeed/*`, `ClarifyChips`, backend clarify `selection` + prompts. Tests: anthropic/schema selection (18).
+Questions-first Create; `planRevealMode`; skip→Intent plan+Qs; answers→refine (no flash); `selection` single|multi. LLM session unchanged.
+
+### E2b-iterate — landed (await PO dogfood; #13 rewrite)
+
+#11 clarify TextInput; #12 Block Edit+pencil; #13 checklist drag **rewritten** (absolute overlay + margin gap — prior native/JS transform mix left dragged row stuck / floating). Re-dogfood drag 4→1.
 
 ### Pending
 
-1. PO dogfood E2a-iterate → accept → **E2c**.  
-2. Known parked: server-side Plan Feed turns; compact refine history; #8 → G; offline P5.
+1. PO dogfood E2b-iterate → accept → **E2c** (#10).  
+2. Parked: server feed turns; compact refine history; #8 → G; offline P5.

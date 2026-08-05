@@ -47,7 +47,7 @@ export type RootStackParamList = {
     stateVersion?: number | null;
     /** Create: plan card index to refresh after save. */
     planIndex?: number;
-    /** Active: limit editor to this action key (Session next/browse). */
+    /** Limit editor to this path-state action id (Create Block Edit + Active Session). */
     actionKey?: string | null;
   };
   Archive: undefined;

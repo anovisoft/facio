@@ -125,6 +125,8 @@ export default {
     subtitleCreate: 'Change checklist items and tool fields on this plan version.',
     subtitleActive: 'Adjust this Session’s tools. You can Undo after saving.',
     editTools: 'Edit tools',
+    edit: 'Edit',
+    editBlockA11y: 'Edit this block',
     save: 'Save',
     loading: 'Loading tools…',
     loadError: 'Could not load tools',

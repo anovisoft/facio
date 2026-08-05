@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Animated,
+  Keyboard,
   Pressable,
   StyleSheet,
   Text,
@@ -282,20 +283,40 @@ function reorderChecklist(
   return next.map((it, i) => ({ ...it, sort: i }));
 }
 
-/** While dragging `from` toward `hover`, other rows shift to preview the gap. */
-function dragSlotOffset(
+/**
+ * While `from` is absolutely positioned, siblings stay in normal flow.
+ * Insert one stride of space at `hover` via margin (no transforms).
+ */
+function checklistFlowGap(
   index: number,
   from: number,
   hover: number,
-): number {
-  if (from === hover) return 0;
-  if (from < hover) {
-    if (index > from && index <= hover) return -CHECKLIST_ROW_STRIDE;
-    return 0;
+  itemCount: number,
+): { marginTop: number; marginBottom: number } {
+  const flowIndices: number[] = [];
+  for (let i = 0; i < itemCount; i++) {
+    if (i !== from) flowIndices.push(i);
   }
-  if (index >= hover && index < from) return CHECKLIST_ROW_STRIDE;
-  return 0;
+  const flowPos = flowIndices.indexOf(index);
+  if (flowPos < 0) {
+    return { marginTop: 0, marginBottom: CHECKLIST_ROW_GAP };
+  }
+  const marginTop = flowPos === hover ? CHECKLIST_ROW_STRIDE : 0;
+  const trailingGap =
+    hover === itemCount - 1 && flowPos === flowIndices.length - 1;
+  return {
+    marginTop,
+    marginBottom:
+      CHECKLIST_ROW_GAP + (trailingGap ? CHECKLIST_ROW_STRIDE : 0),
+  };
 }
+
+type ChecklistDrag = {
+  /** Stable identity — never attach chrome by index after reorder. */
+  id: string;
+  from: number;
+  hover: number;
+};
 
 function ChecklistEditor({
   items,
@@ -308,13 +329,15 @@ function ChecklistEditor({
 }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const [drag, setDrag] = useState<{ from: number; hover: number } | null>(
-    null,
-  );
-  const dragTyRef = useRef(new Animated.Value(0)).current;
+  const [drag, setDrag] = useState<ChecklistDrag | null>(null);
+  /** Finger offset for the absolute overlay row only. */
+  const dragTy = useRef(new Animated.Value(0)).current;
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
 
-  const clearDrag = () => {
-    dragTyRef.setValue(0);
+  const clearDragVisual = () => {
+    dragTy.stopAnimation();
+    dragTy.setValue(0);
     setDrag(null);
   };
 
@@ -323,45 +346,62 @@ function ChecklistEditor({
       <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
         {t('manualEdit.checklist')}
       </Text>
-      <View style={styles.checklistList}>
+      <View
+        style={[
+          styles.checklistList,
+          drag
+            ? { minHeight: items.length * CHECKLIST_ROW_STRIDE }
+            : null,
+        ]}
+      >
         {items.map((item, index) => {
-          const isDragging = drag?.from === index;
-          const slot =
+          const rowId = item.id ?? `c${index}`;
+          const isDragging = drag?.id === rowId;
+          const gap =
             drag && !isDragging
-              ? dragSlotOffset(index, drag.from, drag.hover)
-              : 0;
+              ? checklistFlowGap(index, drag.from, drag.hover, items.length)
+              : { marginTop: 0, marginBottom: CHECKLIST_ROW_GAP };
           return (
             <ChecklistRow
-              key={item.id ?? `c${index}`}
+              key={rowId}
               item={item}
               index={index}
               itemCount={items.length}
               disabled={disabled}
+              listDragging={drag != null}
               dragging={isDragging}
-              slotOffset={slot}
-              dragTy={isDragging ? dragTyRef : null}
+              overlayTop={isDragging ? drag.from * CHECKLIST_ROW_STRIDE : 0}
+              flowMarginTop={gap.marginTop}
+              flowMarginBottom={gap.marginBottom}
+              dragTy={isDragging ? dragTy : null}
               onDragStart={() => {
-                dragTyRef.setValue(0);
-                setDrag({ from: index, hover: index });
+                Keyboard.dismiss();
+                dragTy.stopAnimation();
+                dragTy.setValue(0);
+                setDrag({ id: rowId, from: index, hover: index });
               }}
               onDragMove={(from, translationY) => {
-                dragTyRef.setValue(translationY);
+                dragTy.setValue(translationY);
+                const count = itemsRef.current.length;
                 const delta = Math.round(translationY / CHECKLIST_ROW_STRIDE);
-                const hover = Math.max(
-                  0,
-                  Math.min(items.length - 1, from + delta),
-                );
-                setDrag((prev) =>
-                  prev && prev.from === from && prev.hover === hover
-                    ? prev
-                    : { from, hover },
-                );
+                const hover = Math.max(0, Math.min(count - 1, from + delta));
+                setDrag((prev) => {
+                  if (!prev || prev.from !== from) return prev;
+                  if (prev.hover === hover) return prev;
+                  return { ...prev, hover };
+                });
               }}
               onDragEnd={(from, to) => {
-                clearDrag();
-                onChange(reorderChecklist(items, from, to));
+                const next = reorderChecklist(itemsRef.current, from, to);
+                // Drop chrome first by id, then commit order in the same tick
+                // so drag.from never paints on the post-reorder index.
+                dragTy.stopAnimation();
+                dragTy.setValue(0);
+                setDrag(null);
+                itemsRef.current = next;
+                onChange(next);
               }}
-              onDragCancel={clearDrag}
+              onDragCancel={clearDragVisual}
               onChangeTitle={(title) => {
                 const next = items.map((it, i) =>
                   i === index ? { ...it, title } : it,
@@ -402,8 +442,11 @@ function ChecklistRow({
   index,
   itemCount,
   disabled,
+  listDragging,
   dragging,
-  slotOffset,
+  overlayTop,
+  flowMarginTop,
+  flowMarginBottom,
   dragTy,
   onDragStart,
   onDragMove,
@@ -416,9 +459,13 @@ function ChecklistRow({
   index: number;
   itemCount: number;
   disabled?: boolean;
+  /** Any row is being dragged — blur/lock inputs so focus ring can't stick. */
+  listDragging: boolean;
   dragging: boolean;
-  /** Preview shift while another row is dragged. */
-  slotOffset: number;
+  /** Absolute top while dragging (from-index × stride). */
+  overlayTop: number;
+  flowMarginTop: number;
+  flowMarginBottom: number;
   dragTy: Animated.Value | null;
   onDragStart: () => void;
   onDragMove: (from: number, translationY: number) => void;
@@ -429,17 +476,8 @@ function ChecklistRow({
 }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const slotAnim = useRef(new Animated.Value(0)).current;
   const startIndexRef = useRef(index);
-
-  useEffect(() => {
-    Animated.spring(slotAnim, {
-      toValue: slotOffset,
-      useNativeDriver: false,
-      speed: 28,
-      bounciness: 0,
-    }).start();
-  }, [slotAnim, slotOffset]);
+  const inputRef = useRef<TextInput>(null);
 
   const onGestureEvent = (e: PanGestureHandlerGestureEvent) => {
     onDragMove(startIndexRef.current, e.nativeEvent.translationY);
@@ -449,6 +487,8 @@ function ChecklistRow({
     const { state, translationY } = e.nativeEvent;
     if (state === State.BEGAN) {
       startIndexRef.current = index;
+      inputRef.current?.blur();
+      Keyboard.dismiss();
       onDragStart();
       return;
     }
@@ -474,26 +514,50 @@ function ChecklistRow({
     }
   };
 
-  const translateY = dragging && dragTy ? dragTy : slotAnim;
-
   return (
     <Animated.View
       style={[
         styles.checklistRow,
-        {
-          height: CHECKLIST_ROW_BODY,
-          marginBottom: CHECKLIST_ROW_GAP,
-          transform: [{ translateY }],
-          zIndex: dragging ? 4 : 0,
-          elevation: dragging ? 4 : 0,
-          backgroundColor: dragging ? colors.surface : 'transparent',
-          borderWidth: dragging ? StyleSheet.hairlineWidth : 0,
-          borderColor: dragging ? colors.border : 'transparent',
-          shadowOpacity: dragging ? 0.12 : 0,
-          shadowRadius: dragging ? 6 : 0,
-          shadowOffset: { width: 0, height: 2 },
-        },
+        dragging
+          ? {
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: overlayTop,
+              height: CHECKLIST_ROW_BODY,
+              marginTop: 0,
+              marginBottom: 0,
+              transform: [{ translateY: dragTy ?? 0 }],
+              zIndex: 10,
+              elevation: 6,
+              backgroundColor: colors.surface,
+              // No border — shadow only. Border was sticking on the wrong
+              // index after reorder when chrome was keyed by `from`.
+              borderWidth: 0,
+              borderColor: 'transparent',
+              shadowOpacity: 0.14,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 3 },
+              shadowColor: '#000',
+            }
+          : {
+              position: 'relative',
+              height: CHECKLIST_ROW_BODY,
+              marginTop: flowMarginTop,
+              marginBottom: flowMarginBottom,
+              transform: [{ translateY: 0 }],
+              zIndex: 0,
+              elevation: 0,
+              backgroundColor: 'transparent',
+              borderWidth: 0,
+              borderColor: 'transparent',
+              shadowOpacity: 0,
+              shadowRadius: 0,
+              shadowOffset: { width: 0, height: 0 },
+              shadowColor: 'transparent',
+            },
       ]}
+      pointerEvents="box-none"
     >
       <PanGestureHandler
         enabled={!disabled && itemCount > 1}
@@ -518,12 +582,15 @@ function ChecklistRow({
       </PanGestureHandler>
 
       <TextInput
+        ref={inputRef}
         value={item.title}
-        editable={!disabled}
+        editable={!disabled && !listDragging}
         onChangeText={onChangeTitle}
         placeholder={t('manualEdit.itemPlaceholder')}
         placeholderTextColor={colors.textMuted}
         textAlignVertical="center"
+        // Stable identity for controlled updates after reorder.
+        nativeID={item.id ?? undefined}
         style={[
           styles.checklistInput,
           styles.flex,
@@ -536,7 +603,7 @@ function ChecklistRow({
       />
 
       <Pressable
-        disabled={disabled}
+        disabled={disabled || listDragging}
         onPress={onRemove}
         hitSlop={10}
         accessibilityRole="button"
@@ -777,6 +844,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   checklistList: {
+    position: 'relative',
     // Gaps are marginBottom on rows so drag stride stays stable.
   },
   sectionLabel: {
