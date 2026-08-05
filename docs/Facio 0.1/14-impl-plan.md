@@ -120,6 +120,58 @@ Canon: [11](./11-success-systems.md). Process: [12](./12-process.md).
 
 ---
 
+## Slice E2a — Create Plan Feed
+
+**Goal:** Create Explore becomes a versioned лента (plans + questions), not in-place DraftStudio.
+
+**DoD:**
+
+- After Intent: feed with sense → plan card v1 → questions → answers/freeform → new plan card **or** more questions
+- New AI revision appends below; prior cards remain
+- Each plan card has **Start Guide** CTA; no sticky page-bottom Start
+- Closed feed item types; not chat-home
+- Progressive `#1/#2/#3` preserved
+
+**Non-goals:** Full Manual on every Block type (E2b); Active AI Feed (E2c).
+
+**PO dogfood:** Create carbonara → see v1 → answer questions → see v2 below → Start from preferred card.
+
+Canon: [15](./15-edit-surfaces.md).
+
+---
+
+## Slice E2b — Manual editor (all UI Block tools)
+
+**Goal:** Manual edit of checklist / stepper / counter / … on Create and Active.
+
+**DoD:**
+
+- Shared editor for closed Block tool fields (not raw JSON)
+- Create: edit tools on a plan card version
+- Active: Edit Session / Edit plan Manual mode → apply + Undo
+- Inventing new Block types remains AI
+
+**Non-goals:** Free-form plugin authoring; Active AI Feed UI (E2c).
+
+**PO dogfood:** On Create, edit shopping checklist items before Start; on Active, change stepper targets without AI.
+
+---
+
+## Slice E2c — Active AI Feed + Diff
+
+**Goal:** Repair-with-AI as a feed; apply via Diff (reuse Slice E).
+
+**DoD:**
+
+- Entry from Edit Session / Edit plan (not Session Execute chrome)
+- Feed: intents / freeform / questions → proposal cards
+- Apply → Diff → confirm → Undo
+- Micro-edits (skip / postpone) stay kebab — not inside feed
+
+**PO dogfood:** Lighten via AI Feed → Diff → apply → Block updates → Undo.
+
+---
+
 ## Slice F — Identity + Finish Experience
 
 **Goal:** Guide is my path; ending is a story.
@@ -163,9 +215,9 @@ Only if PO prioritizes push-ups E2E over shell polish.
 
 ## Parallelism note
 
-Default **serial** A→B→B2→C→D→E→F→G.  
+Default **serial** A→B→B2→C→D→E→E2a→E2b→E2c→F→G.  
 Possible parallel later: H alongside shell if different owners; not with A.  
-Compact Summary on Guide roadmap lands primarily in **C** (roadmap); B2 owns Hero + drawer.
+E2a/b/c canon: [15](./15-edit-surfaces.md). Compact Summary on Guide roadmap lands primarily in **C**; B2 owns Hero + drawer.
 
 ---
 

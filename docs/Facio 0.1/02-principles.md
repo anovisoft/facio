@@ -88,6 +88,8 @@ AI is **not**:
 
 Under the hood, operations may call LLM; the visible product is Guide + Session + Continue.
 
+**Allowed exception — Plan Feed / AI Feed** (see [15](./15-edit-surfaces.md)): inside Create Explore and Active Edit only, a closed **лента** may look chat-like, but turns are **plan cards, questions, sense** — not a daily chat product. No chat-home. Manual edit of UI Block tools is first-class alongside the feed; micro-edits (skip / postpone) stay deterministic chrome.
+
 ## P7 — Session must be maximally executable
 
 A Session is not a paragraph of advice.
@@ -98,9 +100,9 @@ Differentiation vs todo lists lives here.
 
 ## P8 — Repair is first-class
 
-Life will break the plan. Repair must be fast and visible — not buried.
+Life will break the plan. Repair must be fast and visible — not buried on Session Execute chrome.
 
-Same living Guide; mutation of structure — not a separate chat world.
+Active rebuild uses three independent mechanics ([15](./15-edit-surfaces.md)): **Manual**, **Micro-edits**, **AI Feed** (Diff before apply). Same living Guide — not a separate chat world.
 
 ## P9 — Short navigation
 

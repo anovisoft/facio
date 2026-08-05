@@ -101,8 +101,8 @@ or
 [ Start Session ]   ← if already committed and Session ready
 ```
 
-Pre-Commitment: Explore + edit + Start Guide.  
-Post-Commitment: user rarely *needs* this daily, but it must stay one gesture away.
+Pre-Commitment: **Plan Feed** (sense → questions → versioned plan cards) + **Manual** on a card; **Start Guide** CTA lives on each plan card (no sticky page-bottom Accept). See [15](./15-edit-surfaces.md).  
+Post-Commitment: user rarely *needs* Guide daily, but it must stay one gesture away; rebuild via Manual / Micro / AI Feed — not Session chrome.
 
 ### Access to Guide from Session
 
@@ -185,14 +185,15 @@ If nothing changed — do not show.
 
 ## Edit entry points
 
-Floating pencil (or equivalent) on Guide / Session chrome:
+Three mechanics — do not merge ([15](./15-edit-surfaces.md)):
 
-- Manual edit
-- AI Edit
-- Repair
-- Structure change
+| Mechanic | Where | Notes |
+|----------|--------|--------|
+| **Plan Feed / AI Feed** | Create Explore; Active Edit | Append plan/proposal cards; Active apply → Diff |
+| **Manual** | Create + Active | All UI Block tools editable |
+| **Micro-edits** | Active Session kebab / Guide chrome | Skip, postpone — deterministic, no LLM |
 
-Repair also via “Something changed?” / overflow — always fast.
+Session kebab → **Edit Session** opens Manual (+ path to AI Feed / full Guide). Repair intents seed AI Feed — not Execute footer.
 
 ---
 
@@ -203,7 +204,8 @@ Repair also via “Something changed?” / overflow — always fast.
 | Root = Projects list | Root = **Continue** |
 | ProjectHome = Session Stage of one project | **Session** screen (per Session); multi-Guide via Continue |
 | Path via burger (secondary list) | **Guide** page as trust/roadmap peer |
-| DraftStudio as main pre-start | Create → Guide Explore → Commitment |
+| DraftStudio as main pre-start | Create → **Plan Feed** Explore → Commitment (CTA on plan card) |
 | Instant Answer branch | Out of primary product (see scope) |
+| Inline Repair on Session | Active **AI Feed** + Manual + Micro |
 
 Runtime engine (cycles, plugins, physical day, repair, next cycle) stays under this IA.

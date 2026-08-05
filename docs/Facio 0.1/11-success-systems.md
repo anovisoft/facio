@@ -152,7 +152,7 @@ Without an ending, achievement disappears and Facio collapses into a forever tod
 
 ## 5. Repair is never magic — always show Diff
 
-Repair (and AI Edit that changes structure) **must** show a human-readable diff before apply.
+On an **active** Guide, AI proposals (AI Feed) and material structural mutations **must** show a human-readable Diff before apply. Create uses **Plan Feed** version cards instead of Diff ritual — pick CTA on the preferred card ([15](./15-edit-surfaces.md)).
 
 Example:
 
@@ -165,10 +165,10 @@ Workout  →  Lighter workout
 
 ### Rules
 
-- Confirm screen with **before → after** for every material change.  
+- Active AI apply: confirm **before → after** for every material change.  
 - No silent rewrite of the living Guide.  
-- Diff is part of trust (same family as roadmap before Commitment).  
-- Applies to Repair, AI Edit, and structure edits that move Sessions/days/load.
+- Diff is trust for rebuild; Create trust = visible plan cards + Manual.  
+- Micro-edits (skip / postpone) are deterministic and outside the AI Feed.
 
 ---
 

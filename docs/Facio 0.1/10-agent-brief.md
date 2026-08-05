@@ -27,10 +27,12 @@ If conflict: **Facio 0.1 wins** on product surface; keep next/RFC engine ideas w
 - [ ] Does daily Execute work without a new LLM call?
 - [ ] Session = one opening + Session complete beat?
 - [ ] Guide finite + Finish Experience on completion?
-- [ ] Repair/AI Edit = Diff + Undo?
+- [ ] Active AI apply = Diff + Undo; Create = Plan Feed cards + CTA on card ([15](./15-edit-surfaces.md))?
+- [ ] Manual edits all UI Block tools on Create and Active?
+- [ ] Micro-edits (skip/postpone) deterministic, not inside AI Feed?
 - [ ] Cover / Identity on Guide surfaces (page / archive / thin drawer mark)?
-- [ ] Did you avoid Instant Answer / chat-home / Accept-map duplicate?
-- [ ] Read [11 — Success systems](./11-success-systems.md) incl. §9?
+- [ ] Did you avoid Instant Answer / chat-home / Accept-map duplicate / sticky bottom Start?
+- [ ] Read [11](./11-success-systems.md) incl. §9 and [15](./15-edit-surfaces.md)?
 
 ---
 
@@ -38,7 +40,8 @@ If conflict: **Facio 0.1 wins** on product surface; keep next/RFC engine ideas w
 
 - Reuse ProjectHome Session Stage → Session screen  
 - Reuse Path data → Guide roadmap presentation  
-- Reuse DraftStudio logic → Guide Explore (clarify + outline)  
+- Reuse DraftStudio logic → **Plan Feed** Create Explore ([15](./15-edit-surfaces.md))  
+
 - Reuse Projects list data → Continue cards + drawer  
 - Prefer IA/navigation/copy changes before schema revolutions  
 - Match existing RN/FastAPI patterns; no drive-by refactors  

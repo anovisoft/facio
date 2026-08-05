@@ -51,11 +51,11 @@ Presentations: [11 §9](./11-success-systems.md).
 - Success definition (**finite end**)
 - **Identity** (post-Commitment): started, progress bar, streak, completed / repaired / skipped
 - **Roadmap** of Cycles / days / major Sessions (not a flat task dump)
-- Clarify / edit while exploring (batch questions + comment as needed)
+- Pre-commit Explore is a **Plan Feed** ([15](./15-edit-surfaces.md)): sense → questions → versioned plan cards + free-form; **Manual** on tools of a card
 - Primary CTA:
-  - pre-commit: **Start Guide**
+  - pre-commit: **Start Guide** on each plan card (no sticky page-bottom Accept)
   - post-commit: **Start Session** / Continue current Session when applicable
-- Access to Repair / AI Edit / manual structure edit (always via Diff + Undo)
+- Post-commit rebuild: Manual + Micro + AI Feed (Diff on AI apply) — not Session Execute chrome
 - Archive / abandon (secondary)
 
 **Visual bar:** Cover + roadmap of **Compact Summaries** — not spreadsheet PathList, not stacked Full Blocks. User should grasp the whole path in ~5 seconds.
@@ -66,20 +66,19 @@ Presentations: [11 §9](./11-success-systems.md).
 
 ---
 
-## 4. Commitment (may be a state of Guide, not a separate route)
+## 4. Commitment (CTA on plan card — not a separate Accept screen)
 
-**Job:** Explicit contract to activate the Guide.
+**Job:** Explicit contract to activate the Guide from a chosen plan version.
 
-Show clearly:
+Show clearly on the plan card (and its expand):
 
 - what you will get
 - how long it takes
 - what counts as success
-- first Cycle shape
+- first Cycle shape / roadmap
 
-CTA: **Start Guide** → Guide becomes active → first Session appears on Continue / can open Session.
-
-May be the bottom of the Guide page (preferred) rather than a duplicate full-map screen.
+CTA: **Start Guide** on that card → Guide becomes active → first Session on Continue.  
+No second full-map Accept screen; no sticky page-bottom Start competing with cards.
 
 ---
 
@@ -95,8 +94,8 @@ May be the bottom of the Guide page (preferred) rather than a duplicate full-map
   - **Same-day** (`horizon_days === 1`): **Back** + **Next**; last step of the day → **Back** + **Done**
   - **Daily** (`horizon_days > 1`): one **Done**
 - Header: back **‹** only (no “Continue” title); right **kebab** (not burger)
-- Kebab: Full Guide · Edit Session (stub) · Postpone to tomorrow (daily only) · Skip · Finish cycle (if allowed) · Archive
-- AI Repair / lighten / rest — **not** on Session happy path (`RepairSheet` kept for future Edit Session)
+- Kebab: Full Guide · Edit Session → Manual / AI Feed · Postpone (micro) · Skip (micro) · Finish cycle (if allowed) · Archive
+- AI Repair / lighten / rest — **not** on Session happy path; they seed **Active AI Feed** ([15](./15-edit-surfaces.md))
 
 **Contains:** only the current Session’s Full Block(s) + completion chrome above.
 
@@ -128,30 +127,27 @@ Skip if no signal.
 
 ---
 
-## 8. Repair sheet
+## 8. Plan Feed (Create Explore)
 
-**Job:** Fast mutation when life breaks the plan — **never magic**.
+**Job:** Build the path as a versioned лента — not in-place overwrite, not chat-home.
 
-Always:
-
-1. Choose intent (+ reason / comment)
-2. Show **Diff** (before → after)
-3. Confirm → apply
-4. Offer **Undo**
-
-Minimum intents (evolve by domain): shift / lighten / rest / free-text reason — cook vs fitness differ.
+Contains: user intent/replies, sense, **plan cards**, question batches, free-form composer.  
+Each plan card: expandable roadmap + **Manual** tool edit + **Start Guide** CTA.  
+AI may append a new plan card or only more questions. Canon: [15](./15-edit-surfaces.md).
 
 ---
 
-## 9. Edit / AI Edit
+## 9. Edit surfaces (Active) — Manual · Micro · AI Feed
 
-**Job:** Change Guide structure or Session content without chat-home.
+**Job:** Rebuild a living Guide without leaving Execute as the daily home.
 
-Entry: floating pencil or Guide overflow.
+| Mechanic | Job |
+|----------|-----|
+| **Manual** | Edit all UI Block tools + structure (shared with Create) |
+| **Micro-edits** | Skip / postpone — deterministic chrome |
+| **AI Feed** | Repair лента; apply proposal → **Diff** → Undo |
 
-Modes: manual, AI edit, Repair, structure.
-
-**Always:** Diff preview + Undo after apply.
+Entry: Session kebab Edit Session; Guide Edit plan. Diff sheet is a **step**, not a peer product screen.
 
 ---
 
@@ -203,8 +199,8 @@ Secondary. Archive lists inactive Guides **with Cover**. Settings for locale, no
 | `ProjectsScreen` | Continue (+ drawer absorbs list role) + Focus Engine |
 | `IntentScreen` | Create |
 | `InstantAnswerScreen` | Remove / non-primary |
-| `DraftStudioScreen` | Fold into Guide Explore + Commitment |
-| `ProjectHomeScreen` | Session (+ Session complete beat) |
+| `DraftStudioScreen` | **Plan Feed** Create Explore + Manual; Commitment CTA on plan card |
+| `ProjectHomeScreen` | Session (+ Session complete beat); Edit → Manual / AI Feed |
 | `PathScreen` | Guide (Cover + Identity + roadmap) |
 | `HistoryScreen` | Archive section |
-| Repair / FinishCycle / NextCycle sheets | Repair **with Diff+Undo**; Finish Experience for Guide end; next cycle stays for mid-Guide chapters |
+| Repair / FinishCycle / NextCycle sheets | Active **AI Feed** + Diff+Undo; Finish Experience for Guide end; next cycle mid-Guide |

@@ -97,7 +97,19 @@ When the user drifts from the plan, the Guide is repaired.
 
 May account for: missed days, new constraints, changed goal, lighter load, schedule shift.
 
-Product-visible, fast, not chat-only.
+Product-visible, fast. Lives in **Active AI Feed** / Edit surfaces — not Session Execute chrome. Always via Diff + Undo on apply. See [15](./15-edit-surfaces.md).
+
+## Plan Feed
+
+Create / Explore interaction: a closed лента of user turns, sense, **versioned plan cards**, clarifying questions. New AI revisions append below (no in-place overwrite). Each plan card has its own Commitment CTA. Manual tool edit sits on the chosen card. Not chat-home.
+
+## Manual editor
+
+First-class edit of **all UI Block tools** (checklist items, stepper/counter targets, …) on Create and Active. Shared surface; inventing new Block types stays AI.
+
+## Micro-edits
+
+Deterministic Active-only nudges (skip Session, postpone day, …). Session kebab / Guide chrome — not inside the AI Feed. No LLM.
 
 ## Continue
 
@@ -129,7 +141,7 @@ End-of-Guide celebration + stats + CTAs (Repeat / Start next Guide). Turns Guide
 
 ## Diff (Repair / AI Edit)
 
-Human-readable before → after preview required before applying structural mutations.
+Human-readable before → after preview required before applying AI proposals and material structural mutations on an **active** Guide. Create Plan Feed compares versions by scrolling cards (pick CTA), not Diff ritual.
 
 ## Undo
 

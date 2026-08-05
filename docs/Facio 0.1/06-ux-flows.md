@@ -4,16 +4,19 @@ Canonical flows for Facio 0.1.
 
 ---
 
-## A. First Guide (Create → Explore → Commit → Execute)
+## A. First Guide (Create → Plan Feed → Commit → Execute)
 
 ```text
 Continue (empty or +)
   → Create: “What do you want?”
-  → AI understands Intent
-  → Clarify (batch questions + optional free-text) while Guide appears
-  → Guide screen (Explore): result, duration, success, roadmap
-       user may edit / re-clarify
-  → Commitment: Start Guide
+  → Plan Feed:
+       sense + plan card v1 (expand roadmap / tools)
+       user may Manual-edit tools on that card
+       clarifying questions
+       user answers / free-form
+       AI appends plan card v2  OR  more questions only
+       …
+  → User taps Start Guide on the preferred plan card
   → Guide active
   → First Session ready on Continue
   → Open Session → UI Blocks → Done
@@ -22,10 +25,12 @@ Continue (empty or +)
 
 **Rules:**
 
-- Never force Start without a readable full path (roadmap).
-- Do not require a second full-map Accept screen.
-- Progressive generation OK: slim sense → full roadmap → materialize live Blocks at Session start if needed for latency/schema limits.
-- No chat-home during this flow; operations under the hood OK.
+- Never force Start without a readable full path (roadmap on the plan card).
+- Do not require a second full-map Accept screen; **no sticky page-bottom Start** — CTA on each plan card.
+- New AI revision = new card below (no in-place overwrite of prior cards).
+- Manual on Create is required (all UI Block tools) — see [15](./15-edit-surfaces.md).
+- Progressive generation OK: slim sense → full roadmap → materialize live Blocks at Session start if needed.
+- No chat-home; Plan Feed is a closed item set inside Create only.
 
 ---
 
@@ -72,22 +77,27 @@ Focus among many Guides: Continue order by readiness / today’s focus (soft). N
 
 ---
 
-## E. Repair
+## E. Active rebuild (Manual · Micro · AI Feed)
+
+Three independent paths ([15](./15-edit-surfaces.md)):
 
 ```text
-From Session or Guide
-  → Something changed? / Repair Guide
-  → Choose intent (+ reason / comment)
-  → Diff screen (before → after) — required
-  → Confirm
-  → Apply + Undo available
+Micro (Session kebab):
+  Skip / Postpone → deterministic apply → Continue or next Session
+
+Manual (Edit Session / Edit plan):
+  Edit UI Block tools / structure → apply → Undo
+
+AI Feed (Edit → repair with AI):
+  Intent chips / free-form / questions
+  → proposal plan card(s) appended in feed
+  → user picks proposal → Diff (required) → Confirm → Apply → Undo
   → Updated Guide + current Session / Continue
 ```
 
-Repair respects physical/calendar unlock where Cycles are multi-day (prototype rule: cannot execute future days early).
-
-Domain-aware intents over time (fitness ≠ one-shot cook).
-Never silent magic rewrite.
+Respect physical/calendar unlock on multi-day Guides.  
+Domain-aware intents over time. Never silent magic rewrite.  
+Repair/lighten/rest are **not** Session Execute chrome.
 
 ---
 
@@ -125,11 +135,12 @@ Mid-Guide chapter end remains **Next Cycle** (flow F) — different from Guide F
 
 ---
 
-## Clarify UX (on Guide)
+## Clarify UX (inside Plan Feed)
 
-- Batch questions on one surface + always-available comment (“anything else”).
+- Batch questions as a feed item + always-available free-form at bottom of feed.
 - Do not: one question → full LLM wait → next question as the only loop.
-- Answers should not wipe when roadmap finishes loading (preserve by question id set).
+- Answers must not wipe when a plan card finishes loading (preserve by question id set).
+- After answers: new plan card **or** more questions only (AI choice).
 
 ---
 
@@ -144,10 +155,12 @@ Primary CTAs:
 | Session end | Session complete → Continue |
 | Cycle end | Next Cycle / Repeat |
 | Guide end | Finish Experience → Repeat / Start next Guide |
-| Drift | Repair Guide (via Diff) |
+| Drift | Edit → AI Feed / Manual / Micro |
+| AI proposal on active | Diff → Apply |
 | After mutation | Undo |
+| Create commitment | Start Guide **on plan card** |
 
-Avoid as primary product nouns: Project, Accept path, Ask AI.
+Avoid as primary product nouns: Project, Accept path, Ask AI, chat-home.
 
 ---
 

@@ -19,12 +19,13 @@ Scope for the Facio 0.1 **implementation wave** (product shell + IA over existin
 - Full path visible **before** Commitment
 - Session screen: UI Blocks hero + **Session complete** beat; affordance to Guide (swipe + ≡)
 - Session **atomicity**: one-opening design (no multi-day resume happy path)
-- Create: *What do you want?* → clarify → Guide Explore → Commitment
+- Create: *What do you want?* → **Plan Feed** (versioned plan cards + questions) → Commitment CTA **on plan card**
+- **Manual** editor for all UI Block tools on Create and Active ([15](./15-edit-surfaces.md))
 - Guides drawer with Covers (+ archive + settings entry)
-- Repair with **Diff** + **Undo**; AI Edit same
+- Active rebuild: Manual + Micro-edits + **AI Feed**; AI apply with **Diff** + **Undo**
 - Guide **finite end** + **Finish Experience** (not silent completed)
 - Multi-active Guides
-- No chat-home
+- No chat-home (Plan Feed only inside Create/Edit)
 - No Instant Answer as primary peer flow
 
 ### Engine (already largely present — preserve)
@@ -50,9 +51,8 @@ Lock rules in [11](./11-success-systems.md) before heavy UI code. Especially: Fo
 ## Should have
 
 - Morning Summary (Focus-aligned)
-- Floating pencil edit hub (manual / AI edit / repair / structure)
 - Richer Guide roadmap visuals (journey, not list)
-- Domain-aware Repair intents + free-text reason in UI
+- Domain-aware Repair intents + free-text in AI Feed
 - Focus reason chips on Continue (*Overdue*, *5 min*, …)
 - Tunable Focus weights / user pin Focus
 - Compact sticky Block bar on Session scroll (prototype should-have)

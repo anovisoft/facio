@@ -6,13 +6,14 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 
 ---
 
-## Snapshot (2026-08-04)
+## Snapshot (2026-08-05)
 
 | Layer | State |
 |-------|--------|
-| Product vector | Facio 0.1 locked — **Guide = path / Continue = focus / Session = execute** + Hero/Full/Compact |
+| Product vector | Facio 0.1 locked — **Guide / Continue / Session** + Hero/Full/Compact + **Plan Feed · Manual · Micro** ([15](./15-edit-surfaces.md)) |
 | Prototype engine | `apps/` ≈ `docs/next` slices 1–5 **accepted** |
-| Facio 0.1 shell | **A–D accepted**. **E implemented / awaiting PO dogfood**. **Session chrome cleanup implemented / awaiting PO dogfood**. **Next after E accept = Slice F** |
+| Facio 0.1 shell | **A–D accepted**. **E + Session chrome** implemented / awaiting PO dogfood. **Next after E accept = E2a Plan Feed** (then E2b Manual, E2c Active AI Feed, then F) |
+| Edit surfaces lock | Create = Plan Feed + Manual (CTA on plan card, no sticky Start). Active = Manual + Micro + AI Feed (Diff on AI apply). Docs written; code not started |
 | Carbonara / multi-Session same day | Sticky **Back** + **Next**/**Done**; Next stays in-Guide; last Done → assurance → Continue |
 | Fitness multi-day E2E | Daily sticky **Done** + assurance; kebab Postpone (deterministic); deferred calendar week / **H** |
 | Instant Answer | Off Create happy path (D5) |
@@ -23,17 +24,18 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 ## After summarization — PM start here
 
 1. Read [README](./README.md) → [11](./11-success-systems.md) (esp. §5–6 Diff/Undo, §9 presentations) → **this file** → [14](./14-impl-plan.md).  
-2. Confirm with PO: **dogfood Slice E + Session chrome?** then accept → dispatch **Slice F** (Identity + Finish).  
+2. Confirm with PO: **dogfood Slice E + Session chrome?** then accept → dispatch **E2a** (Create Plan Feed), not F yet.  
 3. Slice E landed (awaiting PO dogfood — not accepted yet):
    - Repair: intent → **preview Diff** → confirm → apply (no silent apply).
    - API: `POST .../repair/preview` + apply with `proposed_state` / `before_version`; response `undo_version`.
    - Undo: `restore-state` works on **active** (materialize merge) as well as draft.
    - **Landmine fixed:** lighten/rest strip plugin payloads + rematerialize phase-3 (shift still preserves). Do **not** re-introduce blind `_preserve_plugins` on all repairs.
-   - Do **not** expand Anthropic schemas.
-4. **Session chrome cleanup** landed (awaiting PO dogfood — not accepted): see lock below. Repair removed from Session happy path (sheet kept for Edit Session later).
-5. Do **not** invent D1–D8 / deferred parked items.  
-6. Do **not** reopen Guides reveal (`useGuidesRevealGesture`, `useNativeDriver: false`) unless PO reports regress.  
-7. After E (+ chrome) accept → **F** (Identity + Finish).
+   - Do **not** expand Anthropic schemas. E APIs become backbone of Active AI Feed (E2c).
+4. **Session chrome cleanup** landed (awaiting PO dogfood — not accepted): see lock below. Repair off Session happy path → Edit surfaces ([15](./15-edit-surfaces.md)).
+5. **Edit surfaces locked in docs** ([15](./15-edit-surfaces.md)): Plan Feed + Manual + Micro. Code slices E2a→E2b→E2c before F.
+6. Do **not** invent D1–D8 / deferred parked items.  
+7. Do **not** reopen Guides reveal (`useGuidesRevealGesture`, `useNativeDriver: false`) unless PO reports regress.  
+8. After E (+ chrome) accept → **E2a** → E2b → E2c → **F**.
 
 ---
 
@@ -159,7 +161,10 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 | D | Session atom + complete + ≡ Guide | **accepted** (after complete-routing + chrome + P1–P4 polish) |
 | E | Repair Diff + Undo | **implemented / awaiting PO dogfood** |
 | — | Session chrome cleanup | **implemented / awaiting PO dogfood** (not a lettered slice) |
-| F | Identity + Finish Experience | **next** (after E + chrome accept) |
+| E2a | Create Plan Feed | **next** after E + chrome accept — docs locked in [15](./15-edit-surfaces.md) |
+| E2b | Manual editor (all tools) | pending |
+| E2c | Active AI Feed + Diff | pending |
+| F | Identity + Finish Experience | pending (after E2*) |
 | G | Copy / IA kill / Morning Summary (+ #8) | pending |
 | H | Time travel (optional) | pending |
 
@@ -202,4 +207,12 @@ Implemented 2026-08-03; lighten rematerialize fix 2026-08-04:
 - API: `apps/backend-py3/client-service` — Alembic through **013**  
 - Prefer aliases over big-bang DB rename  
 
-Do not rewrite backend runtime to start Facio 0.1 — shell + trust mutations next (F after E/chrome accept).
+Do not rewrite backend runtime to start Facio 0.1 — next after E/chrome accept = **E2a Plan Feed** ([15](./15-edit-surfaces.md)), then Manual + Active AI Feed, then F.
+
+### Edit surfaces lock (PO 2026-08-05)
+
+- Create = Plan Feed + Manual; Start CTA **on each plan card**; no sticky bottom Start.
+- Active = Manual + Micro (skip/postpone chrome) + AI Feed; AI apply → Diff → Undo.
+- Manual must edit **all** UI Block tools (checklist/stepper/…).
+- New AI plan = append card; may ask questions without new plan.
+- Canon doc: [15](./15-edit-surfaces.md).

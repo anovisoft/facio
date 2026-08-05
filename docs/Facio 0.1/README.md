@@ -53,6 +53,7 @@ Not: AI planner, task manager, coach chat, habit tracker, ChatGPT for goals.
 12. [12 — Process](./12-process.md) — PO / PM / subagent cadence  
 13. [13 — Continuity](./13-continuity.md) — fragile memory after chat summary + slice status  
 14. [14 — Impl plan](./14-impl-plan.md) — slices A→B→**B2**→C… with DoD  
+15. [15 — Edit surfaces](./15-edit-surfaces.md) — **Plan Feed · Manual · Micro** (Create + rebuild lock)
 
 ---
 
