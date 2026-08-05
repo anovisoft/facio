@@ -14,9 +14,10 @@ Source dogfood notes. Status routed into Facio 0.1 slices. Canon: `docs/Facio 0.
 | 8 | Rest / day-kind copy is fitness-flavored for all domains (e.g. drawing Guide rest: «без силовой нагрузки»; «Тренировка» on art days) | **→ Slice G** (copy) or create `#2` prompt pass — not D | `path.restEmpty`, `dayKind.*`, LLM day titles |
 | 9 | Create: user didn’t see expandable plan; answered questions but never hit «Update path» | **done** E2a-iterate (accepted) | Qs first + bg #2; skip→plan+Qs; answers→refine; selection |
 | 10 | Active: Manual remove ingredient → expected whole plan cascade; couldn’t find path back to plan dialog | **→ E2c** (+ entry polish) | AI Feed «Save with AI»; pencil/back → Edit; Diff + preserve progress |
-| 11 | Create clarify free-form: typed text misaligned in answer field | **landed** E2b-iterate (await PO dogfood) | `PlanFeedQuestions` / ClarifyChips TextInput |
-| 12 | Edit affordance: not session-global — pencil+Edit on the specific checklist/block (top-right) | **landed** E2b-iterate (await PO dogfood) | `BlockEditButton` on checklist/stepper/counter |
-| 13 | Checklist Manual drag: jerky anim; row flew up once; first row keeps outline after other drags | **landed** E2b-iterate (await PO dogfood) | `react-native-sortables` in `ManualBlockEditor` |
+| 11 | Create clarify free-form: typed text misaligned in answer field | **landed** E2b-iterate (PO confirm) | `PlanFeedQuestions` / ClarifyChips TextInput |
+| 12 | Edit affordance: not session-global — pencil+Edit on the specific checklist/block (top-right) | **landed** E2b-iterate (PO confirm) | `BlockEditButton` on checklist/stepper/counter |
+| 13 | Checklist Manual drag: jerky anim; row flew up once; first row keeps outline after other drags | **landed** E2b-iterate — sortables (`60c9f54`) | `ManualBlockEditor` + `react-native-sortables` |
+| 14 | Notes-only / Guides reopen still showed «Собрать путь без ответов» | **landed** (uncommitted planFeed polish) | hide empty skip; force reveal if path ready |
 
 ## External dogfood (2026-08-05) — triage
 

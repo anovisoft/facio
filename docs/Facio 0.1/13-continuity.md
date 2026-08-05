@@ -12,28 +12,24 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 |-------|--------|
 | Product vector | Facio 0.1 locked — **Guide / Continue / Session** + Hero/Full/Compact + **Plan Feed · Manual · Micro** ([15](./15-edit-surfaces.md)) |
 | Prototype engine | `apps/` ≈ `docs/next` slices 1–5 **accepted** |
-| Facio 0.1 shell | **A–E2b + E2a-iterate accepted**. **E2b-iterate landed** (await PO dogfood #11–13) → then **E2c** → F → G |
+| Facio 0.1 shell | **A–E2b + E2a-iterate accepted**. **E2b-iterate + skip polish** ready for PO accept → next **E2c** (#10) → F → G |
 | Edit surfaces lock | Create = Plan Feed + Manual (CTA on plan card, no sticky Start). Active = Manual + Micro + AI Feed. Canon [15](./15-edit-surfaces.md) |
 | Carbonara / multi-Session same day | Same-day **Back/Next = browse**; **Done** completes live step (assurance); last Done → Continue |
 | Fitness multi-day E2E | Daily sticky **Done** + assurance; kebab Postpone (deterministic); deferred calendar week / **H** |
 | Instant Answer | Off Create happy path (D5) |
-| Uncommitted work | Large client+backend under `apps/` (E→E2b, chrome, planFeed, manualEdit, Alembic `013`) — **not committed** |
+| Git | Through `60c9f54 ux fixes`. **Uncommitted:** planFeed skip/reveal (`PlanFeedExplore`, `PlanFeedQuestions`, `usePlanFeed`) + continuity docs |
 
 ---
 
 ## After summarization — PM start here
 
-1. Read [README](./README.md) → [15](./15-edit-surfaces.md) → [11](./11-success-systems.md) (§5–6 Diff/Undo, §9) → **this file** → [14](./14-impl-plan.md).  
-2. **E2b-iterate landed** (await PO dogfood #11–13). On accept → **E2c**.  
-
-
-
-
+1. Read [README](./README.md) → [15](./15-edit-surfaces.md) → [11](./11-success-systems.md) (§5–6 Diff/Undo, §9) → **this file** → [14](./14-impl-plan.md) → `docs/polishing bugs.txt`.  
+2. Confirm PO accept of **E2b-iterate** (+ skip CTA polish). Default next = **E2c Active AI Feed** (#10).  
 3. Do **not** invent D1–D8 / deferred parked items.  
-4. Do **not** reopen Guides reveal (`useGuidesRevealGesture`, `useNativeDriver: false`) unless PO reports regress.  
-5. Do **not** expand Anthropic schemas beyond E2a-iterate’s tiny clarify `selection` enum. Repair landmines (lighten/rest strip plugins) still apply — E APIs backbone of E2c.  
-
-6. Plan Feed history is **client MMKV** only — server-side turns = known follow-up (not blocking E2c unless PO prioritizes).
+4. Do **not** reopen Guides reveal unless PO reports regress. Note: `60c9f54` rewrote `useGuidesRevealGesture` — treat as new baseline.  
+5. Do **not** expand Anthropic schemas beyond clarify `selection` enum. Repair landmines (lighten/rest strip plugins) still apply — E APIs backbone of E2c.  
+6. Plan Feed history is **client MMKV** only — server turns + compact refine history = parked.  
+7. Subagent model slug: `cursor-grok-4.5-high-fast`.
 
 ---
 
@@ -162,8 +158,9 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 | E2a | Create Plan Feed | **accepted** (PO 2026-08-05) |
 | E2b | Manual editor (all tools) | **accepted** (PO 2026-08-05; checklist drag UI polish included) |
 | E2a-iterate | Create questions-first + bg path + selection (#9) | **accepted** (PO 2026-08-05) |
-| E2b-iterate | Manual entry + checklist polish (#11–13) | **landed** (await PO dogfood) |
-| E2c | Active AI Feed + Diff (#10) | **next** after E2b-iterate accept |
+| E2b-iterate | Manual entry + checklist polish (#11–13) | **landed** — PO: confirm accept; checklist = `react-native-sortables` (`60c9f54`) |
+| — | Create skip CTA polish | **landed** (uncommitted) — hide empty skip; reopen Guides → force reveal if path ready |
+| E2c | Active AI Feed + Diff (#10) | **next** after PO accept |
 | F | Identity + Finish Experience | pending (after E2*) |
 | G | Copy / IA kill / Morning Summary (+ #8) | pending |
 | H | Time travel (optional) | pending |
@@ -185,7 +182,8 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 | Scroll | `SafeScreen` — scroll outside KAV; `flexGrow: 0`; PathList expandable on Guide |
 | Repair Diff + Undo (E) | `RepairSheet` Diff confirm; preview/apply; active Undo; lighten/rest strip plugins + phase-3 rematerialize (shift preserves) |
 | Plan Feed (E2a) | `features/guide/planFeed/*` — append-only лента; MMKV `planFeedByProjectId` |
-| Manual editor (E2b) | `features/manualEdit/*` — Create «Edit tools» + Active Edit Session; `GET path-state` / `POST manual-edit` |
+| Manual editor (E2b / E2b-iterate) | `features/manualEdit/*` — Block Edit+pencil; Sortable checklist (`react-native-sortables`); `GET path-state` / `POST manual-edit` |
+| Plan Feed iterate | `planFeed/*` — questions-first, `planRevealMode`, `selection`, skip rules |
 
 ---
 
@@ -220,41 +218,45 @@ Append-only лента; questions during soft-start; refine waits for path; Star
 
 ### E2b Manual editor — accepted (PO 2026-08-05)
 
-Shared Manual for closed Block tools. Create: plan card «Edit tools». Active: Session kebab → Manual + Undo. API: `GET .../path-state`, `POST .../manual-edit` (`user_edit`). Checklist UI: drag handle left, red X delete, reorder via `react-native-sortables` (`ManualBlockEditor.tsx`). Code: `features/manualEdit/*`. Tests: `tests/test_manual_edit.py`.
+Shared Manual for closed Block tools. API: `GET .../path-state`, `POST .../manual-edit` (`user_edit`). Tests: `tests/test_manual_edit.py`.
 
 ### External dogfood triage (PO paste 2026-08-05)
 
 | # | Finding | Bucket | Slice |
 |---|---------|--------|-------|
-| 9 | Create: didn’t expand plan; answered Qs but never «Update path» | Create polish | **E2a-iterate** — questions-first + bg `#2` + skip/answer branches + `selection` |
-| 10 | Manual removed ingredient; expected whole-plan cascade; no path back to plan dialog | Product gap = E2c | **E2c** — pencil/back → Edit/AI Feed; Manual **«Save with AI»** seeds rebuild; Diff + accept with progress preserve |
+| 9 | Create discoverability | **done** E2a-iterate | questions-first + bg `#2` + selection |
+| 10 | Manual ≠ whole-plan cascade; no path back to plan dialog | **→ E2c** | AI Feed «Save with AI»; pencil/back → Edit; Diff + progress preserve |
+| 11–13 | TextInput align; Block Edit pencil; checklist drag | **E2b-iterate** (landed; PO confirm) | sortables in `60c9f54` |
 
-**PM read:** #10 is exactly why Active AI Feed exists — Manual alone patches tools, not the narrative path. #9 is Create UX, not E2c.
-
-### E2a-iterate lock (PO 2026-08-05) — replacing prior expand-only pass
+### E2a-iterate — accepted + skip polish (2026-08-05)
 
 ```text
 Intent → gate (#1) → questions FIRST (sense OK)
          └─ background #2 Path (hidden until user acts)
 
 A) Answer / free-form → wait #2 → refine → show plan (no Intent-plan flash)
-B) Skip «without answers» → reveal Intent-only plan when ready
-                           → same questions under that plan
+B) Skip «without answers» → reveal Intent-only plan when ready + Qs under plan
 ```
 
-- Per-question `selection`: `single` | `multi` from AI (default single).
-- Plan expanded when shown. No change to LLM “session” (still `current_state` per call).
-- Compact history into refine prompts = **parked** (PO).
+- `selection`: `single` | `multi` (default single). LLM = `current_state` per call (no multi-turn agent session). Compact history = parked.
+- **Skip CTA rules (landed, uncommitted):** hide when notes-only (no questions) + not waiting clarify-first; reopen Guides with path already ready → **force `planRevealMode: revealed`** (no re-trap «Собрать путь без ответов»).
+- Files: `planFeed/usePlanFeed.ts`, `PlanFeedExplore.tsx`, `PlanFeedQuestions.tsx`.
 
-### E2a-iterate — accepted (PO 2026-08-05)
+### E2b-iterate — landed (PO confirm accept)
 
-Questions-first Create; `planRevealMode`; skip→Intent plan+Qs; answers→refine (no flash); `selection` single|multi. LLM session unchanged.
+#11 TextInput lineHeight; #12 Block **Edit+pencil** (`BlockEditButton` on checklist/stepper/counter → `ManualEdit`+`actionKey`; plan-card «Edit tools» removed); #13 checklist = **`react-native-sortables`** (`60c9f54` replaced custom PanGesture). Kebab Edit Session kept as fallback.
 
-### E2b-iterate — landed (await PO dogfood; #13 rewrite)
+### E2c brief (next — do not start until PO accept)
 
-#11 clarify TextInput; #12 Block Edit+pencil; #13 checklist reorder via **`react-native-sortables`** (custom PanGesture overlay removed — stale chrome / wrong slots). Re-dogfood drag 4→1.
+From #10 + [15](./15-edit-surfaces.md) / [14](./14-impl-plan.md):
+- Entry: Session/Guide Edit → Active AI Feed (not Execute chrome)
+- Manual local change → **«Save with AI»** seeds feed / rebuild
+- Apply → Diff → Undo; micro-edits stay kebab
+- Preserve progress when accepting new plan version
 
-### Pending
+### Pending after summary
 
-1. PO dogfood E2b-iterate → accept → **E2c** (#10).  
-2. Parked: server feed turns; compact refine history; #8 → G; offline P5.
+1. PO: accept E2b-iterate (+ skip polish) or note leftovers.  
+2. Commit uncommitted planFeed skip files if PO wants clean tree.  
+3. Dispatch **E2c**.  
+4. Parked: server feed turns; compact refine history; #8 → G; offline P5.

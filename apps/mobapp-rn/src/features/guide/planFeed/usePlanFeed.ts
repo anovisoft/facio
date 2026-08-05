@@ -193,14 +193,21 @@ export function usePlanFeed(projectId: string) {
         }
 
         const questions = project.questions ?? [];
+        const ready = isPathReady(project);
+        const pathError = project.path_error ?? null;
+
         // No questions from gate/refine: never trap in clarify_first.
         if (questions.length === 0 && planRevealModeRef.current === 'hidden') {
           planRevealModeRef.current = 'revealed';
         }
+        // Reopen via Guides (or MMKV still "hidden"): if Path already exists
+        // on the server, show it — don't re-enter questions-first / «Собрать
+        // путь без ответов».
+        if ((ready || pathError) && planRevealModeRef.current === 'hidden') {
+          planRevealModeRef.current = 'revealed';
+        }
 
         const allowPlanCards = planRevealModeRef.current === 'revealed';
-        const ready = isPathReady(project);
-        const pathError = project.path_error ?? null;
 
         if (allowPlanCards && (ready || pathError)) {
           const snapshot = capturePlanSnapshot(project);

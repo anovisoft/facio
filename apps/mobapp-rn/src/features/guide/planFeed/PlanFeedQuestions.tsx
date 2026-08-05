@@ -47,8 +47,10 @@ type Props = {
   disabled: boolean;
   /** Primary refine — gated on having answers or a comment. */
   canSubmit: boolean;
-  /** Skip / reveal CTA — available whenever not busy / pathError. */
+  /** Skip / reveal CTA enabled. */
   canSkip: boolean;
+  /** Hide skip when notes-only and plan already exists (no new inputs). */
+  showSkip: boolean;
   pathWaiting: boolean;
   /** clarify_first: skip reveals Intent plan (no empty refine). */
   clarifyFirst: boolean;
@@ -73,6 +75,7 @@ export function PlanFeedQuestions({
   disabled,
   canSubmit,
   canSkip,
+  showSkip,
   pathWaiting,
   clarifyFirst,
   onSelectAnswer,
@@ -86,9 +89,7 @@ export function PlanFeedQuestions({
   const hasMulti = questions.some((q) => q.selection === 'multi');
   const skipLabel = clarifyFirst
     ? t('planFeed.buildWithoutAnswers')
-    : pathWaiting
-      ? t('planFeed.buildWithoutAnswers')
-      : t('planFeed.updateWithoutAnswers');
+    : t('planFeed.updateWithoutAnswers');
   const commentPlaceholder = hasMulti
     ? t('planFeed.multiCommentPlaceholder')
     : hasQuestions
@@ -186,24 +187,26 @@ export function PlanFeedQuestions({
         disabled={!canSubmit}
         onPress={onSubmit}
       />
-      <Pressable
-        accessibilityRole="button"
-        disabled={!canSkip}
-        onPress={onSkip}
-        hitSlop={8}
-        style={styles.skipLink}
-      >
-        <Text
-          style={[
-            styles.skipLinkText,
-            {
-              color: canSkip ? colors.textSecondary : colors.textMuted,
-            },
-          ]}
+      {showSkip ? (
+        <Pressable
+          accessibilityRole="button"
+          disabled={!canSkip}
+          onPress={onSkip}
+          hitSlop={8}
+          style={styles.skipLink}
         >
-          {skipLabel}
-        </Text>
-      </Pressable>
+          <Text
+            style={[
+              styles.skipLinkText,
+              {
+                color: canSkip ? colors.textSecondary : colors.textMuted,
+              },
+            ]}
+          >
+            {skipLabel}
+          </Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }

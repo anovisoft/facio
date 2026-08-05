@@ -144,9 +144,17 @@ export function PlanFeedExplore({
 
   const hasAnyAnswer = questions.some((q) => Boolean(answers[q.id]?.trim()));
   const hasComment = Boolean(comment.trim());
-  // Skip CTA always available when not busy / pathError; primary needs input.
-  const canSkipRefine = !pathError && !busy && committing == null;
-  const canRefine = canSkipRefine && (hasAnyAnswer || hasComment);
+  // Skip only when meaningful:
+  // - clarify_first while path not ready → reveal / build without answers
+  // - after reveal, only if real questions remain → update without answers
+  // Notes-only + ready plan (typical Guides reopen) → no skip CTA.
+  const showSkipRefine =
+    (clarifyFirst && !pathReady) ||
+    (!clarifyFirst && questions.length > 0);
+  const canSkipRefine =
+    showSkipRefine && !pathError && !busy && committing == null;
+  const canRefine =
+    !pathError && !busy && committing == null && (hasAnyAnswer || hasComment);
 
   const waitForPathReady = async (
     signal: AbortSignal,
@@ -447,6 +455,7 @@ export function PlanFeedExplore({
                   disabled={busy || committing != null}
                   canSubmit={canRefine}
                   canSkip={canSkipRefine}
+                  showSkip={showSkipRefine}
                   pathWaiting={!pathReady && !pathError}
                   clarifyFirst={clarifyFirst}
                   onSelectAnswer={selectAnswer}
