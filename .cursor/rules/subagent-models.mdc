@@ -9,7 +9,7 @@ When launching Task subagents, set `model` explicitly:
 
 | Priority | Model (speak as) | `model` slug |
 |----------|------------------|--------------|
-| Default / important work | Cursor Grok 4.5 High | `cursor-grok-4.5-high` |
+| Default / important work | Cursor Grok 4.5 High Fast| `cursor-grok-4.5-high-fast` |
 | Less important / cheap / mechanical | Composer 2.5 | `composer-2.5` |
 
 ## Use Cursor Grok 4.5 High for

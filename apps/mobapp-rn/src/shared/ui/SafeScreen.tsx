@@ -1,13 +1,20 @@
-import React, { type ReactNode } from 'react';
+import React, { useCallback, useEffect, useRef, type ReactNode } from 'react';
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
   View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   type ViewStyle,
 } from 'react-native';
-import Animated, { type AnimatedRef } from 'react-native-reanimated';
+import Animated, {
+  runOnUI,
+  scrollTo,
+  type AnimatedRef,
+} from 'react-native-reanimated';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -43,6 +50,14 @@ type Props = {
   scrollRef?: AnimatedRef<Animated.ScrollView>;
 };
 
+type ScrollMetrics = {
+  offsetY: number;
+  contentH: number;
+  layoutH: number;
+  insetTop: number;
+  insetBottom: number;
+};
+
 export function SafeScreen({
   children,
   scroll,
@@ -55,18 +70,106 @@ export function SafeScreen({
 }: Props) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const localScrollRef = useRef<ScrollView>(null);
+  const metricsRef = useRef<ScrollMetrics>({
+    offsetY: 0,
+    contentH: 0,
+    layoutH: 0,
+    insetTop: 0,
+    insetBottom: 0,
+  });
+
+  const scrollToY = useCallback(
+    (y: number) => {
+      if (scrollRef) {
+        runOnUI(() => {
+          'worklet';
+          scrollTo(scrollRef, 0, y, false);
+        })();
+        return;
+      }
+      localScrollRef.current?.scrollTo({ y, animated: false });
+    },
+    [scrollRef],
+  );
+
+  const clampScrollOffset = useCallback(() => {
+    const { offsetY, contentH, layoutH, insetTop, insetBottom } =
+      metricsRef.current;
+    if (layoutH <= 0 || contentH <= 0) return;
+
+    // Max offset accounts for keyboard / safe-area content insets.
+    const maxOffset = Math.max(0, contentH - layoutH + insetTop + insetBottom);
+    if (offsetY > maxOffset + 0.5) {
+      metricsRef.current.offsetY = maxOffset;
+      scrollToY(maxOffset);
+      return;
+    }
+    if (offsetY < -0.5) {
+      metricsRef.current.offsetY = 0;
+      scrollToY(0);
+    }
+  }, [scrollToY]);
+
+  useEffect(() => {
+    if (!scroll) return;
+    const hide = Keyboard.addListener('keyboardDidHide', () => {
+      // Insets often clear a frame after hide; clamp once layout settles.
+      requestAnimationFrame(() => {
+        metricsRef.current.insetBottom = 0;
+        metricsRef.current.insetTop = 0;
+        clampScrollOffset();
+      });
+    });
+    return () => hide.remove();
+  }, [scroll, clampScrollOffset]);
+
+  const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { contentOffset, contentSize, contentInset, layoutMeasurement } =
+      e.nativeEvent;
+    metricsRef.current = {
+      offsetY: contentOffset.y,
+      contentH: contentSize.height,
+      layoutH: layoutMeasurement.height,
+      insetTop: contentInset?.top ?? 0,
+      insetBottom: contentInset?.bottom ?? 0,
+    };
+  }, []);
+
+  const onContentSizeChange = useCallback(
+    (_w: number, h: number) => {
+      metricsRef.current.contentH = h;
+      requestAnimationFrame(clampScrollOffset);
+    },
+    [clampScrollOffset],
+  );
+
+  const onLayout = useCallback(
+    (e: { nativeEvent: { layout: { height: number } } }) => {
+      metricsRef.current.layoutH = e.nativeEvent.layout.height;
+      requestAnimationFrame(clampScrollOffset);
+    },
+    [clampScrollOffset],
+  );
 
   const scrollProps = {
     style: styles.flex,
     contentContainerStyle: [styles.scrollContent, contentStyle],
     keyboardShouldPersistTaps: 'handled' as const,
     keyboardDismissMode: 'interactive' as const,
+    // Keep keyboard insets on ScrollView so focused inputs (e.g. Manual Edit)
+    // stay reachable. Sticky footer uses KAV separately; clampScrollOffset
+    // recovers when insets clear or content shrinks past the current offset.
     automaticallyAdjustKeyboardInsets: true,
     // Bound scroll to content height — no flexGrow stretch / empty void.
     // Android: never overscroll into empty; iOS: bounce only when scrollable.
     bounces: true,
     overScrollMode: 'never' as const,
     alwaysBounceVertical: false,
+    scrollEventThrottle: 16,
+    onScroll,
+    onContentSizeChange,
+    onLayout,
   };
 
   const scrollView = scroll ? (
@@ -75,7 +178,9 @@ export function SafeScreen({
         {children}
       </Animated.ScrollView>
     ) : (
-      <ScrollView {...scrollProps}>{children}</ScrollView>
+      <ScrollView ref={localScrollRef} {...scrollProps}>
+        {children}
+      </ScrollView>
     )
   ) : (
     <View style={[styles.content, contentStyle]}>{children}</View>
