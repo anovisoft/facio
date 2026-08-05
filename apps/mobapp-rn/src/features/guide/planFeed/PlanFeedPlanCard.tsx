@@ -19,6 +19,8 @@ type Props = {
   disabled: boolean;
   onStart: () => void;
   onSaveWithoutStarting?: () => void;
+  /** Manual editor for tools on this plan version (Slice E2b). */
+  onEditTools?: () => void;
 };
 
 /**
@@ -31,6 +33,7 @@ export function PlanFeedPlanCard({
   disabled,
   onStart,
   onSaveWithoutStarting,
+  onEditTools,
 }: Props) {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -119,6 +122,28 @@ export function PlanFeedPlanCard({
         </View>
       ) : null}
 
+      {onEditTools && snapshot.pathReady ? (
+        <Pressable
+          accessibilityRole="button"
+          disabled={disabled || committing}
+          onPress={onEditTools}
+          hitSlop={8}
+          style={styles.editTools}
+        >
+          <Text
+            style={[
+              styles.editToolsText,
+              {
+                color:
+                  disabled || committing ? colors.textMuted : colors.primary,
+              },
+            ]}
+          >
+            {t('manualEdit.editTools')}
+          </Text>
+        </Pressable>
+      ) : null}
+
       <PrimaryButton
         label={t('guide.startGuide')}
         disabled={!canStart}
@@ -194,5 +219,13 @@ const styles = StyleSheet.create({
   saveLinkText: {
     ...typography.caption,
     fontWeight: '600',
+  },
+  editTools: {
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
+  },
+  editToolsText: {
+    ...typography.caption,
+    fontWeight: '700',
   },
 });

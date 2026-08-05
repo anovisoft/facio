@@ -127,6 +127,36 @@ export function postponeDay(
   });
 }
 
+export function getPathState(
+  projectId: string,
+  version?: number | null,
+  signal?: AbortSignal,
+): Promise<{ version: number; state: Record<string, unknown> }> {
+  return apiRequest(`/projects/${projectId}/path-state`, {
+    query: version != null ? { version } : undefined,
+    signal,
+  });
+}
+
+export function manualEditProject(
+  projectId: string,
+  payload: {
+    beforeVersion: number;
+    proposedState: Record<string, unknown>;
+  },
+  signal?: AbortSignal,
+): Promise<ProjectDetail> {
+  return apiRequest(`/projects/${projectId}/manual-edit`, {
+    method: 'POST',
+    body: {
+      before_version: payload.beforeVersion,
+      proposed_state: payload.proposedState,
+    },
+    query: { local_date: getLocalDate() },
+    signal,
+  });
+}
+
 export function repairProjectPreview(
   projectId: string,
   payload: { intent?: RepairIntent; reason?: string },

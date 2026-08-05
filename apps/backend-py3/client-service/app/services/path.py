@@ -1241,6 +1241,132 @@ class PathService:
         repaired = await self.projects.get_project(user, project.id)
         return repaired, result.state.paraphrase or None, undo_version
 
+    async def get_path_state_snapshot(
+        self,
+        user: User,
+        project_id: UUID,
+        *,
+        version: int | None = None,
+    ) -> tuple[int, PathState]:
+        """PathState JSON for Manual editor (draft or active).
+
+        ``version=None`` → latest tip. A specific version is read-only
+        (does not restore) so Create can open an older plan card safely.
+        """
+        project = await self.projects.get_project(user, project_id)
+        if project.status not in {ProjectStatus.draft, ProjectStatus.active}:
+            raise ConflictError(
+                "Only draft or active Guides expose Path state for Manual edit"
+            )
+        if version is None:
+            version_no, current = await self.projects.get_latest_state(
+                project.id
+            )
+            if current is None or version_no is None:
+                raise ConflictError("Project has no Path state yet")
+            return version_no, current
+
+        result = await self.db.execute(
+            select(StateVersion).where(
+                StateVersion.project_id == project.id,
+                StateVersion.version == version,
+            )
+        )
+        snapshot = result.scalar_one_or_none()
+        if snapshot is None:
+            raise NotFoundError(f"State version {version} not found")
+        try:
+            state = ensure_action_keys(
+                PathState.model_validate(snapshot.state_json)
+            )
+        except ValidationError as exc:
+            raise ValidationAppError(
+                f"Stored state version {version} is invalid: {exc}"
+            ) from exc
+        return version, state
+
+    async def manual_edit(
+        self,
+        user: User,
+        project_id: UUID,
+        *,
+        before_version: int,
+        proposed_state: dict[str, Any],
+    ) -> tuple[Project, int]:
+        """Apply Manual tool edits. Returns ``(project, undo_version)``.
+
+        No LLM. Persists as ``StateSource.user_edit``. Active Guides
+        rematerialize with merge_progress (same as postpone / repair apply).
+        Does **not** strip or re-preserve plugins — proposed_state is SoT.
+        """
+        project = await self.projects.get_project(
+            user, project_id, for_update=True
+        )
+        if project.status not in {ProjectStatus.draft, ProjectStatus.active}:
+            raise ConflictError(
+                "Project cannot be manually edited in current status"
+            )
+
+        version_no, current = await self.projects.get_latest_state(project.id)
+        if current is None or version_no is None:
+            raise ConflictError("Project has no Path state to edit")
+        if before_version != version_no:
+            raise ConflictError(
+                "Guide changed since Manual opened — reload and try again"
+            )
+        undo_version = version_no
+
+        try:
+            state = ensure_action_keys(
+                PathState.model_validate(proposed_state)
+            )
+        except ValidationError as exc:
+            raise ValidationAppError(
+                f"Invalid proposed_state: {exc}"
+            ) from exc
+
+        materialize: MaterializeMode = (
+            "merge" if project.status == ProjectStatus.active else "none"
+        )
+        result = await self._commit_path_state(
+            project=project,
+            state=state,
+            source=StateSource.user_edit,
+            materialize=materialize,
+        )
+        await self.audit.add_turn(
+            user_id=user.id,
+            project_id=project.id,
+            role=ConversationRole.system,
+            content="Manual edit applied",
+            meta={
+                "kind": "manual_edit",
+                "state_version": result.version,
+                "undo_version": undo_version,
+                "source": StateSource.user_edit.value,
+            },
+        )
+        await self.audit.add_event(
+            event_type=EventType.manual_edit_applied,
+            user_id=user.id,
+            project_id=project.id,
+            payload={
+                "version": result.version,
+                "undo_version": undo_version,
+                "project_status": project.status.value,
+            },
+        )
+        await self.db.commit()
+        logger.info(
+            "manual_edit project=%s version=%s undo=%s status=%s",
+            project.id,
+            result.version,
+            undo_version,
+            project.status.value,
+        )
+        edited = await self.projects.get_project(user, project.id)
+        return edited, undo_version
+
     async def postpone_day(
         self,
         user: User,

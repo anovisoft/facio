@@ -12,7 +12,9 @@ from app.schemas.path import (
     CommitProjectRequest,
     CompleteCycleRequest,
     CreateProjectRequest,
+    ManualEditRequest,
     NextCycleRequest,
+    PathStateSnapshotResponse,
     ProjectDetail,
     ProjectSummary,
     RefineProjectRequest,
@@ -238,6 +240,57 @@ async def postpone_day(
     except AppError as exc:
         await _commit_on_app_error(db, exc)
     return await ProjectService(db).to_detail(project, local_date=local_date)
+
+
+@router.get(
+    "/{project_id}/path-state",
+    response_model=PathStateSnapshotResponse,
+)
+async def get_path_state(
+    project_id: UUID,
+    user: CurrentUser,
+    db: DbSession,
+    version: int | None = Query(
+        default=None,
+        ge=1,
+        description="Optional state_version (read-only; default = latest tip).",
+    ),
+) -> PathStateSnapshotResponse:
+    """PathState for Manual editor (Slice E2b). Optional version is read-only."""
+    service = PathService(db)
+    try:
+        version_no, state = await service.get_path_state_snapshot(
+            user, project_id, version=version
+        )
+    except AppError as exc:
+        await _commit_on_app_error(db, exc)
+    return PathStateSnapshotResponse(
+        version=version_no,
+        state=state.model_dump(mode="json"),
+    )
+
+
+@router.post("/{project_id}/manual-edit", response_model=ProjectDetail)
+async def manual_edit_project(
+    project_id: UUID,
+    body: ManualEditRequest,
+    user: CurrentUser,
+    db: DbSession,
+    local_date: str | None = Query(default=None, description=_LOCAL_DATE_DESC),
+) -> ProjectDetail:
+    """Apply Manual UI Block tool edits (no LLM). Returns undo_version."""
+    service = PathService(db)
+    try:
+        project, undo_version = await service.manual_edit(
+            user,
+            project_id,
+            before_version=body.before_version,
+            proposed_state=body.proposed_state,
+        )
+    except AppError as exc:
+        await _commit_on_app_error(db, exc)
+    detail = await ProjectService(db).to_detail(project, local_date=local_date)
+    return detail.model_copy(update={"undo_version": undo_version})
 
 
 @router.post("/{project_id}/restore-state", response_model=ProjectDetail)

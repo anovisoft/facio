@@ -185,6 +185,31 @@ class RestoreStateRequest(BaseModel):
     version: int = Field(ge=1)
 
 
+class PathStateSnapshotResponse(BaseModel):
+    """Current PathState JSON + version for Manual editor (Slice E2b)."""
+
+    version: int = Field(ge=1)
+    state: dict[str, Any] = Field(
+        description="Validated PathState JSON (actions include tool payloads).",
+    )
+
+
+class ManualEditRequest(BaseModel):
+    """Deterministic Manual editor apply — no LLM (Facio 0.1 Slice E2b).
+
+    Client fetches PathState via GET .../path-state, mutates closed UI Block
+    tool fields, then posts the full proposed_state with before_version.
+    """
+
+    before_version: int = Field(
+        ge=1,
+        description="Current state_version; rejects if Guide moved.",
+    )
+    proposed_state: dict[str, Any] = Field(
+        description="Full PathState JSON after Manual tool edits.",
+    )
+
+
 class CreateEventRequest(BaseModel):
     type: str = Field(min_length=1, max_length=100)
     project_id: UUID | None = None
@@ -487,8 +512,8 @@ class ProjectDetail(ProjectSummary):
     undo_version: int | None = Field(
         default=None,
         description=(
-            "Set only on POST .../repair apply: state_version to restore "
-            "via POST .../restore-state for Undo."
+            "Set on POST .../repair apply and POST .../manual-edit: "
+            "state_version to restore via POST .../restore-state for Undo."
         ),
     )
     cycle_result: CycleResultResponse | None = Field(

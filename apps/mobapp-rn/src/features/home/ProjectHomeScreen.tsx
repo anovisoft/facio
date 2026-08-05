@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +24,7 @@ import {
   getProject,
   postponeDay,
   rematerializePlugins,
+  restoreState,
   startNextCycle,
 } from '@/api/projects';
 import {
@@ -110,6 +111,9 @@ export function ProjectHomeScreen({
   const [finishCycleSheetVisible, setFinishCycleSheetVisible] = useState(false);
   /** Same-day browse peek — null follows live `next_action`. */
   const [browseActionId, setBrowseActionId] = useState<string | null>(null);
+  /** Manual / repair Undo target (state_version). */
+  const [undoVersion, setUndoVersion] = useState<number | null>(null);
+  const [undoMessage, setUndoMessage] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const shownActionIdRef = useRef<string | null>(null);
   const doneFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -166,8 +170,23 @@ export function ProjectHomeScreen({
   useFocusEffect(
     useCallback(() => {
       void load();
+      const pendingUndo = route.params.undoVersion;
+      if (pendingUndo != null) {
+        setUndoVersion(pendingUndo);
+        setUndoMessage(route.params.undoMessage ?? t('manualEdit.applied'));
+        navigation.setParams({
+          undoVersion: undefined,
+          undoMessage: undefined,
+        });
+      }
       return () => abortRef.current?.abort();
-    }, [load]),
+    }, [
+      load,
+      navigation,
+      route.params.undoMessage,
+      route.params.undoVersion,
+      t,
+    ]),
   );
 
   // Poll while phase-3 plugins are still materializing after Start.
@@ -385,6 +404,25 @@ export function ProjectHomeScreen({
     }
   };
 
+  const onUndoManual = async () => {
+    if (busy || undoVersion == null) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const detail = await restoreState(projectId, undoVersion);
+      setProject(detail);
+      setUndoVersion(null);
+      setUndoMessage(null);
+      setBrowseActionId(null);
+    } catch (e) {
+      setError(
+        e instanceof ApiError ? e.message : t('manualEdit.undoError'),
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const onArchive = () => {
     Alert.alert(
       t('home.archiveConfirmTitle'),
@@ -435,7 +473,16 @@ export function ProjectHomeScreen({
       {
         text: t('home.editSession'),
         onPress: () => {
-          Alert.alert(t('home.editSession'), t('home.editSessionSoon'));
+          const live =
+            browseActionId != null
+              ? project?.actions.find((a) => a.id === browseActionId)
+              : project?.next_action;
+          const actionKey = live?.key ?? project?.next_action?.key ?? null;
+          navigation.navigate('ManualEdit', {
+            projectId,
+            mode: 'active',
+            actionKey,
+          });
         },
       },
     ];
@@ -516,6 +563,10 @@ export function ProjectHomeScreen({
     project?.title,
     project?.outcome,
     project?.paraphrase,
+    project?.next_action?.key,
+    project?.actions,
+    browseActionId,
+    projectId,
     busy,
     t,
     colors.text,
@@ -986,6 +1037,34 @@ export function ProjectHomeScreen({
           </View>
         ) : null}
 
+        {undoVersion != null ? (
+          <View
+            style={[
+              styles.undoBanner,
+              {
+                backgroundColor: colors.surfaceMuted,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text
+              style={[styles.undoBannerText, { color: colors.text }]}
+              numberOfLines={2}
+            >
+              {undoMessage ?? t('manualEdit.applied')}
+            </Text>
+            <Pressable
+              onPress={() => void onUndoManual()}
+              disabled={busy}
+              hitSlop={8}
+            >
+              <Text style={[styles.undoBannerAction, { color: colors.primary }]}>
+                {t('manualEdit.undo')}
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
+
             {cycleFinished && project.cycle_result ? (
               <View style={styles.doneBlock}>
                 <Text style={[styles.todayLabel, { color: colors.textMuted }]}>
@@ -1444,5 +1523,23 @@ const styles = StyleSheet.create({
   },
   doneFlashText: {
     ...typography.body,
+  },
+  undoBanner: {
+    borderWidth: 1,
+    borderRadius: radii.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  undoBannerText: {
+    ...typography.body,
+    flex: 1,
+  },
+  undoBannerAction: {
+    ...typography.label,
+    fontWeight: '700',
   },
 });

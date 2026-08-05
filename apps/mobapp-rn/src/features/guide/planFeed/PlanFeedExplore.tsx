@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -6,6 +6,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
 import { ApiError, type ProjectDetail } from '@/api/types';
@@ -17,9 +18,13 @@ import {
 } from '@/api/projects';
 import { PlanFeedPlanCard } from '@/features/guide/planFeed/PlanFeedPlanCard';
 import { PlanFeedQuestions } from '@/features/guide/planFeed/PlanFeedQuestions';
-import { isPathReady } from '@/features/guide/planFeed/snapshot';
+import {
+  capturePlanSnapshot,
+  isPathReady,
+} from '@/features/guide/planFeed/snapshot';
 import type { PlanSnapshot } from '@/features/guide/planFeed/types';
 import { usePlanFeed } from '@/features/guide/planFeed/usePlanFeed';
+import { takePendingCreateManualEdit } from '@/features/manualEdit/pendingResult';
 import type { RootScreenProps } from '@/navigation/types';
 import { trackAcceptViewed } from '@/services/beacons';
 import { SafeScreen } from '@/shared/ui/SafeScreen';
@@ -68,7 +73,8 @@ export function PlanFeedExplore({
   const { colors } = useTheme();
   const setLastProjectId = useSessionStore((s) => s.setLastProjectId);
   const clearPlanFeed = useSessionStore((s) => s.clearPlanFeed);
-  const { items, appendUserTurn, syncFromProject } = usePlanFeed(projectId);
+  const { items, appendUserTurn, syncFromProject, updatePlanCard } =
+    usePlanFeed(projectId);
 
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [comment, setComment] = useState('');
@@ -236,6 +242,31 @@ export function PlanFeedExplore({
     }
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      const pending = takePendingCreateManualEdit(projectId);
+      if (!pending) return;
+      setProject(pending.detail);
+      if (pending.planIndex != null) {
+        updatePlanCard(
+          pending.planIndex,
+          capturePlanSnapshot(pending.detail),
+        );
+      } else {
+        syncFromProject(pending.detail);
+      }
+    }, [projectId, setProject, syncFromProject, updatePlanCard]),
+  );
+
+  const onEditTools = (snapshot: PlanSnapshot, planIndex: number) => {
+    navigation.navigate('ManualEdit', {
+      projectId,
+      mode: 'create',
+      stateVersion: snapshot.stateVersion,
+      planIndex,
+    });
+  };
+
   const onCommitFromCard = async (
     snapshot: PlanSnapshot,
     planIndex: number,
@@ -337,6 +368,9 @@ export function PlanFeedExplore({
                     committing != null && committingPlanIndex === item.planIndex
                   }
                   disabled={busy || committing != null}
+                  onEditTools={() =>
+                    onEditTools(item.snapshot, item.planIndex)
+                  }
                   onStart={() =>
                     void onCommitFromCard(item.snapshot, item.planIndex, 'start')
                   }

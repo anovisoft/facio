@@ -44,6 +44,7 @@ class EventType(str, enum.Enum):
     day_postponed = "day_postponed"
     repair_requested = "repair_requested"
     repair_applied = "repair_applied"
+    manual_edit_applied = "manual_edit_applied"
     # Extra server-side (not all are client beacons)
     checklist_item_toggled = "checklist_item_toggled"
     counter_updated = "counter_updated"

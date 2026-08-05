@@ -12,7 +12,7 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 |-------|--------|
 | Product vector | Facio 0.1 locked — **Guide / Continue / Session** + Hero/Full/Compact + **Plan Feed · Manual · Micro** ([15](./15-edit-surfaces.md)) |
 | Prototype engine | `apps/` ≈ `docs/next` slices 1–5 **accepted** |
-| Facio 0.1 shell | **A–E2a accepted**. **Next = E2b Manual editor** → E2c Active AI Feed → F |
+| Facio 0.1 shell | **A–E2a accepted**. **E2b Manual editor landed** (awaiting PO dogfood) → E2c Active AI Feed → F |
 | Edit surfaces lock | Create = Plan Feed + Manual (CTA on plan card, no sticky Start). Active = Manual + Micro + AI Feed. Canon [15](./15-edit-surfaces.md) |
 | Carbonara / multi-Session same day | Same-day **Back/Next = browse**; **Done** completes live step (assurance); last Done → Continue |
 | Fitness multi-day E2E | Daily sticky **Done** + assurance; kebab Postpone (deterministic); deferred calendar week / **H** |
@@ -24,7 +24,7 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 ## After summarization — PM start here
 
 1. Read [README](./README.md) → [11](./11-success-systems.md) (esp. §5–6 Diff/Undo, §9 presentations) → **this file** → [14](./14-impl-plan.md).  
-2. **E2a accepted** (PO 2026-08-05). Dispatch / land **E2b** (Manual editor).  
+2. **E2a accepted** (PO 2026-08-05). **E2b Manual** implemented — dogfood then accept → **E2c**.  
 3. Slice E accepted — keep landmines:
    - Repair: intent → **preview Diff** → confirm → apply (no silent apply).
    - API: `POST .../repair/preview` + apply with `proposed_state` / `before_version`; response `undo_version`.
@@ -32,7 +32,7 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
    - **Landmine:** lighten/rest strip plugin payloads + rematerialize phase-3 (shift still preserves). Do **not** re-introduce blind `_preserve_plugins` on all repairs.
    - Do **not** expand Anthropic schemas. E APIs become backbone of Active AI Feed (E2c).
 4. Session chrome accepted — see lock below. Repair off Session happy path → Edit surfaces ([15](./15-edit-surfaces.md)).
-5. **Edit surfaces locked** ([15](./15-edit-surfaces.md)): Plan Feed + Manual + Micro. Next code: E2a→E2b→E2c→F.
+5. **Edit surfaces locked** ([15](./15-edit-surfaces.md)): Plan Feed + Manual + Micro. Next code after E2b dogfood: **E2c** → F.
 6. Do **not** invent D1–D8 / deferred parked items.  
 7. Do **not** reopen Guides reveal (`useGuidesRevealGesture`, `useNativeDriver: false`) unless PO reports regress.
 
@@ -161,8 +161,7 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 | E | Repair Diff + Undo | **accepted** (PO 2026-08-05) |
 | — | Session chrome cleanup | **accepted** (PO 2026-08-05) |
 | E2a | Create Plan Feed | **accepted** (PO 2026-08-05) |
-| E2b | Manual editor (all tools) | **in progress** |
-| E2b | Manual editor (all tools) | pending |
+| E2b | Manual editor (all tools) | **landed** (awaiting PO dogfood) |
 | E2c | Active AI Feed + Diff | pending |
 | F | Identity + Finish Experience | pending (after E2*) |
 | G | Copy / IA kill / Morning Summary (+ #8) | pending |
@@ -207,7 +206,7 @@ Implemented 2026-08-03; lighten rematerialize fix 2026-08-04:
 - API: `apps/backend-py3/client-service` — Alembic through **013**  
 - Prefer aliases over big-bang DB rename  
 
-Do not rewrite backend runtime to start Facio 0.1 — next after E/chrome accept = **E2a Plan Feed** ([15](./15-edit-surfaces.md)), then Manual + Active AI Feed, then F.
+Do not rewrite backend runtime to start Facio 0.1 — next after E2b dogfood = **E2c Active AI Feed** ([15](./15-edit-surfaces.md)), then F.
 
 ### Edit surfaces lock (PO 2026-08-05)
 
@@ -217,6 +216,10 @@ Do not rewrite backend runtime to start Facio 0.1 — next after E/chrome accept
 - New AI plan = append card; may ask questions without new plan.
 - Canon doc: [15](./15-edit-surfaces.md).
 
-### E2a Plan Feed (client) — awaiting dogfood
+### E2a Plan Feed (client) — accepted (PO 2026-08-05)
 
-Draft Guide Explore is an append-only лента — user intent, sense, versioned plan cards (Cover + contract + CompactRoadmap + Start on card), clarify block (optional chips + free-form **in the same card**); no sticky Start / no separate notes footer. Chip answers not required — note alone can refine. **Questions show during soft-start** before Path v1 ready (refine waits for path). Prior cards remain after refine; Start on an older card restores that `state_version` then commits. Feed history persisted client-side per project (MMKV); server-side turns = follow-up. Progressive create unchanged. Code: `features/guide/planFeed/*`. Next after accept: **E2b Manual editor**.
+Draft Guide Explore is an append-only лента — user intent, sense, versioned plan cards (Cover + contract + CompactRoadmap + Start on card), clarify block (optional chips + free-form **in the same card**); no sticky Start / no separate notes footer. Chip answers not required — note alone can refine. **Questions show during soft-start** before Path v1 ready (refine waits for path). Prior cards remain after refine; Start on an older card restores that `state_version` then commits. Feed history persisted client-side per project (MMKV); server-side turns = follow-up. Progressive create unchanged. Code: `features/guide/planFeed/*`.
+
+### E2b Manual editor — landed (awaiting PO dogfood)
+
+Shared Manual editor for closed UI Block tool fields (checklist add/remove/edit; stepper targets/labels/rest duration; counter target/label; timer/timeline/interval scalars when present; hints-only graceful note). **Create:** plan card «Edit tools» loads that card’s `state_version` read-only (`GET .../path-state?version=`), Save restores tip if needed then `POST .../manual-edit` (`user_edit` + `proposed_state` / `before_version`, `undo_version`); feed card updates in place. **Active:** Session kebab Edit Session → Manual scoped to live/browse action key; apply → Undo banner via `restore-state`. No AI Feed (E2c). Code: `features/manualEdit/*`, backend `manual_edit` / `path-state`. Tests: `tests/test_manual_edit.py`.

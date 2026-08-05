@@ -23,13 +23,32 @@ export type RootStackParamList = {
     seed?: ProjectDetail;
     fromSession?: boolean;
   };
-  Session: { projectId: string };
+  Session: {
+    projectId: string;
+    /** After Manual apply — restore-state target for Undo banner. */
+    undoVersion?: number | null;
+    undoMessage?: string | null;
+  };
   /** Guide trust surface — draft Explore + active roadmap (Slice C). */
   Guide: {
     projectId: string;
     seed?: ProjectDetail;
     /** Opened via Session ≡ — hide Start Session; expand full plan. */
     fromSession?: boolean;
+  };
+  /**
+   * Manual editor for UI Block tools (Slice E2b) — Create plan card or
+   * Active Session / Guide scope.
+   */
+  ManualEdit: {
+    projectId: string;
+    mode: 'create' | 'active';
+    /** Create: plan card state_version to restore before edit. */
+    stateVersion?: number | null;
+    /** Create: plan card index to refresh after save. */
+    planIndex?: number;
+    /** Active: limit editor to this action key (Session next/browse). */
+    actionKey?: string | null;
   };
   Archive: undefined;
   Settings: undefined;

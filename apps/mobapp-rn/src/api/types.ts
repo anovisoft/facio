@@ -265,8 +265,8 @@ export interface ProjectDetail extends ProjectSummary {
    */
   repair_summary?: string | null;
   /**
-   * Set only on POST .../repair apply: state_version to pass to
-   * restore-state for Undo.
+   * Set on POST .../repair apply and POST .../manual-edit: state_version
+   * to pass to restore-state for Undo.
    */
   undo_version?: number | null;
   /** Structured summary when the current cycle is finished. */

@@ -7,7 +7,10 @@ import {
   planContentFingerprint,
   senseText,
 } from '@/features/guide/planFeed/snapshot';
-import type { PlanFeedItem } from '@/features/guide/planFeed/types';
+import type {
+  PlanFeedItem,
+  PlanSnapshot,
+} from '@/features/guide/planFeed/types';
 import { useSessionStore } from '@/store';
 
 let feedIdSeq = 0;
@@ -293,10 +296,28 @@ export function usePlanFeed(projectId: string) {
     [persistFeed],
   );
 
+  const updatePlanCard = useCallback(
+    (planIndex: number, snapshot: PlanSnapshot) => {
+      setItems((prev) => {
+        const next = prev.map((item) =>
+          item.kind === 'plan_card' && item.planIndex === planIndex
+            ? { ...item, snapshot }
+            : item,
+        );
+        // Keep fingerprint aligned so sync won't append a twin card.
+        lastPlanFpRef.current = planContentFingerprint(snapshot);
+        persistFeed(next);
+        return next;
+      });
+    },
+    [persistFeed],
+  );
+
   return {
     items,
     appendUserTurn,
     syncFromProject,
+    updatePlanCard,
     reset,
     clear,
   };
