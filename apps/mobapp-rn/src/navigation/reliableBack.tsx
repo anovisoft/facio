@@ -6,6 +6,21 @@ import type { NativeStackHeaderBackProps } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '@/navigation/types';
 
 /**
+ * Terminal exit from Session (Done / Skip / Postpone / Archive).
+ * `navigate('Continue')` can leave Session under Continue (or push a second
+ * Continue), so the iOS edge-swipe pops back to Session instead of opening
+ * the Guides drawer. Reset to a single Continue root.
+ */
+export function resetToContinue(
+  navigation: NavigationProp<RootStackParamList>,
+) {
+  navigation.reset({
+    index: 0,
+    routes: [{ name: 'Continue' }],
+  });
+}
+
+/**
  * JS-backed goBack with Continue fallback. Shared by Session nav chip and
  * HeaderBackButton — native UIKit back can stop receiving taps on iOS 26.
  */

@@ -35,7 +35,7 @@ import {
 } from '@/api/types';
 import { FinishCycleSheet } from '@/features/home/FinishCycleSheet';
 import { NextCycleSheet } from '@/features/home/NextCycleSheet';
-import { goBackOrContinue } from '@/navigation/reliableBack';
+import { goBackOrContinue, resetToContinue } from '@/navigation/reliableBack';
 import type { RootScreenProps } from '@/navigation/types';
 import { trackActionShown } from '@/services/beacons';
 import { classifyUnlockDate } from '@/services/localDate';
@@ -219,7 +219,7 @@ export function ProjectHomeScreen({
           : t('home.sessionDoneToast'),
       );
     } else {
-      navigation.navigate('Continue');
+      resetToContinue(navigation);
     }
   };
 
@@ -355,7 +355,7 @@ export function ProjectHomeScreen({
             : t('home.sessionDoneToast'),
         );
       } else {
-        navigation.navigate('Continue');
+        resetToContinue(navigation);
       }
     } catch (e) {
       setError(e instanceof ApiError ? e.message : t('home.error'));
@@ -371,7 +371,7 @@ export function ProjectHomeScreen({
     try {
       const detail = await postponeDay(projectId);
       setProject(detail);
-      navigation.navigate('Continue');
+      resetToContinue(navigation);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : t('home.postponeError'));
     } finally {
@@ -395,7 +395,7 @@ export function ProjectHomeScreen({
               setError(null);
               try {
                 await abandonProject(projectId);
-                navigation.navigate('Continue');
+                resetToContinue(navigation);
               } catch (e) {
                 setError(
                   e instanceof ApiError ? e.message : t('home.archiveError'),

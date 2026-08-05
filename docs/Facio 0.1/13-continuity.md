@@ -101,6 +101,7 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 - Not RN Modal bottom-sheet. Guides **under** Continue; translateX ~82%; radius ~52; **no scale**.  
 - `useGuidesRevealGesture.ts`: `useNativeDriver: false`; don’t drive mid-drag off stale `drawerOpen`.  
 - Stay Expo RN.
+- **Session → Continue terminal exit:** Done / Skip (no next) / Postpone / Archive must `resetToContinue` (`reliableBack.tsx`), not `navigate('Continue')`. Otherwise Session stays under Continue and iOS edge-swipe returns to Session instead of opening Guides.
 
 ### Device / API
 
