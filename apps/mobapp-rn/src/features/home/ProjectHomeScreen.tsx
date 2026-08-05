@@ -35,10 +35,6 @@ import {
 } from '@/api/types';
 import { FinishCycleSheet } from '@/features/home/FinishCycleSheet';
 import { NextCycleSheet } from '@/features/home/NextCycleSheet';
-import {
-  SessionMenuSheet,
-  type SessionMenuAction,
-} from '@/features/home/SessionMenuSheet';
 import { goBackOrContinue } from '@/navigation/reliableBack';
 import type { RootScreenProps } from '@/navigation/types';
 import { trackActionShown } from '@/services/beacons';
@@ -105,7 +101,6 @@ export function ProjectHomeScreen({
   const [doneFlash, setDoneFlash] = useState<string | null>(null);
   const [nextCycleSheetVisible, setNextCycleSheetVisible] = useState(false);
   const [finishCycleSheetVisible, setFinishCycleSheetVisible] = useState(false);
-  const [sessionMenuVisible, setSessionMenuVisible] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const shownActionIdRef = useRef<string | null>(null);
   const doneFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -417,40 +412,55 @@ export function ProjectHomeScreen({
 
   const openSessionMenu = () => {
     if (busy) return;
-    setSessionMenuVisible(true);
-  };
+    const horizon =
+      project?.current_day?.horizon_days ??
+      project?.cycle?.horizon_days ??
+      1;
+    const isDaily = horizon > 1;
+    const canFinish = project?.can_finish_cycle === true;
 
-  const onSessionMenuAction = (action: SessionMenuAction) => {
-    switch (action) {
-      case 'fullGuide':
-        openGuide();
-        break;
-      case 'editSession':
-        Alert.alert(t('home.editSession'), t('home.editSessionSoon'));
-        break;
-      case 'postpone':
-        void onPostpone();
-        break;
-      case 'skip':
-        void onSkip();
-        break;
-      case 'finishCycle':
-        setFinishCycleSheetVisible(true);
-        break;
-      case 'archive':
-        onArchive();
-        break;
-      default: {
-        const _exhaustive: never = action;
-        return _exhaustive;
-      }
+    // Native iOS compact alert (UIAlertController) — same as first kebab ship.
+    const buttons: {
+      text: string;
+      style?: 'cancel' | 'destructive' | 'default';
+      onPress?: () => void;
+    }[] = [
+      { text: t('home.fullGuide'), onPress: openGuide },
+      {
+        text: t('home.editSession'),
+        onPress: () => {
+          Alert.alert(t('home.editSession'), t('home.editSessionSoon'));
+        },
+      },
+    ];
+    if (isDaily) {
+      buttons.push({
+        text: t('home.postponeTomorrow'),
+        onPress: () => {
+          void onPostpone();
+        },
+      });
     }
+    buttons.push({
+      text: t('home.skip'),
+      onPress: () => {
+        void onSkip();
+      },
+    });
+    if (canFinish) {
+      buttons.push({
+        text: t('home.finishCycle'),
+        onPress: () => setFinishCycleSheetVisible(true),
+      });
+    }
+    buttons.push({
+      text: t('home.archive'),
+      style: 'destructive',
+      onPress: onArchive,
+    });
+    buttons.push({ text: t('common.cancel'), style: 'cancel' });
+    Alert.alert(t('home.menuPath'), undefined, buttons);
   };
-
-  const sessionHorizon =
-    project?.current_day?.horizon_days ?? project?.cycle?.horizon_days ?? 1;
-  const sessionMenuIsDaily = sessionHorizon > 1;
-  const sessionMenuCanFinish = project?.can_finish_cycle === true;
 
   useLayoutEffect(() => {
     const title =
@@ -1200,14 +1210,6 @@ export function ProjectHomeScreen({
               </Text>
             ) : null}
           </SafeScreen>
-
-      <SessionMenuSheet
-        visible={sessionMenuVisible}
-        isDaily={sessionMenuIsDaily}
-        canFinish={sessionMenuCanFinish}
-        onAction={onSessionMenuAction}
-        onClose={() => setSessionMenuVisible(false)}
-      />
 
       <FinishCycleSheet
         visible={finishCycleSheetVisible}

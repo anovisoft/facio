@@ -92,7 +92,7 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 
 - **Next** (not last) = `complete` → open next; no modal; undo = **Back** (`POST /actions/{id}/uncomplete`).
 - **Done** (daily + last same-day) = always-on “Finish session?” → Cancel / Done; checklist note if unchecked items remain. Counter never incomplete-gates.
-- Header: `GlassIconButton variant="header"` (icon only) in `headerLeft`/`headerRight` — iOS 26 draws **one** system glass; bordered/`nav` chips double it. Menu = `SessionMenuSheet`. Do **not** use `unstable_header*Items` `button`/`menu` on screens@4.16 (bar-button items unsupported → buttons vanish). Continue ☰ stays `default` LiquidGlass in-content.
+- Header: `GlassIconButton variant="header"` (icon only) in `headerLeft`/`headerRight` — iOS 26 draws **one** system glass; bordered/`nav` chips double it. Kebab menu = native `Alert.alert` (compact UIAlertController). Do **not** use `unstable_header*Items` `button`/`menu` on screens@4.16 (unsupported → buttons vanish). Continue ☰ stays `default` LiquidGlass in-content.
 - Kebab options: Full Guide · Edit Session (stub) · Postpone to tomorrow (daily only, `POST /projects/{id}/postpone-day`, no LLM) · Skip · Finish cycle · Archive (destructive).
 - Repair / lighten / rest off Session happy path; keep `RepairSheet.tsx` for future Edit Session.
 
@@ -175,7 +175,7 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 | Session | `features/home/ProjectHomeScreen.tsx` — sticky footer by horizon, kebab, Back/Next/Done, checklist/Done assurance |
 | Session APIs | `POST /actions/{id}/uncomplete`; `POST /projects/{id}/postpone-day` (Alembic `013` `user_edit`) |
 | Stepper persist/back | `ActionPlugins.tsx` + store `blockRuntimeByActionId` |
-| Glass chips | `GlassIconButton` — `GLASS_ICON_CHIP_SIZE`; Session header = `header` icons + `SessionMenuSheet`; Continue ☰ = `default` |
+| Glass chips | `GlassIconButton` — `GLASS_ICON_CHIP_SIZE`; Session header = `header` icons + native Alert kebab; Continue ☰ = `default` |
 | Scroll | `SafeScreen` — scroll outside KAV; `flexGrow: 0`; PathList expandable on Guide |
 | Repair Diff + Undo (E) | `RepairSheet` Diff confirm; preview/apply; active Undo; lighten/rest strip plugins + phase-3 rematerialize (shift preserves) |
 
