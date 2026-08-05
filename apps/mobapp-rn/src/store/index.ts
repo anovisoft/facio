@@ -25,12 +25,17 @@ export type BlockRuntimeEntry = {
   rest?: BlockRuntimeRest | null;
 };
 
+/** When plan cards may appear in Create Plan Feed (E2a-iterate). */
+export type PlanRevealMode = 'hidden' | 'revealed';
+
 /** Persisted Create Plan Feed history keyed by draft project id (E2a). */
 export type PlanFeedPersisted = {
   items: PlanFeedItem[];
   lastPlanFp: string | null;
   lastQuestionsKey: string;
   planCount: number;
+  /** hidden = clarify_first (questions before plan). Default revealed for legacy. */
+  planRevealMode?: PlanRevealMode;
 };
 
 interface SessionState {

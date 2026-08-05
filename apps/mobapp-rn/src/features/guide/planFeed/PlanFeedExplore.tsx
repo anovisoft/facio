@@ -58,7 +58,7 @@ type Props = {
 };
 
 /**
- * Create Plan Feed (Slice E2a) — versioned лента for pre-Commitment Explore.
+ * Create Plan Feed (Slice E2a / E2a-iterate) — questions-first, then versioned plans.
  * Start Guide lives on each plan card; no sticky page-bottom Start.
  */
 export function PlanFeedExplore({
@@ -73,8 +73,15 @@ export function PlanFeedExplore({
   const { colors } = useTheme();
   const setLastProjectId = useSessionStore((s) => s.setLastProjectId);
   const clearPlanFeed = useSessionStore((s) => s.clearPlanFeed);
-  const { items, appendUserTurn, syncFromProject, updatePlanCard } =
-    usePlanFeed(projectId);
+  const {
+    items,
+    planRevealMode,
+    revealPlan,
+    appendUserTurn,
+    syncFromProject,
+    updatePlanCard,
+  } = usePlanFeed(projectId);
+  const clarifyFirst = planRevealMode === 'hidden';
 
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [comment, setComment] = useState('');
@@ -195,7 +202,7 @@ export function PlanFeedExplore({
     if (!allowEmpty && !hasAnyAnswer && !hasComment) return;
 
     // Only send filled answers — unanswered chips are skipped on purpose.
-    // Skip CTA may send empty answers + empty comment (build/update without answers).
+    // After reveal, skip CTA may send empty answers + empty comment.
     const answersPayload = questions
       .map((q) => {
         const value = answers[q.id]?.trim();
@@ -230,6 +237,8 @@ export function PlanFeedExplore({
         controller.signal,
       );
       if (userText) appendUserTurn(userText);
+      // Reveal only after refine so Intent-only plan never flashes first.
+      revealPlan();
       setProject(detail);
       setAnswers({});
       setComment('');
@@ -242,6 +251,48 @@ export function PlanFeedExplore({
         setQueuedRefine(false);
       }
     }
+  };
+
+  /** Skip in clarify_first: reveal Intent plan + keep questions (no empty refine). */
+  const runSkipReveal = async () => {
+    if (busy || pathError || committing != null || !clarifyFirst) return;
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setBusy(true);
+    setQueuedRefine(!pathReady);
+    setError(null);
+
+    try {
+      revealPlan();
+      if (!pathReady) {
+        const ready = await waitForPathReady(controller.signal);
+        if (controller.signal.aborted) return;
+        if (!ready) return;
+        syncFromProject(ready);
+      } else {
+        syncFromProject(project);
+      }
+      setQueuedRefine(false);
+    } catch (e) {
+      if (controller.signal.aborted || isAbortError(e)) return;
+      setError(e instanceof ApiError ? e.message : t('draft.error'));
+    } finally {
+      if (!controller.signal.aborted) {
+        setBusy(false);
+        setQueuedRefine(false);
+      }
+    }
+  };
+
+  const onSkip = () => {
+    if (clarifyFirst) {
+      void runSkipReveal();
+      return;
+    }
+    void runRefine({ allowEmpty: true });
   };
 
   useFocusEffect(
@@ -392,10 +443,11 @@ export function PlanFeedExplore({
                   canSubmit={canRefine}
                   canSkip={canSkipRefine}
                   pathWaiting={!pathReady && !pathError}
+                  clarifyFirst={clarifyFirst}
                   onSelectAnswer={selectAnswer}
                   onChangeComment={setComment}
                   onSubmit={() => void runRefine()}
-                  onSkip={() => void runRefine({ allowEmpty: true })}
+                  onSkip={onSkip}
                 />
               );
             case 'system_note':

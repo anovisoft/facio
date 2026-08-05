@@ -8,15 +8,21 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import type { ClarifySelection } from '@/api/types';
 import { useTheme } from '@/theme/ThemeContext';
 import { radii, spacing, typography } from '@/theme';
 
 type Props = {
   options: string[];
   onSelect: (option: string) => void;
+  /** Single-select current value. */
   selected?: string | null;
+  /** Multi-select current values (when selection=multi). */
+  selectedValues?: string[];
+  /** single = radio (default); multi = toggle several chips. */
+  selection?: ClarifySelection;
   disabled?: boolean;
-  /** When true, shows a free-text field under the chips. */
+  /** When true, shows a free-text field under the chips (single mode). */
   allowCustom?: boolean;
   customPlaceholder?: string;
 };
@@ -25,20 +31,27 @@ export function ClarifyChips({
   options,
   onSelect,
   selected,
+  selectedValues,
+  selection = 'single',
   disabled,
   allowCustom = false,
   customPlaceholder,
 }: Props) {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const isMulti = selection === 'multi';
   const value = selected ?? '';
-  const isCustom = value.length > 0 && !options.includes(value);
+  const multiSelected = selectedValues ?? [];
+  const isCustom =
+    !isMulti && value.length > 0 && !options.includes(value);
 
   return (
     <View style={styles.wrap}>
       <View style={styles.row}>
         {options.map((option) => {
-          const isSelected = selected === option;
+          const isSelected = isMulti
+            ? multiSelected.includes(option)
+            : selected === option;
           return (
             <Pressable
               key={option}
@@ -70,7 +83,7 @@ export function ClarifyChips({
         })}
       </View>
 
-      {allowCustom ? (
+      {allowCustom && !isMulti ? (
         <TextInput
           value={value}
           onChangeText={onSelect}

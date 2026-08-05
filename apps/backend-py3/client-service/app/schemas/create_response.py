@@ -49,6 +49,7 @@ class ClarifyQuestionWire(BaseModel):
     id: str = ""
     prompt: str = ""
     options: list[str] = Field(default_factory=list)
+    selection: Literal["single", "multi"] = "single"
 
 
 class PathStartSurface(BaseModel):

@@ -345,6 +345,7 @@ def path_state_from_start(start: PathStartSurface) -> PathState:
             "id": q.id.strip(),
             "prompt": q.prompt.strip(),
             "options": [o for o in q.options if o.strip()],
+            "selection": q.selection,
         }
         for q in start.questions
     ]

@@ -219,3 +219,17 @@ def test_create_gate_wire_has_no_path_branch() -> None:
     assert "actions" not in start_props
     assert "timers" not in start_props
     assert "ClarifyQuestionWire" in defs
+    clarify = defs["ClarifyQuestionWire"]
+    clarify_props = clarify.get("properties") or {}
+    assert "selection" in clarify_props
+    selection = clarify_props["selection"]
+    # Enum or anyOf/const — accept single|multi (default single when omitted).
+    enum_vals = selection.get("enum")
+    if enum_vals is None and "anyOf" in selection:
+        enum_vals = [
+            item.get("const")
+            for item in selection["anyOf"]
+            if isinstance(item, dict) and "const" in item
+        ]
+    assert enum_vals is not None
+    assert set(enum_vals) == {"single", "multi"}

@@ -113,6 +113,11 @@ export default {
     composerPlaceholder: 'Ограничения, предпочтения, заметки…',
     buildWithoutAnswers: 'Собрать путь без ответов',
     updateWithoutAnswers: 'Обновить путь без ответов',
+    clarifyFirstHint:
+      'Ответьте ниже, чтобы уточнить план — или соберите путь без ответов. Полный план готовится в фоне.',
+    multiCommentLabel: 'Ваши ответы (выбранные варианты появляются здесь)',
+    multiCommentPlaceholder:
+      'Выбранные варианты появляются здесь — правьте или добавьте заметки…',
   },
   manualEdit: {
     titleCreate: 'Правка инструментов',

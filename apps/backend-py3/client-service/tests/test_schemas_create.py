@@ -1,8 +1,27 @@
 import pytest
 from pydantic import ValidationError
 
-from app.schemas.create_response import CreateLlmResponse
+from app.schemas.create_response import ClarifyQuestionWire, CreateLlmResponse
 from tests.factories import sample_create_path, sample_instant_answer
+
+
+def test_clarify_question_wire_selection_defaults_single():
+    q = ClarifyQuestionWire.model_validate(
+        {"id": "q1", "prompt": "Meat?", "options": ["a", "b"]}
+    )
+    assert q.selection == "single"
+
+
+def test_clarify_question_wire_selection_multi():
+    q = ClarifyQuestionWire.model_validate(
+        {
+            "id": "q1",
+            "prompt": "Prefs?",
+            "options": ["fast", "cheap"],
+            "selection": "multi",
+        }
+    )
+    assert q.selection == "multi"
 
 
 def test_path_branch_valid():

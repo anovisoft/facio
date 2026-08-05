@@ -8,6 +8,38 @@ import { PrimaryButton } from '@/shared/ui/PrimaryButton';
 import { useTheme } from '@/theme/ThemeContext';
 import { radii, spacing, typography } from '@/theme';
 
+const MULTI_JOIN = ', ';
+
+function parseMultiValue(value: string | undefined): string[] {
+  if (!value?.trim()) return [];
+  return value
+    .split(/,\s*/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function joinMulti(values: string[]): string {
+  return values.join(MULTI_JOIN);
+}
+
+/** Insert or remove a chip option inside the free-form comment canvas. */
+export function syncOptionIntoComment(
+  comment: string,
+  option: string,
+  selected: boolean,
+): string {
+  const parts = comment
+    .split(/,\s*|\n/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (selected) {
+    if (!parts.includes(option)) parts.push(option);
+  } else {
+    return parts.filter((p) => p !== option).join(MULTI_JOIN);
+  }
+  return parts.join(MULTI_JOIN);
+}
+
 type Props = {
   questions: ClarifyQuestion[];
   answers: Record<string, string>;
@@ -15,20 +47,24 @@ type Props = {
   disabled: boolean;
   /** Primary refine — gated on having answers or a comment. */
   canSubmit: boolean;
-  /** Skip CTA — available whenever refine is not busy / pathError. */
+  /** Skip / reveal CTA — available whenever not busy / pathError. */
   canSkip: boolean;
   pathWaiting: boolean;
+  /** clarify_first: skip reveals Intent plan (no empty refine). */
+  clarifyFirst: boolean;
   onSelectAnswer: (questionId: string, value: string) => void;
   onChangeComment: (value: string) => void;
   onSubmit: () => void;
-  /** Refine with empty answers + empty comment (build/update without answers). */
+  /**
+   * clarify_first → reveal background plan;
+   * after reveal → empty refine («update without answers»).
+   */
   onSkip: () => void;
 };
 
 /**
  * Clarifying turn in Plan Feed: optional chips + free-form note in one block.
- * Answers are never required — free-form alone can drive refine; skip CTA
- * always offers build/update without answering (#9).
+ * Questions-first (E2a-iterate): primary = submit answers; secondary = skip/reveal.
  */
 export function PlanFeedQuestions({
   questions,
@@ -38,6 +74,7 @@ export function PlanFeedQuestions({
   canSubmit,
   canSkip,
   pathWaiting,
+  clarifyFirst,
   onSelectAnswer,
   onChangeComment,
   onSubmit,
@@ -46,9 +83,32 @@ export function PlanFeedQuestions({
   const { t } = useTranslation();
   const { colors } = useTheme();
   const hasQuestions = questions.length > 0;
-  const skipLabel = pathWaiting
+  const hasMulti = questions.some((q) => q.selection === 'multi');
+  const skipLabel = clarifyFirst
     ? t('planFeed.buildWithoutAnswers')
-    : t('planFeed.updateWithoutAnswers');
+    : pathWaiting
+      ? t('planFeed.buildWithoutAnswers')
+      : t('planFeed.updateWithoutAnswers');
+  const commentPlaceholder = hasMulti
+    ? t('planFeed.multiCommentPlaceholder')
+    : hasQuestions
+      ? t('draft.commentPlaceholder')
+      : t('planFeed.composerPlaceholder');
+
+  const onChipSelect = (question: ClarifyQuestion, option: string) => {
+    if (question.selection === 'multi') {
+      const current = parseMultiValue(answers[question.id]);
+      const nextSelected = current.includes(option)
+        ? current.filter((v) => v !== option)
+        : [...current, option];
+      onSelectAnswer(question.id, joinMulti(nextSelected));
+      onChangeComment(
+        syncOptionIntoComment(comment, option, !current.includes(option)),
+      );
+      return;
+    }
+    onSelectAnswer(question.id, option);
+  };
 
   return (
     <View
@@ -62,24 +122,35 @@ export function PlanFeedQuestions({
           ? t('draft.clarifyLabel')
           : t('planFeed.composerLabel')}
       </Text>
-      {questions.map((question, index) => (
-        <View key={question.id} style={styles.questionBlock}>
-          <Text style={[styles.question, { color: colors.text }]}>
-            {index + 1}. {question.prompt}
-          </Text>
-          <ClarifyChips
-            options={question.options}
-            selected={answers[question.id] ?? null}
-            disabled={disabled}
-            allowCustom
-            customPlaceholder={t('draft.freeTextPlaceholder')}
-            onSelect={(option) => onSelectAnswer(question.id, option)}
-          />
-        </View>
-      ))}
+      {questions.map((question, index) => {
+        const mode = question.selection === 'multi' ? 'multi' : 'single';
+        return (
+          <View key={question.id} style={styles.questionBlock}>
+            <Text style={[styles.question, { color: colors.text }]}>
+              {index + 1}. {question.prompt}
+            </Text>
+            <ClarifyChips
+              options={question.options}
+              selection={mode}
+              selected={mode === 'single' ? answers[question.id] ?? null : null}
+              selectedValues={
+                mode === 'multi'
+                  ? parseMultiValue(answers[question.id])
+                  : undefined
+              }
+              disabled={disabled}
+              allowCustom={mode === 'single'}
+              customPlaceholder={t('draft.freeTextPlaceholder')}
+              onSelect={(option) => onChipSelect(question, option)}
+            />
+          </View>
+        );
+      })}
       {hasQuestions ? (
         <Text style={[styles.noteLabel, { color: colors.textMuted }]}>
-          {t('draft.commentLabel')}
+          {hasMulti
+            ? t('planFeed.multiCommentLabel')
+            : t('draft.commentLabel')}
         </Text>
       ) : null}
       <TextInput
@@ -87,7 +158,7 @@ export function PlanFeedQuestions({
         onChangeText={onChangeComment}
         editable={!disabled}
         multiline
-        placeholder={t('draft.commentPlaceholder')}
+        placeholder={commentPlaceholder}
         placeholderTextColor={colors.textMuted}
         style={[
           styles.input,
@@ -98,9 +169,14 @@ export function PlanFeedQuestions({
           },
         ]}
       />
-      {pathWaiting ? (
+      {pathWaiting && !clarifyFirst ? (
         <Text style={[styles.hint, { color: colors.textSecondary }]}>
           {t('draft.refineWaitPath')}
+        </Text>
+      ) : null}
+      {clarifyFirst && pathWaiting ? (
+        <Text style={[styles.hint, { color: colors.textSecondary }]}>
+          {t('planFeed.clarifyFirstHint')}
         </Text>
       ) : null}
       <PrimaryButton

@@ -11,7 +11,7 @@ import type {
   PlanFeedItem,
   PlanSnapshot,
 } from '@/features/guide/planFeed/types';
-import { useSessionStore } from '@/store';
+import { useSessionStore, type PlanRevealMode } from '@/store';
 
 let feedIdSeq = 0;
 function nextId(prefix: string): string {
@@ -23,33 +23,64 @@ function questionRoundKey(questions: ClarifyQuestion[]): string {
   return questions.map((q) => q.id).join('|');
 }
 
+function inferRevealMode(items: PlanFeedItem[]): PlanRevealMode {
+  if (items.some((i) => i.kind === 'plan_card')) return 'revealed';
+  const qItem = items.find((i) => i.kind === 'questions');
+  if (qItem && qItem.kind === 'questions' && qItem.questions.length > 0) {
+    return 'hidden';
+  }
+  return 'revealed';
+}
+
 /**
- * Append-only Plan Feed state for Create/Explore (Slice E2a).
+ * Append-only Plan Feed state for Create/Explore (Slice E2a / E2a-iterate).
  * Snapshots plan cards client-side; prior cards stay after refine.
  * Hydrates from session store so reopen keeps feed history.
+ * planRevealMode gates plan_card append during questions-first phase.
  */
 export function usePlanFeed(projectId: string) {
   const [items, setItems] = useState<PlanFeedItem[]>([]);
+  const [planRevealMode, setPlanRevealModeState] =
+    useState<PlanRevealMode>('hidden');
   const seededProjectRef = useRef<string | null>(null);
   const lastPlanFpRef = useRef<string | null>(null);
   const lastQuestionsKeyRef = useRef<string>('');
   const planCountRef = useRef(0);
   const pendingLoadingCardIdRef = useRef<string | null>(null);
+  const planRevealModeRef = useRef<PlanRevealMode>('hidden');
   const setPlanFeed = useSessionStore((s) => s.setPlanFeed);
   const clearPlanFeedStore = useSessionStore((s) => s.clearPlanFeed);
 
   const persistFeed = useCallback(
-    (nextItems: PlanFeedItem[]) => {
+    (nextItems: PlanFeedItem[], revealMode?: PlanRevealMode) => {
       if (!projectId || nextItems.length === 0) return;
+      const mode = revealMode ?? planRevealModeRef.current;
       setPlanFeed(projectId, {
         items: nextItems,
         lastPlanFp: lastPlanFpRef.current,
         lastQuestionsKey: lastQuestionsKeyRef.current,
         planCount: planCountRef.current,
+        planRevealMode: mode,
       });
     },
     [projectId, setPlanFeed],
   );
+
+  const setPlanRevealMode = useCallback(
+    (mode: PlanRevealMode) => {
+      planRevealModeRef.current = mode;
+      setPlanRevealModeState(mode);
+      setItems((prev) => {
+        if (prev.length > 0) persistFeed(prev, mode);
+        return prev;
+      });
+    },
+    [persistFeed],
+  );
+
+  const revealPlan = useCallback(() => {
+    setPlanRevealMode('revealed');
+  }, [setPlanRevealMode]);
 
   const reset = useCallback(() => {
     setItems([]);
@@ -58,6 +89,8 @@ export function usePlanFeed(projectId: string) {
     lastQuestionsKeyRef.current = '';
     planCountRef.current = 0;
     pendingLoadingCardIdRef.current = null;
+    planRevealModeRef.current = 'hidden';
+    setPlanRevealModeState('hidden');
   }, []);
 
   const clear = useCallback(() => {
@@ -108,6 +141,8 @@ export function usePlanFeed(projectId: string) {
             lastQuestionsKeyRef.current = stored.lastQuestionsKey;
             planCountRef.current = stored.planCount;
             next = stored.items;
+            planRevealModeRef.current =
+              stored.planRevealMode ?? inferRevealMode(stored.items);
           } else {
             lastPlanFpRef.current = null;
             lastQuestionsKeyRef.current = '';
@@ -128,6 +163,12 @@ export function usePlanFeed(projectId: string) {
                 { id: nextId('sense'), kind: 'sense', text: sense },
               ];
             }
+
+            // Questions-first: hide plan until skip or answered refine.
+            // Empty gate questions → reveal when ready (don't trap).
+            const gateQuestions = project.questions ?? [];
+            planRevealModeRef.current =
+              gateQuestions.length > 0 ? 'hidden' : 'revealed';
           }
         } else {
           // Sense may arrive after soft-start gate.
@@ -151,10 +192,17 @@ export function usePlanFeed(projectId: string) {
           }
         }
 
+        const questions = project.questions ?? [];
+        // No questions from gate/refine: never trap in clarify_first.
+        if (questions.length === 0 && planRevealModeRef.current === 'hidden') {
+          planRevealModeRef.current = 'revealed';
+        }
+
+        const allowPlanCards = planRevealModeRef.current === 'revealed';
         const ready = isPathReady(project);
         const pathError = project.path_error ?? null;
 
-        if (ready || pathError) {
+        if (allowPlanCards && (ready || pathError)) {
           const snapshot = capturePlanSnapshot(project);
           const fp = planContentFingerprint(snapshot);
           const loadingId = pendingLoadingCardIdRef.current;
@@ -215,12 +263,13 @@ export function usePlanFeed(projectId: string) {
             });
           }
         } else if (
+          allowPlanCards &&
           !ready &&
           !pathError &&
           planCountRef.current === 0 &&
           !pendingLoadingCardIdRef.current
         ) {
-          // Soft-start: show outline card while #2 Path builds.
+          // Soft-start outline only after reveal (skip) — not in clarify_first.
           planCountRef.current = 1;
           const loadingId = nextId('plan');
           pendingLoadingCardIdRef.current = loadingId;
@@ -233,7 +282,7 @@ export function usePlanFeed(projectId: string) {
               snapshot: capturePlanSnapshot(project),
             },
           ]);
-        } else if (pendingLoadingCardIdRef.current) {
+        } else if (allowPlanCards && pendingLoadingCardIdRef.current) {
           // Keep outline days fresh while polling.
           const loadingId = pendingLoadingCardIdRef.current;
           const snapshot = capturePlanSnapshot(project);
@@ -246,14 +295,10 @@ export function usePlanFeed(projectId: string) {
           );
         }
 
-        const questions = project.questions ?? [];
-
         // Clarify can appear during soft-start (#1) before Path v1 is ready —
         // do not gate chips on pathReady (PO dogfood). Notes-only block waits
-        // until a plan card exists. Refine still waits for path in Explore.
+        // until a plan card exists (or clarify_first with questions).
         // Always place questions after the latest plan card (end of that step).
-        // Soft-start may show questions while path loads; once a new plan
-        // appends, re-append questions below it even if roundKey is unchanged.
         const upsertQuestionsItem = (
           qKey: string,
           qs: ClarifyQuestion[],
@@ -282,16 +327,18 @@ export function usePlanFeed(projectId: string) {
 
         if (questions.length > 0) {
           upsertQuestionsItem(questionRoundKey(questions), questions);
-        } else if (ready || pathError) {
+        } else if (allowPlanCards && (ready || pathError)) {
           upsertQuestionsItem('notes-only', []);
         } else if (lastQuestionsKeyRef.current === 'notes-only') {
           ensure((list) => list.filter((i) => i.kind !== 'questions'));
           lastQuestionsKeyRef.current = '';
         }
 
-        persistFeed(next);
+        persistFeed(next, planRevealModeRef.current);
         return next;
       });
+
+      setPlanRevealModeState(planRevealModeRef.current);
     },
     [persistFeed],
   );
@@ -315,6 +362,8 @@ export function usePlanFeed(projectId: string) {
 
   return {
     items,
+    planRevealMode,
+    revealPlan,
     appendUserTurn,
     syncFromProject,
     updatePlanCard,

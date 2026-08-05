@@ -158,7 +158,9 @@ _PATH_FIELDS = """\
   - Do NOT emit timers[], timeline, interval_plan, counter, or stepper \
     objects on Path — hints only.
 - questions[]: 0 or 2–4 (max 4) clarifies that change the path; not an interview. \
-  Emit the full batch for one round — user answers all at once.
+  Emit the full batch for one round — user answers all at once. \
+  Each question: id, prompt, options[], selection ("single" | "multi"; \
+  default single). Choose multi when several options may apply together.
 - Do NOT emit resources[] or milestones[] (server defaults to []).
 """
 
@@ -245,7 +247,9 @@ Match user language.
   - title: short plan hero (≤ ~120 chars)
   - summary: 1–3 sentences draft of what the cycle delivers (never empty)
   - questions: 0 or 2–4 clarifies that change the plan (full batch; not interview)
-    Each: id, prompt, options[] (2–4 chips; user may still type free text)
+    Each: id, prompt, options[] (2–4 chips; user may still type free text), \
+    selection: "single" (one chip) or "multi" (several may apply — choose \
+    per question; default single)
   - outline_days: rough day TITLES for THIS cycle only — ≤7 short strings \
     (fitness/push-ups week → exactly 7, one per day; carbonara → 1), \
     e.g. ["Вечер готовки"] or ["Силовая A","Отдых",…]. If the goal spans \
@@ -306,7 +310,9 @@ Rules:
 - Preserve action/group ids when the step is the same; do not reshuffle \
   the whole path without cause. New/replaced steps may get new ids.
 - Keep every action.why non-empty and meaningful.
-- questions[]: only still-useful clarifies (0 or 2–4, max 4); else [].
+- questions[]: only still-useful clarifies (0 or 2–4, max 4); else []. \
+  Each still-useful question may set selection "single"|"multi" \
+  (default single) when several chips can apply together.
 - Soft cap ≤ 8–12 actions; first remaining step still doable soon.
 - Match user language.
 

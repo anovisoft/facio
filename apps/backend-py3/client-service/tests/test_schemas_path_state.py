@@ -36,6 +36,32 @@ def test_empty_questions_ok():
     assert state.questions == []
 
 
+def test_clarify_selection_defaults_to_single():
+    state = PathState.model_validate(sample_path_state())
+    assert all(q.selection == "single" for q in state.questions)
+
+
+def test_clarify_selection_multi_accepted():
+    payload = sample_path_state()
+    payload["questions"] = [
+        {
+            "id": "q_prefs",
+            "prompt": "Что важно?",
+            "options": ["быстро", "бюджет", "вкусно"],
+            "selection": "multi",
+        },
+        {
+            "id": "q_when",
+            "prompt": "Когда готовите?",
+            "options": ["сегодня", "завтра"],
+            "selection": "single",
+        },
+    ]
+    state = PathState.model_validate(payload)
+    assert state.questions[0].selection == "multi"
+    assert state.questions[1].selection == "single"
+
+
 def test_unknown_group_id_rejected():
     payload = sample_path_state()
     payload["actions"][0]["group_id"] = "missing"

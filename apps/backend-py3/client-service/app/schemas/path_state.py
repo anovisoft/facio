@@ -464,6 +464,13 @@ class ClarifyQuestion(BaseModel):
         default_factory=list,
         description="Chip options; user may still type free text.",
     )
+    selection: Literal["single", "multi"] = Field(
+        default="single",
+        description=(
+            "Chip selection mode: single = one option (radio); "
+            "multi = several options may be selected."
+        ),
+    )
 
 
 def _default_horizon_days(domain: str | None, actions: list) -> int:

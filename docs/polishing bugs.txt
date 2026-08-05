@@ -12,7 +12,7 @@ Source dogfood notes. Status routed into Facio 0.1 slices. Canon: `docs/Facio 0.
 | 6 | Stepper state resets when leaving Session → Continue → back | **done** (Slice D) | same-day `blockRuntimeByActionId` |
 | 7 | Recompose Session: title → day N/M → large Block → why lower | **done** (Slice D) | Session Stage layout |
 | 8 | Rest / day-kind copy is fitness-flavored for all domains (e.g. drawing Guide rest: «без силовой нагрузки»; «Тренировка» on art days) | **→ Slice G** (copy) or create `#2` prompt pass — not D | `path.restEmpty`, `dayKind.*`, LLM day titles |
-| 9 | Create: user didn’t see expandable plan; answered questions but never hit «Update path» | **landed** E2a-iterate (await PO dogfood) | Plan expanded by default + skip without answers |
+| 9 | Create: user didn’t see expandable plan; answered questions but never hit «Update path» | **landed** E2a-iterate (await PO dogfood) | Qs first + bg #2; skip→plan+Qs; answers→refine; selection |
 | 10 | Active: Manual remove ingredient → expected whole plan cascade; couldn’t find path back to plan dialog | **→ E2c** (+ entry polish) | AI Feed «Save with AI»; pencil/back → Edit; Diff + preserve progress |
 
 ## External dogfood (2026-08-05) — triage

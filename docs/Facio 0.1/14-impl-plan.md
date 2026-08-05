@@ -140,21 +140,29 @@ Canon: [15](./15-edit-surfaces.md).
 
 ---
 
-## Slice E2a-iterate — Create Plan Feed discoverability (#9)
+## Slice E2a-iterate — Create questions-first + background path (#9)
 
-**Goal:** External tester could not expand the plan and answered questions without pressing refine. Make Create feel stepped and obvious.
+**Goal:** First screen after Intent is **questions**, not the plan. Background `#2` for latency. Chip mode `single|multi` from AI.
 
-**DoD (from tester + PM):**
+**Locked PO (2026-08-05):**
 
-1. **Plan detail expanded by default** on every plan card (`PathList` visible; collapse optional, not required to discover).
-2. **Stepped clarify:** when clarifying questions exist, present them as a clear step with primary CTA to refine **and** a secondary **«Build / update path without answers»** (empty answers + empty comment allowed) so refine is never a hidden requirement.
-3. After a plan card is ready, questions sit **below** that plan (end of the step), not competing as the only visible surface while the plan looks “closed”.
-4. i18n en/ru for the skip/build-without-answers control.
-5. Preserve: append-only feed, Start CTA on card, MMKV history, Manual «Edit tools», progressive `#1/#2/#3`. Do not start Active AI Feed (E2c).
+1. **Background `#2`** while questions show (gate already starts it — keep; UI hides plan until user acts).
+2. **Skip** → reveal Intent-only plan when ready; **same questions under that plan**.
+3. **Answered** → wait `#2` if needed → **refine** → show that plan (**no** Intent-plan flash).
+4. AI sets per-question **`selection`: `single` | `multi`** (default `single`). Multi may auto-insert into free-form; adjust placeholder.
+5. Plan **expanded by default** when shown. LLM call model unchanged (`current_state` per mutation — no multi-turn agent session). Compact history into refine = parked.
 
-**Non-goals:** Server-side feed turns; Active pencil/Save-with-AI (#10 → E2c); inventing new Block types.
+**DoD:**
 
-**PO dogfood:** Create Guide → see full plan without hunting expand → answer or skip questions → path updates → Start from card.
+- Explore phase `clarify_first` until skip **or** first refine-with-answers; hide plan cards (incl. soft-start outline) in that phase.
+- Primary CTA = submit answers/free-form → refine → plan. Secondary = «Build path without answers» → reveal background plan + questions below.
+- `ClarifyQuestion` (+ gate wire, path_state, client types, chips) supports `selection`.
+- i18n en/ru for skip + free-form placeholder.
+- Preserve append-only feed, Start on card, MMKV, Manual Edit tools, `#1/#2/#3`. No E2c. Tiny `selection` enum only — no Path+plugins grammar merge.
+
+**Non-goals:** Compact LLM history; server feed turns; Active AI Feed (#10).
+
+**PO dogfood:** Create → questions only → skip sees Intent plan+Qs **or** answer → plan matches answers; multi allows several chips.
 
 ---
 

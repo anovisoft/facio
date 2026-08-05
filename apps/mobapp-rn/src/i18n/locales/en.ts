@@ -113,6 +113,11 @@ export default {
     composerPlaceholder: 'Extra constraints, preferences, notes…',
     buildWithoutAnswers: 'Build path without answers',
     updateWithoutAnswers: 'Update path without answers',
+    clarifyFirstHint:
+      'Answer below to shape the plan — or build the path without answers. The full plan is preparing in the background.',
+    multiCommentLabel: 'Your answers (selected options appear here)',
+    multiCommentPlaceholder:
+      'Selected options appear here — edit or add notes…',
   },
   manualEdit: {
     titleCreate: 'Edit tools',

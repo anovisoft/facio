@@ -62,10 +62,14 @@ export type ClientBeaconType =
   | 'path_opened'
   | 'project_switched';
 
+export type ClarifySelection = 'single' | 'multi';
+
 export interface ClarifyQuestion {
   id: string;
   prompt: string;
   options: string[];
+  /** Chip mode from AI; omit/undefined treated as single. */
+  selection?: ClarifySelection;
 }
 
 export interface RefineAnswerItem {

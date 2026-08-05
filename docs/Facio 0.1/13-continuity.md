@@ -12,7 +12,7 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 |-------|--------|
 | Product vector | Facio 0.1 locked — **Guide / Continue / Session** + Hero/Full/Compact + **Plan Feed · Manual · Micro** ([15](./15-edit-surfaces.md)) |
 | Prototype engine | `apps/` ≈ `docs/next` slices 1–5 **accepted** |
-| Facio 0.1 shell | **A–E2b accepted**. **E2a-iterate landed** (await PO dogfood #9). Next after accept = **E2c** (#10) → F → G |
+| Facio 0.1 shell | **A–E2b accepted**. **E2a-iterate re-impl landed** (await PO dogfood). Then **E2c** → F → G |
 | Edit surfaces lock | Create = Plan Feed + Manual (CTA on plan card, no sticky Start). Active = Manual + Micro + AI Feed. Canon [15](./15-edit-surfaces.md) |
 | Carbonara / multi-Session same day | Same-day **Back/Next = browse**; **Done** completes live step (assurance); last Done → Continue |
 | Fitness multi-day E2E | Daily sticky **Done** + assurance; kebab Postpone (deterministic); deferred calendar week / **H** |
@@ -24,11 +24,13 @@ Working memory across sessions. Product canon = `01`–`11`. Process = [12](./12
 ## After summarization — PM start here
 
 1. Read [README](./README.md) → [15](./15-edit-surfaces.md) → [11](./11-success-systems.md) (§5–6 Diff/Undo, §9) → **this file** → [14](./14-impl-plan.md).  
-2. **E2a-iterate landed** (await PO dogfood). On accept → dispatch **E2c**.  
+2. **E2a-iterate** re-spec (PO 2026-08-05): questions-first, background `#2`, skip→Intent plan+Qs, answers→refine plan, AI `selection` single|multi. LLM session model unchanged.  
+
 
 3. Do **not** invent D1–D8 / deferred parked items.  
 4. Do **not** reopen Guides reveal (`useGuidesRevealGesture`, `useNativeDriver: false`) unless PO reports regress.  
-5. Do **not** expand Anthropic schemas. Repair landmines (lighten/rest strip plugins) still apply — E APIs backbone of E2c.  
+5. Do **not** expand Anthropic schemas beyond E2a-iterate’s tiny clarify `selection` enum. Repair landmines (lighten/rest strip plugins) still apply — E APIs backbone of E2c.  
+
 6. Plan Feed history is **client MMKV** only — server-side turns = known follow-up (not blocking E2c unless PO prioritizes).
 
 ---
@@ -157,7 +159,7 @@ One-liner: **Guide determines the path. Continue determines the focus. Session e
 | — | Session chrome cleanup | **accepted** (PO 2026-08-05) |
 | E2a | Create Plan Feed | **accepted** (PO 2026-08-05) |
 | E2b | Manual editor (all tools) | **accepted** (PO 2026-08-05; checklist drag UI polish included) |
-| E2a-iterate | Create Plan Feed discoverability (#9) | **landed** (await PO dogfood) |
+| E2a-iterate | Create questions-first + bg path + selection (#9) | **landed** (await PO dogfood) |
 | E2c | Active AI Feed + Diff (#10) | **next** after E2a-iterate accept |
 | F | Identity + Finish Experience | pending (after E2*) |
 | G | Copy / IA kill / Morning Summary (+ #8) | pending |
@@ -221,16 +223,31 @@ Shared Manual for closed Block tools. Create: plan card «Edit tools». Active: 
 
 | # | Finding | Bucket | Slice |
 |---|---------|--------|-------|
-| 9 | Create: didn’t expand plan; answered Qs but never «Update path» | Create polish | **E2a-iterate** — questions-first step + skip «build without answers»; plan cards **expanded by default** |
+| 9 | Create: didn’t expand plan; answered Qs but never «Update path» | Create polish | **E2a-iterate** — questions-first + bg `#2` + skip/answer branches + `selection` |
 | 10 | Manual removed ingredient; expected whole-plan cascade; no path back to plan dialog | Product gap = E2c | **E2c** — pencil/back → Edit/AI Feed; Manual **«Save with AI»** seeds rebuild; Diff + accept with progress preserve |
 
 **PM read:** #10 is exactly why Active AI Feed exists — Manual alone patches tools, not the narrative path. #9 is Create UX, not E2c.
 
+### E2a-iterate lock (PO 2026-08-05) — replacing prior expand-only pass
+
+```text
+Intent → gate (#1) → questions FIRST (sense OK)
+         └─ background #2 Path (hidden until user acts)
+
+A) Answer / free-form → wait #2 → refine → show plan (no Intent-plan flash)
+B) Skip «without answers» → reveal Intent-only plan when ready
+                           → same questions under that plan
+```
+
+- Per-question `selection`: `single` | `multi` from AI (default single).
+- Plan expanded when shown. No change to LLM “session” (still `current_state` per call).
+- Compact history into refine prompts = **parked** (PO).
+
 ### E2a-iterate — landed (await PO dogfood)
 
-Create discoverability (#9): plan `PathList` **expanded by default**; secondary **Build/Update without answers** (empty refine allowed client+API); questions always re-appended **below** latest plan card. Code: `planFeed/*`, i18n `planFeed.buildWithoutAnswers` / `updateWithoutAnswers`, schema empty refine + `test_schemas_refine.py`.
+Questions-first Create; `planRevealMode` hidden→revealed (MMKV); skip reveals Intent plan (no empty refine); answers wait `#2`→refine→reveal (no flash); `selection` single|multi schema→chips; plan expanded when shown. Code: `planFeed/*`, `ClarifyChips`, backend clarify `selection` + prompts. Tests: anthropic/schema selection (18).
 
 ### Pending
 
-1. PO dogfood E2a-iterate → accept → dispatch **E2c**.  
-2. Known parked: server-side Plan Feed turns; #8 → G; offline P5.
+1. PO dogfood E2a-iterate → accept → **E2c**.  
+2. Known parked: server-side Plan Feed turns; compact refine history; #8 → G; offline P5.
