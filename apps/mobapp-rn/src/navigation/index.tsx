@@ -12,6 +12,7 @@ import { GuideScreen } from '@/features/guide/GuideScreen';
 import { ProjectHomeScreen } from '@/features/home/ProjectHomeScreen';
 import { InstantAnswerScreen } from '@/features/intent/InstantAnswerScreen';
 import { IntentScreen } from '@/features/intent/IntentScreen';
+import { ActiveAiFeedScreen } from '@/features/aiFeed/ActiveAiFeedScreen';
 import { ManualEditScreen } from '@/features/manualEdit/ManualEditScreen';
 import { HistoryScreen } from '@/features/projects/HistoryScreen';
 import { SettingsScreen } from '@/features/settings/SettingsScreen';
@@ -88,6 +89,7 @@ export default function AppNavigator() {
         />
         <Stack.Screen name="Guide" component={GuideScreen} />
         <Stack.Screen name="ManualEdit" component={ManualEditScreen} />
+        <Stack.Screen name="ActiveAiFeed" component={ActiveAiFeedScreen} />
         <Stack.Screen name="Archive" component={HistoryScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
       </Stack.Navigator>

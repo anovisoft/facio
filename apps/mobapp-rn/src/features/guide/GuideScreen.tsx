@@ -139,17 +139,37 @@ export function GuideScreen({ navigation, route }: Props) {
   const showDetail = pathReady && detailExpanded;
 
   const stickyFooter = fromSession ? (
-    <PrimaryButton
-      variant="secondary"
-      label={t('guide.backToSession')}
-      onPress={() => navigation.goBack()}
-    />
-  ) : project.next_action ? (
-    <PrimaryButton
-      label={t('guide.startSession')}
-      onPress={onStartSession}
-    />
-  ) : null;
+    <View style={styles.footerCol}>
+      <PrimaryButton
+        variant="secondary"
+        label={t('guide.editPlan')}
+        onPress={() =>
+          navigation.navigate('ActiveAiFeed', { projectId: project.id })
+        }
+      />
+      <PrimaryButton
+        variant="ghost"
+        label={t('guide.backToSession')}
+        onPress={() => navigation.goBack()}
+      />
+    </View>
+  ) : (
+    <View style={styles.footerCol}>
+      <PrimaryButton
+        variant="secondary"
+        label={t('guide.editPlan')}
+        onPress={() =>
+          navigation.navigate('ActiveAiFeed', { projectId: project.id })
+        }
+      />
+      {project.next_action ? (
+        <PrimaryButton
+          label={t('guide.startSession')}
+          onPress={onStartSession}
+        />
+      ) : null}
+    </View>
+  );
 
   return (
     <SafeScreen scroll footer={stickyFooter}>
@@ -215,5 +235,8 @@ const styles = StyleSheet.create({
   },
   muted: {
     ...typography.caption,
+  },
+  footerCol: {
+    gap: spacing.sm,
   },
 });

@@ -1,6 +1,10 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import type { InstantAnswerResponse, ProjectDetail } from '@/api/types';
+import type {
+  InstantAnswerResponse,
+  ProjectDetail,
+  RepairIntent,
+} from '@/api/types';
 
 /**
  * Facio 0.1 IA routes (Slice A+C).
@@ -49,6 +53,19 @@ export type RootStackParamList = {
     planIndex?: number;
     /** Limit editor to this path-state action id (Create Block Edit + Active Session). */
     actionKey?: string | null;
+  };
+  /**
+   * Active AI Feed — repair lenta + Diff apply (Slice E2c).
+   * Entry from ManualEdit / Guide Edit plan — not Session Execute chrome.
+   */
+  ActiveAiFeed: {
+    projectId: string;
+    /** Seeds first preview (e.g. after Manual «Rebuild with AI»). */
+    seedReason?: string | null;
+    /** Auto-run intent chip preview on open. */
+    initialIntent?: RepairIntent | null;
+    /** When false, hide Manual tools link (opened from Manual already). */
+    openManual?: boolean;
   };
   Archive: undefined;
   Settings: undefined;
