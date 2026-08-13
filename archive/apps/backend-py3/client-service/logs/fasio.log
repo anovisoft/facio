@@ -1,0 +1,1090 @@
+2026-08-05 03:52:31,590 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-08-05 03:52:31,592 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-08-05 03:52:49,619 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:52:49,619 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:52:49,629 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:53:24,505 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:53:24,512 - app - INFO - GET /api/v1/projects/8ae6483a-9917-4f1b-9b77-30329a9ae848 → 200
+2026-08-05 03:53:24,557 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:53:27,976 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:53:32,620 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:53:32,642 - app - INFO - GET /api/v1/projects/ad8468cd-aba3-4177-b807-73e8d0d5ad14 → 200
+2026-08-05 03:53:32,680 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:53:34,750 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:53:51,039 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:53:51,044 - app - INFO - GET /api/v1/projects/0bef7ca9-f873-4436-b5bf-76d507c7bcd8 → 200
+2026-08-05 03:53:51,065 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:53:52,426 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:53:53,627 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:53:53,635 - app - INFO - GET /api/v1/projects/8ae6483a-9917-4f1b-9b77-30329a9ae848 → 200
+2026-08-05 03:53:53,668 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:53:55,151 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:53:55,608 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:53:55,635 - app - INFO - GET /api/v1/projects/0bef7ca9-f873-4436-b5bf-76d507c7bcd8 → 200
+2026-08-05 03:53:55,670 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:54:26,646 - app - INFO - POST /api/v1/checklist-items/f74229a5-5831-4a60-b6c7-5e6ba584965b/toggle → 200
+2026-08-05 03:54:26,647 - app - INFO - POST /api/v1/checklist-items/bccd4077-bdc0-4cf8-b17c-e9e73184a328/toggle → 200
+2026-08-05 03:54:26,649 - app - INFO - POST /api/v1/checklist-items/aaadd2ca-b396-4f35-b34e-ac783c14100d/toggle → 200
+2026-08-05 03:54:26,663 - app - INFO - POST /api/v1/checklist-items/96dd8e44-a095-4d56-bf21-c8282df60051/toggle → 200
+2026-08-05 03:54:26,709 - app - INFO - POST /api/v1/actions/b3e35b97-8ca9-45d8-97cf-e4b12d192ebe/complete → 200
+2026-08-05 03:54:26,747 - app - INFO - GET /api/v1/projects/0bef7ca9-f873-4436-b5bf-76d507c7bcd8 → 200
+2026-08-05 03:54:26,817 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:54:26,818 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:54:37,843 - app - INFO - GET /api/v1/projects/8ae6483a-9917-4f1b-9b77-30329a9ae848 → 200
+2026-08-05 03:54:37,847 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:54:37,891 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:54:41,639 - app - INFO - POST /api/v1/projects/8ae6483a-9917-4f1b-9b77-30329a9ae848/abandon → 200
+2026-08-05 03:54:41,741 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:54:41,744 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:54:45,700 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:54:47,308 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:54:49,496 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:54:52,119 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:54:53,307 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:54:53,335 - app - INFO - GET /api/v1/projects/b8faa082-cf9b-41b0-95ed-21741bd42da7 → 200
+2026-08-05 03:54:53,384 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:54:55,006 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:54:57,330 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:54:57,364 - app - INFO - GET /api/v1/projects/b8faa082-cf9b-41b0-95ed-21741bd42da7 → 200
+2026-08-05 03:54:57,413 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:55:09,623 - app - INFO - POST /api/v1/checklist-items/61f5f977-601e-4f88-ad1e-5875efcbed89/toggle → 200
+2026-08-05 03:55:09,624 - app - INFO - POST /api/v1/checklist-items/c31762c0-020c-44fc-af23-1197421af140/toggle → 200
+2026-08-05 03:55:09,624 - app - INFO - POST /api/v1/checklist-items/f7b24409-812c-4ce2-9dc0-63442d033c89/toggle → 200
+2026-08-05 03:55:09,660 - app - INFO - POST /api/v1/actions/571ec925-57d9-4ca8-a4fe-ac060c68049a/complete → 200
+2026-08-05 03:55:09,682 - app - INFO - GET /api/v1/projects/b8faa082-cf9b-41b0-95ed-21741bd42da7 → 200
+2026-08-05 03:55:09,718 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:55:09,760 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:55:09,763 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:55:14,983 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:55:15,018 - app - INFO - GET /api/v1/projects/b8faa082-cf9b-41b0-95ed-21741bd42da7 → 200
+2026-08-05 03:55:15,075 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:55:26,781 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:55:39,222 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:55:39,252 - app - INFO - GET /api/v1/projects/b8faa082-cf9b-41b0-95ed-21741bd42da7 → 200
+2026-08-05 03:55:39,294 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:55:42,206 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:55:42,908 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:55:42,944 - app - INFO - GET /api/v1/projects/b8faa082-cf9b-41b0-95ed-21741bd42da7 → 200
+2026-08-05 03:55:42,986 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:55:50,031 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:55:53,676 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:55:53,710 - app - INFO - GET /api/v1/projects/b8faa082-cf9b-41b0-95ed-21741bd42da7 → 200
+2026-08-05 03:55:53,842 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:55:54,823 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:55:55,788 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:55:55,822 - app - INFO - GET /api/v1/projects/b8faa082-cf9b-41b0-95ed-21741bd42da7 → 200
+2026-08-05 03:55:55,867 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:56:13,504 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:56:13,983 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:56:14,038 - app - INFO - GET /api/v1/projects/5b12abaf-4ec3-4a64-bc2f-e9b0a9e0c785 → 200
+2026-08-05 03:56:14,097 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:56:17,687 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:56:17,887 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:56:17,892 - app - INFO - GET /api/v1/projects/b8faa082-cf9b-41b0-95ed-21741bd42da7 → 200
+2026-08-05 03:56:17,922 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:56:52,101 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:56:52,124 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:56:52,124 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:56:55,800 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:56:55,844 - app - INFO - GET /api/v1/projects/b8faa082-cf9b-41b0-95ed-21741bd42da7 → 200
+2026-08-05 03:56:55,944 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:57:04,377 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:58:40,293 - app - INFO - GET /api/v1/projects/b8faa082-cf9b-41b0-95ed-21741bd42da7 → 200
+2026-08-05 03:58:40,297 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:58:40,369 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:58:51,171 - app - INFO - GET /api/v1/projects/b8faa082-cf9b-41b0-95ed-21741bd42da7 → 200
+2026-08-05 03:58:51,208 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:58:53,718 - app - INFO - GET /api/v1/projects/b8faa082-cf9b-41b0-95ed-21741bd42da7 → 200
+2026-08-05 03:59:01,901 - app - INFO - POST /api/v1/actions/39101be7-9867-47f0-a3d8-817cf50eae26/skip → 200
+2026-08-05 03:59:01,934 - app - INFO - GET /api/v1/projects/b8faa082-cf9b-41b0-95ed-21741bd42da7 → 200
+2026-08-05 03:59:01,966 - app - INFO - POST /api/v1/events → 201
+2026-08-05 03:59:11,332 - app.path - INFO - postpone_day project=b8faa082-cf9b-41b0-95ed-21741bd42da7 from_day=1 keys=['a2_card_redesign'] version=3
+2026-08-05 03:59:11,338 - app - INFO - POST /api/v1/projects/b8faa082-cf9b-41b0-95ed-21741bd42da7/postpone-day → 200
+2026-08-05 03:59:11,433 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:59:11,440 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 03:59:14,126 - app - INFO - GET /api/v1/projects/b8faa082-cf9b-41b0-95ed-21741bd42da7 → 200
+2026-08-05 03:59:15,720 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 04:21:32,986 - app - INFO - GET /api/v1/projects/0bef7ca9-f873-4436-b5bf-76d507c7bcd8 → 200
+2026-08-05 04:21:32,991 - app - INFO - POST /api/v1/events → 201
+2026-08-05 04:21:33,039 - app - INFO - POST /api/v1/events → 201
+2026-08-05 04:21:35,259 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 04:21:38,648 - app - INFO - POST /api/v1/events → 201
+2026-08-05 04:21:38,649 - app - INFO - GET /api/v1/projects/ad8468cd-aba3-4177-b807-73e8d0d5ad14 → 200
+2026-08-05 04:21:38,684 - app - INFO - POST /api/v1/events → 201
+2026-08-05 04:21:41,013 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 04:21:46,368 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 04:21:52,853 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 04:22:12,463 - app - INFO - POST /api/v1/events → 201
+2026-08-05 04:22:12,467 - app - INFO - GET /api/v1/projects/ad8468cd-aba3-4177-b807-73e8d0d5ad14 → 200
+2026-08-05 04:22:12,504 - app - INFO - POST /api/v1/events → 201
+2026-08-05 04:22:13,970 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 04:22:23,865 - app - INFO - POST /api/v1/events → 201
+2026-08-05 04:22:23,870 - app - INFO - GET /api/v1/projects/ad8468cd-aba3-4177-b807-73e8d0d5ad14 → 200
+2026-08-05 04:22:23,907 - app - INFO - POST /api/v1/events → 201
+2026-08-05 04:22:31,178 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 04:22:44,900 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 04:22:46,028 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 04:22:56,261 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 04:23:02,468 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 04:23:02,829 - app - INFO - GET /api/v1/projects/ad8468cd-aba3-4177-b807-73e8d0d5ad14 → 200
+2026-08-05 04:23:02,832 - app - INFO - POST /api/v1/events → 201
+2026-08-05 04:23:02,862 - app - INFO - POST /api/v1/events → 201
+2026-08-05 04:23:05,359 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 04:23:07,052 - app - INFO - POST /api/v1/events → 201
+2026-08-05 04:23:07,057 - app - INFO - GET /api/v1/projects/ad8468cd-aba3-4177-b807-73e8d0d5ad14 → 200
+2026-08-05 04:23:07,101 - app - INFO - POST /api/v1/events → 201
+2026-08-05 04:23:09,162 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 04:23:09,357 - app - INFO - POST /api/v1/events → 201
+2026-08-05 04:23:09,379 - app - INFO - GET /api/v1/projects/ad8468cd-aba3-4177-b807-73e8d0d5ad14 → 200
+2026-08-05 04:23:09,413 - app - INFO - POST /api/v1/events → 201
+2026-08-05 04:23:19,696 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:11:32,084 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:17:35,802 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-08-05 06:17:35,802 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-08-05 06:17:50,631 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:17:50,632 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:17:50,636 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:18:03,579 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 06:18:03,641 - app.path - INFO - create path start user=4969f13f-74c0-41dd-9e59-facec3b2497b project=24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 version=1 outcome='Карбонара на ужин' gate_llm=762d22be-7e6d-43e6-adb5-c8008a52cd67 path_ready=false
+2026-08-05 06:18:03,642 - app - INFO - POST /api/v1/projects → 200
+2026-08-05 06:18:03,821 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:18:05,341 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:18:06,840 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:18:08,368 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:18:09,896 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:18:11,341 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:18:12,880 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:18:14,336 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:18:15,848 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:18:17,383 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:18:18,844 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:18:20,348 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:18:21,853 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:18:23,338 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:18:24,859 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:18:25,674 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 06:18:25,706 - app.path - INFO - create path ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 version=2 outcome='Приготовить карбонару дома' gate_llm=762d22be-7e6d-43e6-adb5-c8008a52cd67 path_llm=8e8f7463-4f70-409b-9408-2679caaf4e5f
+2026-08-05 06:18:26,358 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:18:26,422 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:22:41,682 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:22:51,914 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:22:53,175 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:22:53,203 - app - INFO - GET /api/v1/projects/5b12abaf-4ec3-4a64-bc2f-e9b0a9e0c785 → 200
+2026-08-05 06:22:53,235 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:22:54,550 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:24:22,450 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:24:22,458 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:24:22,460 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:24:31,186 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 06:24:31,214 - app.path - INFO - create path start user=4969f13f-74c0-41dd-9e59-facec3b2497b project=0e056542-93af-4657-a8bd-dd3d2add9bbc version=1 outcome='Карбонара на ужин' gate_llm=1725f5f5-862d-419f-8247-d6b3a273273a path_ready=false
+2026-08-05 06:24:31,215 - app - INFO - POST /api/v1/projects → 200
+2026-08-05 06:24:31,325 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:24:32,837 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:24:34,333 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:24:35,841 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:24:37,366 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:24:38,835 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:24:40,373 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:24:41,846 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:24:43,340 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:24:44,882 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:24:45,271 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 06:24:45,289 - app.path - INFO - create path ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=0e056542-93af-4657-a8bd-dd3d2add9bbc version=2 outcome='Приготовить карбонару дома' gate_llm=1725f5f5-862d-419f-8247-d6b3a273273a path_llm=e97d377e-39c3-4ce2-ae04-e041bb153e81
+2026-08-05 06:24:46,352 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:24:46,422 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:25:44,800 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 06:25:44,824 - app.path - INFO - refine project=0e056542-93af-4657-a8bd-dd3d2add9bbc version=3 answers=['meat', 'servings'] has_comment=True
+2026-08-05 06:25:44,834 - app - INFO - POST /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc/refine → 200
+2026-08-05 06:26:22,101 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:26:26,742 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:26:26,768 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:26:26,806 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:26:33,607 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:26:41,074 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:26:41,131 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:26:41,138 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:26:42,891 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:26:42,921 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:26:42,959 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:27:33,989 - app - INFO - POST /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc/commit → 200
+2026-08-05 06:27:34,101 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:27:34,129 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:27:35,686 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:27:37,324 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:27:38,960 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:27:40,605 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:27:42,238 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:27:43,983 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:27:44,189 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 06:27:44,227 - app.path - INFO - plugins ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=0e056542-93af-4657-a8bd-dd3d2add9bbc version=4 llm=c10a74b3-e872-4fcd-bf81-75ee93c1b514
+2026-08-05 06:27:44,232 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:27:45,667 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:27:55,468 - app - INFO - POST /api/v1/checklist-items/8cabaf7d-3c48-4fc5-a672-bbdbed01fbe6/toggle → 200
+2026-08-05 06:27:55,469 - app - INFO - POST /api/v1/checklist-items/54974136-eef8-4a9e-aeae-989c145931c2/toggle → 200
+2026-08-05 06:27:55,469 - app - INFO - POST /api/v1/checklist-items/0c59da0a-2a04-4402-a20c-7fe597b0e0a2/toggle → 200
+2026-08-05 06:27:55,469 - app - INFO - POST /api/v1/checklist-items/bdf19471-7be8-42d5-a1f0-242a106096e2/toggle → 200
+2026-08-05 06:27:55,481 - app - INFO - POST /api/v1/checklist-items/4f741235-8360-45fb-b641-6c4b142d58ca/toggle → 200
+2026-08-05 06:27:55,537 - app - INFO - POST /api/v1/actions/3a0c059b-d590-4d2f-bbab-1096df9c6bd0/complete → 200
+2026-08-05 06:27:55,575 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:27:55,612 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:27:56,684 - app - INFO - POST /api/v1/actions/3a0c059b-d590-4d2f-bbab-1096df9c6bd0/uncomplete → 200
+2026-08-05 06:27:56,726 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:27:56,761 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:27:59,645 - app - INFO - POST /api/v1/checklist-items/bdf19471-7be8-42d5-a1f0-242a106096e2/toggle → 200
+2026-08-05 06:28:00,269 - app - INFO - POST /api/v1/checklist-items/0c59da0a-2a04-4402-a20c-7fe597b0e0a2/toggle → 200
+2026-08-05 06:28:00,485 - app - INFO - POST /api/v1/checklist-items/4f741235-8360-45fb-b641-6c4b142d58ca/toggle → 200
+2026-08-05 06:28:01,022 - app - INFO - POST /api/v1/checklist-items/54974136-eef8-4a9e-aeae-989c145931c2/toggle → 200
+2026-08-05 06:28:01,400 - app - INFO - POST /api/v1/checklist-items/8cabaf7d-3c48-4fc5-a672-bbdbed01fbe6/toggle → 200
+2026-08-05 06:28:06,187 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:28:07,287 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:28:07,309 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:28:07,334 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:28:08,854 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:29:37,976 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:29:37,982 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:29:38,065 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:43:40,484 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:43:41,135 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:43:41,151 - app - INFO - GET /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc → 200
+2026-08-05 06:43:41,194 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:43:46,039 - app - INFO - POST /api/v1/projects/0e056542-93af-4657-a8bd-dd3d2add9bbc/abandon → 200
+2026-08-05 06:43:46,102 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:43:46,105 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:43:51,629 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:43:51,649 - app - INFO - GET /api/v1/projects/ad8468cd-aba3-4177-b807-73e8d0d5ad14 → 200
+2026-08-05 06:43:51,684 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:43:54,787 - app - INFO - POST /api/v1/projects/ad8468cd-aba3-4177-b807-73e8d0d5ad14/abandon → 200
+2026-08-05 06:43:54,855 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:43:54,859 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:43:56,183 - app - INFO - GET /api/v1/projects/5b12abaf-4ec3-4a64-bc2f-e9b0a9e0c785 → 200
+2026-08-05 06:43:56,186 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:43:56,219 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:43:59,624 - app - INFO - POST /api/v1/projects/5b12abaf-4ec3-4a64-bc2f-e9b0a9e0c785/abandon → 200
+2026-08-05 06:43:59,686 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:43:59,686 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:44:11,635 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 06:44:11,659 - app.path - INFO - create path start user=4969f13f-74c0-41dd-9e59-facec3b2497b project=24fe7afc-e83c-4d86-91e5-7637614a6923 version=1 outcome='Карбонара на ужин' gate_llm=245ed76c-1540-4a0f-941d-0f0d5db98047 path_ready=false
+2026-08-05 06:44:11,661 - app - INFO - POST /api/v1/projects → 200
+2026-08-05 06:44:11,740 - app - INFO - GET /api/v1/projects/24fe7afc-e83c-4d86-91e5-7637614a6923 → 200
+2026-08-05 06:44:13,254 - app - INFO - GET /api/v1/projects/24fe7afc-e83c-4d86-91e5-7637614a6923 → 200
+2026-08-05 06:44:14,757 - app - INFO - GET /api/v1/projects/24fe7afc-e83c-4d86-91e5-7637614a6923 → 200
+2026-08-05 06:44:16,338 - app - INFO - GET /api/v1/projects/24fe7afc-e83c-4d86-91e5-7637614a6923 → 200
+2026-08-05 06:44:17,764 - app - INFO - GET /api/v1/projects/24fe7afc-e83c-4d86-91e5-7637614a6923 → 200
+2026-08-05 06:44:19,261 - app - INFO - GET /api/v1/projects/24fe7afc-e83c-4d86-91e5-7637614a6923 → 200
+2026-08-05 06:44:20,759 - app - INFO - GET /api/v1/projects/24fe7afc-e83c-4d86-91e5-7637614a6923 → 200
+2026-08-05 06:44:22,009 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 06:44:22,049 - app.path - INFO - create path ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=24fe7afc-e83c-4d86-91e5-7637614a6923 version=2 outcome='Приготовить карбонару дома' gate_llm=245ed76c-1540-4a0f-941d-0f0d5db98047 path_llm=9ba9fa1a-cd65-445b-88c1-c46a9e3219da
+2026-08-05 06:44:22,267 - app - INFO - GET /api/v1/projects/24fe7afc-e83c-4d86-91e5-7637614a6923 → 200
+2026-08-05 06:44:22,318 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:44:48,474 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:44:52,138 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:44:52,178 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:44:52,208 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:45:21,129 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 06:45:21,139 - app.path - INFO - refine project=24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 version=3 answers=['meat', 'servings'] has_comment=True
+2026-08-05 06:45:21,152 - app - INFO - POST /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53/refine → 200
+2026-08-05 06:45:42,032 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:45:44,039 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:45:44,054 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:45:44,098 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:45:52,651 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:45:57,877 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:45:57,913 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:45:57,915 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:45:59,561 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:45:59,746 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:45:59,780 - app - INFO - GET /api/v1/projects/24f832a7-a7e1-42d2-a6e1-2cd9c6d12b53 → 200
+2026-08-05 06:45:59,822 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:46:05,000 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:46:33,476 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 06:46:33,502 - app.path - INFO - create path start user=4969f13f-74c0-41dd-9e59-facec3b2497b project=4effe34d-1389-47aa-beb5-281b2aca41e8 version=1 outcome='Болоньеза на ужин' gate_llm=4a1ddb00-ac86-44b0-95ca-9c7a23052935 path_ready=false
+2026-08-05 06:46:33,503 - app - INFO - POST /api/v1/projects → 200
+2026-08-05 06:46:33,667 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 06:46:35,182 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 06:46:36,663 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 06:46:38,180 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 06:46:39,667 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 06:46:41,190 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 06:46:42,680 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 06:46:44,172 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 06:46:44,195 - app.path - INFO - create path ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=4effe34d-1389-47aa-beb5-281b2aca41e8 version=2 outcome='Приготовить болоньезу дома' gate_llm=4a1ddb00-ac86-44b0-95ca-9c7a23052935 path_llm=d1c2e5e5-7e0f-4bb5-a159-7ff6ee81e3f4
+2026-08-05 06:46:44,196 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 06:46:45,688 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 06:46:45,760 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:47:57,145 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 06:48:06,431 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 06:48:06,450 - app.path - INFO - refine project=4effe34d-1389-47aa-beb5-281b2aca41e8 version=3 answers=['meat'] has_comment=True
+2026-08-05 06:48:06,458 - app - INFO - POST /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8/refine → 200
+2026-08-05 06:48:35,474 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:48:36,513 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:48:37,523 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 06:48:37,525 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:48:37,557 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:48:49,435 - app - INFO - POST /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8/commit → 200
+2026-08-05 06:48:49,597 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:48:49,605 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 06:48:51,165 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 06:48:52,748 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 06:48:52,785 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 06:48:52,813 - app.path - INFO - plugins ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=4effe34d-1389-47aa-beb5-281b2aca41e8 version=4 llm=eab64dec-d5a6-4f5e-ace1-63f2a0b835c8
+2026-08-05 06:48:52,817 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:48:54,363 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 06:50:08,826 - app - INFO - POST /api/v1/checklist-items/cf9e669b-1b06-4baf-a883-7de6da257178/toggle → 200
+2026-08-05 06:50:08,826 - app - INFO - POST /api/v1/checklist-items/83c0e9ba-2965-4101-aacd-7b1d1172f8ff/toggle → 200
+2026-08-05 06:50:08,827 - app - INFO - POST /api/v1/checklist-items/a330aa4b-5be0-4a7e-8c7a-1060374528a4/toggle → 200
+2026-08-05 06:50:08,827 - app - INFO - POST /api/v1/checklist-items/62138a6e-2d6a-430f-8c9c-2030a3a2306e/toggle → 200
+2026-08-05 06:50:08,827 - app - INFO - POST /api/v1/checklist-items/fcb67283-7490-4eb7-99ff-8a4a299eb582/toggle → 200
+2026-08-05 06:50:08,850 - app - INFO - POST /api/v1/checklist-items/592059a7-5330-4d6c-8fbc-a7be29406e7b/toggle → 200
+2026-08-05 06:50:08,852 - app - INFO - POST /api/v1/checklist-items/c967a04a-1185-4c57-ba13-12112106e3e3/toggle → 200
+2026-08-05 06:50:08,892 - app - INFO - POST /api/v1/actions/40aae5bb-1bcb-473b-9e10-3f52a5e4edf3/complete → 200
+2026-08-05 06:50:08,920 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 06:50:08,950 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:50:13,799 - app - INFO - POST /api/v1/checklist-items/6afc1881-73a8-43da-aa60-3438521984e5/toggle → 200
+2026-08-05 06:50:13,800 - app - INFO - POST /api/v1/checklist-items/438df03d-b846-4f3d-b556-ad98df9ddc7e/toggle → 200
+2026-08-05 06:50:13,800 - app - INFO - POST /api/v1/checklist-items/1a36779d-b2ac-4fba-92ba-1642648ead17/toggle → 200
+2026-08-05 06:50:13,802 - app - INFO - POST /api/v1/checklist-items/62352816-d848-4b7e-a7b2-e491d232399d/toggle → 200
+2026-08-05 06:50:13,883 - app - INFO - POST /api/v1/actions/cc9a996b-d758-47a2-9ef2-4148515187d4/complete → 200
+2026-08-05 06:50:13,913 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 06:50:13,952 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:53:36,675 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:53:38,661 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:53:38,669 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 06:53:38,709 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:53:40,479 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:53:41,528 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:53:43,865 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:53:44,193 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:53:44,221 - app - INFO - GET /api/v1/projects/b8faa082-cf9b-41b0-95ed-21741bd42da7 → 200
+2026-08-05 06:53:44,252 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:53:46,062 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:53:47,107 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:58:30,473 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:58:30,475 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:58:31,329 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:58:31,371 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:58:31,376 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:59:25,991 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:59:25,993 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:59:26,022 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:59:26,029 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:59:26,031 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:59:28,942 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:59:28,943 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:59:28,961 - app - INFO - POST /api/v1/events → 201
+2026-08-05 06:59:28,989 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:59:28,990 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:59:59,169 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 06:59:59,169 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:07:36,390 - app - INFO - POST /api/v1/events → 201
+2026-08-05 07:07:36,394 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 07:07:36,423 - app - INFO - POST /api/v1/events → 201
+2026-08-05 07:07:39,389 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8/path-state → 404
+2026-08-05 07:07:48,135 - app - INFO - POST /api/v1/events → 201
+2026-08-05 07:07:48,196 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:07:48,199 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:08:18,077 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-08-05 07:08:18,077 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-08-05 07:08:24,256 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:08:24,260 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:08:24,262 - app - INFO - POST /api/v1/events → 201
+2026-08-05 07:08:27,813 - app - INFO - POST /api/v1/events → 201
+2026-08-05 07:08:27,852 - app - INFO - GET /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8 → 200
+2026-08-05 07:08:27,891 - app - INFO - POST /api/v1/events → 201
+2026-08-05 07:08:31,405 - app - INFO - POST /api/v1/projects/4effe34d-1389-47aa-beb5-281b2aca41e8/abandon → 200
+2026-08-05 07:08:31,507 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:08:31,514 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:08:37,283 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:08:38,867 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:08:54,747 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 07:08:54,803 - app.path - INFO - create path start user=4969f13f-74c0-41dd-9e59-facec3b2497b project=977aa3c5-a414-4664-a619-fc4a0bc21878 version=1 outcome='Карбонара на ужин' gate_llm=3b6297bb-0737-4724-a38d-181e972b2d70 path_ready=false
+2026-08-05 07:08:54,804 - app - INFO - POST /api/v1/projects → 200
+2026-08-05 07:08:54,896 - app - INFO - GET /api/v1/projects/977aa3c5-a414-4664-a619-fc4a0bc21878 → 200
+2026-08-05 07:08:56,409 - app - INFO - GET /api/v1/projects/977aa3c5-a414-4664-a619-fc4a0bc21878 → 200
+2026-08-05 07:08:57,911 - app - INFO - GET /api/v1/projects/977aa3c5-a414-4664-a619-fc4a0bc21878 → 200
+2026-08-05 07:08:59,420 - app - INFO - GET /api/v1/projects/977aa3c5-a414-4664-a619-fc4a0bc21878 → 200
+2026-08-05 07:09:00,926 - app - INFO - GET /api/v1/projects/977aa3c5-a414-4664-a619-fc4a0bc21878 → 200
+2026-08-05 07:09:02,423 - app - INFO - GET /api/v1/projects/977aa3c5-a414-4664-a619-fc4a0bc21878 → 200
+2026-08-05 07:09:03,919 - app - INFO - GET /api/v1/projects/977aa3c5-a414-4664-a619-fc4a0bc21878 → 200
+2026-08-05 07:09:05,460 - app - INFO - GET /api/v1/projects/977aa3c5-a414-4664-a619-fc4a0bc21878 → 200
+2026-08-05 07:09:05,880 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 07:09:05,913 - app.path - INFO - create path ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=977aa3c5-a414-4664-a619-fc4a0bc21878 version=2 outcome='Приготовить карбонару дома' gate_llm=3b6297bb-0737-4724-a38d-181e972b2d70 path_llm=de38439e-ec26-4bec-bb51-2d4eef6c86b9
+2026-08-05 07:09:06,912 - app - INFO - GET /api/v1/projects/977aa3c5-a414-4664-a619-fc4a0bc21878 → 200
+2026-08-05 07:09:06,959 - app - INFO - POST /api/v1/events → 201
+2026-08-05 07:09:34,648 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 07:09:34,664 - app.path - INFO - refine project=977aa3c5-a414-4664-a619-fc4a0bc21878 version=3 answers=['meat', 'servings'] has_comment=True
+2026-08-05 07:09:34,670 - app - INFO - POST /api/v1/projects/977aa3c5-a414-4664-a619-fc4a0bc21878/refine → 200
+2026-08-05 07:09:37,470 - app - INFO - GET /api/v1/projects/977aa3c5-a414-4664-a619-fc4a0bc21878/path-state → 200
+2026-08-05 07:09:37,499 - app - INFO - GET /api/v1/projects/977aa3c5-a414-4664-a619-fc4a0bc21878/path-state → 200
+2026-08-05 07:11:46,917 - app.path - INFO - manual_edit project=977aa3c5-a414-4664-a619-fc4a0bc21878 version=4 undo=3 status=draft
+2026-08-05 07:11:46,926 - app - INFO - POST /api/v1/projects/977aa3c5-a414-4664-a619-fc4a0bc21878/manual-edit → 200
+2026-08-05 07:11:46,970 - app - INFO - GET /api/v1/projects/977aa3c5-a414-4664-a619-fc4a0bc21878 → 200
+2026-08-05 07:12:02,333 - app - INFO - GET /api/v1/projects/977aa3c5-a414-4664-a619-fc4a0bc21878/path-state → 200
+2026-08-05 07:12:02,366 - app - INFO - GET /api/v1/projects/977aa3c5-a414-4664-a619-fc4a0bc21878/path-state → 200
+2026-08-05 07:12:09,872 - app - INFO - GET /api/v1/projects/977aa3c5-a414-4664-a619-fc4a0bc21878 → 200
+2026-08-05 07:12:43,513 - app - INFO - GET /api/v1/projects/977aa3c5-a414-4664-a619-fc4a0bc21878 → 200
+2026-08-05 07:12:43,523 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:12:43,526 - app - INFO - POST /api/v1/events → 201
+2026-08-05 07:12:43,558 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:12:43,561 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:12:43,989 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:12:43,990 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:12:44,004 - app - INFO - POST /api/v1/events → 201
+2026-08-05 07:12:44,017 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:12:44,026 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:18:33,826 - app - INFO - POST /api/v1/events → 201
+2026-08-05 07:18:33,856 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:18:33,864 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:50:41,467 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:50:46,974 - app - INFO - POST /api/v1/events → 201
+2026-08-05 07:50:47,010 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:50:47,012 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 07:51:10,180 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 07:51:10,214 - app.path - INFO - create path start user=4969f13f-74c0-41dd-9e59-facec3b2497b project=be83606a-f7db-467d-85cd-ed7806e81a2d version=1 outcome='Карбонара на ужин' gate_llm=b23fb6e8-0f2a-4653-bfce-6eca78c2c6b0 path_ready=false
+2026-08-05 07:51:10,215 - app - INFO - POST /api/v1/projects → 200
+2026-08-05 07:51:10,362 - app - INFO - GET /api/v1/projects/be83606a-f7db-467d-85cd-ed7806e81a2d → 200
+2026-08-05 07:51:11,882 - app - INFO - GET /api/v1/projects/be83606a-f7db-467d-85cd-ed7806e81a2d → 200
+2026-08-05 07:51:13,410 - app - INFO - GET /api/v1/projects/be83606a-f7db-467d-85cd-ed7806e81a2d → 200
+2026-08-05 07:51:14,907 - app - INFO - GET /api/v1/projects/be83606a-f7db-467d-85cd-ed7806e81a2d → 200
+2026-08-05 07:51:16,374 - app - INFO - GET /api/v1/projects/be83606a-f7db-467d-85cd-ed7806e81a2d → 200
+2026-08-05 07:51:17,970 - app - INFO - GET /api/v1/projects/be83606a-f7db-467d-85cd-ed7806e81a2d → 200
+2026-08-05 07:51:19,415 - app - INFO - GET /api/v1/projects/be83606a-f7db-467d-85cd-ed7806e81a2d → 200
+2026-08-05 07:51:20,868 - app - INFO - GET /api/v1/projects/be83606a-f7db-467d-85cd-ed7806e81a2d → 200
+2026-08-05 07:51:21,176 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 07:51:21,200 - app.path - INFO - create path ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=be83606a-f7db-467d-85cd-ed7806e81a2d version=2 outcome='Приготовить карбонару дома' gate_llm=b23fb6e8-0f2a-4653-bfce-6eca78c2c6b0 path_llm=05a52e64-7a29-4abd-b0b2-91c37dd8617c
+2026-08-05 07:51:22,484 - app - INFO - GET /api/v1/projects/be83606a-f7db-467d-85cd-ed7806e81a2d → 200
+2026-08-05 07:51:22,613 - app - INFO - POST /api/v1/events → 201
+2026-08-05 07:51:32,920 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 07:51:32,927 - app.path - INFO - refine project=be83606a-f7db-467d-85cd-ed7806e81a2d version=3 answers=['meat', 'servings'] has_comment=True
+2026-08-05 07:51:32,977 - app - INFO - POST /api/v1/projects/be83606a-f7db-467d-85cd-ed7806e81a2d/refine → 200
+2026-08-05 07:51:38,465 - app - INFO - GET /api/v1/projects/be83606a-f7db-467d-85cd-ed7806e81a2d/path-state → 200
+2026-08-05 07:51:38,500 - app - INFO - GET /api/v1/projects/be83606a-f7db-467d-85cd-ed7806e81a2d/path-state → 200
+2026-08-05 08:23:44,518 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-08-05 08:23:44,518 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-08-05 08:24:20,230 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 08:24:20,232 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 08:24:20,249 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:24:58,811 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 08:25:06,581 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 08:25:06,632 - app.path - INFO - create path start user=4969f13f-74c0-41dd-9e59-facec3b2497b project=a829deca-0e5f-4a28-bdea-1419af30ff26 version=1 outcome='Карбонара на ужин' gate_llm=87e78add-19af-48c9-aa4b-4cb8d75d8b42 path_ready=false
+2026-08-05 08:25:06,633 - app - INFO - POST /api/v1/projects → 200
+2026-08-05 08:25:06,815 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:25:08,280 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:25:09,780 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:25:11,320 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:25:12,785 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:25:14,385 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:25:15,786 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:25:16,775 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 08:25:16,804 - app.path - INFO - create path ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=a829deca-0e5f-4a28-bdea-1419af30ff26 version=2 outcome='Приготовить карбонару дома' gate_llm=87e78add-19af-48c9-aa4b-4cb8d75d8b42 path_llm=145008f1-a964-43fe-b2f1-4d73c39ebb82
+2026-08-05 08:25:17,357 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:25:17,501 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:25:37,990 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26/path-state → 200
+2026-08-05 08:25:38,025 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26/path-state → 200
+2026-08-05 08:25:40,085 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:26:21,479 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 08:26:21,496 - app.path - INFO - refine project=a829deca-0e5f-4a28-bdea-1419af30ff26 version=3 answers=['meat', 'servings'] has_comment=True
+2026-08-05 08:26:21,503 - app - INFO - POST /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26/refine → 200
+2026-08-05 08:26:53,425 - app - INFO - POST /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26/commit → 200
+2026-08-05 08:26:53,521 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 08:26:53,548 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:26:55,101 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:26:56,676 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:26:57,481 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 08:26:57,520 - app.path - INFO - plugins ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=a829deca-0e5f-4a28-bdea-1419af30ff26 version=4 llm=4990f07a-c047-475f-b0ed-7962635b40c6
+2026-08-05 08:26:57,526 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:26:58,325 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:27:00,751 - app - INFO - POST /api/v1/checklist-items/3222f25a-6e33-4422-8c2a-77344fa7cc48/toggle → 200
+2026-08-05 08:27:04,074 - app - INFO - POST /api/v1/checklist-items/3222f25a-6e33-4422-8c2a-77344fa7cc48/toggle → 200
+2026-08-05 08:27:06,313 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 08:27:07,819 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:27:07,832 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:27:07,869 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:27:14,412 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26/path-state → 200
+2026-08-05 08:27:14,447 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26/path-state → 200
+2026-08-05 08:27:37,168 - app.path - INFO - manual_edit project=a829deca-0e5f-4a28-bdea-1419af30ff26 version=5 undo=4 status=active
+2026-08-05 08:27:37,175 - app - INFO - POST /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26/manual-edit → 200
+2026-08-05 08:27:37,275 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:27:37,292 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:27:37,317 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:28:16,184 - app - INFO - POST /api/v1/checklist-items/bc31aef5-6866-48bc-9b6b-d12dc38d5100/toggle → 200
+2026-08-05 08:28:16,363 - app - INFO - POST /api/v1/checklist-items/714f7d0a-23d7-485c-ad82-ed370144cf1e/toggle → 200
+2026-08-05 08:28:16,552 - app - INFO - POST /api/v1/checklist-items/3efdcd60-5e05-409d-8ec7-58bc7721c085/toggle → 200
+2026-08-05 08:28:17,280 - app - INFO - POST /api/v1/checklist-items/209cd3bb-1e8f-4d89-8e79-7a704babfc0c/toggle → 200
+2026-08-05 08:28:19,243 - app - INFO - POST /api/v1/actions/ca0d5249-a365-4ae2-a3dc-53497f89eeec/complete → 200
+2026-08-05 08:28:19,279 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:28:19,314 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:28:34,022 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:28:34,054 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:28:38,574 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:28:44,120 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26/path-state → 200
+2026-08-05 08:28:44,155 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26/path-state → 200
+2026-08-05 08:28:46,024 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:28:48,816 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:28:48,866 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:28:49,616 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 08:28:51,536 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:28:51,539 - app - INFO - GET /api/v1/projects/a829deca-0e5f-4a28-bdea-1419af30ff26 → 200
+2026-08-05 08:28:51,572 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:29:31,275 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 08:29:55,136 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 08:29:55,166 - app.path - INFO - create path start user=4969f13f-74c0-41dd-9e59-facec3b2497b project=1aec851e-fdde-4773-b973-64e81e89ca03 version=1 outcome='Карбонара на ужин' gate_llm=b853dadb-e217-429b-be20-a96e5d84d798 path_ready=false
+2026-08-05 08:29:55,167 - app - INFO - POST /api/v1/projects → 200
+2026-08-05 08:29:55,313 - app - INFO - GET /api/v1/projects/1aec851e-fdde-4773-b973-64e81e89ca03 → 200
+2026-08-05 08:29:56,877 - app - INFO - GET /api/v1/projects/1aec851e-fdde-4773-b973-64e81e89ca03 → 200
+2026-08-05 08:29:58,317 - app - INFO - GET /api/v1/projects/1aec851e-fdde-4773-b973-64e81e89ca03 → 200
+2026-08-05 08:29:59,877 - app - INFO - GET /api/v1/projects/1aec851e-fdde-4773-b973-64e81e89ca03 → 200
+2026-08-05 08:30:01,331 - app - INFO - GET /api/v1/projects/1aec851e-fdde-4773-b973-64e81e89ca03 → 200
+2026-08-05 08:30:02,852 - app - INFO - GET /api/v1/projects/1aec851e-fdde-4773-b973-64e81e89ca03 → 200
+2026-08-05 08:30:04,383 - app - INFO - GET /api/v1/projects/1aec851e-fdde-4773-b973-64e81e89ca03 → 200
+2026-08-05 08:30:05,697 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 08:30:05,715 - app.path - INFO - create path ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=1aec851e-fdde-4773-b973-64e81e89ca03 version=2 outcome='Приготовить карбонару дома' gate_llm=b853dadb-e217-429b-be20-a96e5d84d798 path_llm=17b6763e-6d07-4334-874b-d06068acb3df
+2026-08-05 08:30:05,818 - app - INFO - GET /api/v1/projects/1aec851e-fdde-4773-b973-64e81e89ca03 → 200
+2026-08-05 08:30:05,897 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:34:48,550 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 08:34:54,051 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 08:34:54,080 - app.path - INFO - create path start user=4969f13f-74c0-41dd-9e59-facec3b2497b project=ea56804e-9865-43c8-8417-2c18eed5a54b version=1 outcome='Карбонара на ужин' gate_llm=4dd8805b-f57b-402a-a483-566a352632f9 path_ready=false
+2026-08-05 08:34:54,081 - app - INFO - POST /api/v1/projects → 200
+2026-08-05 08:34:54,211 - app - INFO - GET /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b → 200
+2026-08-05 08:34:55,791 - app - INFO - GET /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b → 200
+2026-08-05 08:34:57,231 - app - INFO - GET /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b → 200
+2026-08-05 08:34:58,731 - app - INFO - GET /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b → 200
+2026-08-05 08:35:00,228 - app - INFO - GET /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b → 200
+2026-08-05 08:35:01,755 - app - INFO - GET /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b → 200
+2026-08-05 08:35:03,237 - app - INFO - GET /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b → 200
+2026-08-05 08:35:04,547 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 08:35:04,564 - app.path - INFO - create path ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=ea56804e-9865-43c8-8417-2c18eed5a54b version=2 outcome='Приготовить карбонару дома' gate_llm=4dd8805b-f57b-402a-a483-566a352632f9 path_llm=d6c6da00-25aa-4d86-a2d1-eea1c2855977
+2026-08-05 08:35:04,733 - app - INFO - GET /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b → 200
+2026-08-05 08:35:04,801 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:36:26,328 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 08:36:26,346 - app.path - INFO - refine project=ea56804e-9865-43c8-8417-2c18eed5a54b version=3 answers=['meat', 'servings'] has_comment=False
+2026-08-05 08:36:26,355 - app - INFO - POST /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b/refine → 200
+2026-08-05 08:37:27,643 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 08:37:27,661 - app.path - INFO - refine project=ea56804e-9865-43c8-8417-2c18eed5a54b version=4 answers=[] has_comment=True
+2026-08-05 08:37:27,669 - app - INFO - POST /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b/refine → 200
+2026-08-05 08:38:51,062 - app - INFO - POST /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b/restore-state → 200
+2026-08-05 08:38:51,115 - app - INFO - POST /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b/commit → 200
+2026-08-05 08:38:51,172 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 08:38:51,177 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 08:38:52,975 - app - INFO - GET /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b → 200
+2026-08-05 08:38:54,124 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 08:38:54,162 - app.path - INFO - plugins ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=ea56804e-9865-43c8-8417-2c18eed5a54b version=6 llm=c613d9ae-f3c9-4617-9b76-5091fc334718
+2026-08-05 08:38:54,168 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:38:54,168 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:38:54,546 - app - INFO - GET /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b → 200
+2026-08-05 08:38:58,872 - app - INFO - GET /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b/path-state → 200
+2026-08-05 08:38:58,904 - app - INFO - GET /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b/path-state → 200
+2026-08-05 08:39:08,069 - app - INFO - GET /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b → 200
+2026-08-05 08:39:08,103 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:40:00,279 - app - INFO - GET /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b/path-state → 200
+2026-08-05 08:40:00,310 - app - INFO - GET /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b/path-state → 200
+2026-08-05 08:40:11,727 - app - INFO - GET /api/v1/projects/ea56804e-9865-43c8-8417-2c18eed5a54b → 200
+2026-08-05 08:40:12,863 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 08:40:31,199 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 08:42:21,655 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 08:42:21,682 - app.path - INFO - create path start user=4969f13f-74c0-41dd-9e59-facec3b2497b project=b49241d9-571a-4d79-9087-0560894f1453 version=1 outcome='Грибы тануки с мясом' gate_llm=d649060d-17ba-4b3a-85c5-7b449d8bd2d5 path_ready=false
+2026-08-05 08:42:21,684 - app - INFO - POST /api/v1/projects → 200
+2026-08-05 08:42:21,855 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 08:42:23,418 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 08:42:24,856 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 08:42:26,359 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 08:42:27,862 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 08:42:29,358 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 08:42:30,848 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 08:42:32,395 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 08:42:32,473 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 08:42:32,489 - app.path - INFO - create path ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=b49241d9-571a-4d79-9087-0560894f1453 version=2 outcome='Приготовить грибы тануки с мясом и овощами' gate_llm=d649060d-17ba-4b3a-85c5-7b449d8bd2d5 path_llm=beb5203f-c940-4482-b8a8-06587d1cd886
+2026-08-05 08:42:33,866 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 08:42:33,942 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:43:46,954 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 08:43:46,969 - app.path - INFO - refine project=b49241d9-571a-4d79-9087-0560894f1453 version=3 answers=['meat_type', 'vegetables'] has_comment=True
+2026-08-05 08:43:46,977 - app - INFO - POST /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453/refine → 200
+2026-08-05 08:44:45,504 - app - INFO - POST /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453/commit → 200
+2026-08-05 08:44:45,627 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 08:44:45,631 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 08:44:47,202 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 08:44:48,246 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 08:44:48,274 - app.path - INFO - plugins ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=b49241d9-571a-4d79-9087-0560894f1453 version=4 llm=6ef428d6-c34d-44e8-9926-da3052f2667a
+2026-08-05 08:44:48,278 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:44:48,764 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 08:45:31,328 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453/path-state → 200
+2026-08-05 08:45:31,365 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453/path-state → 200
+2026-08-05 08:45:33,320 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 08:45:33,362 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:45:35,354 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 08:45:58,273 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 08:45:58,276 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:45:58,304 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:46:23,175 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 08:46:24,209 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 08:46:30,736 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:46:30,752 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 08:46:30,795 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:47:01,027 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 08:47:01,639 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:47:01,669 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 08:47:01,697 - app - INFO - POST /api/v1/events → 201
+2026-08-05 08:47:19,767 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453/path-state → 200
+2026-08-05 08:47:19,796 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453/path-state → 200
+2026-08-05 08:47:30,016 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 09:08:04,923 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-08-05 09:08:04,923 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-08-05 09:08:11,450 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 09:08:11,453 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 09:08:11,457 - app - INFO - POST /api/v1/events → 201
+2026-08-05 09:08:50,511 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 09:08:50,562 - app.path - INFO - create path start user=4969f13f-74c0-41dd-9e59-facec3b2497b project=e6ee09f6-746c-493b-9a3b-1ae819371e15 version=1 outcome='Карбонара на ужин' gate_llm=e442102b-3984-47fc-9f80-4858a17b5d19 path_ready=false
+2026-08-05 09:08:50,563 - app - INFO - POST /api/v1/projects → 200
+2026-08-05 09:08:50,747 - app - INFO - GET /api/v1/projects/e6ee09f6-746c-493b-9a3b-1ae819371e15 → 200
+2026-08-05 09:08:52,221 - app - INFO - GET /api/v1/projects/e6ee09f6-746c-493b-9a3b-1ae819371e15 → 200
+2026-08-05 09:08:53,719 - app - INFO - GET /api/v1/projects/e6ee09f6-746c-493b-9a3b-1ae819371e15 → 200
+2026-08-05 09:08:55,211 - app - INFO - GET /api/v1/projects/e6ee09f6-746c-493b-9a3b-1ae819371e15 → 200
+2026-08-05 09:08:56,718 - app - INFO - GET /api/v1/projects/e6ee09f6-746c-493b-9a3b-1ae819371e15 → 200
+2026-08-05 09:08:58,211 - app - INFO - GET /api/v1/projects/e6ee09f6-746c-493b-9a3b-1ae819371e15 → 200
+2026-08-05 09:08:59,724 - app - INFO - GET /api/v1/projects/e6ee09f6-746c-493b-9a3b-1ae819371e15 → 200
+2026-08-05 09:09:00,853 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 09:09:00,896 - app.path - INFO - create path ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=e6ee09f6-746c-493b-9a3b-1ae819371e15 version=2 outcome='Приготовить карбонару дома' gate_llm=e442102b-3984-47fc-9f80-4858a17b5d19 path_llm=26075170-2a3a-4c57-a6ae-967007b9aada
+2026-08-05 09:09:01,276 - app - INFO - GET /api/v1/projects/e6ee09f6-746c-493b-9a3b-1ae819371e15 → 200
+2026-08-05 09:09:01,345 - app - INFO - POST /api/v1/events → 201
+2026-08-05 09:29:13,004 - app - INFO - POST /api/v1/events → 201
+2026-08-05 09:29:13,021 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 09:29:13,021 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 09:29:15,297 - app - INFO - POST /api/v1/events → 201
+2026-08-05 09:29:15,342 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 09:29:15,345 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 09:38:12,898 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-08-05 09:38:12,900 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-08-05 09:38:16,269 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 09:38:16,270 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 09:38:16,272 - app - INFO - POST /api/v1/events → 201
+2026-08-05 09:48:44,726 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-08-05 09:48:44,726 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-08-05 09:49:00,428 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 09:49:00,431 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 09:49:00,434 - app - INFO - POST /api/v1/events → 201
+2026-08-05 09:51:03,921 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 09:51:03,984 - app.path - INFO - create path start user=4969f13f-74c0-41dd-9e59-facec3b2497b project=4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f version=1 outcome='Карбонара на ужин' gate_llm=3ce9cc2e-5147-4a98-a794-34a644a1039e path_ready=false
+2026-08-05 09:51:03,985 - app - INFO - POST /api/v1/projects → 200
+2026-08-05 09:51:04,114 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:05,595 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:07,098 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:08,588 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:10,096 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:11,597 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:13,098 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:14,668 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:16,105 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:17,616 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:19,103 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:20,620 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:22,109 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:23,605 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:25,127 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:26,656 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:28,123 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:29,622 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:31,121 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:32,070 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:32,460 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 09:51:32,493 - app.path - INFO - create path ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f version=2 outcome='Приготовить карбонару дома' gate_llm=3ce9cc2e-5147-4a98-a794-34a644a1039e path_llm=c333afc2-4dca-4540-a1fa-9e42cdb8742c
+2026-08-05 09:51:33,637 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:51:43,630 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 09:51:43,639 - app.path - INFO - refine project=4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f version=3 answers=['meat', 'servings'] has_comment=True
+2026-08-05 09:51:43,645 - app - INFO - POST /api/v1/events → 201
+2026-08-05 09:51:43,645 - app - INFO - POST /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f/refine → 200
+2026-08-05 09:52:10,083 - app - INFO - POST /api/v1/events → 201
+2026-08-05 09:52:10,139 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 09:52:10,142 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 09:52:12,472 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 09:52:12,733 - app - INFO - POST /api/v1/events → 201
+2026-08-05 09:52:12,752 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 09:52:12,806 - app - INFO - POST /api/v1/events → 201
+2026-08-05 09:52:43,093 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f/path-state → 200
+2026-08-05 09:52:43,120 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f/path-state → 200
+2026-08-05 09:52:59,649 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 10:04:53,062 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f/path-state → 200
+2026-08-05 10:04:53,097 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f/path-state → 200
+2026-08-05 10:05:26,988 - app.path - INFO - manual_edit project=4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f version=4 undo=3 status=draft
+2026-08-05 10:05:26,994 - app - INFO - POST /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f/manual-edit → 200
+2026-08-05 10:05:27,051 - app - INFO - GET /api/v1/projects/4084dcf2-9c87-4cbb-bb6e-03dd66d66b7f → 200
+2026-08-05 11:05:43,813 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-08-05 11:05:43,813 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-08-05 11:12:24,652 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-08-05 11:12:24,653 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-08-05 11:12:37,214 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 11:12:37,215 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 11:12:37,219 - app - INFO - POST /api/v1/events → 201
+2026-08-05 11:13:18,099 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 11:13:18,158 - app.path - INFO - create path start user=4969f13f-74c0-41dd-9e59-facec3b2497b project=144c40a1-a7e4-49ed-84a8-57b4083e9658 version=1 outcome='Макароны по флотски' gate_llm=e1096216-98fa-4fa0-8cb6-8ba5e7583d02 path_ready=false
+2026-08-05 11:13:18,160 - app - INFO - POST /api/v1/projects → 200
+2026-08-05 11:13:18,334 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 11:13:19,823 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 11:13:21,304 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 11:13:22,797 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 11:13:24,303 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 11:13:25,807 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 11:13:27,313 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 11:13:28,161 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 11:13:28,190 - app.path - INFO - create path ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=144c40a1-a7e4-49ed-84a8-57b4083e9658 version=2 outcome='Приготовить макароны по флотски на обед' gate_llm=e1096216-98fa-4fa0-8cb6-8ba5e7583d02 path_llm=7e88644d-cded-4a41-99f0-949d981af1de
+2026-08-05 11:13:28,808 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 11:13:28,881 - app - INFO - POST /api/v1/events → 201
+2026-08-05 11:13:50,356 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 11:13:50,374 - app.path - INFO - refine project=144c40a1-a7e4-49ed-84a8-57b4083e9658 version=3 answers=['pasta_type', 'tinned_meat'] has_comment=False
+2026-08-05 11:13:50,384 - app - INFO - POST /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/refine → 200
+2026-08-05 11:14:06,169 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/path-state → 200
+2026-08-05 11:14:06,212 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/path-state → 200
+2026-08-05 11:14:25,379 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 11:14:47,329 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/path-state → 200
+2026-08-05 11:14:47,358 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/path-state → 200
+2026-08-05 11:24:01,808 - app - INFO - POST /api/v1/events → 201
+2026-08-05 11:24:01,819 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 11:24:01,821 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 11:24:03,960 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 11:24:05,240 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 11:24:05,242 - app - INFO - POST /api/v1/events → 201
+2026-08-05 11:24:05,284 - app - INFO - POST /api/v1/events → 201
+2026-08-05 11:24:08,982 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/path-state → 200
+2026-08-05 11:24:09,017 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/path-state → 200
+2026-08-05 11:32:01,556 - app - INFO - POST /api/v1/events → 201
+2026-08-05 11:32:01,568 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 11:32:01,569 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 11:32:02,787 - app - INFO - POST /api/v1/events → 201
+2026-08-05 11:32:02,831 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 11:32:02,861 - app - INFO - POST /api/v1/events → 201
+2026-08-05 11:32:04,202 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 11:32:05,051 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 11:32:05,275 - app - INFO - POST /api/v1/events → 201
+2026-08-05 11:32:05,292 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 11:32:05,325 - app - INFO - POST /api/v1/events → 201
+2026-08-05 11:32:11,713 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/path-state → 200
+2026-08-05 11:32:11,737 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/path-state → 200
+2026-08-05 11:45:02,806 - app - INFO - POST /api/v1/events → 201
+2026-08-05 11:45:02,831 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 11:45:02,832 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 11:45:05,865 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 11:45:11,239 - app - INFO - POST /api/v1/events → 201
+2026-08-05 11:45:11,352 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 11:45:11,356 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 11:46:25,825 - app - INFO - POST /api/v1/events → 201
+2026-08-05 11:46:25,836 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 11:46:25,841 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 11:46:27,494 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 11:46:28,433 - app - INFO - POST /api/v1/events → 201
+2026-08-05 11:46:28,462 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 11:46:28,500 - app - INFO - POST /api/v1/events → 201
+2026-08-05 11:46:36,751 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/path-state → 200
+2026-08-05 11:46:36,780 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/path-state → 200
+2026-08-05 11:48:48,419 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 11:49:19,539 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/path-state → 200
+2026-08-05 11:49:19,575 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/path-state → 200
+2026-08-05 11:49:22,738 - app.path - INFO - manual_edit project=144c40a1-a7e4-49ed-84a8-57b4083e9658 version=4 undo=3 status=draft
+2026-08-05 11:49:22,743 - app - INFO - POST /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/manual-edit → 200
+2026-08-05 11:49:22,806 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 12:13:11,604 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:13:11,644 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:13:11,668 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:13:13,080 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:13:13,115 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 12:13:13,157 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:13:14,464 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:13:15,373 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:13:17,303 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 12:13:17,306 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:13:17,338 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:13:23,772 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/path-state → 200
+2026-08-05 12:13:23,806 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/path-state → 200
+2026-08-05 12:13:25,728 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 12:13:27,003 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:13:28,309 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:13:30,860 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:13:34,192 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:13:37,275 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:13:40,048 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:13:42,401 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:13:42,841 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:13:42,862 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 12:13:42,908 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:14:03,038 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/path-state → 200
+2026-08-05 12:14:03,072 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/path-state → 200
+2026-08-05 12:14:11,676 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 12:21:58,263 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:22:00,280 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:22:18,830 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:22:18,885 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:22:18,896 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:22:22,021 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:22:22,293 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:22:22,302 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 12:22:22,337 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:22:32,215 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:22:32,310 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:22:32,321 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:22:34,062 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:22:35,386 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:22:35,416 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 12:22:35,459 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:23:12,659 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:23:12,692 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:23:12,703 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:23:21,691 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:23:21,709 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:23:21,730 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 12:23:21,782 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:24:18,870 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/path-state → 200
+2026-08-05 12:24:18,898 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658/path-state → 200
+2026-08-05 12:24:22,283 - app - INFO - GET /api/v1/projects/144c40a1-a7e4-49ed-84a8-57b4083e9658 → 200
+2026-08-05 12:24:29,237 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:24:32,949 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:32:54,603 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 12:32:54,637 - app.path - INFO - create path start user=4969f13f-74c0-41dd-9e59-facec3b2497b project=f6e86b81-bb00-4614-8d45-8ebefac1e814 version=1 outcome='Наведение порядка в квартире' gate_llm=c9b9b7de-44ed-47fd-82fb-7225d09ebf62 path_ready=false
+2026-08-05 12:32:54,639 - app - INFO - POST /api/v1/projects → 200
+2026-08-05 12:32:54,760 - app - INFO - GET /api/v1/projects/f6e86b81-bb00-4614-8d45-8ebefac1e814 → 200
+2026-08-05 12:32:56,337 - app - INFO - GET /api/v1/projects/f6e86b81-bb00-4614-8d45-8ebefac1e814 → 200
+2026-08-05 12:32:57,784 - app - INFO - GET /api/v1/projects/f6e86b81-bb00-4614-8d45-8ebefac1e814 → 200
+2026-08-05 12:32:59,272 - app - INFO - GET /api/v1/projects/f6e86b81-bb00-4614-8d45-8ebefac1e814 → 200
+2026-08-05 12:33:00,781 - app - INFO - GET /api/v1/projects/f6e86b81-bb00-4614-8d45-8ebefac1e814 → 200
+2026-08-05 12:33:02,280 - app - INFO - GET /api/v1/projects/f6e86b81-bb00-4614-8d45-8ebefac1e814 → 200
+2026-08-05 12:33:03,781 - app - INFO - GET /api/v1/projects/f6e86b81-bb00-4614-8d45-8ebefac1e814 → 200
+2026-08-05 12:33:05,280 - app - INFO - GET /api/v1/projects/f6e86b81-bb00-4614-8d45-8ebefac1e814 → 200
+2026-08-05 12:33:06,864 - app - INFO - GET /api/v1/projects/f6e86b81-bb00-4614-8d45-8ebefac1e814 → 200
+2026-08-05 12:33:08,324 - app - INFO - GET /api/v1/projects/f6e86b81-bb00-4614-8d45-8ebefac1e814 → 200
+2026-08-05 12:33:09,821 - app - INFO - GET /api/v1/projects/f6e86b81-bb00-4614-8d45-8ebefac1e814 → 200
+2026-08-05 12:33:11,335 - app - INFO - GET /api/v1/projects/f6e86b81-bb00-4614-8d45-8ebefac1e814 → 200
+2026-08-05 12:33:12,064 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 12:33:12,092 - app.path - INFO - create path ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=f6e86b81-bb00-4614-8d45-8ebefac1e814 version=2 outcome='Чистая и организованная квартира' gate_llm=c9b9b7de-44ed-47fd-82fb-7225d09ebf62 path_llm=9f8cf143-acc7-4657-805c-789f6ad6e47d
+2026-08-05 12:33:12,825 - app - INFO - GET /api/v1/projects/f6e86b81-bb00-4614-8d45-8ebefac1e814 → 200
+2026-08-05 12:33:12,903 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:39:31,323 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:39:31,369 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:39:31,374 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:40:23,627 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 12:40:23,657 - app.path - INFO - create path start user=4969f13f-74c0-41dd-9e59-facec3b2497b project=6bf83266-28b6-4cf8-bb80-027a1418564a version=1 outcome='Карбонара на ужин' gate_llm=cfd16a1d-3bb7-4455-8d4d-3937f8f90d90 path_ready=false
+2026-08-05 12:40:23,660 - app - INFO - POST /api/v1/projects → 200
+2026-08-05 12:40:23,746 - app - INFO - GET /api/v1/projects/6bf83266-28b6-4cf8-bb80-027a1418564a → 200
+2026-08-05 12:40:25,264 - app - INFO - GET /api/v1/projects/6bf83266-28b6-4cf8-bb80-027a1418564a → 200
+2026-08-05 12:40:26,768 - app - INFO - GET /api/v1/projects/6bf83266-28b6-4cf8-bb80-027a1418564a → 200
+2026-08-05 12:40:28,320 - app - INFO - GET /api/v1/projects/6bf83266-28b6-4cf8-bb80-027a1418564a → 200
+2026-08-05 12:40:29,770 - app - INFO - GET /api/v1/projects/6bf83266-28b6-4cf8-bb80-027a1418564a → 200
+2026-08-05 12:40:30,161 - app - INFO - GET /api/v1/projects/6bf83266-28b6-4cf8-bb80-027a1418564a → 200
+2026-08-05 12:40:31,784 - app - INFO - GET /api/v1/projects/6bf83266-28b6-4cf8-bb80-027a1418564a → 200
+2026-08-05 12:40:33,355 - app - INFO - GET /api/v1/projects/6bf83266-28b6-4cf8-bb80-027a1418564a → 200
+2026-08-05 12:40:34,545 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 12:40:34,563 - app.path - INFO - create path ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=6bf83266-28b6-4cf8-bb80-027a1418564a version=2 outcome='Приготовить карбонара дома' gate_llm=cfd16a1d-3bb7-4455-8d4d-3937f8f90d90 path_llm=79db9da8-eb3f-4f0b-89af-9bfc0085a1af
+2026-08-05 12:40:34,910 - app - INFO - GET /api/v1/projects/6bf83266-28b6-4cf8-bb80-027a1418564a → 200
+2026-08-05 12:40:35,046 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:54:59,104 - app - INFO - GET /api/v1/projects/6bf83266-28b6-4cf8-bb80-027a1418564a → 200
+2026-08-05 12:54:59,770 - app - INFO - GET /api/v1/projects/6bf83266-28b6-4cf8-bb80-027a1418564a → 200
+2026-08-05 12:55:08,138 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:55:08,145 - app - INFO - GET /api/v1/projects/6bf83266-28b6-4cf8-bb80-027a1418564a → 200
+2026-08-05 12:55:08,147 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:55:08,224 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:55:08,226 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:55:08,824 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:55:08,831 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:55:08,848 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:55:08,849 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:55:08,849 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:55:13,363 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:55:13,370 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:55:13,402 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:55:13,405 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:55:13,405 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:55:14,191 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:55:14,192 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:55:14,215 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:55:14,220 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:55:14,221 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:55:53,864 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:55:53,868 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:55:53,882 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:55:53,886 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:55:53,887 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:59:34,636 - app - INFO - POST /api/v1/events → 201
+2026-08-05 12:59:34,665 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 12:59:34,665 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:01:09,359 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 13:01:09,391 - app.path - INFO - create path start user=4969f13f-74c0-41dd-9e59-facec3b2497b project=45126b95-1556-486b-85b3-0a41585a2338 version=1 outcome='От текущего уровня к 30 отжиманиям' gate_llm=15f0bd94-513e-4b01-a41b-c4d79587d323 path_ready=false
+2026-08-05 13:01:09,393 - app - INFO - POST /api/v1/projects → 200
+2026-08-05 13:01:09,517 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:01:11,043 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:01:12,594 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:01:14,029 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:01:15,542 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:01:17,044 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:01:18,538 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:01:20,043 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:01:21,188 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 13:01:21,211 - app.path - INFO - create path ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=45126b95-1556-486b-85b3-0a41585a2338 version=2 outcome='Выполнить 30 отжиманий подряд' gate_llm=15f0bd94-513e-4b01-a41b-c4d79587d323 path_llm=318a695e-f59d-4763-8154-efbe84c6b420
+2026-08-05 13:01:21,542 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:01:21,612 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:01:42,494 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 13:01:42,512 - app.path - INFO - refine project=45126b95-1556-486b-85b3-0a41585a2338 version=3 answers=['current_level', 'frequency'] has_comment=False
+2026-08-05 13:01:42,519 - app - INFO - POST /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338/refine → 200
+2026-08-05 13:02:26,780 - app - INFO - POST /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338/commit → 200
+2026-08-05 13:02:26,876 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:02:26,880 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:02:28,452 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:02:30,030 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:02:31,607 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:02:33,195 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:02:34,829 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:02:36,204 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 13:02:36,242 - app.path - INFO - plugins ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=45126b95-1556-486b-85b3-0a41585a2338 version=4 llm=2bb87331-93fa-4d23-8e82-ce662ec75902
+2026-08-05 13:02:36,248 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:02:36,425 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:02:43,019 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338/path-state → 200
+2026-08-05 13:02:43,054 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338/path-state → 200
+2026-08-05 13:03:50,022 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:03:50,068 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:04:17,596 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338/path-state → 200
+2026-08-05 13:04:17,637 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338/path-state → 200
+2026-08-05 13:05:32,262 - app.path - INFO - manual_edit project=45126b95-1556-486b-85b3-0a41585a2338 version=5 undo=4 status=active
+2026-08-05 13:05:32,272 - app - INFO - POST /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338/manual-edit → 200
+2026-08-05 13:05:32,317 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338/path-state → 200
+2026-08-05 13:05:46,912 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 13:05:46,927 - app.path - INFO - repair_preview project=45126b95-1556-486b-85b3-0a41585a2338 before_version=5 intent=None llm=52e7165f-9bf0-4da3-9532-fda6b2d13ca1
+2026-08-05 13:05:46,929 - app - INFO - POST /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338/repair/preview → 200
+2026-08-05 13:11:24,364 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:11:24,415 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:11:36,646 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338/path-state → 200
+2026-08-05 13:11:36,680 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338/path-state → 200
+2026-08-05 13:12:08,905 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 13:12:08,920 - app.path - INFO - repair_preview project=45126b95-1556-486b-85b3-0a41585a2338 before_version=5 intent=lighten llm=0b69e583-5d43-4170-b86d-fc86a34b66e0
+2026-08-05 13:12:08,922 - app - INFO - POST /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338/repair/preview → 200
+2026-08-05 13:12:35,013 - app - INFO - GET /api/v1/projects/45126b95-1556-486b-85b3-0a41585a2338 → 200
+2026-08-05 13:13:03,616 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:13:10,515 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 13:13:10,539 - app.path - INFO - create path start user=4969f13f-74c0-41dd-9e59-facec3b2497b project=1ddabae0-51e8-45bb-a542-1851d67c67ef version=1 outcome='Карбонара на ужин' gate_llm=595616c9-6bda-4f3f-9576-5fe02a8dd78e path_ready=false
+2026-08-05 13:13:10,541 - app - INFO - POST /api/v1/projects → 200
+2026-08-05 13:13:10,711 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:13:12,223 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:13:13,764 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:13:14,441 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:13:16,082 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:13:17,710 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:13:19,357 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:13:20,756 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 13:13:20,776 - app.path - INFO - create path ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=1ddabae0-51e8-45bb-a542-1851d67c67ef version=2 outcome='Приготовить карбонару дома' gate_llm=595616c9-6bda-4f3f-9576-5fe02a8dd78e path_llm=9103b664-49e2-4732-92bb-52cdbad9a70e
+2026-08-05 13:13:20,975 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:13:21,070 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:13:45,928 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 13:13:45,943 - app.path - INFO - refine project=1ddabae0-51e8-45bb-a542-1851d67c67ef version=3 answers=['meat', 'servings'] has_comment=False
+2026-08-05 13:13:45,949 - app - INFO - POST /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef/refine → 200
+2026-08-05 13:13:53,591 - app - INFO - POST /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef/commit → 200
+2026-08-05 13:13:53,713 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:13:53,718 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:13:55,303 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:13:56,895 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:13:57,423 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 13:13:57,459 - app.path - INFO - plugins ready user=4969f13f-74c0-41dd-9e59-facec3b2497b project=1ddabae0-51e8-45bb-a542-1851d67c67ef version=4 llm=efd8c15d-eb09-44e3-a5dd-354b59d20146
+2026-08-05 13:13:57,465 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:13:58,582 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:14:45,820 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef/path-state → 200
+2026-08-05 13:14:45,850 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef/path-state → 200
+2026-08-05 13:15:14,590 - app.path - INFO - manual_edit project=1ddabae0-51e8-45bb-a542-1851d67c67ef version=5 undo=4 status=active
+2026-08-05 13:15:14,597 - app - INFO - POST /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef/manual-edit → 200
+2026-08-05 13:15:14,660 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:15:14,684 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:15:14,722 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:15:17,806 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef/path-state → 200
+2026-08-05 13:15:17,852 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef/path-state → 200
+2026-08-05 13:15:36,882 - app.path - INFO - manual_edit project=1ddabae0-51e8-45bb-a542-1851d67c67ef version=6 undo=5 status=active
+2026-08-05 13:15:36,886 - app - INFO - POST /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef/manual-edit → 200
+2026-08-05 13:15:36,923 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef/path-state → 200
+2026-08-05 13:15:47,510 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-08-05 13:15:47,523 - app.path - INFO - repair_preview project=1ddabae0-51e8-45bb-a542-1851d67c67ef before_version=6 intent=None llm=dfb858fb-3a3d-431d-af07-d23a2d7cde47
+2026-08-05 13:15:47,524 - app - INFO - POST /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef/repair/preview → 200
+2026-08-05 13:16:08,121 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:16:08,152 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:33:14,087 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:33:14,133 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:33:20,219 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:33:22,150 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:34:09,789 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:34:09,791 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:34:09,836 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:34:27,691 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef/path-state → 200
+2026-08-05 13:34:27,718 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef/path-state → 200
+2026-08-05 13:34:29,367 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:34:30,493 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:34:31,896 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:35:12,888 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:35:16,233 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:35:43,639 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:35:43,643 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:35:43,672 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:35:47,587 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:35:48,850 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:35:48,856 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:35:48,878 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:36:01,029 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:36:01,803 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:36:10,666 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:36:10,673 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:36:10,709 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:36:12,561 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:36:16,045 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:36:16,046 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:36:16,084 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:36:17,769 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:36:18,852 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:36:46,058 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:36:46,061 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:36:46,090 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:36:47,650 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:36:48,743 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:36:59,899 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:36:59,900 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:36:59,936 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:37:47,485 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:37:48,302 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:37:48,320 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:37:48,344 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:38:10,373 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:40:45,691 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:40:46,474 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:40:48,534 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:40:51,601 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:40:54,969 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:41:11,270 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:41:11,275 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:41:11,305 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:41:12,583 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:41:13,194 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:41:13,614 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:41:15,848 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:41:17,011 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:41:23,807 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:41:37,664 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:41:37,680 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:41:37,707 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:41:40,319 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:41:41,143 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:41:41,147 - app - INFO - GET /api/v1/projects/1ddabae0-51e8-45bb-a542-1851d67c67ef → 200
+2026-08-05 13:41:41,187 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:41:42,798 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:41:46,407 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:41:51,132 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:41:53,715 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:41:56,727 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:42:02,773 - app - INFO - GET /api/v1/projects/b49241d9-571a-4d79-9087-0560894f1453 → 200
+2026-08-05 13:42:02,775 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:42:02,806 - app - INFO - POST /api/v1/events → 201
+2026-08-05 13:42:05,018 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:42:06,662 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:48:12,147 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:48:14,483 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:48:17,563 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:48:28,515 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:48:33,729 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:48:37,521 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:49:07,910 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:49:11,180 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:49:15,180 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:49:51,152 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:49:55,684 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:50:07,707 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:51:11,420 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:51:15,591 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:51:20,297 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:54:24,448 - app - INFO - GET /api/v1/projects → 200
+2026-08-05 13:54:26,793 - app - INFO - GET /api/v1/projects → 200

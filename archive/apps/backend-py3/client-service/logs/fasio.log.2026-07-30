@@ -1,0 +1,436 @@
+2026-07-30 03:57:41,343 - app - INFO - LLM provider configured: Anthropic model=claude-sonnet-5 cache=True ttl=5m
+2026-07-30 03:57:41,344 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-07-30 03:57:52,582 - app - INFO - GET /api/v1/redoc → 200
+2026-07-30 03:57:52,921 - app - INFO - GET /api/v1/openapi.json → 200
+2026-07-30 03:58:05,325 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 03:58:24,086 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 03:58:30,807 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 03:58:39,397 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 03:58:43,502 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:01:16,660 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:01:21,097 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:01:30,052 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:03:32,384 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:35:32,519 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:35:32,645 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:35:35,155 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:35:55,236 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:37:38,762 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:37:53,177 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:37:56,900 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:38:00,856 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:38:04,799 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:38:10,766 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:39:08,968 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:40:47,941 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:40:47,947 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:43:50,781 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:43:50,831 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:43:53,733 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:47:37,144 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:47:37,209 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:47:40,112 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:47:59,228 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:47:59,294 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:48:02,205 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:48:57,679 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:48:57,737 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:49:00,661 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:49:04,361 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:49:08,242 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:49:11,011 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:49:14,159 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:56:52,908 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:56:52,912 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:56:53,715 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:56:53,735 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:57:00,996 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:57:03,616 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:57:03,625 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:57:12,530 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:57:12,532 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:57:14,233 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:57:16,201 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:57:18,188 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:57:19,164 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:57:20,467 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:57:43,423 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:57:43,788 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:59:12,023 - app - INFO - POST /api/v1/events → 201
+2026-07-30 04:59:12,090 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:59:26,730 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 04:59:31,591 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 05:05:58,032 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 05:05:58,079 - app.path - INFO - create instant_answer user=d0a08434-04de-49e1-9ff2-832a0c0a5496 llm_call=d0e0e8c9-9d93-4855-b38b-4a63189a80ad label='Это похоже на вопрос, а не на цель.' domain=health
+2026-07-30 05:05:58,082 - app - INFO - POST /api/v1/projects → 200
+2026-07-30 05:35:07,148 - app - INFO - POST /api/v1/events → 201
+2026-07-30 05:35:07,175 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 05:35:22,955 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 05:35:30,081 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 05:35:30,093 - app - INFO - POST /api/v1/projects → 422
+2026-07-30 05:45:08,836 - app - INFO - LLM provider configured: Anthropic model=claude-sonnet-5 cache=True ttl=5m
+2026-07-30 05:45:08,837 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-07-30 05:45:09,028 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 05:45:42,398 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 05:45:42,464 - app.path - INFO - create path user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=f623137c-30ed-448d-a617-8004ab685980 version=1 outcome='Приготовить карбонару дома'
+2026-07-30 05:45:42,465 - app - INFO - POST /api/v1/projects → 200
+2026-07-30 05:45:42,686 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980/state-versions → 200
+2026-07-30 05:45:42,731 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 05:45:42,768 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980/state-versions → 200
+2026-07-30 05:49:38,168 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 05:49:44,828 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 05:49:44,847 - app.path - INFO - refine project=f623137c-30ed-448d-a617-8004ab685980 version=2 question_id=meat
+2026-07-30 05:49:44,855 - app - INFO - POST /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980/refine → 200
+2026-07-30 05:50:01,533 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 05:50:01,571 - app - INFO - POST /api/v1/events → 201
+2026-07-30 05:50:14,557 - app - INFO - POST /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980/commit → 200
+2026-07-30 05:50:20,856 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 05:50:21,428 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 05:50:23,000 - app - INFO - POST /api/v1/events → 201
+2026-07-30 05:50:25,279 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 05:56:59,404 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 05:57:01,674 - app - INFO - POST /api/v1/events → 201
+2026-07-30 05:57:03,405 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 05:57:08,762 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:01:19,896 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:01:21,652 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:01:22,706 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:01:25,064 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:01:36,020 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:02:55,833 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:02:55,843 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:03:00,197 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:03:00,218 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 06:03:00,241 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:03:08,402 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 06:03:08,437 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:03:15,565 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 06:03:23,497 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:03:25,927 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:03:25,944 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 06:03:25,971 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:03:28,455 - app - INFO - POST /api/v1/checklist-items/2d3266cb-f8cf-4abe-8147-c2e05174620c/toggle → 200
+2026-07-30 06:03:29,999 - app - INFO - POST /api/v1/checklist-items/2d3266cb-f8cf-4abe-8147-c2e05174620c/toggle → 200
+2026-07-30 06:03:30,717 - app - INFO - POST /api/v1/checklist-items/acca3e77-9a75-4f1f-8290-85522bb5e256/toggle → 200
+2026-07-30 06:03:31,656 - app - INFO - POST /api/v1/checklist-items/acca3e77-9a75-4f1f-8290-85522bb5e256/toggle → 200
+2026-07-30 06:03:42,473 - app - INFO - POST /api/v1/checklist-items/2bdbd997-96d8-484b-925d-1b468f2b0ac7/toggle → 200
+2026-07-30 06:03:44,437 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:03:44,776 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:03:44,790 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 06:03:44,825 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:03:46,778 - app - INFO - POST /api/v1/checklist-items/acca3e77-9a75-4f1f-8290-85522bb5e256/toggle → 200
+2026-07-30 06:03:48,290 - app - INFO - POST /api/v1/checklist-items/acca3e77-9a75-4f1f-8290-85522bb5e256/toggle → 200
+2026-07-30 06:03:48,922 - app - INFO - POST /api/v1/checklist-items/2bdbd997-96d8-484b-925d-1b468f2b0ac7/toggle → 200
+2026-07-30 06:03:53,494 - app - INFO - POST /api/v1/checklist-items/2d3266cb-f8cf-4abe-8147-c2e05174620c/toggle → 200
+2026-07-30 06:03:54,026 - app - INFO - POST /api/v1/checklist-items/acca3e77-9a75-4f1f-8290-85522bb5e256/toggle → 200
+2026-07-30 06:03:54,592 - app - INFO - POST /api/v1/checklist-items/2bdbd997-96d8-484b-925d-1b468f2b0ac7/toggle → 200
+2026-07-30 06:03:55,212 - app - INFO - POST /api/v1/checklist-items/d273c13f-f302-4890-8be1-bf1efcd96120/toggle → 200
+2026-07-30 06:04:00,407 - app - INFO - POST /api/v1/actions/ed7af5a3-7d06-4780-8cf6-34c639f51718/complete → 200
+2026-07-30 06:04:00,440 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 06:04:00,475 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:04:08,462 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 06:04:08,497 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:04:12,133 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 06:04:15,530 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:04:16,706 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:04:16,717 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 06:04:16,752 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:04:56,265 - app - INFO - POST /api/v1/actions/967d6112-6cb3-43d1-a544-8435d1d2f538/complete → 200
+2026-07-30 06:04:56,290 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 06:04:58,044 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 06:04:58,084 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:05:00,429 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 06:05:02,356 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:05:03,491 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:05:04,810 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:05:06,612 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:05:07,383 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:05:07,399 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 06:05:08,673 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 06:05:08,717 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:05:10,511 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 06:05:11,466 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:05:12,298 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:05:12,302 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 06:05:14,749 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:06:19,562 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 06:06:19,591 - app.path - INFO - create path user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=f8c15875-4f35-4fd3-9378-203a6630c89e version=1 outcome='Постепенно снизить вес на ~6 кг за счёт умеренного дефицита калорий и активности'
+2026-07-30 06:06:19,592 - app - INFO - POST /api/v1/projects → 200
+2026-07-30 06:06:19,758 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 06:06:19,759 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e/state-versions → 200
+2026-07-30 06:06:19,793 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e/state-versions → 200
+2026-07-30 06:06:52,878 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 06:06:52,900 - app.path - INFO - refine project=f8c15875-4f35-4fd3-9378-203a6630c89e version=2 question_id=activity_level
+2026-07-30 06:06:52,907 - app - INFO - POST /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e/refine → 200
+2026-07-30 06:07:17,720 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 06:07:30,345 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 06:07:30,358 - app.path - INFO - refine project=f8c15875-4f35-4fd3-9378-203a6630c89e version=3 question_id=diet_pref
+2026-07-30 06:07:30,363 - app - INFO - POST /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e/refine → 200
+2026-07-30 06:07:58,832 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 06:07:58,871 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:08:05,600 - app - INFO - POST /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e/commit → 200
+2026-07-30 06:08:05,675 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 06:08:05,718 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:08:26,470 - app - INFO - POST /api/v1/actions/fdae6dcd-013f-403c-8ecc-db12adbc2f34/complete → 200
+2026-07-30 06:08:26,499 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 06:08:26,536 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:08:33,893 - app - INFO - POST /api/v1/actions/592a2672-39d0-471c-ac9e-2ea3cf669794/complete → 200
+2026-07-30 06:08:33,925 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 06:08:33,969 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:08:37,210 - app - INFO - POST /api/v1/actions/1f8edee5-8588-4c9e-adcc-f9b9f76ec936/complete → 200
+2026-07-30 06:08:37,238 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 06:08:37,267 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:08:39,364 - app - INFO - POST /api/v1/actions/b7899fc6-bbcd-411e-a43e-a22c7884a168/complete → 200
+2026-07-30 06:08:39,404 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 06:08:39,456 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:08:41,895 - app - INFO - POST /api/v1/actions/a2600baf-91ae-442a-82bc-58ba3a3b5a5c/complete → 200
+2026-07-30 06:08:41,927 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 06:08:41,972 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:08:42,746 - app - INFO - POST /api/v1/actions/668ac00f-8386-4b2b-ac11-da8175d9df3b/complete → 200
+2026-07-30 06:08:42,776 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 06:08:44,699 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:11:23,532 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 06:11:23,536 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:11:29,007 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:11:29,805 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:11:29,818 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 06:11:32,243 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:11:34,877 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:11:36,366 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:11:37,109 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:11:37,123 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 06:11:38,717 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:11:38,973 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:11:38,982 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 06:11:39,673 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 06:11:39,701 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:11:41,599 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 06:11:42,758 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:13:38,603 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:44:20,670 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:44:22,283 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:44:22,287 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 06:45:48,615 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:45:51,121 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:45:51,121 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 06:45:54,662 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:45:55,650 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:45:55,655 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 06:45:57,863 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:45:58,622 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:45:58,631 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 06:46:04,283 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:48:18,816 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-07-30 06:48:18,817 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-07-30 06:49:11,072 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 06:49:11,106 - app.path - INFO - create instant_answer user=a81b3885-558d-4ac8-bff3-5f85995c43c0 llm_call=686dbc54-d66e-4e53-be36-b5a2ab8f0dd7 label='Звучит как заготовка, но цель не ясна.' domain=other
+2026-07-30 06:49:11,107 - app - INFO - POST /api/v1/projects → 200
+2026-07-30 06:49:22,643 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 06:49:22,693 - app.path - INFO - create path user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=bd4d26dc-6cfb-4cb6-955d-abf8a32987b6 version=1 outcome='Пожарить картошку на ужин'
+2026-07-30 06:49:22,694 - app - INFO - POST /api/v1/projects → 200
+2026-07-30 06:49:22,846 - app - INFO - GET /api/v1/projects/bd4d26dc-6cfb-4cb6-955d-abf8a32987b6/state-versions → 200
+2026-07-30 06:49:22,869 - app - INFO - GET /api/v1/projects/bd4d26dc-6cfb-4cb6-955d-abf8a32987b6 → 200
+2026-07-30 06:49:22,890 - app - INFO - GET /api/v1/projects/bd4d26dc-6cfb-4cb6-955d-abf8a32987b6/state-versions → 200
+2026-07-30 06:50:31,969 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:50:36,966 - app - INFO - POST /api/v1/events → 201
+2026-07-30 06:50:36,968 - app - INFO - GET /api/v1/projects/bd4d26dc-6cfb-4cb6-955d-abf8a32987b6 → 200
+2026-07-30 06:50:36,988 - app - INFO - GET /api/v1/projects/bd4d26dc-6cfb-4cb6-955d-abf8a32987b6/state-versions → 200
+2026-07-30 06:50:38,948 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:51:05,276 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:51:07,695 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 06:51:39,983 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 06:51:39,997 - app.path - INFO - create instant_answer user=a81b3885-558d-4ac8-bff3-5f85995c43c0 llm_call=86933907-2f7c-45f4-a7b3-4b4cde338846 label='Это звучит как шутка или необычный жест, а не цель.' domain=social
+2026-07-30 06:51:39,998 - app - INFO - POST /api/v1/projects → 200
+2026-07-30 06:52:10,721 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 06:52:16,587 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 06:52:16,618 - app.path - INFO - create path user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=7e45b382-f14a-454d-a502-9d56e9e57527 version=1 outcome='Приготовить ужин с картошкой'
+2026-07-30 06:52:16,619 - app - INFO - POST /api/v1/projects → 200
+2026-07-30 06:52:16,703 - app - INFO - GET /api/v1/projects/7e45b382-f14a-454d-a502-9d56e9e57527/state-versions → 200
+2026-07-30 06:52:16,710 - app - INFO - GET /api/v1/projects/7e45b382-f14a-454d-a502-9d56e9e57527 → 200
+2026-07-30 06:52:16,738 - app - INFO - GET /api/v1/projects/7e45b382-f14a-454d-a502-9d56e9e57527/state-versions → 200
+2026-07-30 06:53:46,766 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 06:53:46,789 - app.path - INFO - refine project=7e45b382-f14a-454d-a502-9d56e9e57527 version=2 question_id=recipe
+2026-07-30 06:53:46,797 - app - INFO - POST /api/v1/projects/7e45b382-f14a-454d-a502-9d56e9e57527/refine → 200
+2026-07-30 06:54:47,285 - app - INFO - GET /api/v1/projects/7e45b382-f14a-454d-a502-9d56e9e57527 → 200
+2026-07-30 06:54:47,317 - app - INFO - POST /api/v1/events → 201
+2026-07-30 07:02:15,495 - app - INFO - GET /api/v1/projects/7e45b382-f14a-454d-a502-9d56e9e57527 → 200
+2026-07-30 07:02:20,768 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 08:10:24,539 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 08:10:26,652 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 08:10:28,466 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 08:10:34,539 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 08:12:38,407 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 08:12:38,411 - app - INFO - POST /api/v1/events → 201
+2026-07-30 08:12:41,719 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 08:12:44,129 - app - INFO - POST /api/v1/events → 201
+2026-07-30 08:12:44,148 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 200
+2026-07-30 08:12:46,461 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 08:40:11,086 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-07-30 08:40:11,087 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-07-30 08:41:10,171 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 08:41:10,179 - app - INFO - POST /api/v1/events → 201
+2026-07-30 08:41:45,107 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 08:41:45,171 - app.path - INFO - create path user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=0bbb4cff-4519-46da-b243-55a747256616 version=1 outcome='Приготовить карбонару дома'
+2026-07-30 08:41:45,172 - app - INFO - POST /api/v1/projects → 200
+2026-07-30 08:41:45,312 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616/state-versions → 200
+2026-07-30 08:41:45,314 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616 → 200
+2026-07-30 08:41:45,338 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616/state-versions → 200
+2026-07-30 08:45:31,495 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 08:45:32,702 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616 → 200
+2026-07-30 08:45:32,703 - app - INFO - POST /api/v1/events → 201
+2026-07-30 08:45:32,737 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616/state-versions → 200
+2026-07-30 08:59:32,477 - app - INFO - POST /api/v1/events → 201
+2026-07-30 08:59:32,493 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 08:59:52,630 - app - INFO - POST /api/v1/events → 201
+2026-07-30 08:59:52,653 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616 → 200
+2026-07-30 08:59:52,684 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616/state-versions → 200
+2026-07-30 08:59:54,676 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 08:59:56,169 - app - INFO - POST /api/v1/events → 201
+2026-07-30 08:59:56,188 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616 → 200
+2026-07-30 08:59:56,213 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616/state-versions → 200
+2026-07-30 09:01:12,554 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 09:01:12,574 - app.path - INFO - refine project=0bbb4cff-4519-46da-b243-55a747256616 version=2 answers=['meat', 'servings'] has_comment=True
+2026-07-30 09:01:12,581 - app - INFO - POST /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616/refine → 200
+2026-07-30 09:01:29,945 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616 → 200
+2026-07-30 09:01:29,979 - app - INFO - POST /api/v1/events → 201
+2026-07-30 09:02:07,560 - app - INFO - POST /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616/commit → 200
+2026-07-30 09:02:07,646 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616 → 200
+2026-07-30 09:02:07,680 - app - INFO - POST /api/v1/events → 201
+2026-07-30 09:02:14,579 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616 → 200
+2026-07-30 09:02:14,610 - app - INFO - POST /api/v1/events → 201
+2026-07-30 09:02:18,246 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616 → 200
+2026-07-30 09:02:22,457 - app - INFO - POST /api/v1/checklist-items/a9dd570f-967f-41c2-99e9-a1feccb5f436/toggle → 200
+2026-07-30 09:02:23,764 - app - INFO - POST /api/v1/checklist-items/6dd6a621-6ae9-4ef9-a838-da38533c2547/toggle → 200
+2026-07-30 09:02:24,661 - app - INFO - POST /api/v1/checklist-items/a9bda30d-0961-427d-94f0-5406467d6656/toggle → 200
+2026-07-30 09:02:25,488 - app - INFO - POST /api/v1/checklist-items/a9bda30d-0961-427d-94f0-5406467d6656/toggle → 200
+2026-07-30 09:02:26,122 - app - INFO - POST /api/v1/checklist-items/a9dd570f-967f-41c2-99e9-a1feccb5f436/toggle → 200
+2026-07-30 09:02:26,930 - app - INFO - POST /api/v1/checklist-items/6dd6a621-6ae9-4ef9-a838-da38533c2547/toggle → 200
+2026-07-30 09:02:27,749 - app - INFO - POST /api/v1/checklist-items/a9dd570f-967f-41c2-99e9-a1feccb5f436/toggle → 200
+2026-07-30 09:02:36,003 - app - INFO - POST /api/v1/checklist-items/a9dd570f-967f-41c2-99e9-a1feccb5f436/toggle → 200
+2026-07-30 09:02:37,120 - app - INFO - POST /api/v1/checklist-items/a9dd570f-967f-41c2-99e9-a1feccb5f436/toggle → 200
+2026-07-30 09:02:38,229 - app - INFO - POST /api/v1/checklist-items/a9dd570f-967f-41c2-99e9-a1feccb5f436/toggle → 200
+2026-07-30 09:02:39,551 - app - INFO - POST /api/v1/checklist-items/a9dd570f-967f-41c2-99e9-a1feccb5f436/toggle → 200
+2026-07-30 09:02:41,356 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 09:02:42,427 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 09:02:44,694 - app - INFO - POST /api/v1/events → 201
+2026-07-30 09:02:44,716 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616 → 200
+2026-07-30 09:02:44,741 - app - INFO - POST /api/v1/events → 201
+2026-07-30 09:02:45,974 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 09:03:56,707 - app - INFO - POST /api/v1/events → 201
+2026-07-30 09:03:56,709 - app - INFO - GET /api/v1/projects/7e45b382-f14a-454d-a502-9d56e9e57527 → 200
+2026-07-30 09:03:56,741 - app - INFO - GET /api/v1/projects/7e45b382-f14a-454d-a502-9d56e9e57527/state-versions → 200
+2026-07-30 09:03:59,316 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 09:03:59,535 - app - INFO - POST /api/v1/events → 201
+2026-07-30 09:03:59,548 - app - INFO - GET /api/v1/projects/7e45b382-f14a-454d-a502-9d56e9e57527 → 200
+2026-07-30 09:03:59,581 - app - INFO - GET /api/v1/projects/7e45b382-f14a-454d-a502-9d56e9e57527/state-versions → 200
+2026-07-30 09:04:01,149 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 09:05:09,531 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 09:05:09,534 - app - INFO - POST /api/v1/events → 201
+2026-07-30 09:05:11,562 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 09:18:48,846 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-07-30 09:18:48,846 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-07-30 09:21:22,295 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 09:21:22,305 - app - INFO - POST /api/v1/events → 201
+2026-07-30 09:22:48,730 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 400 Bad Request"
+2026-07-30 09:22:48,747 - app - INFO - POST /api/v1/projects → 502
+2026-07-30 09:38:09,328 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 09:38:12,411 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 09:38:13,443 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 09:38:22,640 - app - INFO - POST /api/v1/events → 201
+2026-07-30 09:38:22,662 - app - INFO - GET /api/v1/projects/f8c15875-4f35-4fd3-9378-203a6630c89e → 422
+2026-07-30 09:38:31,237 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 09:38:31,478 - app - INFO - POST /api/v1/events → 201
+2026-07-30 09:38:31,524 - app - INFO - GET /api/v1/projects/f623137c-30ed-448d-a617-8004ab685980 → 200
+2026-07-30 09:38:33,083 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 09:38:33,434 - app - INFO - POST /api/v1/events → 201
+2026-07-30 09:38:33,463 - app - INFO - GET /api/v1/projects/bd4d26dc-6cfb-4cb6-955d-abf8a32987b6 → 200
+2026-07-30 09:38:33,508 - app - INFO - GET /api/v1/projects/bd4d26dc-6cfb-4cb6-955d-abf8a32987b6/state-versions → 200
+2026-07-30 09:38:39,728 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 09:38:45,938 - app - INFO - POST /api/v1/events → 201
+2026-07-30 09:38:45,948 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616 → 200
+2026-07-30 09:38:45,975 - app - INFO - POST /api/v1/events → 201
+2026-07-30 09:38:53,729 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616 → 200
+2026-07-30 09:38:53,763 - app - INFO - POST /api/v1/events → 201
+2026-07-30 09:38:58,947 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616 → 200
+2026-07-30 09:39:00,454 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 09:44:23,094 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-07-30 09:44:23,094 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-07-30 09:47:19,559 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 09:47:20,646 - app - INFO - POST /api/v1/events → 201
+2026-07-30 09:47:20,671 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616 → 200
+2026-07-30 09:47:20,692 - app - INFO - POST /api/v1/events → 201
+2026-07-30 09:47:22,592 - app - INFO - POST /api/v1/checklist-items/6dd6a621-6ae9-4ef9-a838-da38533c2547/toggle → 200
+2026-07-30 09:47:23,148 - app - INFO - POST /api/v1/checklist-items/a9bda30d-0961-427d-94f0-5406467d6656/toggle → 200
+2026-07-30 09:47:23,659 - app - INFO - POST /api/v1/checklist-items/35d40f52-ae7f-422e-8216-cd33cafca059/toggle → 200
+2026-07-30 09:47:24,372 - app - INFO - POST /api/v1/checklist-items/b4a65ab4-a990-4f08-91f5-8c6aad7c6167/toggle → 200
+2026-07-30 09:47:34,751 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 09:48:22,289 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 09:48:22,363 - app.path - INFO - create path user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=64cbc0c6-085f-468c-b7cb-f46b959fda9e version=1 outcome='Сделать 30 отжиманий подряд в хорошей форме'
+2026-07-30 09:48:22,364 - app - INFO - POST /api/v1/projects → 200
+2026-07-30 09:48:22,532 - app - INFO - GET /api/v1/projects/64cbc0c6-085f-468c-b7cb-f46b959fda9e/state-versions → 200
+2026-07-30 09:48:22,535 - app - INFO - GET /api/v1/projects/64cbc0c6-085f-468c-b7cb-f46b959fda9e → 200
+2026-07-30 09:48:22,705 - app - INFO - GET /api/v1/projects/64cbc0c6-085f-468c-b7cb-f46b959fda9e/state-versions → 200
+2026-07-30 09:49:53,407 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 09:49:53,433 - app.path - INFO - refine project=64cbc0c6-085f-468c-b7cb-f46b959fda9e version=2 answers=['current', 'form'] has_comment=False
+2026-07-30 09:49:53,440 - app - INFO - POST /api/v1/projects/64cbc0c6-085f-468c-b7cb-f46b959fda9e/refine → 200
+2026-07-30 10:17:25,857 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-07-30 10:17:25,857 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-07-30 10:17:36,769 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 10:17:36,832 - app - INFO - POST /api/v1/events → 201
+2026-07-30 10:18:12,907 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 10:18:12,983 - app.path - INFO - create path user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=34b5c78b-d238-4f5c-b96a-8a06d0668e08 version=1 outcome='Сделать 30 отжиманий подряд с хорошей формой'
+2026-07-30 10:18:12,985 - app - INFO - POST /api/v1/projects → 200
+2026-07-30 10:18:13,118 - app - INFO - GET /api/v1/projects/34b5c78b-d238-4f5c-b96a-8a06d0668e08/state-versions → 200
+2026-07-30 10:18:13,124 - app - INFO - GET /api/v1/projects/34b5c78b-d238-4f5c-b96a-8a06d0668e08 → 200
+2026-07-30 10:18:13,157 - app - INFO - GET /api/v1/projects/34b5c78b-d238-4f5c-b96a-8a06d0668e08/state-versions → 200
+2026-07-30 10:29:45,846 - app - INFO - POST /api/v1/events → 201
+2026-07-30 10:29:45,852 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 10:29:47,434 - app - INFO - POST /api/v1/events → 201
+2026-07-30 10:29:47,469 - app - INFO - GET /api/v1/projects/34b5c78b-d238-4f5c-b96a-8a06d0668e08 → 200
+2026-07-30 10:29:47,501 - app - INFO - GET /api/v1/projects/34b5c78b-d238-4f5c-b96a-8a06d0668e08/state-versions → 200
+2026-07-30 10:31:47,086 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 10:31:47,122 - app.path - INFO - refine project=34b5c78b-d238-4f5c-b96a-8a06d0668e08 version=2 answers=['current', 'schedule'] has_comment=False
+2026-07-30 10:31:47,140 - app - INFO - POST /api/v1/projects/34b5c78b-d238-4f5c-b96a-8a06d0668e08/refine → 200
+2026-07-30 10:33:49,933 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-30 10:33:49,954 - app.path - INFO - refine project=34b5c78b-d238-4f5c-b96a-8a06d0668e08 version=3 answers=['weak_point', 'extra_days'] has_comment=False
+2026-07-30 10:33:49,963 - app - INFO - POST /api/v1/projects/34b5c78b-d238-4f5c-b96a-8a06d0668e08/refine → 200
+2026-07-30 10:33:57,312 - app - INFO - GET /api/v1/projects/34b5c78b-d238-4f5c-b96a-8a06d0668e08 → 200
+2026-07-30 10:33:57,354 - app - INFO - POST /api/v1/events → 201
+2026-07-30 10:34:09,557 - app - INFO - POST /api/v1/projects/34b5c78b-d238-4f5c-b96a-8a06d0668e08/commit → 200
+2026-07-30 10:34:09,649 - app - INFO - GET /api/v1/projects/34b5c78b-d238-4f5c-b96a-8a06d0668e08 → 200
+2026-07-30 10:34:09,687 - app - INFO - POST /api/v1/events → 201
+2026-07-30 10:41:17,381 - app - INFO - POST /api/v1/checklist-items/f7892955-6d64-4628-8c2a-1d0ab68618f3/toggle → 200
+2026-07-30 10:41:18,544 - app - INFO - POST /api/v1/checklist-items/8e969fcd-b6cc-4e8b-b5c1-6bacb58d4e3a/toggle → 200
+2026-07-30 10:41:19,706 - app - INFO - POST /api/v1/checklist-items/d6838fb4-fcb3-4db2-a5f3-f2db9ba5f874/toggle → 200
+2026-07-30 10:41:29,204 - app - INFO - POST /api/v1/checklist-items/1efd2fe1-881e-472b-a9e6-265e94c7b0f2/toggle → 200
+2026-07-30 10:41:29,936 - app - INFO - POST /api/v1/actions/d3349701-c2a5-483c-8f49-322ac12e1cfd/complete → 200
+2026-07-30 10:41:30,042 - app - INFO - GET /api/v1/projects/34b5c78b-d238-4f5c-b96a-8a06d0668e08 → 200
+2026-07-30 10:41:30,089 - app - INFO - POST /api/v1/events → 201
+2026-07-30 10:41:36,059 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 10:41:37,130 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 11:00:03,983 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-07-30 11:00:03,984 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-07-30 11:01:54,580 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 11:01:54,590 - app - INFO - POST /api/v1/events → 201
+2026-07-30 11:01:59,383 - app - INFO - GET /api/v1/projects/34b5c78b-d238-4f5c-b96a-8a06d0668e08 → 200
+2026-07-30 11:01:59,386 - app - INFO - POST /api/v1/events → 201
+2026-07-30 11:01:59,411 - app - INFO - POST /api/v1/events → 201
+2026-07-30 11:02:02,005 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 11:02:20,079 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 11:02:35,703 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 400 Bad Request"
+2026-07-30 11:02:35,720 - app - INFO - POST /api/v1/projects → 502
+2026-07-30 11:52:14,577 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 11:52:18,681 - app - INFO - POST /api/v1/events → 201
+2026-07-30 11:52:18,692 - app - INFO - GET /api/v1/projects/34b5c78b-d238-4f5c-b96a-8a06d0668e08 → 200
+2026-07-30 11:52:18,732 - app - INFO - POST /api/v1/events → 201
+2026-07-30 11:52:21,539 - app - INFO - GET /api/v1/projects/34b5c78b-d238-4f5c-b96a-8a06d0668e08 → 200
+2026-07-30 11:52:21,571 - app - INFO - POST /api/v1/events → 201
+2026-07-30 11:52:53,452 - app - INFO - GET /api/v1/projects/34b5c78b-d238-4f5c-b96a-8a06d0668e08 → 200
+2026-07-30 11:52:54,998 - app - INFO - GET /api/v1/projects → 200
+2026-07-30 11:52:57,343 - app - INFO - POST /api/v1/events → 201
+2026-07-30 11:52:57,369 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616 → 200
+2026-07-30 11:52:57,406 - app - INFO - POST /api/v1/events → 201
+2026-07-30 11:52:59,394 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616 → 200
+2026-07-30 11:52:59,442 - app - INFO - POST /api/v1/events → 201
+2026-07-30 11:53:04,661 - app - INFO - GET /api/v1/projects/0bbb4cff-4519-46da-b243-55a747256616 → 200
+2026-07-30 11:53:10,826 - app - INFO - GET /api/v1/projects → 200

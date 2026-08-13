@@ -1,0 +1,1423 @@
+2026-07-31 08:22:11,907 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-07-31 08:22:11,909 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-07-31 08:49:50,888 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 08:49:50,904 - app - INFO - POST /api/v1/events → 201
+2026-07-31 08:50:27,901 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 08:50:53,555 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 08:50:53,599 - app.path - INFO - create path user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=3d3897c6-70d3-4a06-85ce-17f858c075cb version=1 outcome='Приготовить карбонару дома' gate_llm=f98b55b0-764d-4d7d-998d-99da16b1329a path_llm=93354c18-2b46-44a4-bffc-726bc7866908
+2026-07-31 08:50:53,600 - app - INFO - POST /api/v1/projects → 200
+2026-07-31 08:50:53,761 - app - INFO - GET /api/v1/projects/3d3897c6-70d3-4a06-85ce-17f858c075cb/state-versions → 200
+2026-07-31 08:50:53,765 - app - INFO - GET /api/v1/projects/3d3897c6-70d3-4a06-85ce-17f858c075cb → 200
+2026-07-31 08:50:53,792 - app - INFO - GET /api/v1/projects/3d3897c6-70d3-4a06-85ce-17f858c075cb/state-versions → 200
+2026-07-31 08:58:56,565 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 08:58:56,596 - app.path - INFO - refine project=3d3897c6-70d3-4a06-85ce-17f858c075cb version=2 answers=['meat', 'servings'] has_comment=True
+2026-07-31 08:58:56,611 - app - INFO - POST /api/v1/projects/3d3897c6-70d3-4a06-85ce-17f858c075cb/refine → 200
+2026-07-31 08:59:18,558 - app - INFO - GET /api/v1/projects/3d3897c6-70d3-4a06-85ce-17f858c075cb → 200
+2026-07-31 08:59:18,594 - app - INFO - POST /api/v1/events → 201
+2026-07-31 08:59:23,717 - app - INFO - GET /api/v1/projects/3d3897c6-70d3-4a06-85ce-17f858c075cb → 200
+2026-07-31 08:59:30,975 - app - INFO - GET /api/v1/projects/3d3897c6-70d3-4a06-85ce-17f858c075cb → 200
+2026-07-31 08:59:31,002 - app - INFO - POST /api/v1/events → 201
+2026-07-31 08:59:33,922 - app - INFO - POST /api/v1/projects/3d3897c6-70d3-4a06-85ce-17f858c075cb/commit → 200
+2026-07-31 08:59:34,018 - app - INFO - GET /api/v1/projects/3d3897c6-70d3-4a06-85ce-17f858c075cb → 200
+2026-07-31 08:59:34,053 - app - INFO - POST /api/v1/events → 201
+2026-07-31 08:59:36,787 - app - INFO - GET /api/v1/projects/3d3897c6-70d3-4a06-85ce-17f858c075cb → 200
+2026-07-31 08:59:36,825 - app - INFO - POST /api/v1/events → 201
+2026-07-31 09:00:10,509 - app - INFO - GET /api/v1/projects/3d3897c6-70d3-4a06-85ce-17f858c075cb → 200
+2026-07-31 09:00:11,314 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 09:00:12,640 - app - INFO - POST /api/v1/events → 201
+2026-07-31 09:00:12,686 - app - INFO - GET /api/v1/projects/3d3897c6-70d3-4a06-85ce-17f858c075cb → 200
+2026-07-31 09:00:12,760 - app - INFO - POST /api/v1/events → 201
+2026-07-31 09:00:16,386 - app - INFO - POST /api/v1/checklist-items/c6558938-dd7a-4f1a-a9a3-288031c2fb82/toggle → 200
+2026-07-31 09:00:16,906 - app - INFO - POST /api/v1/checklist-items/0c200d13-fa1e-47bc-aeaa-b33d14ad2388/toggle → 200
+2026-07-31 09:00:17,326 - app - INFO - POST /api/v1/checklist-items/410cc518-3cfc-4b6d-9ade-e71afd99b6da/toggle → 200
+2026-07-31 09:00:17,789 - app - INFO - POST /api/v1/checklist-items/23ef9fe7-d425-45cf-8b64-d8df1226b9b3/toggle → 200
+2026-07-31 09:00:18,230 - app - INFO - POST /api/v1/checklist-items/222fba37-afc5-4603-a295-ff835bf726e8/toggle → 200
+2026-07-31 09:00:18,855 - app - INFO - POST /api/v1/actions/11335a9c-e97f-42b2-b771-6bf31c3857f4/complete → 200
+2026-07-31 09:00:18,893 - app - INFO - GET /api/v1/projects/3d3897c6-70d3-4a06-85ce-17f858c075cb → 200
+2026-07-31 09:00:18,939 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:02:18,185 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-07-31 11:02:18,186 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-07-31 11:02:41,205 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 11:02:41,220 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:02:49,010 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:02:49,018 - app - INFO - GET /api/v1/projects/3d3897c6-70d3-4a06-85ce-17f858c075cb → 200
+2026-07-31 11:02:49,172 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:02:54,863 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 11:02:55,354 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 11:03:22,514 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 11:03:22,581 - app.path - INFO - create path start user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=2965ae13-dc0e-4435-ba46-7d08e57da4f5 version=1 outcome='Карбонара с чесноком' gate_llm=a6e382e9-d002-48b9-bf4c-e282eb492ca3 path_ready=false
+2026-07-31 11:03:22,582 - app - INFO - POST /api/v1/projects → 200
+2026-07-31 11:03:22,822 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5/state-versions → 200
+2026-07-31 11:03:22,827 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:22,858 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5/state-versions → 200
+2026-07-31 11:03:23,005 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 400 Bad Request"
+2026-07-31 11:03:23,014 - app.path - ERROR - complete_create_path_job failed project=2965ae13-dc0e-4435-ba46-7d08e57da4f5 user=a81b3885-558d-4ac8-bff3-5f85995c43c0
+Traceback (most recent call last):
+  File "/app/app/services/path.py", line 798, in _llm_generate_validated
+    raw = await self.llm.generate(
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/app/providers/anthropic_llm.py", line 81, in generate
+    response = await self._client.messages.create(**kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/anthropic/resources/messages/messages.py", line 2545, in create
+    return await self._post(
+           ^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/anthropic/_base_client.py", line 2276, in post
+    return await self.request(cast_to, opts, stream=stream, stream_cls=stream_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/anthropic/_base_client.py", line 1941, in request
+    raise self._make_status_error_from_response(response) from None
+anthropic.BadRequestError: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools.'}, 'request_id': 'req_011Cda2KPhv8xSrmijfkq3F7'}
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/app/services/path.py", line 186, in complete_create_path_job
+    await service.complete_create_path(
+  File "/app/app/services/path.py", line 354, in complete_create_path
+    state, _path_raw, path_llm_call_id = await self._generate_create_path(
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/app/services/path.py", line 492, in _generate_create_path
+    return await self._llm_generate_validated(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/app/services/path.py", line 834, in _llm_generate_validated
+    raise UpstreamError(f"LLM call failed: {exc}") from exc
+app.errors.UpstreamError: LLM call failed: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools.'}, 'request_id': 'req_011Cda2KPhv8xSrmijfkq3F7'}
+2026-07-31 11:03:24,393 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:25,968 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:27,554 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:29,100 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:30,678 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:32,322 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:33,964 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:35,555 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:37,138 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:38,722 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:40,311 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:41,914 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:43,507 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:45,099 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:46,662 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:48,223 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:49,817 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:51,382 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:52,954 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:54,533 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:56,108 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:57,669 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:03:59,262 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:00,844 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:02,429 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:04,012 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:05,591 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:07,168 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:08,738 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:10,312 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:11,884 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:13,455 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:15,018 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:16,595 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:18,179 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:19,759 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:21,344 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:22,930 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:24,532 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:26,111 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:27,700 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:29,285 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:30,866 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:32,526 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:34,114 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:35,695 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:37,273 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:38,854 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:40,440 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:42,021 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:43,578 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:45,119 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:46,678 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:48,254 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:49,847 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:51,405 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:57,590 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:04:59,143 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:00,742 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:02,304 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:03,875 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:05,441 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:07,010 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:08,581 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:10,157 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:11,739 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:13,331 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:14,915 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:16,500 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:18,089 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:19,693 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:21,263 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:22,834 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:24,435 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:26,007 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:27,568 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:29,157 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:30,740 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:05:32,328 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:06:48,403 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:06:49,982 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:06:51,552 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:06:53,130 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:06:54,708 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:06:56,290 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:06:57,868 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:06:59,446 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:01,009 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:02,593 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:04,181 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:05,751 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:07,325 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:08,917 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:10,583 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:12,204 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:13,879 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:15,462 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:17,051 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:18,638 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:20,214 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:21,787 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:23,403 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:24,997 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:26,582 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:28,167 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:29,741 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:31,372 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:32,958 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:34,532 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:36,103 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:37,680 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:39,264 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:40,835 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:42,474 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:44,126 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:45,763 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:47,344 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:48,940 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:50,510 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:52,078 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:53,649 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:55,287 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:56,866 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:07:58,434 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:00,019 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:01,592 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:03,175 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:04,755 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:06,347 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:07,923 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:09,494 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:11,139 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:12,729 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:14,295 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:15,863 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:17,438 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:19,034 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:20,604 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:22,187 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:23,763 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:25,344 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:26,923 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:28,492 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:30,072 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:31,668 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:33,248 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:34,863 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:36,426 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:38,027 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:39,602 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:41,189 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:42,756 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:44,325 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:45,925 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:47,495 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:49,075 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:50,649 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:52,299 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:53,902 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:55,471 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:57,046 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:08:58,629 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:00,191 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:01,789 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:03,374 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:04,953 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:06,536 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:08,115 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:09,681 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:11,251 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:12,828 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:14,406 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:16,000 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:17,598 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:19,278 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:20,846 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:22,417 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:23,973 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:25,531 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:27,208 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:28,798 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:30,382 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:31,960 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:33,547 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:35,134 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:36,705 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:38,281 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:39,848 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:41,454 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:43,031 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:44,606 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:46,185 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:47,761 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:49,361 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:50,936 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:52,515 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:54,099 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:55,676 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:57,250 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:09:58,831 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:00,423 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:01,988 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:03,570 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:05,165 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:06,745 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:08,323 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:09,895 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:11,486 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:13,073 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:14,671 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:16,244 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:17,821 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:19,391 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:20,980 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:22,628 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:24,242 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:25,813 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:27,397 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:28,963 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:30,535 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:32,101 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:33,690 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:35,271 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:36,828 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:38,410 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:39,991 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:41,576 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:43,142 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:44,726 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:46,288 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:47,858 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:49,446 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:51,025 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:52,615 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:54,201 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:55,780 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:57,362 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:10:58,934 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:00,515 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:02,098 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:03,679 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:05,260 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:06,851 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:08,434 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:10,009 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:11,604 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:13,173 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:14,772 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:16,342 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:17,907 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:19,483 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:21,048 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:22,634 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:24,209 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:25,805 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:27,382 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:28,953 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:30,536 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:32,137 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:33,718 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:35,303 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:36,900 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:38,473 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:40,055 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:41,635 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:43,207 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:44,790 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:46,374 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:47,960 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:49,526 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:51,108 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:52,686 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:54,273 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:55,856 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:57,440 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:11:59,022 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:00,613 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:02,192 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:03,760 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:05,341 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:06,899 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:08,475 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:10,062 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:11,649 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:13,240 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:14,818 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:16,397 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:17,980 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:19,565 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:21,141 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:22,715 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:24,295 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:25,877 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:27,449 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:29,032 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:30,605 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:32,163 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:33,802 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:35,380 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:36,941 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:38,518 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:40,093 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:41,687 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:43,338 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:44,925 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:46,497 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:48,076 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:49,659 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:51,237 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:52,820 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:54,403 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:55,978 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:57,571 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:12:59,202 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:00,819 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:02,411 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:03,974 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:05,548 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:07,186 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:08,758 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:10,345 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:11,922 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:13,506 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:15,089 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:16,661 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:18,243 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:19,816 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:21,408 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:22,988 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:24,576 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:26,149 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:27,731 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:29,302 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:30,874 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:32,457 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:34,019 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:35,600 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:37,181 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:38,827 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:40,449 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:42,028 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:43,616 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:45,199 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:46,771 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:48,364 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:49,945 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:51,528 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:53,112 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:54,696 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:56,280 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:57,866 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:13:59,452 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:01,026 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:02,597 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:04,196 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:05,788 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:07,375 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:08,947 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:10,524 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:12,092 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:13,683 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:15,257 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:16,838 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:18,407 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:19,988 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:21,561 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:23,143 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:24,726 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:26,313 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:27,898 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:29,474 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:31,048 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:32,648 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:34,301 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:35,887 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:37,470 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:39,049 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:40,675 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:42,256 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:43,857 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:45,445 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:47,019 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:48,653 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:50,307 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:51,879 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:53,465 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:55,040 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:56,614 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:58,314 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:14:59,931 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:01,501 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:03,083 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:04,664 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:06,257 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:07,835 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:09,419 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:11,001 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:12,580 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:14,150 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:15,718 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:17,334 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:18,915 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:20,525 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:22,105 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:23,671 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:25,257 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:26,826 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:28,405 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:29,982 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:31,551 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:33,125 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:34,716 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:36,298 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:37,876 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:39,459 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:41,061 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:42,637 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:44,210 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:45,782 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:47,356 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:48,926 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:50,511 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:52,094 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:53,676 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:55,266 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:56,842 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:58,412 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:15:59,999 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:01,573 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:03,141 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:04,726 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:06,309 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:07,897 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:09,480 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:11,059 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:12,635 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:14,227 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:15,796 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:17,412 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:18,990 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:20,556 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:22,130 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:23,720 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:25,343 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:26,999 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:28,640 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:30,223 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:31,804 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:33,370 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:34,962 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:36,536 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:38,117 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:39,684 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:41,256 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:42,837 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:44,424 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:46,018 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:47,593 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:49,174 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:50,751 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:52,382 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:53,960 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:55,547 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:57,124 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:16:58,723 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:00,337 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:02,006 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:03,585 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:05,162 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:06,742 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:08,302 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:09,888 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:11,466 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:13,060 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:14,653 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:16,221 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:17,798 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:19,365 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:20,951 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:22,535 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:24,112 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:25,681 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:27,263 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:28,820 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:30,403 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:31,979 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:33,577 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:35,151 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:36,720 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:38,300 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:39,870 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:41,448 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:43,030 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:44,687 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:46,261 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:47,843 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:49,416 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:50,997 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:52,588 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:54,464 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:56,063 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:57,639 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:17:59,210 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:00,788 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:02,375 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:03,957 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:05,582 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:07,172 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:08,765 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:10,342 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:11,911 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:13,482 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:15,064 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:16,628 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:18,213 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:19,794 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:21,356 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:23,005 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:24,601 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:26,168 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:27,745 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:29,323 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:30,915 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:32,501 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:34,078 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:35,668 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:37,265 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:38,857 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:40,437 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:42,006 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:43,594 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:45,177 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:46,756 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:48,331 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:49,918 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:51,507 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:53,086 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:54,664 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:56,228 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:57,803 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:18:59,388 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:00,961 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:02,558 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:04,132 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:05,728 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:07,308 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:08,896 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:10,471 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:12,059 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:13,646 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:15,241 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:16,808 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:18,395 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:19,961 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:21,545 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:23,114 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:24,698 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:26,275 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:27,865 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:29,459 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:31,031 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:32,600 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:34,173 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:35,757 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:37,343 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:38,932 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:40,513 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:42,105 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:43,695 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:45,290 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:46,909 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:48,517 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:50,104 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:52,355 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:53,955 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:55,522 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:57,105 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:19:58,692 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:00,267 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:01,839 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:03,414 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:04,991 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:06,569 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:08,166 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:09,749 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:11,310 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:12,878 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:14,456 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:16,029 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:17,614 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:19,183 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:20,755 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:22,328 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:23,909 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:25,505 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:27,077 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:28,658 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:30,234 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:31,826 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:33,443 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:35,031 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:36,600 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:38,178 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:39,788 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:41,353 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:42,927 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:44,514 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:46,085 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:47,661 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:49,239 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:50,815 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:52,400 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:53,989 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:55,637 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:57,235 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:20:58,816 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:00,397 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:01,967 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:03,547 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:05,131 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:06,717 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:08,301 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:09,884 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:11,467 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:13,028 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:14,623 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:16,183 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:17,759 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:19,333 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:20,916 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:22,488 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:24,061 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:25,624 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:27,187 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:28,763 - app - INFO - GET /api/v1/projects/2965ae13-dc0e-4435-ba46-7d08e57da4f5 → 200
+2026-07-31 11:21:29,842 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 11:21:30,736 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 11:21:35,923 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 11:21:46,201 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:21:46,209 - app - INFO - GET /api/v1/projects/3d3897c6-70d3-4a06-85ce-17f858c075cb → 200
+2026-07-31 11:21:46,238 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:21:48,309 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 11:21:49,146 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:21:49,162 - app - INFO - GET /api/v1/projects/3d3897c6-70d3-4a06-85ce-17f858c075cb → 200
+2026-07-31 11:21:49,198 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:21:51,335 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 11:21:52,025 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:21:52,033 - app - INFO - GET /api/v1/projects/3d3897c6-70d3-4a06-85ce-17f858c075cb → 200
+2026-07-31 11:21:52,065 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:21:53,831 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 11:21:57,386 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 11:22:02,134 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 11:33:01,866 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 11:33:34,783 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 11:33:38,105 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 11:34:39,911 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 11:37:19,210 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-07-31 11:37:19,210 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-07-31 11:37:26,807 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 11:37:26,816 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:38:36,203 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 11:38:36,277 - app.path - INFO - create path start user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=f90d12bf-5835-408b-b7f7-4730166f20f6 version=1 outcome='Карбонара на ужин' gate_llm=b8054238-4235-4d08-97fd-b0f04e07b466 path_ready=false
+2026-07-31 11:38:36,278 - app - INFO - POST /api/v1/projects → 200
+2026-07-31 11:38:36,430 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6/state-versions → 200
+2026-07-31 11:38:36,435 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:38:36,454 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6/state-versions → 200
+2026-07-31 11:38:37,990 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:38:39,582 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:38:41,165 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:38:42,750 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:38:44,320 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:38:45,921 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:38:47,486 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:38:49,048 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:38:50,678 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:38:52,325 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:38:53,897 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:38:55,484 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:38:57,049 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:38:58,628 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:39:00,174 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:39:01,600 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 11:39:01,640 - app.path - INFO - create path ready user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=f90d12bf-5835-408b-b7f7-4730166f20f6 version=2 outcome='Приготовить карбонара дома' gate_llm=b8054238-4235-4d08-97fd-b0f04e07b466 path_llm=6f7fe515-a755-4d0d-9665-8102add20f9c
+2026-07-31 11:39:01,743 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:39:01,859 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:40:01,564 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 11:40:01,595 - app.path - INFO - refine project=f90d12bf-5835-408b-b7f7-4730166f20f6 version=3 answers=['meat', 'servings'] has_comment=True
+2026-07-31 11:40:01,609 - app - INFO - POST /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6/refine → 200
+2026-07-31 11:40:35,084 - app - INFO - POST /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6/commit → 200
+2026-07-31 11:40:35,186 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:40:36,760 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:40:38,347 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:40:40,040 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:40:41,630 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:40:43,219 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:40:44,521 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 11:40:45,614 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:40:46,870 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:40:46,916 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 11:40:46,939 - app.path - INFO - plugins ready user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=f90d12bf-5835-408b-b7f7-4730166f20f6 version=4 llm=69ca2a3d-ceb1-4cd6-b18d-9325fef02402
+2026-07-31 11:40:46,945 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:40:46,946 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:40:46,946 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:40:46,947 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:40:47,174 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:40:51,300 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:40:51,358 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:40:54,789 - app - INFO - POST /api/v1/checklist-items/bbb4a678-b1be-48a7-a2b8-611373ec34f5/toggle → 200
+2026-07-31 11:40:55,280 - app - INFO - POST /api/v1/checklist-items/f168ded5-5fbb-486f-9225-4d2b0ebecf32/toggle → 200
+2026-07-31 11:40:55,746 - app - INFO - POST /api/v1/checklist-items/bcff1652-cf35-404a-8de8-666ad2ac0807/toggle → 200
+2026-07-31 11:40:56,165 - app - INFO - POST /api/v1/checklist-items/5c3da03f-efd0-4318-b2f3-ec18c3a6317f/toggle → 200
+2026-07-31 11:40:56,577 - app - INFO - POST /api/v1/checklist-items/987533b9-e1b0-4895-aac6-cf2116df43bd/toggle → 200
+2026-07-31 11:40:56,949 - app - INFO - POST /api/v1/checklist-items/0ad082fe-bed3-47a1-b635-7134d081f67c/toggle → 200
+2026-07-31 11:40:57,785 - app - INFO - POST /api/v1/actions/4558bc9f-8d49-4d16-8b84-e752967b8af3/complete → 200
+2026-07-31 11:40:57,825 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:40:57,859 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:41:08,176 - app - INFO - POST /api/v1/actions/668c8d85-d4c9-47d5-8772-f4d1eebdc7d1/complete → 200
+2026-07-31 11:41:08,220 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:41:08,262 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:41:29,621 - app - INFO - POST /api/v1/actions/8ef97eb1-2092-405c-8207-7e0e59c41695/complete → 200
+2026-07-31 11:41:29,654 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:41:29,690 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:50:03,880 - app - INFO - POST /api/v1/actions/07972fa1-c835-4fec-a344-76d8567b90d1/complete → 200
+2026-07-31 11:50:03,916 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:50:03,954 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:50:50,023 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:50:50,060 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:58:05,349 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:58:23,128 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 11:58:23,491 - app - INFO - POST /api/v1/events → 201
+2026-07-31 11:58:23,507 - app - INFO - GET /api/v1/projects/f90d12bf-5835-408b-b7f7-4730166f20f6 → 200
+2026-07-31 11:58:23,535 - app - INFO - POST /api/v1/events → 201
+2026-07-31 12:08:09,540 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-07-31 12:08:09,540 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-07-31 12:10:06,305 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-07-31 12:10:06,306 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-07-31 12:10:30,653 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 12:10:30,664 - app - INFO - POST /api/v1/events → 201
+2026-07-31 12:11:03,140 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 12:11:50,714 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 12:11:50,788 - app.path - INFO - create path start user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 version=1 outcome='Макароны по флотски' gate_llm=12c8cc4c-c0bc-49ee-b1aa-1781d3451edf path_ready=false
+2026-07-31 12:11:50,789 - app - INFO - POST /api/v1/projects → 200
+2026-07-31 12:11:51,043 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8/state-versions → 200
+2026-07-31 12:11:51,047 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 → 200
+2026-07-31 12:11:51,074 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8/state-versions → 200
+2026-07-31 12:11:52,609 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 → 200
+2026-07-31 12:11:54,192 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 → 200
+2026-07-31 12:11:55,780 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 → 200
+2026-07-31 12:11:57,361 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 → 200
+2026-07-31 12:11:58,947 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 → 200
+2026-07-31 12:11:59,349 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 12:11:59,372 - app.path - INFO - create path ready user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 version=2 outcome='Приготовить макароны по флотски дома' gate_llm=12c8cc4c-c0bc-49ee-b1aa-1781d3451edf path_llm=98f7e3f0-0436-435c-b6fa-a66f4c9668f8
+2026-07-31 12:12:00,541 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 → 200
+2026-07-31 12:12:00,652 - app - INFO - POST /api/v1/events → 201
+2026-07-31 12:12:26,753 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 12:12:26,774 - app.path - INFO - refine project=2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 version=3 answers=['meat_type', 'servings'] has_comment=False
+2026-07-31 12:12:26,781 - app - INFO - POST /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8/refine → 200
+2026-07-31 12:14:07,723 - app - INFO - POST /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8/commit → 200
+2026-07-31 12:14:07,820 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 → 200
+2026-07-31 12:14:09,410 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 → 200
+2026-07-31 12:14:10,529 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 12:14:10,567 - app.path - INFO - plugins ready user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 version=4 llm=3d5fed10-6d3e-4095-9b62-06130e353bad
+2026-07-31 12:14:10,574 - app - INFO - POST /api/v1/events → 201
+2026-07-31 12:14:11,002 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 → 200
+2026-07-31 12:14:18,229 - app - INFO - POST /api/v1/checklist-items/4d5e735d-1099-4586-989d-62b160b341a9/toggle → 200
+2026-07-31 12:14:18,576 - app - INFO - POST /api/v1/checklist-items/ab18bd34-1d7c-4c41-9c3f-8e5e7df750c8/toggle → 200
+2026-07-31 12:14:19,101 - app - INFO - POST /api/v1/checklist-items/0e3460c1-05d4-476c-a0dc-9a4d94665e60/toggle → 200
+2026-07-31 12:14:19,640 - app - INFO - POST /api/v1/checklist-items/ee62afb0-5fd5-418b-abb2-8f6883f58f95/toggle → 200
+2026-07-31 12:14:20,036 - app - INFO - POST /api/v1/checklist-items/ee62afb0-5fd5-418b-abb2-8f6883f58f95/toggle → 200
+2026-07-31 12:14:20,897 - app - INFO - POST /api/v1/checklist-items/ee62afb0-5fd5-418b-abb2-8f6883f58f95/toggle → 200
+2026-07-31 12:14:21,361 - app - INFO - POST /api/v1/checklist-items/8f74fc08-fbed-46af-b185-c68cf1baec4d/toggle → 200
+2026-07-31 12:14:22,454 - app - INFO - POST /api/v1/actions/73a17c8d-1cae-4b7e-abcf-1fe6ad313b41/complete → 200
+2026-07-31 12:14:22,487 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 → 200
+2026-07-31 12:14:22,519 - app - INFO - POST /api/v1/events → 201
+2026-07-31 12:15:07,851 - app - INFO - POST /api/v1/actions/affbf9dd-3f7b-4b6a-86f2-85999d920c5a/complete → 200
+2026-07-31 12:15:07,895 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 → 200
+2026-07-31 12:15:09,952 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 → 200
+2026-07-31 12:15:09,988 - app - INFO - POST /api/v1/events → 201
+2026-07-31 12:15:13,167 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 → 200
+2026-07-31 12:15:14,332 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 12:15:15,545 - app - INFO - POST /api/v1/events → 201
+2026-07-31 12:15:15,570 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 → 200
+2026-07-31 12:15:16,533 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 → 200
+2026-07-31 12:15:16,567 - app - INFO - POST /api/v1/events → 201
+2026-07-31 12:28:44,754 - app - INFO - GET /api/v1/projects/2766f9a0-10c3-4926-a3b9-9e1ec9352bd8 → 200
+2026-07-31 12:28:45,858 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 12:56:04,262 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-07-31 12:56:04,263 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-07-31 12:57:24,961 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 12:57:24,970 - app - INFO - POST /api/v1/events → 201
+2026-07-31 12:58:11,491 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 12:58:11,563 - app.path - INFO - create path start user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=e72e0a1e-138b-47c2-be1e-b667e194c895 version=1 outcome='Паста Болоньезе' gate_llm=77d3d70f-f7e1-48cf-ace9-d915a114acf1 path_ready=false
+2026-07-31 12:58:11,564 - app - INFO - POST /api/v1/projects → 200
+2026-07-31 12:58:11,836 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895/state-versions → 200
+2026-07-31 12:58:11,841 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 12:58:11,875 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895/state-versions → 200
+2026-07-31 12:58:13,404 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 12:58:14,993 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 12:58:16,590 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 12:58:18,163 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 12:58:19,750 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 12:58:21,341 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 12:58:22,924 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 12:58:24,582 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 12:58:26,229 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 12:58:26,324 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 12:58:26,342 - app.path - INFO - create path ready user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=e72e0a1e-138b-47c2-be1e-b667e194c895 version=2 outcome='Приготовить пасту Болоньезе дома' gate_llm=77d3d70f-f7e1-48cf-ace9-d915a114acf1 path_llm=5fe4942f-85ff-4940-8ea5-fb303d9301a8
+2026-07-31 12:58:27,806 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 12:58:27,873 - app - INFO - POST /api/v1/events → 201
+2026-07-31 12:59:29,766 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 12:59:29,790 - app.path - INFO - refine project=e72e0a1e-138b-47c2-be1e-b667e194c895 version=3 answers=['time', 'servings'] has_comment=False
+2026-07-31 12:59:29,797 - app - INFO - POST /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895/refine → 200
+2026-07-31 13:00:26,766 - app - INFO - POST /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895/commit → 200
+2026-07-31 13:00:26,848 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:00:29,856 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 13:00:30,254 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 13:00:30,299 - app.path - INFO - plugins ready user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=e72e0a1e-138b-47c2-be1e-b667e194c895 version=4 llm=192aaf78-7cd8-416d-9493-a1fbdf7e45f0
+2026-07-31 13:00:30,304 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:00:30,305 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:00:31,420 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 13:00:45,054 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 13:00:45,092 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:00:47,025 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 13:00:47,060 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:01:08,037 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:01:11,089 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:01:42,780 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:01:42,786 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 13:01:42,823 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:01:51,169 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 13:01:51,213 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:03:01,788 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 13:03:03,582 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 13:03:03,625 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:03:15,749 - app - INFO - POST /api/v1/checklist-items/e4e53e09-a121-47d0-8183-26b369e2d1fb/toggle → 200
+2026-07-31 13:03:16,447 - app - INFO - POST /api/v1/checklist-items/7da61de8-be6c-4c4e-90ac-8437a0fe96a6/toggle → 200
+2026-07-31 13:03:17,030 - app - INFO - POST /api/v1/checklist-items/7da61de8-be6c-4c4e-90ac-8437a0fe96a6/toggle → 200
+2026-07-31 13:03:17,966 - app - INFO - POST /api/v1/checklist-items/7da61de8-be6c-4c4e-90ac-8437a0fe96a6/toggle → 200
+2026-07-31 13:03:18,614 - app - INFO - POST /api/v1/checklist-items/f5637cea-caa7-43fd-9186-efb97ac91b0b/toggle → 200
+2026-07-31 13:03:20,654 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 13:03:22,794 - app - INFO - POST /api/v1/checklist-items/2ace7a06-ef93-4747-be7f-48c7873e3833/toggle → 200
+2026-07-31 13:03:23,342 - app - INFO - POST /api/v1/checklist-items/91b41aa8-bcca-47d4-8553-7680b385b0ae/toggle → 200
+2026-07-31 13:03:23,818 - app - INFO - POST /api/v1/checklist-items/2f879d95-dfec-4943-8558-61119cff10f9/toggle → 200
+2026-07-31 13:03:24,275 - app - INFO - POST /api/v1/checklist-items/bba1837e-bbaa-4d25-aa9a-81994531b95f/toggle → 200
+2026-07-31 13:03:25,018 - app - INFO - POST /api/v1/checklist-items/fd681aea-85b1-4884-be31-dc9753a1e2c5/toggle → 200
+2026-07-31 13:03:27,299 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 13:03:27,338 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:05:05,411 - app - INFO - GET /api/v1/projects/e72e0a1e-138b-47c2-be1e-b667e194c895 → 200
+2026-07-31 13:05:08,256 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:05:16,587 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 13:05:16,626 - app.path - INFO - create path start user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=a22d19da-56c9-4ebd-9fcd-801117a6727a version=1 outcome='Навести порядок в квартире' gate_llm=95fbfe4b-287f-4cef-8582-3409cde80433 path_ready=false
+2026-07-31 13:05:16,628 - app - INFO - POST /api/v1/projects → 200
+2026-07-31 13:05:16,837 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a/state-versions → 200
+2026-07-31 13:05:16,843 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:05:16,879 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a/state-versions → 200
+2026-07-31 13:05:18,425 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:05:20,024 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:05:21,671 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:05:23,256 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:05:24,849 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:05:26,439 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:05:28,003 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:05:29,541 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:05:31,124 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:05:32,707 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:05:34,283 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:05:35,909 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:05:37,481 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:05:38,960 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 13:05:38,987 - app.path - INFO - create path ready user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=a22d19da-56c9-4ebd-9fcd-801117a6727a version=2 outcome='Чистая и организованная квартира' gate_llm=95fbfe4b-287f-4cef-8582-3409cde80433 path_llm=17f5dce0-c4ff-4c99-9689-f8b07d681201
+2026-07-31 13:05:39,075 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:05:39,112 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:06:49,492 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 13:06:49,533 - app.path - INFO - refine project=a22d19da-56c9-4ebd-9fcd-801117a6727a version=3 answers=['scope', 'time', 'declutter'] has_comment=True
+2026-07-31 13:06:49,540 - app - INFO - POST /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a/refine → 200
+2026-07-31 13:07:02,426 - app - INFO - POST /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a/commit → 200
+2026-07-31 13:07:02,510 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:07:02,535 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:07:04,667 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:07:04,718 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:07:56,238 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:07:57,254 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:07:57,734 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:08:11,058 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 13:08:11,070 - app.path - INFO - create instant_answer user=a81b3885-558d-4ac8-bff3-5f85995c43c0 llm_call=1d2d52b0-3adf-495a-8905-5183950e9b80 label='Разовая задача, не цель.' domain=home
+2026-07-31 13:08:11,072 - app - INFO - POST /api/v1/projects → 200
+2026-07-31 13:08:47,154 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:08:47,871 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:09:17,627 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:09:19,191 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:09:20,529 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:09:20,539 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:09:20,574 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:09:33,314 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:09:34,152 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:09:34,178 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:09:34,220 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:10:13,582 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:10:13,629 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:10:26,707 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:10:27,621 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:10:29,343 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:10:29,364 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:10:29,395 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:10:30,935 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:10:32,265 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:10:32,269 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:10:32,296 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:10:33,582 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:10:35,173 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:10:36,996 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:10:37,011 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:10:37,044 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:10:38,775 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:10:44,202 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:10:44,223 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:10:44,254 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:10:46,402 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:11:51,422 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:12:01,946 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:12:26,210 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:12:31,762 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:12:34,290 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:12:34,292 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:12:34,326 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:12:35,883 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:12:35,923 - app - INFO - POST /api/v1/events → 201
+2026-07-31 13:12:42,634 - app - INFO - GET /api/v1/projects/a22d19da-56c9-4ebd-9fcd-801117a6727a → 200
+2026-07-31 13:12:44,266 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:12:50,010 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:12:52,267 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:13:02,406 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:13:31,828 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 13:13:31,841 - app.path - INFO - create instant_answer user=a81b3885-558d-4ac8-bff3-5f85995c43c0 llm_call=77d7522a-f59a-422b-8ea3-85210fdcdca9 label='Какую именно домашку по русскому?' domain=learning
+2026-07-31 13:13:31,842 - app - INFO - POST /api/v1/projects → 200
+2026-07-31 13:13:54,417 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 13:14:22,830 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 13:14:22,863 - app.path - INFO - create path start user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=434b7345-69e8-42db-b486-a161ddf2bde1 version=1 outcome='Подготовка к ОГЭ по русскому языку' gate_llm=8964d23e-27a6-4a9b-b124-15ce4ea329b4 path_ready=false
+2026-07-31 13:14:22,865 - app - INFO - POST /api/v1/projects → 200
+2026-07-31 13:14:22,961 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1/state-versions → 200
+2026-07-31 13:14:22,969 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:22,996 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1/state-versions → 200
+2026-07-31 13:14:24,528 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:26,102 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:27,692 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:29,273 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:30,854 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:32,439 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:34,025 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:35,629 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:37,221 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:38,797 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:40,381 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:41,932 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:43,509 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:45,089 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:46,674 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:48,327 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:49,912 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:51,505 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:53,099 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:54,691 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:56,296 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:57,857 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:14:59,453 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:15:01,049 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:15:02,631 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:15:04,183 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:15:05,788 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:15:07,359 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:15:08,953 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:15:10,533 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:15:12,110 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 13:15:13,315 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 13:15:13,362 - app.path - ERROR - complete_create_path_job failed project=434b7345-69e8-42db-b486-a161ddf2bde1 user=a81b3885-558d-4ac8-bff3-5f85995c43c0
+Traceback (most recent call last):
+  File "/app/app/services/path.py", line 1059, in _llm_generate_validated
+    raw = await self.llm.generate(
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/app/providers/anthropic_llm.py", line 85, in generate
+    raw_response: Any = json.loads(text)
+                        ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/json/decoder.py", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/json/decoder.py", line 354, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+json.decoder.JSONDecodeError: Unterminated string starting at: line 1 column 19974 (char 19973)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/app/services/path.py", line 256, in complete_create_path_job
+    await service.complete_create_path(
+  File "/app/app/services/path.py", line 487, in complete_create_path
+    state, _path_raw, path_llm_call_id = await self._generate_create_path(
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/app/services/path.py", line 736, in _generate_create_path
+    return await self._llm_generate_validated(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/app/services/path.py", line 1095, in _llm_generate_validated
+    raise UpstreamError(f"LLM call failed: {exc}") from exc
+app.errors.UpstreamError: LLM call failed: Unterminated string starting at: line 1 column 19974 (char 19973)
+2026-07-31 13:15:13,680 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 14:22:10,295 - app - INFO - LLM provider configured: Anthropic model=claude-haiku-4-5 cache=True ttl=5m
+2026-07-31 14:22:10,295 - app - INFO - File logging enabled: dir=/app/logs backup_days=30
+2026-07-31 14:22:28,708 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 14:22:28,713 - app - INFO - POST /api/v1/events → 201
+2026-07-31 14:25:03,049 - app - INFO - POST /api/v1/events → 201
+2026-07-31 14:25:03,073 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1 → 200
+2026-07-31 14:25:03,099 - app - INFO - GET /api/v1/projects/434b7345-69e8-42db-b486-a161ddf2bde1/state-versions → 200
+2026-07-31 14:25:06,480 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 14:25:23,689 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 14:25:23,736 - app.path - INFO - create path start user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=9c59249f-d1aa-46c3-980b-bbc21d7cdd07 version=1 outcome='От текущего уровня к 30 отжиманиям' gate_llm=5fe69e0d-4ef5-405d-a8d4-1e384f5e5c8c path_ready=false
+2026-07-31 14:25:23,736 - app - INFO - POST /api/v1/projects → 200
+2026-07-31 14:25:24,158 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07/state-versions → 200
+2026-07-31 14:25:24,163 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:24,255 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07/state-versions → 200
+2026-07-31 14:25:25,789 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:27,370 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:28,950 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:30,517 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:32,095 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:33,700 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:35,291 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:36,861 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:38,437 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:40,022 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:41,618 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:43,205 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:44,798 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:46,380 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:47,966 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:49,540 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:51,129 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:52,718 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:54,300 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:55,870 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:57,442 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:25:59,009 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:00,562 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:02,158 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:03,744 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:04,905 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 14:26:05,317 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:06,908 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:08,497 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:10,084 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:11,673 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:13,258 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:14,858 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:16,420 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:18,015 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:19,597 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:21,168 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:22,741 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:24,326 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:25,899 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:27,489 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:29,098 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:30,694 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:32,286 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:33,849 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:35,411 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:36,980 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:38,556 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:40,034 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 14:26:40,056 - app.path - INFO - create path ready user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=9c59249f-d1aa-46c3-980b-bbc21d7cdd07 version=2 outcome='Сделать 30 отжиманий подряд' gate_llm=5fe69e0d-4ef5-405d-a8d4-1e384f5e5c8c path_llm=d3d04ca0-7866-42f7-8134-2c2b149e12a0
+2026-07-31 14:26:40,123 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 14:26:40,194 - app - INFO - POST /api/v1/events → 201
+2026-07-31 14:28:52,584 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 14:28:52,629 - app.path - INFO - refine project=9c59249f-d1aa-46c3-980b-bbc21d7cdd07 version=3 answers=['current_level', 'frequency'] has_comment=False
+2026-07-31 14:28:52,637 - app - INFO - POST /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07/refine → 200
+2026-07-31 15:06:10,238 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:06:11,007 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:06:12,499 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:06:37,126 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:06:42,755 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:07:49,636 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:07:54,958 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:08:37,498 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:09:24,512 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 15:09:24,534 - app.path - INFO - create path start user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=5fe674bf-39a7-4dc1-9038-d95ae8afbab7 version=1 outcome='Карбонара на ужин' gate_llm=a5d68c4e-2476-4105-8cda-63dd569e36a9 path_ready=false
+2026-07-31 15:09:24,534 - app - INFO - POST /api/v1/projects → 200
+2026-07-31 15:09:24,623 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7/state-versions → 200
+2026-07-31 15:09:24,632 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:09:24,655 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7/state-versions → 200
+2026-07-31 15:09:26,181 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:09:27,746 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:09:29,322 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:09:30,898 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:09:32,465 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:09:34,046 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:09:35,601 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:09:35,784 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 15:09:35,797 - app.path - INFO - create path ready user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=5fe674bf-39a7-4dc1-9038-d95ae8afbab7 version=2 outcome='Приготовить карбонару дома' gate_llm=a5d68c4e-2476-4105-8cda-63dd569e36a9 path_llm=d47e533a-3f71-4b90-b5d0-f16b7a7cc11f
+2026-07-31 15:09:37,139 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:09:37,215 - app - INFO - POST /api/v1/events → 201
+2026-07-31 15:10:06,396 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 15:10:06,412 - app.path - INFO - refine project=5fe674bf-39a7-4dc1-9038-d95ae8afbab7 version=3 answers=['meat', 'servings'] has_comment=True
+2026-07-31 15:10:06,417 - app - INFO - POST /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7/refine → 200
+2026-07-31 15:10:53,113 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 15:10:53,128 - app.path - INFO - refine project=5fe674bf-39a7-4dc1-9038-d95ae8afbab7 version=4 answers=[] has_comment=True
+2026-07-31 15:10:53,133 - app - INFO - POST /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7/refine → 200
+2026-07-31 15:11:07,064 - app - INFO - POST /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7/commit → 200
+2026-07-31 15:11:07,156 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:11:08,708 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:11:10,330 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:11:11,646 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 15:11:11,665 - app.path - INFO - plugins ready user=a81b3885-558d-4ac8-bff3-5f85995c43c0 project=5fe674bf-39a7-4dc1-9038-d95ae8afbab7 version=5 llm=67dbf8c6-09c8-4f57-b481-534f7d2c6b1a
+2026-07-31 15:11:11,669 - app - INFO - POST /api/v1/events → 201
+2026-07-31 15:11:11,902 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:11:12,388 - app - INFO - POST /api/v1/checklist-items/cbc91f55-8867-4287-aae8-c84d15451947/toggle → 200
+2026-07-31 15:11:13,148 - app - INFO - POST /api/v1/checklist-items/13a9eda3-e025-4e6e-a721-49a4693e2e65/toggle → 200
+2026-07-31 15:11:15,146 - app - INFO - POST /api/v1/checklist-items/acd18202-0761-4337-af75-d4f1e2727c3b/toggle → 200
+2026-07-31 15:11:17,301 - app - INFO - POST /api/v1/checklist-items/b19a9b33-839b-4984-9412-c6c8d98b65b7/toggle → 200
+2026-07-31 15:11:18,259 - app - INFO - POST /api/v1/checklist-items/22e88c6b-f778-41c8-840c-1da2e829e894/toggle → 200
+2026-07-31 15:11:20,611 - app - INFO - POST /api/v1/actions/8648c424-02e8-4f57-85a5-577e511938f7/complete → 200
+2026-07-31 15:11:20,651 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:11:20,692 - app - INFO - POST /api/v1/events → 201
+2026-07-31 15:11:43,541 - app - INFO - POST /api/v1/actions/d86a28e1-582f-4c4c-8d9b-84352d086b92/complete → 200
+2026-07-31 15:11:43,577 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:11:43,614 - app - INFO - POST /api/v1/events → 201
+2026-07-31 15:12:37,811 - app - INFO - POST /api/v1/actions/a14b38a9-4813-42a7-9236-a32aed41c3a6/complete → 200
+2026-07-31 15:12:37,856 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:12:39,364 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:12:39,408 - app - INFO - POST /api/v1/events → 201
+2026-07-31 15:12:41,159 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:12:42,186 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:12:45,396 - app - INFO - POST /api/v1/events → 201
+2026-07-31 15:12:45,417 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:12:45,451 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07/state-versions → 200
+2026-07-31 15:12:45,470 - app - INFO - POST /api/v1/events → 201
+2026-07-31 15:13:05,762 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:13:07,641 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:13:19,630 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:13:19,632 - app - INFO - POST /api/v1/events → 201
+2026-07-31 15:13:20,769 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:13:20,813 - app - INFO - POST /api/v1/events → 201
+2026-07-31 15:13:32,835 - app - INFO - GET /api/v1/projects/5fe674bf-39a7-4dc1-9038-d95ae8afbab7 → 200
+2026-07-31 15:13:34,514 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:22:59,875 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:22:59,887 - app - INFO - POST /api/v1/events → 201
+2026-07-31 15:22:59,925 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07/state-versions → 200
+2026-07-31 15:22:59,935 - app - INFO - POST /api/v1/events → 201
+2026-07-31 15:23:02,575 - app - INFO - POST /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07/commit → 200
+2026-07-31 15:23:02,711 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:23:04,265 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:23:05,851 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:23:09,267 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-07-31 15:23:10,295 - app.path - ERROR - complete_materialize_plugins_job failed project=9c59249f-d1aa-46c3-980b-bbc21d7cdd07 user=a81b3885-558d-4ac8-bff3-5f85995c43c0
+Traceback (most recent call last):
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 578, in _executemany
+    return await self._connection.executemany(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/asyncpg/connection.py", line 401, in executemany
+    return await self._executemany(command, args, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/asyncpg/connection.py", line 1997, in _executemany
+    result, _ = await self._do_execute(
+                ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/asyncpg/connection.py", line 2033, in _do_execute
+    result = await executor(stmt, None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "asyncpg/protocol/protocol.pyx", line 266, in bind_execute_many
+asyncpg.exceptions.DeadlockDetectedError: deadlock detected
+DETAIL:  Process 321 waits for ShareLock on transaction 5119; blocked by process 71.
+Process 71 waits for ShareLock on transaction 5117; blocked by process 321.
+HINT:  See server log for query details.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1938, in _exec_single_context
+    self.dialect.do_executemany(
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 949, in do_executemany
+    cursor.executemany(statement, parameters)
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 590, in executemany
+    return self._adapt_connection.await_(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 582, in _executemany
+    self._handle_exception(error)
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 513, in _handle_exception
+    self._adapt_connection._handle_exception(error)
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 797, in _handle_exception
+    raise translated_error from error
+sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.Error: <class 'asyncpg.exceptions.DeadlockDetectedError'>: deadlock detected
+DETAIL:  Process 321 waits for ShareLock on transaction 5119; blocked by process 71.
+Process 71 waits for ShareLock on transaction 5117; blocked by process 321.
+HINT:  See server log for query details.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/app/services/path.py", line 312, in complete_materialize_plugins_job
+    await service.complete_materialize_plugins(
+  File "/app/app/services/path.py", line 618, in complete_materialize_plugins
+    await materialize_path(
+  File "/app/app/services/path_materialize.py", line 247, in materialize_path
+    await db.flush()
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/session.py", line 786, in flush
+    await greenlet_spawn(self.sync_session.flush, objects=objects)
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4353, in flush
+    self._flush(objects)
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4488, in _flush
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 122, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 4449, in _flush
+    flush_context.execute()
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py", line 465, in execute
+    rec.execute(self)
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py", line 678, in execute
+    util.preloaded.orm_persistence.delete_obj(
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py", line 194, in delete_obj
+    _emit_delete_statements(
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py", line 1472, in _emit_delete_statements
+    c = connection.execute(
+        ^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+           ^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2365, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1938, in _exec_single_context
+    self.dialect.do_executemany(
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 949, in do_executemany
+    cursor.executemany(statement, parameters)
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 590, in executemany
+    return self._adapt_connection.await_(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 582, in _executemany
+    self._handle_exception(error)
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 513, in _handle_exception
+    self._adapt_connection._handle_exception(error)
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 797, in _handle_exception
+    raise translated_error from error
+sqlalchemy.exc.DBAPIError: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DeadlockDetectedError'>: deadlock detected
+DETAIL:  Process 321 waits for ShareLock on transaction 5119; blocked by process 71.
+Process 71 waits for ShareLock on transaction 5117; blocked by process 321.
+HINT:  See server log for query details.
+[SQL: DELETE FROM checklist_items WHERE checklist_items.id = $1::UUID]
+[parameters: [(UUID('0119fd97-dc6d-4907-8226-f74cbe9d5301'),), (UUID('02773078-4a42-4002-9340-ddda888fc9f4'),), (UUID('02feb48c-f0f2-41a1-93e9-587d22e34988'),), (UUID('030ca6f1-4ac1-4898-b96e-8f2724fbf0ac'),), (UUID('1080655b-7689-4f2a-8148-b017af540ad8'),), (UUID('175439fb-14f8-4328-ad25-6540ef67fd9c'),), (UUID('1a693865-f6bf-448f-b98e-246dfb2f9684'),), (UUID('1ae03618-bff2-4fb7-8d90-a857826c9f2f'),)  ... displaying 10 of 45 total bound parameter sets ...  (UUID('fa09252a-b08c-4e5c-a9af-2c0ec4308b94'),), (UUID('fd70097a-ad79-4958-8ad8-4175e7f4faeb'),)]]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+2026-07-31 15:23:10,307 - app - INFO - POST /api/v1/events → 201
+2026-07-31 15:23:10,308 - app - INFO - POST /api/v1/checklist-items/916dfede-5b6e-4c99-a76b-3b7ac5d00dd4/toggle → 200
+2026-07-31 15:23:11,357 - app - INFO - POST /api/v1/checklist-items/02773078-4a42-4002-9340-ddda888fc9f4/toggle → 200
+2026-07-31 15:23:11,945 - app - INFO - POST /api/v1/checklist-items/252b9ce7-62b4-47fb-aad1-f3ea18bb8462/toggle → 200
+2026-07-31 15:23:12,671 - app - INFO - POST /api/v1/actions/44f1569b-aa67-4d42-accf-64bfe73cc489/complete → 200
+2026-07-31 15:23:12,695 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:23:14,276 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:23:15,872 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:23:17,477 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:23:19,040 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:23:19,290 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:23:19,336 - app - INFO - POST /api/v1/events → 201
+2026-07-31 15:23:20,651 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:23:22,225 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:23:23,790 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:23:25,356 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:23:26,531 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:23:27,354 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:23:28,229 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:24:31,194 - app - INFO - POST /api/v1/events → 201
+2026-07-31 15:24:31,202 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:24:32,767 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:24:33,384 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:24:33,428 - app - INFO - POST /api/v1/events → 201
+2026-07-31 15:24:34,380 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:24:35,963 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:24:37,551 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:24:39,133 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:24:40,720 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:24:42,345 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:24:43,965 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:24:45,540 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:24:46,384 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:24:47,941 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:24:49,100 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:24:55,965 - app - INFO - POST /api/v1/events → 201
+2026-07-31 15:24:55,982 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:24:57,608 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:24:58,365 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:24:58,409 - app - INFO - POST /api/v1/events → 201
+2026-07-31 15:24:59,203 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:25:00,778 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:25:02,339 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:25:03,967 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:25:05,613 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:25:07,182 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:25:08,742 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:25:08,759 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:25:10,342 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:25:10,627 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:25:25,920 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:25:27,325 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:25:28,802 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:25:39,168 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:25:40,293 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:25:41,449 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:25:42,436 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:25:43,353 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:28:39,983 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:29:18,599 - app - INFO - GET /api/v1/projects/9c59249f-d1aa-46c3-980b-bbc21d7cdd07 → 200
+2026-07-31 15:29:18,600 - app - INFO - POST /api/v1/events → 201
+2026-07-31 15:29:20,005 - app - INFO - GET /api/v1/projects → 200
+2026-07-31 15:31:26,060 - app - INFO - GET /api/v1/projects → 200
