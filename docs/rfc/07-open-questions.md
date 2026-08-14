@@ -23,13 +23,14 @@ Do not invent these in implementation. Default until decided: the conservative c
 | Q15 | Gestures on lid tiles | **Locked:** no inner carousel on the lid. |
 | Q16 | Horizontal category tabs | **Parked.** |
 | Q17 | Kebab vs current chat if widget never appeared | Current chat + widget as send-context. |
-| Q18 | Odd grid sizes | Prefer `4×1` / `2×2` / `4×2` / `4×4`. |
+| Q18 | Odd grid sizes and packing | Prefer `4×1` / `2×2` / `4×2` / `4×4`. Packing v0 in [03](./03-product.md): row-major in rank order, gaps allowed, no reflow. Revisit against a real week, not by adding a layout engine. |
 | Q19 | Auth | Device-id was prototype-only. Real accounts before multi-device sync. Provider TBD. |
-| Q20 | Source of truth / offline | **Server of record** for widget state (as archive 0.1). Lid **reads from cache** so execute works offline (P5). Mutations queue and sync. Conflict: last-write-wins until proven otherwise. |
+| Q20 | Source of truth / offline | **Server of record** for widget state (as archive 0.1). Lid **reads from cache** so execute works offline (P5). Mutations queue and sync. Conflict: last-write-wins on **structure** (payload, `version`). **Runtime progress is not LWW** — ticks, elapsed timers and stepper position merge per item, and a stale structural write must never drop them ([06](./06-never-do.md) AI #2). Plain LWW over the whole widget silently eats a set logged offline, which is P5 failing at exactly the moment it matters. Still not designed here. |
 | Q21 | Reminder infra | OS local notification from the reminder object. Server fan-out later if local is not enough. No LLM at fire. |
 | Q22 | Eval harness | Required before widening the tool loop (create / mutate / explain). Not optional polish. |
 | Q23 | Delivery phases | Product wedge in [00](./00-vision.md). Eng: (1) lid + catalog + cache execute (2) chat tools + New chat (3) reminders + morning (4) Deeds/Inspect carousel (5) measure cost/active day, then any Plus talk. |
 | Q24 | Cost per active day | **Measure**; do not invent a USD number here. Gate Plus on a measured budget. |
+| Q25 | P3 leak boundary inside a long thread | One continuous chat (P2) makes “has a desk object” soft by construction: after the first binding, almost any question has an object in context. **No limiter in v0** — measure the share of turns that neither mutate, remember, nor explain a bound widget. Add a rule only if that share grows. Do not build a classifier up front. |
 
 ## This pack is product, not an eng spec
 

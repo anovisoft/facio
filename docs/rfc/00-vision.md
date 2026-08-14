@@ -55,6 +55,8 @@ Honesty line: **good enough to do tonight without leaving the lid; not specialis
 
 Do not add a third executable vertical until carbonara **or** a training day is good enough that a casual user does not immediately prop YouTube / download Hevy *for that evening*. Two bars, not ten apps.
 
+Read that bar narrowly, or it contradicts the honesty line. It is about a **casual** user **mid-run**: they already chose this dish or this session, and they get through it on the lid without opening a second app in the middle. It is not “deeper than Hevy,” and it is not an enthusiast comparing feature lists — that person is out of scope by the table above. Specialist-grade is not the bar. **Finishing tonight without a second screen** is.
+
 Also keep: no morning “plan your day for 10 minutes” (morning is a check); memory is life (salt, not before 19:00), not a workgraph.
 
 ## Wedge

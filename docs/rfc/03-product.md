@@ -54,6 +54,8 @@ Four sections, **not** four homes:
 
 Grid: 4 columns. Sizes are **width × height** in cells. Type picks one of: `4×1` (banner), `1×2`, `1×4`, `2×2`, `2×4`, `3×4`, `4×2`, `4×4`. Prefer iOS-like `4×1` / `2×2` / `4×2` / `4×4` when a type fits. User does not place wallpaper.
 
+**Packing v0.** Fill row-major inside each section, in rank order ([02 P10](./02-principles.md)). A tile that does not fit the remaining width starts a new row and **leaves the gap**. Never reorder tiles to close a hole — rank order carries information, density does not. If the gaps look bad on a real week, change the type’s size, not the packer ([07](./07-open-questions.md) Q18).
+
 Kebab on every tile (top-right).
 
 **Off days.** Cook and train are episodic. If Today is empty, leave it empty — composer is still there; Soon may sit below. A user-asked Today checklist is valid furniture. Padding the grid so every morning looks busy is the planner trap and kills memory (salt never pays off if carbonara never repeats as itself).
@@ -84,7 +86,7 @@ In the sheet, MCP/tools see the user’s widgets. When the model binds an object
 
 Snapshot is not a runtime (no timer, no per-item ticks, no stepper beats inside the bubble). Tap card → Use or Inspect as appropriate.
 
-Chats are ChatGPT threads: one **current**, many in pan Talks. A single chat may mention many widgets. Kebab does not invent a second messenger: it opens the chat that last attached this widget, scrolled to that **instance chapter**. Carousel moves the chapter, not a different app.
+Chats are ChatGPT threads: one **current**, many in pan Talks. A single chat may mention many widgets. Kebab does not invent a second messenger: it opens the chat that last attached this widget, scrolled to that **instance chapter** ([04](./04-domain-model.md) — derived scroll target, not an entity). Carousel moves the chapter, not a different app.
 
 ---
 
