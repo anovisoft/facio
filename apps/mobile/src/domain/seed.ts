@@ -1,3 +1,4 @@
+import { formatLocalDateTime, nextReminderFireAt, windowFromClosing } from './reminder';
 import { COMPACT_TILE, type Cue, type Instance, type Subject, type Widget } from './types';
 
 /**
@@ -7,8 +8,66 @@ import { COMPACT_TILE, type Cue, type Instance, type Subject, type Widget } from
  * honest. On the phone they must sit in Сегодня — otherwise the author never
  * sees the do-time cue at the moment of the set.
  *
- * Bike is step 2. Not seeded.
+ * Bike is not only here: a live warehouse already has push-ups/vegetables, so
+ * `ensureBike` doseeds the bike without wiping those rows.
  */
+
+export const BIKE_SUBJECT_ID = 'bike';
+export const BIKE_CUE_ID = 'bike-gym-hours';
+export const BIKE_INSTANCE_ID = 'bike-open';
+export const BIKE_WIDGET_ID = 'bike-reminder';
+
+export function buildBikeSeed(now: Date): {
+  subject: Subject;
+  cue: Cue;
+  instance: Instance;
+  widget: Widget;
+} {
+  const bikeWindow = windowFromClosing('22:00:00');
+  const fireAt = nextReminderFireAt(bikeWindow, now);
+  const fireIso = formatLocalDateTime(fireAt);
+
+  return {
+    subject: {
+      id: BIKE_SUBJECT_ID,
+      title: 'exercise bike',
+      cadence: { count: 2, period: 'week' },
+      window: bikeWindow,
+      cue_ids: [BIKE_CUE_ID],
+      target: null,
+      instance_ids: [BIKE_INSTANCE_ID],
+      status: 'active',
+    },
+    cue: {
+      id: BIKE_CUE_ID,
+      subject_id: BIKE_SUBJECT_ID,
+      kind: 'correction',
+      text: 'зал до 22',
+      surface: 'timing',
+      hits: { surfaced: 0, applied: 0 },
+    },
+    instance: {
+      id: BIKE_INSTANCE_ID,
+      subject_id: BIKE_SUBJECT_ID,
+      when: fireIso,
+      status: 'prepared',
+    },
+    widget: {
+      id: BIKE_WIDGET_ID,
+      type: 'reminder',
+      title: 'exercise bike',
+      payload: { fire_at: fireIso },
+      status: 'ready',
+      when: fireIso,
+      section: 'today',
+      subject_id: BIKE_SUBJECT_ID,
+      instance_id: BIKE_INSTANCE_ID,
+      tile_size: '4x1',
+      version: 1,
+    },
+  };
+}
+
 export function buildSeed(nowIso: string): {
   subjects: Subject[];
   cues: Cue[];

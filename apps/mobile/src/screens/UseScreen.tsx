@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -11,6 +11,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import { WhenModal } from '@/components/WhenModal';
+import { clockPartsFromWindow, formatFireClock } from '@/domain/reminder';
+import type { Cue, Widget, Window } from '@/domain/types';
 import { useDesk } from '@/store/DeskContext';
 import { colors, radii, spacing, typography } from '@/theme';
 import type { RootStackParamList } from '@/navigation/types';
@@ -28,24 +31,16 @@ export function UseScreen({ navigation, route }: Props) {
   const widget = desk.widgets.find((item) => item.id === route.params.widgetId);
   const instance = desk.instances.find((item) => item.id === widget?.instance_id);
   const cue = widget ? desk.cueFor(widget.subject_id) : undefined;
+  const subject = desk.subjects.find((item) => item.id === widget?.subject_id);
 
-  const [cueDraft, setCueDraft] = useState(cue?.text ?? '');
-  const [goalDraft, setGoalDraft] = useState(String(widget?.payload.target ?? ''));
   const openedDone = useRef(widget?.status === 'done');
-  const startedRef = useRef(false);
+  const surfacedRef = useRef(false);
 
   useEffect(() => {
-    if (!widget || startedRef.current) return;
-    startedRef.current = true;
-    if (widget.status !== 'done') {
-      desk.startInstance(widget.id);
-    }
+    if (!widget || surfacedRef.current) return;
+    surfacedRef.current = true;
     desk.markCueSurfaced(widget.id, 'use');
   }, [desk, widget]);
-
-  useEffect(() => {
-    if (cue) setCueDraft(cue.text);
-  }, [cue]);
 
   useEffect(() => {
     if (!openedDone.current && widget?.status === 'done') {
@@ -53,16 +48,88 @@ export function UseScreen({ navigation, route }: Props) {
     }
   }, [navigation, widget?.status]);
 
-  if (!widget || widget.type !== 'counter') {
+  if (!widget) {
     return (
       <View style={[styles.root, { paddingTop: insets.top }]}>
         <Pressable onPress={() => navigation.goBack()} style={styles.back}>
           <Text style={styles.backText}>Назад</Text>
         </Pressable>
-        <Text style={styles.missing}>Этого счётчика уже нет на крышке.</Text>
+        <Text style={styles.missing}>Этого виджета уже нет на крышке.</Text>
       </View>
     );
   }
+
+  const dateLabel = quietDate(instance?.when);
+  const chrome = { insets, dateLabel, onBack: () => navigation.goBack() };
+
+  switch (widget.type) {
+    case 'counter':
+      return <CounterUse widget={widget} cue={cue} chrome={chrome} />;
+    case 'tick':
+      return <TickUse widget={widget} chrome={chrome} onToggle={() => desk.toggleTick(widget.id)} />;
+    case 'reminder':
+      return (
+        <ReminderUse
+          widget={widget}
+          latestBy={subject?.window}
+          chrome={chrome}
+          onComplete={() => desk.completeReminder(widget.id)}
+          onSaveWindow={(hours, minutes) => desk.setReminderWindow(widget.id, hours, minutes)}
+          onDogfood={() => desk.fireDogfoodReminder(widget.id)}
+        />
+      );
+    case 'checklist':
+    case 'timer':
+    case 'stepper':
+      return (
+        <View style={[styles.root, { paddingTop: insets.top }]}>
+          <Pressable onPress={() => navigation.goBack()} style={styles.back}>
+            <Text style={styles.backText}>Назад</Text>
+          </Pressable>
+          <Text style={styles.missing}>Этот тип ещё не открывается.</Text>
+        </View>
+      );
+    default: {
+      const exhaustive: never = widget.type;
+      return exhaustive;
+    }
+  }
+}
+
+type Chrome = {
+  insets: { top: number; bottom: number };
+  dateLabel: string;
+  onBack: () => void;
+};
+
+function UseBar({ chrome }: { chrome: Chrome }) {
+  return (
+    <View style={styles.bar}>
+      <Pressable onPress={chrome.onBack} hitSlop={12} style={styles.back}>
+        <Text style={styles.backText}>Назад</Text>
+      </Pressable>
+      <Text style={styles.date}>{chrome.dateLabel}</Text>
+      <View style={styles.back} />
+    </View>
+  );
+}
+
+function CounterUse({
+  widget,
+  cue,
+  chrome,
+}: {
+  widget: Widget;
+  cue?: Cue;
+  chrome: Chrome;
+}) {
+  const desk = useDesk();
+  const [cueDraft, setCueDraft] = useState(cue?.text ?? '');
+  const [goalDraft, setGoalDraft] = useState(String(widget.payload.target ?? ''));
+
+  useEffect(() => {
+    if (cue) setCueDraft(cue.text);
+  }, [cue]);
 
   const count = widget.payload.count ?? 0;
   const target = widget.payload.target ?? 0;
@@ -84,17 +151,10 @@ export function UseScreen({ navigation, route }: Props) {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.root, { paddingTop: insets.top }]}
+      style={[styles.root, { paddingTop: chrome.insets.top }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.bar}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.back}>
-          <Text style={styles.backText}>Назад</Text>
-        </Pressable>
-        <Text style={styles.date}>{quietDate(instance?.when)}</Text>
-        <View style={styles.back} />
-      </View>
-
+      <UseBar chrome={chrome} />
       <Text style={styles.title}>{widget.title}</Text>
 
       <View style={styles.numberBlock}>
@@ -125,14 +185,14 @@ export function UseScreen({ navigation, route }: Props) {
       <View style={styles.buttons}>
         <Pressable
           onPress={() => desk.tickCounter(widget.id, -1)}
-          style={styles.step}
+          style={({ pressed }) => [styles.step, pressed && styles.pressed]}
           accessibilityLabel="минус"
         >
           <Text style={styles.stepText}>−</Text>
         </Pressable>
         <Pressable
           onPress={() => desk.tickCounter(widget.id, 1)}
-          style={[styles.step, styles.stepPlus]}
+          style={({ pressed }) => [styles.step, styles.stepPlus, pressed && styles.pressed]}
           accessibilityLabel="плюс"
         >
           <Text style={[styles.stepText, styles.stepPlusText]}>+</Text>
@@ -141,11 +201,114 @@ export function UseScreen({ navigation, route }: Props) {
 
       <Pressable
         onPress={() => desk.completeCounter(widget.id)}
-        style={[styles.done, { marginBottom: insets.bottom + spacing.md }]}
+        style={({ pressed }) => [
+          styles.done,
+          { marginBottom: chrome.insets.bottom + spacing.md },
+          pressed && styles.pressed,
+        ]}
       >
         <Text style={styles.doneText}>Готово</Text>
       </Pressable>
     </KeyboardAvoidingView>
+  );
+}
+
+function TickUse({
+  widget,
+  chrome,
+  onToggle,
+}: {
+  widget: Widget;
+  chrome: Chrome;
+  onToggle: () => void;
+}) {
+  const done = Boolean(widget.payload.done);
+  return (
+    <View style={[styles.root, { paddingTop: chrome.insets.top }]}>
+      <UseBar chrome={chrome} />
+      <Text style={styles.title}>{widget.title}</Text>
+      <View style={styles.tickBlock}>
+        <View style={styles.tickGroup}>
+          <Pressable
+            onPress={onToggle}
+            style={({ pressed }) => [styles.useBox, done && styles.useBoxDone, pressed && styles.pressed]}
+            accessibilityLabel="галочка"
+          >
+            <Text style={[styles.useCheck, done && styles.useCheckDone]}>{done ? '✓' : ''}</Text>
+          </Pressable>
+          <Text style={styles.tickHint}>на Сегодня</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function ReminderUse({
+  widget,
+  latestBy,
+  chrome,
+  onComplete,
+  onSaveWindow,
+  onDogfood,
+}: {
+  widget: Widget;
+  latestBy: Window | null | undefined;
+  chrome: Chrome;
+  onComplete: () => void;
+  onSaveWindow: (hours: number, minutes: number) => Promise<void>;
+  onDogfood: () => Promise<void>;
+}) {
+  const [whenOpen, setWhenOpen] = useState(false);
+  const clock = useMemo(
+    () => clockPartsFromWindow(latestBy, widget.payload.fire_at),
+    [latestBy, widget.payload.fire_at],
+  );
+  const fireClock = formatFireClock(widget.payload.fire_at);
+
+  return (
+    <View style={[styles.root, { paddingTop: chrome.insets.top }]}>
+      <UseBar chrome={chrome} />
+      <Text style={styles.title}>{widget.title}</Text>
+
+      <Pressable
+        onPress={() => setWhenOpen(true)}
+        style={({ pressed }) => [styles.clockHit, pressed && styles.pressed]}
+        accessibilityLabel="во сколько напомнить"
+      >
+        <Text style={styles.number}>{fireClock || '—'}</Text>
+      </Pressable>
+      <Pressable
+        onPress={() => setWhenOpen(true)}
+        style={({ pressed }) => [styles.whenLink, pressed && styles.pressed]}
+      >
+        <Text style={styles.whenLinkText}>во сколько</Text>
+      </Pressable>
+
+      <Pressable
+        onPress={onComplete}
+        style={({ pressed }) => [
+          styles.done,
+          { marginBottom: chrome.insets.bottom + spacing.md },
+          pressed && styles.pressed,
+        ]}
+      >
+        <Text style={styles.doneText}>Я проехал</Text>
+      </Pressable>
+
+      <WhenModal
+        visible={whenOpen}
+        initialHours={clock.hours}
+        initialMinutes={clock.minutes}
+        onClose={() => setWhenOpen(false)}
+        onSave={(hours, minutes) => {
+          void onSaveWindow(hours, minutes);
+          setWhenOpen(false);
+        }}
+        onDogfood={() => {
+          void onDogfood();
+        }}
+      />
+    </View>
   );
 }
 
@@ -261,5 +424,57 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.textSecondary,
     marginTop: spacing.lg,
+  },
+  tickBlock: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xl,
+  },
+  tickGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  useBox: {
+    width: 60,
+    height: 60,
+    borderRadius: radii.sm,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.white,
+  },
+  useBoxDone: {
+    backgroundColor: colors.primary,
+  },
+  useCheck: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  useCheckDone: {
+    color: colors.white,
+  },
+  tickHint: {
+    ...typography.caption,
+    color: colors.textMuted,
+  },
+  clockHit: {
+    alignItems: 'center',
+    marginTop: spacing.xl,
+  },
+  whenLink: {
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+  whenLinkText: {
+    ...typography.subtitle,
+    color: colors.primary,
+  },
+  pressed: {
+    opacity: 0.7,
   },
 });

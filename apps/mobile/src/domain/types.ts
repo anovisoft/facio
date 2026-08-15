@@ -14,11 +14,16 @@ export type Target = {
 
 export type SubjectStatus = 'active' | 'shrunk' | 'retired';
 
+export type Window = {
+  latest_by: string;
+  closes_at: string | null;
+};
+
 export type Subject = {
   id: string;
   title: string;
   cadence: Cadence;
-  window?: { latest_by: string; closes_at: string | null } | null;
+  window?: Window | null;
   cue_ids: string[];
   target: Target | null;
   instance_ids: string[];
@@ -65,6 +70,9 @@ export type WidgetPayload = {
   count?: number | null;
   target?: number | null;
   done?: boolean | null;
+  fire_at?: string | null;
+  os_notification_id?: string | null;
+  dogfood_notification_id?: string | null;
 };
 
 export type Widget = {
@@ -97,7 +105,10 @@ export type JournalEventType =
   | 'instance_started'
   | 'instance_completed'
   | 'counter_ticked'
-  | 'tick_toggled';
+  | 'tick_toggled'
+  | 'reminder_scheduled'
+  | 'reminder_fired'
+  | 'reminder_opened';
 
 export type JournalEvent = {
   id: string;

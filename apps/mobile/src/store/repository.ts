@@ -1,7 +1,7 @@
 import * as Crypto from 'expo-crypto';
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import { buildSeed } from '@/domain/seed';
+import { BIKE_SUBJECT_ID, buildBikeSeed, buildSeed } from '@/domain/seed';
 import type {
   Cue,
   DeskSnapshot,
@@ -58,6 +58,18 @@ export function saveWidget(database: SQLiteDatabase, widget: Widget): void {
   );
 }
 
+export function getMeta(database: SQLiteDatabase, key: string): string | null {
+  const row = database.getFirstSync<{ value: string }>(
+    'SELECT value FROM meta WHERE key = ?',
+    [key],
+  );
+  return row?.value ?? null;
+}
+
+export function setMeta(database: SQLiteDatabase, key: string, value: string): void {
+  database.runSync('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)', [key, value]);
+}
+
 export function appendEvent(
   database: SQLiteDatabase,
   type: JournalEventType,
@@ -111,6 +123,65 @@ export function seedIfEmpty(database: SQLiteDatabase): DeskSnapshot {
     for (const instance of seed.instances) saveInstance(database, instance);
     for (const widget of seed.widgets) saveWidget(database, widget);
     database.runSync('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)', ['seeded_at', nowIso]);
+  });
+
+  return loadSnapshot(database);
+}
+
+/**
+ * Doseed the founding bike on a live warehouse. Does not rewrite push-ups
+ * or vegetables. `seedIfEmpty` never runs again once the author has lived
+ * step 1 — this is the path that matters.
+ */
+export function ensureBike(database: SQLiteDatabase, now = new Date()): DeskSnapshot {
+  const snapshot = loadSnapshot(database);
+  if (snapshot.subjects.some((subject) => subject.id === BIKE_SUBJECT_ID)) {
+    return snapshot;
+  }
+
+  const seed = buildBikeSeed(now);
+  database.withTransactionSync(() => {
+    saveSubject(database, seed.subject);
+    saveCue(database, seed.cue);
+    appendEvent(database, 'cue_written', {
+      subject_id: seed.cue.subject_id,
+      cue_id: seed.cue.id,
+      payload: { text: seed.cue.text, surface: seed.cue.surface },
+    });
+    saveInstance(database, seed.instance);
+    saveWidget(database, seed.widget);
+  });
+
+  return loadSnapshot(database);
+}
+
+/**
+ * Opening Use used to mark the counter running. A warehouse that only
+ * looked still has `running` / `in_progress` and a jumped grid. Revert
+ * those rows unless a real +/- was journaled.
+ */
+export function revertLookOnlyStarts(database: SQLiteDatabase): DeskSnapshot {
+  const snapshot = loadSnapshot(database);
+  const ticked = new Set(
+    database
+      .getAllSync<{ widget_id: string }>(
+        `SELECT DISTINCT widget_id FROM events
+         WHERE type = 'counter_ticked' AND widget_id IS NOT NULL`,
+      )
+      .map((row) => row.widget_id),
+  );
+
+  database.withTransactionSync(() => {
+    for (const widget of snapshot.widgets) {
+      if (widget.type !== 'counter' || widget.status !== 'running') continue;
+      if (ticked.has(widget.id)) continue;
+      const instance = snapshot.instances.find((item) => item.id === widget.instance_id);
+      if (!instance || instance.status === 'completed') continue;
+      saveWidget(database, { ...widget, status: 'ready' });
+      if (instance.status === 'in_progress') {
+        saveInstance(database, { ...instance, status: 'prepared' });
+      }
+    }
   });
 
   return loadSnapshot(database);

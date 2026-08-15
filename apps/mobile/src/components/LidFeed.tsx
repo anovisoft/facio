@@ -1,11 +1,12 @@
-import React, { useCallback } from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import React from 'react';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { projectLid } from '@/domain/lid';
+import { formatFireClock } from '@/domain/reminder';
 import { cellsForTile, packRowMajor } from '@/domain/pack';
 import type { Cue, Widget } from '@/domain/types';
 import { colors, grid, spacing, typography } from '@/theme';
-import { CounterTile, TickTile } from './tiles';
+import { CounterTile, ReminderTile, TickTile } from './tiles';
 
 type LidFeedProps = {
   widgets: Widget[];
@@ -13,20 +14,57 @@ type LidFeedProps = {
   onOpenUse: (widgetId: string) => void;
   onToggleTick: (widgetId: string) => void;
   onCueSurfaced: (widgetId: string) => void;
+  onOpenWindow: (widgetId: string) => void;
 };
 
-function SectionHeader({
-  title,
-  onPress,
-}: {
-  title: string;
-  onPress?: () => void;
-}) {
+function SectionHeader({ title }: { title: string }) {
   return (
-    <Pressable onPress={onPress} disabled={!onPress} style={styles.headerHit}>
+    <View style={styles.headerHit}>
       <Text style={styles.header}>{title}</Text>
-    </Pressable>
+    </View>
   );
+}
+
+function renderTile(
+  item: Widget,
+  props: Omit<LidFeedProps, 'widgets'>,
+): React.ReactElement | null {
+  switch (item.type) {
+    case 'counter':
+      return (
+        <CounterTile
+          widget={item}
+          cue={props.cueFor(item.subject_id)}
+          onOpen={() => props.onOpenUse(item.id)}
+          onSurfaced={() => props.onCueSurfaced(item.id)}
+        />
+      );
+    case 'tick':
+      return (
+        <TickTile
+          widget={item}
+          onOpen={() => props.onOpenUse(item.id)}
+          onToggle={() => props.onToggleTick(item.id)}
+        />
+      );
+    case 'reminder':
+      return (
+        <ReminderTile
+          widget={item}
+          fireClock={formatFireClock(item.payload.fire_at)}
+          onOpen={() => props.onOpenUse(item.id)}
+          onOpenWindow={() => props.onOpenWindow(item.id)}
+        />
+      );
+    case 'checklist':
+    case 'timer':
+    case 'stepper':
+      return null;
+    default: {
+      const exhaustive: never = item.type;
+      return exhaustive;
+    }
+  }
 }
 
 function PackedSection({
@@ -35,10 +73,9 @@ function PackedSection({
   onOpenUse,
   onToggleTick,
   onCueSurfaced,
-  onEmptyPress,
+  onOpenWindow,
 }: {
   widgets: Widget[];
-  onEmptyPress?: () => void;
 } & Omit<LidFeedProps, 'widgets'>) {
   const { width } = useWindowDimensions();
   const inner = width - grid.padding * 2;
@@ -49,9 +86,6 @@ function PackedSection({
 
   return (
     <View style={[styles.grid, { height }]}>
-      {onEmptyPress ? (
-        <Pressable style={StyleSheet.absoluteFill} onPress={onEmptyPress} />
-      ) : null}
       {placements.map(({ item, col, row, w, h }) => {
         const left = col * (cell + grid.gap);
         const top = row * (cell + grid.gap);
@@ -65,16 +99,13 @@ function PackedSection({
               { left, top, width: tileWidth, height: tileHeight },
             ]}
           >
-            {item.type === 'counter' ? (
-              <CounterTile
-                widget={item}
-                cue={cueFor(item.subject_id)}
-                onOpen={() => onOpenUse(item.id)}
-                onSurfaced={() => onCueSurfaced(item.id)}
-              />
-            ) : item.type === 'tick' ? (
-              <TickTile widget={item} onToggle={() => onToggleTick(item.id)} />
-            ) : null}
+            {renderTile(item, {
+              cueFor,
+              onOpenUse,
+              onToggleTick,
+              onCueSurfaced,
+              onOpenWindow,
+            })}
           </View>
         );
       })}
@@ -88,16 +119,13 @@ export function LidFeed({
   onOpenUse,
   onToggleTick,
   onCueSurfaced,
+  onOpenWindow,
 }: LidFeedProps) {
   const lid = projectLid(widgets);
-  const firstCounter = lid.today.find((widget) => widget.type === 'counter');
-  const openFirstCounter = useCallback(() => {
-    if (firstCounter) onOpenUse(firstCounter.id);
-  }, [firstCounter, onOpenUse]);
 
   return (
     <View style={styles.root}>
-      <SectionHeader title="Сегодня" onPress={openFirstCounter} />
+      <SectionHeader title="Сегодня" />
       {lid.today.length === 0 ? (
         <View style={styles.empty} />
       ) : (
@@ -107,25 +135,20 @@ export function LidFeed({
           onOpenUse={onOpenUse}
           onToggleTick={onToggleTick}
           onCueSurfaced={onCueSurfaced}
-          onEmptyPress={openFirstCounter}
+          onOpenWindow={onOpenWindow}
         />
       )}
 
       {lid.lifetime.length > 0 ? (
         <>
-          <SectionHeader
-            title="Lifetime"
-            onPress={() => {
-              const first = lid.lifetime.find((widget) => widget.type === 'counter');
-              if (first) onOpenUse(first.id);
-            }}
-          />
+          <SectionHeader title="Lifetime" />
           <PackedSection
             widgets={lid.lifetime}
             cueFor={cueFor}
             onOpenUse={onOpenUse}
             onToggleTick={onToggleTick}
             onCueSurfaced={onCueSurfaced}
+            onOpenWindow={onOpenWindow}
           />
         </>
       ) : null}

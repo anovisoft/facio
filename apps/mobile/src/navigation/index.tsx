@@ -4,13 +4,16 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { LidScreen } from '@/screens/LidScreen';
 import { UseScreen } from '@/screens/UseScreen';
+import { ReminderBridge } from './ReminderBridge';
+import { navigationRef } from './ref';
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function AppNavigator() {
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
+      <ReminderBridge />
       <Stack.Navigator
         initialRouteName="Lid"
         screenOptions={{

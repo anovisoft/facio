@@ -25,6 +25,7 @@ module.exports = {
     },
     plugins: [
       'expo-sqlite',
+      'expo-notifications',
       [
         'expo-splash-screen',
         {
@@ -47,5 +48,9 @@ module.exports = {
       ],
       ['./plugins/withAppleTeamId', { teamId: 'SXXLPXXJMD' }],
     ],
+    notification: {
+      icon: './assets/icon.png',
+      color: '#1F4D3A',
+    },
   },
 };

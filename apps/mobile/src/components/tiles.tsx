@@ -21,16 +21,14 @@ export function CounterTile({ widget, cue, onOpen, onSurfaced }: CounterTileProp
   }, [cue, onSurfaced]);
 
   return (
-    <View style={styles.card}>
+    <Pressable onPress={onOpen} style={styles.card}>
       <View style={styles.top}>
-        <Pressable onPress={onOpen} style={styles.topHit}>
-          <Text style={styles.title} numberOfLines={1}>
-            {widget.title}
-          </Text>
-        </Pressable>
+        <Text style={styles.title} numberOfLines={1}>
+          {widget.title}
+        </Text>
         <KebabStub />
       </View>
-      <Pressable onPress={onOpen} style={styles.bodyHit}>
+      <View style={styles.bodyHit}>
         <Text style={styles.ratio}>
           {count}
           <Text style={styles.goal}> / {target}</Text>
@@ -40,35 +38,66 @@ export function CounterTile({ widget, cue, onOpen, onSurfaced }: CounterTileProp
             {cue.text}
           </Text>
         ) : null}
-      </Pressable>
-    </View>
+      </View>
+    </Pressable>
+  );
+}
+
+type ReminderTileProps = {
+  widget: Widget;
+  fireClock: string;
+  onOpen: () => void;
+  onOpenWindow: () => void;
+};
+
+/** Row tile. Timing cue is the fire hour, not «зал до 22» as do-time text. */
+export function ReminderTile({ widget, fireClock, onOpen, onOpenWindow }: ReminderTileProps) {
+  return (
+    <Pressable onPress={onOpen} style={styles.rowCard}>
+      <View style={styles.rowCopy}>
+        <Text style={styles.title} numberOfLines={1}>
+          {widget.title}
+        </Text>
+        <Pressable
+          onPress={onOpenWindow}
+          style={({ pressed }) => [styles.clockHit, pressed && styles.pressed]}
+          accessibilityLabel="во сколько напомнить"
+        >
+          <Text style={styles.fireClock}>{fireClock || '—'}</Text>
+        </Pressable>
+      </View>
+      <KebabStub />
+    </Pressable>
   );
 }
 
 type TickTileProps = {
   widget: Widget;
+  onOpen: () => void;
   onToggle: () => void;
 };
 
-export function TickTile({ widget, onToggle }: TickTileProps) {
+export function TickTile({ widget, onOpen, onToggle }: TickTileProps) {
   const done = Boolean(widget.payload.done);
   return (
-    <View style={styles.card}>
+    <Pressable onPress={onOpen} style={styles.card}>
       <View style={styles.top}>
-        <Pressable onPress={onToggle} style={styles.topHit}>
-          <Text style={styles.title} numberOfLines={1}>
-            {widget.title}
-          </Text>
-        </Pressable>
+        <Text style={styles.title} numberOfLines={1}>
+          {widget.title}
+        </Text>
         <KebabStub />
       </View>
-      <Pressable onPress={onToggle} style={styles.tickRow}>
-        <View style={[styles.box, done && styles.boxDone]}>
+      <View style={styles.tickRow}>
+        <Pressable
+          onPress={onToggle}
+          style={({ pressed }) => [styles.box, done && styles.boxDone, pressed && styles.pressed]}
+          accessibilityLabel="галочка"
+        >
           <Text style={[styles.check, done && styles.checkDone]}>{done ? '✓' : ''}</Text>
-        </View>
+        </Pressable>
         <Text style={styles.tickHint}>на Сегодня</Text>
-      </Pressable>
-    </View>
+      </View>
+    </Pressable>
   );
 }
 
@@ -88,9 +117,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: spacing.xs,
   },
-  topHit: {
-    flex: 1,
-  },
   bodyHit: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -99,6 +125,7 @@ const styles = StyleSheet.create({
   title: {
     ...typography.subtitle,
     color: colors.text,
+    flex: 1,
   },
   ratio: {
     fontSize: 28,
@@ -145,5 +172,36 @@ const styles = StyleSheet.create({
   tickHint: {
     ...typography.caption,
     color: colors.textMuted,
+    flex: 1,
+  },
+  rowCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: spacing.sm,
+  },
+  rowCopy: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
+  },
+  clockHit: {
+    alignSelf: 'flex-start',
+    paddingVertical: 2,
+  },
+  fireClock: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.primary,
+    letterSpacing: -0.4,
+  },
+  pressed: {
+    opacity: 0.7,
   },
 });
