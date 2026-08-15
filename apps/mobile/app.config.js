@@ -14,6 +14,11 @@ module.exports = {
       config: {
         usesNonExemptEncryption: false,
       },
+      infoPlist: {
+        NSAppTransportSecurity: {
+          NSAllowsLocalNetworking: true,
+        },
+      },
     },
     android: {
       adaptiveIcon: {

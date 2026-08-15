@@ -1,6 +1,18 @@
-# Facio — крышка (шаг 1)
+# Facio — крышка
 
-Дом приложения — крышка: одна вертикальная лента. Сегодня первым экраном. Нет чата, сковородки, напоминаний, HTTP и модели.
+Дом приложения — крышка: одна вертикальная лента. Сегодня первым экраном. Нет полного чата и сковородки.
+
+Узкий разговор (шаг 4): одно поле «сказать про это» внизу Use. Сервис — `apps/api`. Ключ Anthropic в приложение не кладётся.
+
+```bash
+# симулятор
+echo 'EXPO_PUBLIC_API_URL=http://localhost:8000' > .env
+
+# устройство в той же Wi‑Fi — LAN IP мака
+# echo 'EXPO_PUBLIC_API_URL=http://192.168.1.10:8000' > .env
+```
+
+Как поднять API — из корня репозитория `docker compose up --build` (ключ в корневой `.env`). Подробности — `apps/api/README.md`. Без ключа сервис отвечает 501, стол не меняется.
 
 Идентичность как в архиве: `Facio` / `facio` / `com.anovisoft.facio` / team `SXXLPXXJMD`. Плагин `plugins/withAppleTeamId.js` подключён в `app.config.js` — без него `prebuild` сотрёт team.
 
@@ -59,4 +71,4 @@ npm run android
 
 ## Журнал
 
-Таблица `events` в SQLite. Типы: `cue_written`, `cue_surfaced`, `cue_applied`, `instance_started`, `instance_completed`, `counter_ticked`, `tick_toggled`. Практику при правке пальцем не удаляем.
+Таблица `events` в SQLite. Типы: `cue_written`, `cue_surfaced`, `cue_applied`, `instance_started`, `instance_completed`, `counter_ticked`, `tick_toggled`, `talk_patched`, `talk_rejected`. В разговоре пишем op и ids, не сырую реплику. Практику при правке пальцем не удаляем.

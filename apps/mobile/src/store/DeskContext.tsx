@@ -4,7 +4,17 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 
 import { formatClock, formatLocalDate, formatLocalDateTime, nextReminderFireAt } from '@/domain/reminder';
 import { doTimeCueFor } from '@/domain/seed';
-import { COMPACT_TILE, type Cue, type DeskSnapshot, type Instance, type Subject, type Widget, type Window } from '@/domain/types';
+import {
+  COMPACT_TILE,
+  type Cue,
+  type DeskSnapshot,
+  type Instance,
+  type Subject,
+  type TalkPatch,
+  type Widget,
+  type Window,
+} from '@/domain/types';
+import { requestTurn, TalkRequestError } from '@/services/talk';
 import {
   PERMISSION_META_KEY,
   cancelWidgetNotifications,
@@ -46,6 +56,7 @@ type DeskContextValue = DeskSnapshot & {
   setReminderWindow: (widgetId: string, hours: number, minutes: number) => Promise<void>;
   editCueText: (cueId: string, text: string) => void;
   editTarget: (widgetId: string, goal: number) => void;
+  talkAbout: (widgetId: string, utterance: string) => Promise<string>;
   syncReminders: () => Promise<void>;
   fireDogfoodReminder: (widgetId: string) => Promise<void>;
   noteReminderFired: (notification: Notifications.Notification) => void;
@@ -432,6 +443,150 @@ export function DeskProvider({ children }: { children: React.ReactNode }) {
     [persist, snapshot],
   );
 
+  const applyTalkPatches = useCallback((widgetId: string, patches: TalkPatch[]): string[] => {
+    const database = getDb();
+    let current = loadSnapshot(database);
+    const widget = current.widgets.find((item) => item.id === widgetId);
+    const subject = current.subjects.find((item) => item.id === widget?.subject_id);
+    if (!widget || !subject) return [];
+
+    const cueIds: string[] = [];
+    let workingSubject = subject;
+    let workingWidget = widget;
+
+    for (const patch of patches) {
+      switch (patch.op) {
+        case 'add_cue': {
+          const cue: Cue = {
+            id: Crypto.randomUUID(),
+            subject_id: workingSubject.id,
+            kind: patch.kind,
+            text: patch.text,
+            surface: patch.surface,
+            hits: { surfaced: 0, applied: 0 },
+          };
+          saveCue(database, cue);
+          appendEvent(database, 'cue_written', {
+            subject_id: cue.subject_id,
+            cue_id: cue.id,
+            payload: { text: cue.text, surface: cue.surface, origin: 'talk' },
+          });
+          workingSubject = {
+            ...workingSubject,
+            cue_ids: [...workingSubject.cue_ids, cue.id],
+          };
+          saveSubject(database, workingSubject);
+          current = {
+            ...current,
+            cues: [...current.cues, cue],
+            subjects: replaceById(current.subjects, workingSubject),
+          };
+          cueIds.push(cue.id);
+          break;
+        }
+        case 'set_target': {
+          const goal = patch.goal;
+          workingWidget = {
+            ...workingWidget,
+            payload: { ...workingWidget.payload, target: goal },
+          };
+          saveWidget(database, workingWidget);
+          workingSubject = {
+            ...workingSubject,
+            target: {
+              current: patch.current ?? workingSubject.target?.current ?? workingWidget.payload.count ?? 0,
+              goal,
+            },
+          };
+          saveSubject(database, workingSubject);
+          current = {
+            ...current,
+            widgets: replaceById(current.widgets, workingWidget),
+            subjects: replaceById(current.subjects, workingSubject),
+          };
+          break;
+        }
+        case 'set_cadence': {
+          workingSubject = {
+            ...workingSubject,
+            cadence: { count: patch.count, period: patch.period },
+            status: 'active',
+          };
+          saveSubject(database, workingSubject);
+          current = { ...current, subjects: replaceById(current.subjects, workingSubject) };
+          break;
+        }
+        case 'shrink': {
+          if (patch.cadence === 'none') {
+            workingSubject = {
+              ...workingSubject,
+              cadence: { count: null, period: 'none' },
+              status: 'retired',
+            };
+          } else {
+            workingSubject = {
+              ...workingSubject,
+              cadence: { count: 1, period: 'week' },
+              status: 'shrunk',
+            };
+          }
+          saveSubject(database, workingSubject);
+          current = { ...current, subjects: replaceById(current.subjects, workingSubject) };
+          break;
+        }
+        case 'none':
+          break;
+        default: {
+          const exhaustive: never = patch;
+          return exhaustive;
+        }
+      }
+    }
+
+    persist(current);
+    return cueIds;
+  }, [persist]);
+
+  const talkAbout = useCallback(
+    async (widgetId: string, utterance: string): Promise<string> => {
+      const database = getDb();
+      const current = loadSnapshot(database);
+      const widget = current.widgets.find((item) => item.id === widgetId);
+      const subject = current.subjects.find((item) => item.id === widget?.subject_id);
+      if (!widget || !subject) {
+        throw new TalkRequestError('invalid', 'так не записывается');
+      }
+      const cues = current.cues.filter((item) => item.subject_id === subject.id);
+
+      try {
+        const result = await requestTurn({ utterance, subject, cues, widget });
+        const cueIds = applyTalkPatches(widgetId, result.patches);
+        appendEvent(database, 'talk_patched', {
+          subject_id: subject.id,
+          widget_id: widget.id,
+          instance_id: widget.instance_id,
+          cue_id: cueIds[0] ?? null,
+          payload: {
+            ops: result.patches.map((patch) => patch.op),
+            cue_ids: cueIds,
+          },
+        });
+        return result.confirmation;
+      } catch (caught) {
+        const reason = caught instanceof TalkRequestError ? caught.reason : 'http';
+        appendEvent(database, 'talk_rejected', {
+          subject_id: subject.id,
+          widget_id: widget.id,
+          instance_id: widget.instance_id,
+          payload: { reason },
+        });
+        if (caught instanceof TalkRequestError) throw caught;
+        throw new TalkRequestError('http', 'сервис не принял');
+      }
+    },
+    [applyTalkPatches],
+  );
+
   const editTarget = useCallback(
     (widgetId: string, goal: number) => {
       const database = getDb();
@@ -774,6 +929,7 @@ export function DeskProvider({ children }: { children: React.ReactNode }) {
       setReminderWindow,
       editCueText,
       editTarget,
+      talkAbout,
       syncReminders,
       fireDogfoodReminder,
       noteReminderFired,
@@ -792,6 +948,7 @@ export function DeskProvider({ children }: { children: React.ReactNode }) {
       cueFor,
       editCueText,
       editTarget,
+      talkAbout,
       error,
       fireDogfoodReminder,
       markCueSurfaced,

@@ -156,7 +156,11 @@ export function buildSeed(nowIso: string): {
 }
 
 export function doTimeCueFor(cues: Cue[], subjectId: string): Cue | undefined {
-  return cues.find((cue) => cue.subject_id === subjectId && cue.surface === 'do-time');
+  for (let index = cues.length - 1; index >= 0; index -= 1) {
+    const cue = cues[index];
+    if (cue.subject_id === subjectId && cue.surface === 'do-time') return cue;
+  }
+  return undefined;
 }
 
 /** Founding bike case: 21 days of silence. Never-started is not drift. */

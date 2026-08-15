@@ -111,6 +111,18 @@ export type DriftCard = {
   offer: DriftOffer;
 };
 
+export type TalkPatch =
+  | { op: 'add_cue'; kind: CueKind; text: string; surface: CueSurface }
+  | { op: 'set_target'; current?: number | null; goal: number }
+  | { op: 'set_cadence'; count: number; period: 'day' | 'week' }
+  | { op: 'shrink'; cadence?: { count: 1; period: 'week' } | 'none' | null }
+  | { op: 'none' };
+
+export type TalkResult = {
+  confirmation: string;
+  patches: TalkPatch[];
+};
+
 export type JournalEventType =
   | 'cue_written'
   | 'cue_surfaced'
@@ -123,7 +135,9 @@ export type JournalEventType =
   | 'reminder_fired'
   | 'reminder_opened'
   | 'drift_answered'
-  | 'delta_answered';
+  | 'delta_answered'
+  | 'talk_patched'
+  | 'talk_rejected';
 
 export type JournalEvent = {
   id: string;

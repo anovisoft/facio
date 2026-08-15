@@ -1,6 +1,7 @@
 """Facio domain law — models and pure functions. No I/O, no network."""
 
 from facio_domain.cues import add_cue, default_surface
+from facio_domain.pain import reports_pain
 from facio_domain.drift import (
     drift_card,
     is_drifting,
@@ -55,6 +56,7 @@ __all__ = [
     "Window",
     "add_cue",
     "default_surface",
+    "reports_pain",
     "drift_card",
     "is_drifting",
     "lid_projection",

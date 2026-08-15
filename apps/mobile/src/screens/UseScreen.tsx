@@ -11,6 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import { TalkField } from '@/components/TalkField';
 import { WhenModal } from '@/components/WhenModal';
 import { clockPartsFromWindow, formatFireClock } from '@/domain/reminder';
 import type { Cue, Widget, Window } from '@/domain/types';
@@ -197,9 +198,7 @@ function CounterUse({
       <Text style={styles.editHint}>можно править текст и цель</Text>
 
       {lookOnly ? (
-        <Text style={[styles.lookHint, { marginBottom: chrome.insets.bottom + spacing.md }]}>
-          готово
-        </Text>
+        <Text style={styles.lookHint}>готово</Text>
       ) : (
         <>
           <View style={styles.buttons}>
@@ -221,16 +220,14 @@ function CounterUse({
 
           <Pressable
             onPress={() => desk.completeCounter(widget.id)}
-            style={({ pressed }) => [
-              styles.done,
-              { marginBottom: chrome.insets.bottom + spacing.md },
-              pressed && styles.pressed,
-            ]}
+            style={({ pressed }) => [styles.done, pressed && styles.pressed]}
           >
             <Text style={styles.doneText}>Готово</Text>
           </Pressable>
         </>
       )}
+
+      <TalkField widgetId={widget.id} bottomInset={chrome.insets.bottom} />
     </KeyboardAvoidingView>
   );
 }
@@ -248,7 +245,10 @@ function TickUse({
 }) {
   const done = Boolean(widget.payload.done) || lookOnly;
   return (
-    <View style={[styles.root, { paddingTop: chrome.insets.top }]}>
+    <KeyboardAvoidingView
+      style={[styles.root, { paddingTop: chrome.insets.top }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <UseBar chrome={chrome} />
       <Text style={styles.title}>{widget.title}</Text>
       <View style={styles.tickBlock}>
@@ -263,7 +263,8 @@ function TickUse({
           <Text style={styles.tickHint}>{done ? 'готово' : 'на Сегодня'}</Text>
         </View>
       </View>
-    </View>
+      <TalkField widgetId={widget.id} bottomInset={chrome.insets.bottom} />
+    </KeyboardAvoidingView>
   );
 }
 
@@ -292,7 +293,10 @@ function ReminderUse({
   const fireClock = formatFireClock(widget.payload.fire_at);
 
   return (
-    <View style={[styles.root, { paddingTop: chrome.insets.top }]}>
+    <KeyboardAvoidingView
+      style={[styles.root, { paddingTop: chrome.insets.top }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <UseBar chrome={chrome} />
       <Text style={styles.title}>{widget.title}</Text>
 
@@ -323,21 +327,17 @@ function ReminderUse({
       ) : null}
 
       {lookOnly ? (
-        <Text style={[styles.lookHint, { marginBottom: chrome.insets.bottom + spacing.md }]}>
-          готово
-        </Text>
+        <Text style={styles.lookHint}>готово</Text>
       ) : (
         <Pressable
           onPress={onComplete}
-          style={({ pressed }) => [
-            styles.done,
-            { marginBottom: chrome.insets.bottom + spacing.md },
-            pressed && styles.pressed,
-          ]}
+          style={({ pressed }) => [styles.done, pressed && styles.pressed]}
         >
           <Text style={styles.doneText}>Я проехал</Text>
         </Pressable>
       )}
+
+      <TalkField widgetId={widget.id} bottomInset={chrome.insets.bottom} />
 
       <WhenModal
         visible={whenOpen}
@@ -349,7 +349,7 @@ function ReminderUse({
           setWhenOpen(false);
         }}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
