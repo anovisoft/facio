@@ -1,0 +1,19 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "current": {
+      "title": "Current",
+      "type": "integer"
+    },
+    "goal": {
+      "title": "Goal",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "current",
+    "goal"
+  ],
+  "title": "Target",
+  "type": "object"
+}

@@ -1,0 +1,28 @@
+[
+  {
+    "id": "push-ups",
+    "title": "push-ups",
+    "cadence": { "count": 3, "period": "week" },
+    "cue_ids": ["push-ups-brace"],
+    "target": { "current": 28, "goal": 30 },
+    "instance_ids": [],
+    "status": "active"
+  },
+  {
+    "id": "bike",
+    "title": "exercise bike",
+    "cadence": { "count": 2, "period": "week" },
+    "window": { "latest_by": "19:00:00", "closes_at": "22:00:00" },
+    "cue_ids": ["bike-gym-hours"],
+    "instance_ids": [],
+    "status": "active"
+  },
+  {
+    "id": "vegetables",
+    "title": "vegetables",
+    "cadence": { "count": 1, "period": "day" },
+    "cue_ids": [],
+    "instance_ids": [],
+    "status": "active"
+  }
+]

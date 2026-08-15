@@ -1,0 +1,243 @@
+{
+  "$defs": {
+    "WidgetPayload": {
+      "additionalProperties": true,
+      "description": "Flexible payload; fields used by tests are typed, the rest may pass through.",
+      "properties": {
+        "count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Count"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target"
+        },
+        "done": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Done"
+        },
+        "items": {
+          "anyOf": [
+            {
+              "items": {},
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Items"
+        },
+        "seconds": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seconds"
+        },
+        "elapsed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Elapsed"
+        },
+        "steps": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Steps"
+        },
+        "current": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Current"
+        },
+        "fire_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fire At"
+        }
+      },
+      "title": "WidgetPayload",
+      "type": "object"
+    },
+    "WidgetSection": {
+      "enum": [
+        "today",
+        "lifetime",
+        "soon",
+        "postponed"
+      ],
+      "title": "WidgetSection",
+      "type": "string"
+    },
+    "WidgetStatus": {
+      "enum": [
+        "ready",
+        "running",
+        "done",
+        "skipped",
+        "snoozed",
+        "archived"
+      ],
+      "title": "WidgetStatus",
+      "type": "string"
+    },
+    "WidgetType": {
+      "enum": [
+        "counter",
+        "tick",
+        "checklist",
+        "reminder",
+        "timer",
+        "stepper"
+      ],
+      "title": "WidgetType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "type": {
+      "$ref": "#/$defs/WidgetType"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "payload": {
+      "$ref": "#/$defs/WidgetPayload"
+    },
+    "status": {
+      "$ref": "#/$defs/WidgetStatus"
+    },
+    "when": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "When"
+    },
+    "section": {
+      "$ref": "#/$defs/WidgetSection"
+    },
+    "group_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Group Id"
+    },
+    "subject_id": {
+      "title": "Subject Id",
+      "type": "string"
+    },
+    "instance_id": {
+      "title": "Instance Id",
+      "type": "string"
+    },
+    "tile_size": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tile Size"
+    },
+    "version": {
+      "default": 1,
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "id",
+    "type",
+    "title",
+    "status",
+    "section",
+    "subject_id",
+    "instance_id"
+  ],
+  "title": "Widget",
+  "type": "object"
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "id": "push-ups-brace",
+    "subject_id": "push-ups",
+    "kind": "correction",
+    "text": "brace the core and the glutes",
+    "surface": "do-time",
+    "hits": { "surfaced": 0, "applied": 0 }
+  },
+  {
+    "id": "bike-gym-hours",
+    "subject_id": "bike",
+    "kind": "correction",
+    "text": "зал до 22",
+    "surface": "timing",
+    "hits": { "surfaced": 0, "applied": 0 }
+  }
+]

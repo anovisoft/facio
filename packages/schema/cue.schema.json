@@ -1,0 +1,196 @@
+{
+  "$defs": {
+    "CueHits": {
+      "additionalProperties": false,
+      "properties": {
+        "surfaced": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Surfaced",
+          "type": "integer"
+        },
+        "applied": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Applied",
+          "type": "integer"
+        }
+      },
+      "title": "CueHits",
+      "type": "object"
+    },
+    "CueKind": {
+      "enum": [
+        "correction",
+        "clarification"
+      ],
+      "title": "CueKind",
+      "type": "string"
+    },
+    "CueOrigin": {
+      "additionalProperties": true,
+      "properties": {
+        "chat_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Chat Id"
+        },
+        "message_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message Id"
+        }
+      },
+      "title": "CueOrigin",
+      "type": "object"
+    },
+    "CueSurface": {
+      "enum": [
+        "do-time",
+        "on-demand",
+        "timing",
+        "placement"
+      ],
+      "title": "CueSurface",
+      "type": "string"
+    },
+    "LinkMedia": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "link",
+          "default": "link",
+          "title": "Kind",
+          "type": "string"
+        },
+        "url": {
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "title": "LinkMedia",
+      "type": "object"
+    },
+    "PhotoMedia": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "photo",
+          "default": "photo",
+          "title": "Kind",
+          "type": "string"
+        },
+        "ref": {
+          "title": "Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "ref"
+      ],
+      "title": "PhotoMedia",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A fact bound to a subject and to a place it appears.\n\n`surface` is required. A fact with nowhere to show is not a cue.\n`quote` is the selected phrase as text, never an offset into a message.",
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "subject_id": {
+      "title": "Subject Id",
+      "type": "string"
+    },
+    "step_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Step Id"
+    },
+    "kind": {
+      "$ref": "#/$defs/CueKind"
+    },
+    "text": {
+      "title": "Text",
+      "type": "string"
+    },
+    "quote": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Quote"
+    },
+    "media": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PhotoMedia"
+        },
+        {
+          "$ref": "#/$defs/LinkMedia"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Media"
+    },
+    "origin": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CueOrigin"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "surface": {
+      "$ref": "#/$defs/CueSurface"
+    },
+    "hits": {
+      "$ref": "#/$defs/CueHits"
+    }
+  },
+  "required": [
+    "id",
+    "subject_id",
+    "kind",
+    "text",
+    "surface"
+  ],
+  "title": "Cue",
+  "type": "object"
+}

@@ -1,0 +1,152 @@
+{
+  "$defs": {
+    "Cadence": {
+      "additionalProperties": false,
+      "description": "Count per period, or `none` (one-off).\n\nThis is a count over a period, not fixed weekdays (Q26).\nDaily-ish is modelled as count=1, period=day \u2014 no extra flag.",
+      "properties": {
+        "count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Count"
+        },
+        "period": {
+          "default": "none",
+          "enum": [
+            "day",
+            "week",
+            "none"
+          ],
+          "title": "Period",
+          "type": "string"
+        }
+      },
+      "title": "Cadence",
+      "type": "object"
+    },
+    "SubjectStatus": {
+      "enum": [
+        "active",
+        "shrunk",
+        "retired"
+      ],
+      "title": "SubjectStatus",
+      "type": "string"
+    },
+    "Target": {
+      "additionalProperties": false,
+      "properties": {
+        "current": {
+          "title": "Current",
+          "type": "integer"
+        },
+        "goal": {
+          "title": "Goal",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "current",
+        "goal"
+      ],
+      "title": "Target",
+      "type": "object"
+    },
+    "Window": {
+      "additionalProperties": false,
+      "description": "When the practice can still happen.\n\n`latest_by` is the clock hour the reminder fires.\n`closes_at` is the optional source fact (gym door). Founding rule:\nlatest_by = closes_at minus 3 hours (22:00 \u2192 19:00).",
+      "properties": {
+        "latest_by": {
+          "format": "time",
+          "title": "Latest By",
+          "type": "string"
+        },
+        "closes_at": {
+          "anyOf": [
+            {
+              "format": "time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Closes At"
+        }
+      },
+      "required": [
+        "latest_by"
+      ],
+      "title": "Window",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "cadence": {
+      "$ref": "#/$defs/Cadence"
+    },
+    "window": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Window"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "cue_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Cue Ids",
+      "type": "array"
+    },
+    "target": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Target"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "instance_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Instance Ids",
+      "type": "array"
+    },
+    "status": {
+      "$ref": "#/$defs/SubjectStatus",
+      "default": "active"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "cadence"
+  ],
+  "title": "Subject",
+  "type": "object"
+}

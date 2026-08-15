@@ -1,0 +1,35 @@
+{
+  "$defs": {
+    "DriftOffer": {
+      "enum": [
+        "move_to_today",
+        "once_a_week",
+        "retire",
+        "stop"
+      ],
+      "title": "DriftOffer",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "subject_id": {
+      "title": "Subject Id",
+      "type": "string"
+    },
+    "silent_days": {
+      "title": "Silent Days",
+      "type": "integer"
+    },
+    "offer": {
+      "$ref": "#/$defs/DriftOffer"
+    }
+  },
+  "required": [
+    "subject_id",
+    "silent_days",
+    "offer"
+  ],
+  "title": "DriftCard",
+  "type": "object"
+}

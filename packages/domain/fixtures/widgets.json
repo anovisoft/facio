@@ -1,0 +1,38 @@
+[
+  {
+    "id": "push-ups-counter",
+    "type": "counter",
+    "title": "push-ups",
+    "payload": { "count": 28, "target": 30 },
+    "status": "ready",
+    "when": null,
+    "section": "lifetime",
+    "subject_id": "push-ups",
+    "instance_id": "push-ups-open",
+    "version": 1
+  },
+  {
+    "id": "bike-reminder",
+    "type": "reminder",
+    "title": "exercise bike",
+    "payload": { "fire_at": "2026-08-15T19:00:00" },
+    "status": "ready",
+    "when": "2026-08-15T19:00:00",
+    "section": "lifetime",
+    "subject_id": "bike",
+    "instance_id": "bike-open",
+    "version": 1
+  },
+  {
+    "id": "vegetables-tick",
+    "type": "tick",
+    "title": "vegetables",
+    "payload": { "done": false },
+    "status": "ready",
+    "when": null,
+    "section": "lifetime",
+    "subject_id": "vegetables",
+    "instance_id": "vegetables-open",
+    "version": 1
+  }
+]

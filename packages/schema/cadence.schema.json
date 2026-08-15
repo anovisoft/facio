@@ -1,0 +1,30 @@
+{
+  "additionalProperties": false,
+  "description": "Count per period, or `none` (one-off).\n\nThis is a count over a period, not fixed weekdays (Q26).\nDaily-ish is modelled as count=1, period=day \u2014 no extra flag.",
+  "properties": {
+    "count": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Count"
+    },
+    "period": {
+      "default": "none",
+      "enum": [
+        "day",
+        "week",
+        "none"
+      ],
+      "title": "Period",
+      "type": "string"
+    }
+  },
+  "title": "Cadence",
+  "type": "object"
+}

@@ -1,0 +1,94 @@
+{
+  "now": "2026-08-15T12:00:00",
+  "bike_silence": [
+    {
+      "id": "bike_silence_6d",
+      "last_completed": "2026-08-09T18:00:00",
+      "expect_drifting": false
+    },
+    {
+      "id": "bike_silence_8d",
+      "last_completed": "2026-08-07T18:00:00",
+      "expect_drifting": true
+    },
+    {
+      "id": "bike_silence_21d",
+      "last_completed": "2026-07-25T18:00:00",
+      "expect_drifting": true
+    }
+  ],
+  "empty_today_no_commitments": {
+    "instances": [
+      {
+        "id": "push-ups-recent",
+        "subject_id": "push-ups",
+        "when": "2026-08-14T08:00:00",
+        "status": "completed"
+      },
+      {
+        "id": "bike-recent",
+        "subject_id": "bike",
+        "when": "2026-08-12T18:00:00",
+        "status": "completed"
+      },
+      {
+        "id": "vegetables-recent",
+        "subject_id": "vegetables",
+        "when": "2026-08-14T19:00:00",
+        "status": "completed"
+      }
+    ],
+    "widgets": [],
+    "expect_today_empty": true,
+    "expect_drift": false
+  },
+  "empty_today_with_drift": {
+    "instances": [
+      {
+        "id": "bike-silent-8d",
+        "subject_id": "bike",
+        "when": "2026-08-07T18:00:00",
+        "status": "completed"
+      },
+      {
+        "id": "push-ups-recent",
+        "subject_id": "push-ups",
+        "when": "2026-08-14T08:00:00",
+        "status": "completed"
+      },
+      {
+        "id": "vegetables-recent",
+        "subject_id": "vegetables",
+        "when": "2026-08-14T19:00:00",
+        "status": "completed"
+      }
+    ],
+    "widgets": [],
+    "expect_today_kinds": ["drift"],
+    "expect_drift_subject": "bike"
+  },
+  "miss_tuesday": {
+    "subject_id": "push-ups",
+    "instances": [
+      {
+        "id": "push-ups-mon",
+        "subject_id": "push-ups",
+        "when": "2026-08-10T08:00:00",
+        "status": "completed"
+      },
+      {
+        "id": "push-ups-wed",
+        "subject_id": "push-ups",
+        "when": "2026-08-12T08:00:00",
+        "status": "completed"
+      },
+      {
+        "id": "push-ups-fri",
+        "subject_id": "push-ups",
+        "when": "2026-08-14T08:00:00",
+        "status": "completed"
+      }
+    ],
+    "expect_drifting": false
+  }
+}

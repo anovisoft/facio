@@ -1,0 +1,40 @@
+{
+  "$defs": {
+    "InstanceStatus": {
+      "enum": [
+        "completed",
+        "prepared",
+        "in_progress"
+      ],
+      "title": "InstanceStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "subject_id": {
+      "title": "Subject Id",
+      "type": "string"
+    },
+    "when": {
+      "format": "date-time",
+      "title": "When",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/InstanceStatus"
+    }
+  },
+  "required": [
+    "id",
+    "subject_id",
+    "when",
+    "status"
+  ],
+  "title": "Instance",
+  "type": "object"
+}

@@ -1,0 +1,20 @@
+{
+  "additionalProperties": false,
+  "description": "How far the shrink ladder has already been walked for one subject.\n\nNot a stored score. Input to `next_drift_offer` / `drift_card`.",
+  "properties": {
+    "asks_made": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Asks Made",
+      "type": "integer"
+    },
+    "retire_refusals": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Retire Refusals",
+      "type": "integer"
+    }
+  },
+  "title": "DriftAskState",
+  "type": "object"
+}

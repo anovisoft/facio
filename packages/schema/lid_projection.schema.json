@@ -1,0 +1,396 @@
+{
+  "$defs": {
+    "DriftCard": {
+      "additionalProperties": false,
+      "properties": {
+        "subject_id": {
+          "title": "Subject Id",
+          "type": "string"
+        },
+        "silent_days": {
+          "title": "Silent Days",
+          "type": "integer"
+        },
+        "offer": {
+          "$ref": "#/$defs/DriftOffer"
+        }
+      },
+      "required": [
+        "subject_id",
+        "silent_days",
+        "offer"
+      ],
+      "title": "DriftCard",
+      "type": "object"
+    },
+    "DriftOffer": {
+      "enum": [
+        "move_to_today",
+        "once_a_week",
+        "retire",
+        "stop"
+      ],
+      "title": "DriftOffer",
+      "type": "string"
+    },
+    "DriftTodayItem": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "drift",
+          "default": "drift",
+          "title": "Kind",
+          "type": "string"
+        },
+        "band": {
+          "const": "drift_card",
+          "default": "drift_card",
+          "title": "Band",
+          "type": "string"
+        },
+        "drift_card": {
+          "$ref": "#/$defs/DriftCard"
+        }
+      },
+      "required": [
+        "drift_card"
+      ],
+      "title": "DriftTodayItem",
+      "type": "object"
+    },
+    "RankBand": {
+      "enum": [
+        "in_progress",
+        "overdue",
+        "unanswered_morning",
+        "drift_card",
+        "soon_by_time",
+        "today_incomplete"
+      ],
+      "title": "RankBand",
+      "type": "string"
+    },
+    "Widget": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/WidgetType"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "payload": {
+          "$ref": "#/$defs/WidgetPayload"
+        },
+        "status": {
+          "$ref": "#/$defs/WidgetStatus"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "When"
+        },
+        "section": {
+          "$ref": "#/$defs/WidgetSection"
+        },
+        "group_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Group Id"
+        },
+        "subject_id": {
+          "title": "Subject Id",
+          "type": "string"
+        },
+        "instance_id": {
+          "title": "Instance Id",
+          "type": "string"
+        },
+        "tile_size": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tile Size"
+        },
+        "version": {
+          "default": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "title",
+        "status",
+        "section",
+        "subject_id",
+        "instance_id"
+      ],
+      "title": "Widget",
+      "type": "object"
+    },
+    "WidgetPayload": {
+      "additionalProperties": true,
+      "description": "Flexible payload; fields used by tests are typed, the rest may pass through.",
+      "properties": {
+        "count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Count"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target"
+        },
+        "done": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Done"
+        },
+        "items": {
+          "anyOf": [
+            {
+              "items": {},
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Items"
+        },
+        "seconds": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seconds"
+        },
+        "elapsed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Elapsed"
+        },
+        "steps": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Steps"
+        },
+        "current": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Current"
+        },
+        "fire_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fire At"
+        }
+      },
+      "title": "WidgetPayload",
+      "type": "object"
+    },
+    "WidgetSection": {
+      "enum": [
+        "today",
+        "lifetime",
+        "soon",
+        "postponed"
+      ],
+      "title": "WidgetSection",
+      "type": "string"
+    },
+    "WidgetStatus": {
+      "enum": [
+        "ready",
+        "running",
+        "done",
+        "skipped",
+        "snoozed",
+        "archived"
+      ],
+      "title": "WidgetStatus",
+      "type": "string"
+    },
+    "WidgetTodayItem": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "widget",
+          "default": "widget",
+          "title": "Kind",
+          "type": "string"
+        },
+        "band": {
+          "$ref": "#/$defs/RankBand"
+        },
+        "widget": {
+          "$ref": "#/$defs/Widget"
+        }
+      },
+      "required": [
+        "band",
+        "widget"
+      ],
+      "title": "WidgetTodayItem",
+      "type": "object"
+    },
+    "WidgetType": {
+      "enum": [
+        "counter",
+        "tick",
+        "checklist",
+        "reminder",
+        "timer",
+        "stepper"
+      ],
+      "title": "WidgetType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The lid is a view of what is due now, not a second inventory.",
+  "properties": {
+    "today": {
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/WidgetTodayItem"
+          },
+          {
+            "$ref": "#/$defs/DriftTodayItem"
+          }
+        ]
+      },
+      "title": "Today",
+      "type": "array"
+    },
+    "lifetime": {
+      "items": {
+        "$ref": "#/$defs/Widget"
+      },
+      "title": "Lifetime",
+      "type": "array"
+    },
+    "soon": {
+      "items": {
+        "$ref": "#/$defs/Widget"
+      },
+      "title": "Soon",
+      "type": "array"
+    },
+    "postponed": {
+      "items": {
+        "$ref": "#/$defs/Widget"
+      },
+      "title": "Postponed",
+      "type": "array"
+    },
+    "drift_card": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DriftCard"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "today",
+    "lifetime",
+    "soon",
+    "postponed"
+  ],
+  "title": "LidProjection",
+  "type": "object"
+}
