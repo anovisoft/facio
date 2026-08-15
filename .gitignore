@@ -9,3 +9,11 @@ dist/
 build/
 .DS_Store
 apps/backend-py3/client-service/logs/
+node_modules/
+.expo/
+apps/mobile/ios/
+apps/mobile/android/
+node_modules/
+.expo/
+apps/mobile/ios/
+apps/mobile/android/
