@@ -1,20 +1,27 @@
 import React from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
-import { projectLid } from '@/domain/lid';
+import { deltaCardText, displayTitle, driftCardText } from '@/domain/copy';
+import { projectLid, type TodayItem } from '@/domain/lid';
 import { formatFireClock } from '@/domain/reminder';
-import { cellsForTile, packRowMajor } from '@/domain/pack';
-import type { Cue, Widget } from '@/domain/types';
+import { cellsForTile, packRowMajor, type CellSize } from '@/domain/pack';
+import type { Cue, Instance, Subject, Widget } from '@/domain/types';
 import { colors, grid, spacing, typography } from '@/theme';
+import { AskCard } from './AskCard';
 import { CounterTile, ReminderTile, TickTile } from './tiles';
 
 type LidFeedProps = {
   widgets: Widget[];
+  subjects: Subject[];
+  instances: Instance[];
+  morningClosedOn: string | null;
   cueFor: (subjectId: string) => Cue | undefined;
   onOpenUse: (widgetId: string) => void;
   onToggleTick: (widgetId: string) => void;
   onCueSurfaced: (widgetId: string) => void;
   onOpenWindow: (widgetId: string) => void;
+  onAnswerDrift: (subjectId: string, action: 'today' | 'weekly' | 'retire') => void;
+  onAnswerDelta: (widgetId: string, action: 'yes' | 'leave' | 'later') => void;
 };
 
 function SectionHeader({ title }: { title: string }) {
@@ -25,9 +32,17 @@ function SectionHeader({ title }: { title: string }) {
   );
 }
 
-function renderTile(
+function sizeOfItem(item: TodayItem | Widget): CellSize {
+  if ('kind' in item) {
+    if (item.kind === 'drift' || item.kind === 'delta') return { w: 4, h: 2 };
+    return cellsForTile(item.widget.tile_size);
+  }
+  return cellsForTile(item.tile_size);
+}
+
+function renderWidget(
   item: Widget,
-  props: Omit<LidFeedProps, 'widgets'>,
+  props: Omit<LidFeedProps, 'widgets' | 'subjects' | 'instances' | 'morningClosedOn'>,
 ): React.ReactElement | null {
   switch (item.type) {
     case 'counter':
@@ -67,22 +82,115 @@ function renderTile(
   }
 }
 
-function PackedSection({
-  widgets,
-  cueFor,
-  onOpenUse,
-  onToggleTick,
-  onCueSurfaced,
-  onOpenWindow,
+function renderTodayItem(
+  item: TodayItem,
+  subjects: Subject[],
+  props: Omit<LidFeedProps, 'widgets' | 'subjects' | 'instances' | 'morningClosedOn'>,
+): React.ReactElement | null {
+  switch (item.kind) {
+    case 'widget':
+      return renderWidget(item.widget, props);
+    case 'drift': {
+      const subject = subjects.find((row) => row.id === item.drift_card.subject_id);
+      return (
+        <AskCard
+          text={driftCardText(displayTitle(subject), item.drift_card.silent_days)}
+          chips={[
+            {
+              id: 'today',
+              label: 'На сегодня',
+              onPress: () => props.onAnswerDrift(item.drift_card.subject_id, 'today'),
+            },
+            {
+              id: 'weekly',
+              label: 'Раз в неделю',
+              onPress: () => props.onAnswerDrift(item.drift_card.subject_id, 'weekly'),
+            },
+            {
+              id: 'retire',
+              label: 'Убрать',
+              onPress: () => props.onAnswerDrift(item.drift_card.subject_id, 'retire'),
+            },
+          ]}
+        />
+      );
+    }
+    case 'delta': {
+      const subject = subjects.find((row) => row.id === item.subject_id);
+      return (
+        <AskCard
+          text={deltaCardText(displayTitle(subject))}
+          chips={[
+            { id: 'yes', label: 'Да', onPress: () => props.onAnswerDelta(item.widget_id, 'yes') },
+            {
+              id: 'leave',
+              label: 'На сегодня',
+              onPress: () => props.onAnswerDelta(item.widget_id, 'leave'),
+            },
+            {
+              id: 'later',
+              label: 'Позже',
+              onPress: () => props.onAnswerDelta(item.widget_id, 'later'),
+            },
+          ]}
+        />
+      );
+    }
+    default: {
+      const exhaustive: never = item;
+      return exhaustive;
+    }
+  }
+}
+
+function PackedToday({
+  items,
+  subjects,
+  ...props
 }: {
-  widgets: Widget[];
-} & Omit<LidFeedProps, 'widgets'>) {
+  items: TodayItem[];
+  subjects: Subject[];
+} & Omit<LidFeedProps, 'widgets' | 'subjects' | 'instances' | 'morningClosedOn'>) {
   const { width } = useWindowDimensions();
   const inner = width - grid.padding * 2;
   const cell = (inner - grid.gap * (grid.columns - 1)) / grid.columns;
-  const { placements, rowCount } = packRowMajor(widgets, (widget) => cellsForTile(widget.tile_size));
-  const height =
-    rowCount > 0 ? rowCount * cell + Math.max(0, rowCount - 1) * grid.gap : 0;
+  const { placements, rowCount } = packRowMajor(items, sizeOfItem);
+  const height = rowCount > 0 ? rowCount * cell + Math.max(0, rowCount - 1) * grid.gap : 0;
+
+  return (
+    <View style={[styles.grid, { height }]}>
+      {placements.map(({ item, col, row, w, h }, index) => {
+        const left = col * (cell + grid.gap);
+        const top = row * (cell + grid.gap);
+        const tileWidth = w * cell + (w - 1) * grid.gap;
+        const tileHeight = h * cell + (h - 1) * grid.gap;
+        const key =
+          item.kind === 'widget'
+            ? item.widget.id
+            : item.kind === 'drift'
+              ? `drift:${item.drift_card.subject_id}`
+              : `delta:${item.widget_id}`;
+        return (
+          <View key={key || String(index)} style={[styles.slot, { left, top, width: tileWidth, height: tileHeight }]}>
+            {renderTodayItem(item, subjects, props)}
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+function PackedWidgets({
+  widgets,
+  ...props
+}: {
+  widgets: Widget[];
+} & Omit<LidFeedProps, 'widgets' | 'subjects' | 'instances' | 'morningClosedOn'>) {
+  const { width } = useWindowDimensions();
+  const inner = width - grid.padding * 2;
+  const cell = (inner - grid.gap * (grid.columns - 1)) / grid.columns;
+  const { placements, rowCount } = packRowMajor(widgets, sizeOfItem);
+  const height = rowCount > 0 ? rowCount * cell + Math.max(0, rowCount - 1) * grid.gap : 0;
 
   return (
     <View style={[styles.grid, { height }]}>
@@ -92,20 +200,8 @@ function PackedSection({
         const tileWidth = w * cell + (w - 1) * grid.gap;
         const tileHeight = h * cell + (h - 1) * grid.gap;
         return (
-          <View
-            key={item.id}
-            style={[
-              styles.slot,
-              { left, top, width: tileWidth, height: tileHeight },
-            ]}
-          >
-            {renderTile(item, {
-              cueFor,
-              onOpenUse,
-              onToggleTick,
-              onCueSurfaced,
-              onOpenWindow,
-            })}
+          <View key={item.id} style={[styles.slot, { left, top, width: tileWidth, height: tileHeight }]}>
+            {renderWidget(item, props)}
           </View>
         );
       })}
@@ -115,13 +211,12 @@ function PackedSection({
 
 export function LidFeed({
   widgets,
-  cueFor,
-  onOpenUse,
-  onToggleTick,
-  onCueSurfaced,
-  onOpenWindow,
+  subjects,
+  instances,
+  morningClosedOn,
+  ...props
 }: LidFeedProps) {
-  const lid = projectLid(widgets);
+  const lid = projectLid(widgets, subjects, instances, new Date(), morningClosedOn);
 
   return (
     <View style={styles.root}>
@@ -129,27 +224,13 @@ export function LidFeed({
       {lid.today.length === 0 ? (
         <View style={styles.empty} />
       ) : (
-        <PackedSection
-          widgets={lid.today}
-          cueFor={cueFor}
-          onOpenUse={onOpenUse}
-          onToggleTick={onToggleTick}
-          onCueSurfaced={onCueSurfaced}
-          onOpenWindow={onOpenWindow}
-        />
+        <PackedToday items={lid.today} subjects={subjects} {...props} />
       )}
 
       {lid.lifetime.length > 0 ? (
         <>
           <SectionHeader title="Lifetime" />
-          <PackedSection
-            widgets={lid.lifetime}
-            cueFor={cueFor}
-            onOpenUse={onOpenUse}
-            onToggleTick={onToggleTick}
-            onCueSurfaced={onCueSurfaced}
-            onOpenWindow={onOpenWindow}
-          />
+          <PackedWidgets widgets={lid.lifetime} {...props} />
         </>
       ) : null}
     </View>

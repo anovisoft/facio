@@ -33,6 +33,31 @@ export function formatLocalDateTime(date: Date): string {
   )}`;
 }
 
+export function formatLocalDate(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/** Widget `when` is local wall time; journal `at` may be UTC. */
+export function parseWhen(value: string): Date {
+  if (value.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(value)) {
+    return new Date(value);
+  }
+  return parseLocalDateTime(value);
+}
+
+export function sameCalendarDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+export function addCalendarDays(date: Date, days: number): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days, date.getHours(), date.getMinutes(), date.getSeconds(), 0);
+}
+
 /** Law `window_from_closing`: latest_by = closes_at minus 3 hours. */
 export function windowFromClosing(closesAt: string): Window {
   const clock = parseClock(closesAt);

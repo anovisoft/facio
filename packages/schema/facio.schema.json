@@ -833,7 +833,8 @@
             "unanswered_morning",
             "drift_card",
             "soon_by_time",
-            "today_incomplete"
+            "today_incomplete",
+            "today_done"
           ],
           "title": "RankBand",
           "type": "string"

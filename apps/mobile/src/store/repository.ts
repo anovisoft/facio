@@ -1,7 +1,13 @@
 import * as Crypto from 'expo-crypto';
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import { BIKE_SUBJECT_ID, buildBikeSeed, buildSeed } from '@/domain/seed';
+import { addCalendarDays, formatLocalDateTime, parseWhen, sameCalendarDay } from '@/domain/reminder';
+import {
+  BIKE_SUBJECT_ID,
+  buildBikeFoundingCompleted,
+  buildBikeSeed,
+  buildSeed,
+} from '@/domain/seed';
 import type {
   Cue,
   DeskSnapshot,
@@ -133,6 +139,8 @@ export function seedIfEmpty(database: SQLiteDatabase): DeskSnapshot {
  * or vegetables. `seedIfEmpty` never runs again once the author has lived
  * step 1 — this is the path that matters.
  */
+export const MORNING_CLOSED_META_KEY = 'morning_card_closed_on';
+
 export function ensureBike(database: SQLiteDatabase, now = new Date()): DeskSnapshot {
   const snapshot = loadSnapshot(database);
   if (snapshot.subjects.some((subject) => subject.id === BIKE_SUBJECT_ID)) {
@@ -152,6 +160,140 @@ export function ensureBike(database: SQLiteDatabase, now = new Date()): DeskSnap
     saveWidget(database, seed.widget);
   });
 
+  return loadSnapshot(database);
+}
+
+/**
+ * Never-started is not drift. On a live warehouse the bike often has only
+ * a prepared reminder — doseed one completed instance 21 days ago.
+ */
+export function ensureBikeFoundingSilence(
+  database: SQLiteDatabase,
+  now = new Date(),
+): DeskSnapshot {
+  const snapshot = loadSnapshot(database);
+  const bike = snapshot.subjects.find((subject) => subject.id === BIKE_SUBJECT_ID);
+  if (!bike) return snapshot;
+
+  const hasActivity = snapshot.instances.some(
+    (item) =>
+      item.subject_id === BIKE_SUBJECT_ID &&
+      (item.status === 'completed' || item.status === 'in_progress'),
+  );
+  if (hasActivity) return snapshot;
+
+  const founding = buildBikeFoundingCompleted(now);
+  const nextSubject: Subject = {
+    ...bike,
+    instance_ids: bike.instance_ids.includes(founding.id)
+      ? bike.instance_ids
+      : [...bike.instance_ids, founding.id],
+  };
+  database.withTransactionSync(() => {
+    saveInstance(database, founding);
+    saveSubject(database, nextSubject);
+  });
+  return loadSnapshot(database);
+}
+
+export function setLastCompletedWhen(
+  database: SQLiteDatabase,
+  subjectId: string,
+  when: Date,
+): DeskSnapshot {
+  const snapshot = loadSnapshot(database);
+  const own = snapshot.instances.filter(
+    (item) =>
+      item.subject_id === subjectId &&
+      (item.status === 'completed' || item.status === 'in_progress'),
+  );
+  const whenIso = formatLocalDateTime(when);
+  let target = own.reduce<Instance | null>((latest, item) => {
+    if (!latest) return item;
+    return parseWhen(item.when) > parseWhen(latest.when) ? item : latest;
+  }, null);
+  const subject = snapshot.subjects.find((item) => item.id === subjectId);
+
+  database.withTransactionSync(() => {
+    if (!target) {
+      target =
+        subjectId === BIKE_SUBJECT_ID
+          ? { ...buildBikeFoundingCompleted(when), when: whenIso }
+          : {
+              id: `${subjectId}-silence`,
+              subject_id: subjectId,
+              when: whenIso,
+              status: 'completed',
+            };
+      saveInstance(database, target);
+    } else {
+      saveInstance(database, { ...target, when: whenIso, status: 'completed' });
+    }
+    if (subject) {
+      const ids = subject.instance_ids.includes(target.id)
+        ? subject.instance_ids
+        : [...subject.instance_ids, target.id];
+      saveSubject(database, { ...subject, instance_ids: ids, last_asked: null });
+    }
+  });
+  return loadSnapshot(database);
+}
+
+/** Debug: un-retire the bike and plant silence so the drift card returns. */
+export function restoreBikeDrift(
+  database: SQLiteDatabase,
+  days: 8 | 21,
+  now = new Date(),
+): DeskSnapshot {
+  const snapshot = setLastCompletedWhen(database, BIKE_SUBJECT_ID, addCalendarDays(now, -days));
+  const bike = snapshot.subjects.find((subject) => subject.id === BIKE_SUBJECT_ID);
+  if (!bike) return snapshot;
+  const needsCadence = bike.status === 'retired' || bike.cadence.period === 'none';
+  const next: Subject = {
+    ...bike,
+    status: 'active',
+    cadence: needsCadence ? { count: 2, period: 'week' } : bike.cadence,
+    last_asked: null,
+    asks_made: 0,
+    retire_refusals: 0,
+  };
+  saveSubject(database, next);
+  return loadSnapshot(database);
+}
+
+/**
+ * Done today belongs on Today. Lifetime leftovers with today's `when`
+ * come back; other days stay in the warehouse and leave the lid.
+ */
+export function restoreTodayDone(database: SQLiteDatabase, now = new Date()): DeskSnapshot {
+  const snapshot = loadSnapshot(database);
+  const rows = database.getAllSync<{ widget_id: string; at: string }>(
+    `SELECT widget_id, at FROM events
+     WHERE type = 'instance_completed' AND widget_id IS NOT NULL
+     ORDER BY at ASC`,
+  );
+  const completedAt = new Map<string, string>();
+  for (const row of rows) {
+    completedAt.set(row.widget_id, row.at);
+  }
+
+  database.withTransactionSync(() => {
+    for (const widget of snapshot.widgets) {
+      if (widget.status !== 'done') continue;
+      const instance = snapshot.instances.find((item) => item.id === widget.instance_id);
+      const rawWhen = widget.when ?? instance?.when ?? completedAt.get(widget.id) ?? null;
+      if (!rawWhen) continue;
+      const whenDate = parseWhen(rawWhen);
+      if (Number.isNaN(whenDate.getTime())) continue;
+      const whenLocal = formatLocalDateTime(whenDate);
+      const nextSection = sameCalendarDay(whenDate, now) ? 'today' : widget.section;
+      if (widget.when === whenLocal && widget.section === nextSection) continue;
+      saveWidget(database, { ...widget, when: whenLocal, section: nextSection });
+      if (instance && instance.status === 'completed' && instance.when !== whenLocal) {
+        saveInstance(database, { ...instance, when: whenLocal });
+      }
+    }
+  });
   return loadSnapshot(database);
 }
 

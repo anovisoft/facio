@@ -62,10 +62,54 @@ def test_empty_today_with_drift_shows_one_card(subjects, scenarios, now) -> None
     assert item.band == RankBand.drift_card
 
 
-def test_done_widget_leaves_today(subjects, now) -> None:
+def test_done_widget_today_stays_in_today(subjects, now) -> None:
     widgets = [_widget("done-set", status=WidgetStatus.done, when=now)]
     projection = lid_projection(now, subjects, [], widgets)
+    assert len(projection.today) == 1
+    item = projection.today[0]
+    assert isinstance(item, WidgetTodayItem)
+    assert item.widget.id == "done-set"
+    assert item.band == RankBand.today_done
+
+
+def test_done_widget_other_day_leaves_today(subjects, now) -> None:
+    yesterday = datetime(2026, 8, 14, 12, 0, 0)
+    widgets = [_widget("old-set", status=WidgetStatus.done, when=yesterday)]
+    projection = lid_projection(now, subjects, [], widgets)
     assert projection.today == []
+
+
+def test_lifetime_done_today_returns_to_today(subjects, now) -> None:
+    widgets = [
+        _widget(
+            "push-done",
+            status=WidgetStatus.done,
+            when=now,
+            section=WidgetSection.lifetime,
+        )
+    ]
+    projection = lid_projection(now, subjects, [], widgets)
+    assert len(projection.today) == 1
+    item = projection.today[0]
+    assert isinstance(item, WidgetTodayItem)
+    assert item.band == RankBand.today_done
+    assert item.widget.id == "push-done"
+    assert projection.lifetime == []
+
+
+def test_lifetime_done_other_day_leaves_lid(subjects, now) -> None:
+    yesterday = datetime(2026, 8, 14, 12, 0, 0)
+    widgets = [
+        _widget(
+            "old-set",
+            status=WidgetStatus.done,
+            when=yesterday,
+            section=WidgetSection.lifetime,
+        )
+    ]
+    projection = lid_projection(now, subjects, [], widgets)
+    assert projection.today == []
+    assert projection.lifetime == []
 
 
 def test_rank_v0_order(subjects, now) -> None:
@@ -73,13 +117,16 @@ def test_rank_v0_order(subjects, now) -> None:
     overdue = _widget("overdue", when=datetime(2026, 8, 15, 8, 0, 0))
     later = _widget("later", when=datetime(2026, 8, 15, 18, 0, 0))
     incomplete = _widget("incomplete")
-    projection = lid_projection(now, subjects, [], [later, incomplete, overdue, running])
+    done = _widget("done-set", status=WidgetStatus.done, when=now)
+    projection = lid_projection(
+        now, subjects, [], [later, incomplete, overdue, running, done]
+    )
     ids = [
         item.widget.id
         for item in projection.today
         if isinstance(item, WidgetTodayItem)
     ]
-    assert ids == ["running", "overdue", "later", "incomplete"]
+    assert ids == ["running", "overdue", "later", "incomplete", "done-set"]
     bands = [
         item.band for item in projection.today if isinstance(item, WidgetTodayItem)
     ]
@@ -88,6 +135,7 @@ def test_rank_v0_order(subjects, now) -> None:
         RankBand.overdue,
         RankBand.soon_by_time,
         RankBand.today_incomplete,
+        RankBand.today_done,
     ]
 
 
@@ -107,6 +155,23 @@ def test_drift_card_ranks_between_overdue_and_soon(
     assert isinstance(projection.today[1], DriftTodayItem)
     assert isinstance(projection.today[2], WidgetTodayItem)
     assert projection.today[2].widget.id == "later"
+
+
+def test_done_today_ranks_after_live_and_drift(
+    subjects, scenarios, now
+) -> None:
+    case = scenarios["empty_today_with_drift"]
+    live = _widget("live")
+    done = _widget("done-set", status=WidgetStatus.done, when=now)
+    projection = lid_projection(
+        now, subjects, instances_from_rows(case["instances"]), [live, done]
+    )
+    kinds = [item.kind for item in projection.today]
+    assert kinds == ["drift", "widget", "widget"]
+    assert isinstance(projection.today[1], WidgetTodayItem)
+    assert projection.today[1].band == RankBand.today_incomplete
+    assert isinstance(projection.today[2], WidgetTodayItem)
+    assert projection.today[2].band == RankBand.today_done
 
 
 def test_no_invented_morning_card(subjects, now) -> None:

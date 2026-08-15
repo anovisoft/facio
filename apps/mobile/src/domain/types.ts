@@ -28,6 +28,10 @@ export type Subject = {
   target: Target | null;
   instance_ids: string[];
   status: SubjectStatus;
+  /** Q28 shrink ladder. Not a drift score. */
+  asks_made?: number;
+  retire_refusals?: number;
+  last_asked?: string | null;
 };
 
 export type CueKind = 'correction' | 'clarification';
@@ -96,7 +100,16 @@ export type RankBand =
   | 'unanswered_morning'
   | 'drift_card'
   | 'soon_by_time'
-  | 'today_incomplete';
+  | 'today_incomplete'
+  | 'today_done';
+
+export type DriftOffer = 'move_to_today' | 'once_a_week' | 'retire' | 'stop';
+
+export type DriftCard = {
+  subject_id: string;
+  silent_days: number;
+  offer: DriftOffer;
+};
 
 export type JournalEventType =
   | 'cue_written'
@@ -108,7 +121,9 @@ export type JournalEventType =
   | 'tick_toggled'
   | 'reminder_scheduled'
   | 'reminder_fired'
-  | 'reminder_opened';
+  | 'reminder_opened'
+  | 'drift_answered'
+  | 'delta_answered';
 
 export type JournalEvent = {
   id: string;

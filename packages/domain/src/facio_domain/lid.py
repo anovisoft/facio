@@ -22,12 +22,12 @@ from facio_domain.models import (
 
 _HIDDEN_TODAY = frozenset(
     {
-        WidgetStatus.done,
         WidgetStatus.skipped,
         WidgetStatus.archived,
         WidgetStatus.snoozed,
     }
 )
+
 
 def _band_index(band: RankBand) -> int:
     match band:
@@ -43,13 +43,23 @@ def _band_index(band: RankBand) -> int:
             return 4
         case RankBand.today_incomplete:
             return 5
+        case RankBand.today_done:
+            return 6
         case _:
             unreachable: Never = band
             raise ValueError(unreachable)
 
 
+def _is_done_today(widget: Widget, now: datetime) -> bool:
+    if widget.status != WidgetStatus.done or widget.when is None:
+        return False
+    return widget.when.date() == now.date()
+
+
 def widget_rank_band(widget: Widget, now: datetime) -> RankBand:
     """Rank v0 band for a Today widget. Morning is a hole unless a card exists."""
+    if widget.status == WidgetStatus.done:
+        return RankBand.today_done
     if widget.status == WidgetStatus.running:
         return RankBand.in_progress
     if widget.when is not None and widget.when < now:
@@ -70,6 +80,25 @@ def _sort_key(item: WidgetTodayItem | DriftTodayItem, now: datetime) -> tuple:
     return (_band_index(item.band), when, item.widget.id)
 
 
+def _today_widgets(widgets: Sequence[Widget], now: datetime) -> list[Widget]:
+    """Live Today tiles, plus done of this calendar day — even if still in Lifetime."""
+    seen: set[str] = set()
+    chosen: list[Widget] = []
+    for widget in widgets:
+        if widget.status in _HIDDEN_TODAY:
+            continue
+        if widget.status == WidgetStatus.done:
+            if not _is_done_today(widget, now):
+                continue
+        elif widget.section != WidgetSection.today:
+            continue
+        if widget.id in seen:
+            continue
+        seen.add(widget.id)
+        chosen.append(widget)
+    return chosen
+
+
 def lid_projection(
     now: datetime,
     subjects: Sequence[Subject],
@@ -81,18 +110,21 @@ def lid_projection(
 
     Empty Today with no commitments and no drift → today empty, no card.
     Empty Today while a practice missed its cadence → one drift card in today.
+    Done today stays in Today (band today_done), after the live tiles.
+    Done on another calendar day is not drawn on Today.
     Rank v0 inside a non-empty Today. Unanswered morning is reserved; this
     step does not invent a morning engine.
     """
     card = drift_card(subjects, instances, now, histories)
 
-    today_widgets = [
+    today_widgets = _today_widgets(widgets, now)
+    today_ids = {widget.id for widget in today_widgets}
+    lifetime = [
         widget
         for widget in widgets
-        if widget.section == WidgetSection.today and widget.status not in _HIDDEN_TODAY
-    ]
-    lifetime = [
-        widget for widget in widgets if widget.section == WidgetSection.lifetime
+        if widget.section == WidgetSection.lifetime
+        and widget.id not in today_ids
+        and widget.status != WidgetStatus.done
     ]
     soon = [widget for widget in widgets if widget.section == WidgetSection.soon]
     postponed = [

@@ -1,9 +1,10 @@
+import * as Crypto from 'expo-crypto';
 import type * as Notifications from 'expo-notifications';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { formatClock, formatLocalDateTime, nextReminderFireAt } from '@/domain/reminder';
+import { formatClock, formatLocalDate, formatLocalDateTime, nextReminderFireAt } from '@/domain/reminder';
 import { doTimeCueFor } from '@/domain/seed';
-import type { Cue, DeskSnapshot, Instance, Subject, Widget, Window } from '@/domain/types';
+import { COMPACT_TILE, type Cue, type DeskSnapshot, type Instance, type Subject, type Widget, type Window } from '@/domain/types';
 import {
   PERMISSION_META_KEY,
   cancelWidgetNotifications,
@@ -17,14 +18,18 @@ import { getDb } from './database';
 import {
   appendEvent,
   ensureBike,
+  ensureBikeFoundingSilence,
   getMeta,
   loadSnapshot,
+  MORNING_CLOSED_META_KEY,
+  restoreTodayDone,
   revertLookOnlyStarts,
   saveWidget,
   saveCue,
   saveInstance,
   saveSubject,
   seedIfEmpty,
+  restoreBikeDrift,
   setMeta,
 } from './repository';
 
@@ -45,6 +50,10 @@ type DeskContextValue = DeskSnapshot & {
   fireDogfoodReminder: (widgetId: string) => Promise<void>;
   noteReminderFired: (notification: Notifications.Notification) => void;
   noteReminderOpened: (notification: Notifications.Notification) => void;
+  morningClosedOn: string | null;
+  answerDrift: (subjectId: string, action: 'today' | 'weekly' | 'retire') => void;
+  answerDelta: (widgetId: string, action: 'yes' | 'leave' | 'later') => void;
+  restoreBikeDrift: (days: 8 | 21) => void;
 };
 
 const DeskContext = createContext<DeskContextValue | null>(null);
@@ -64,6 +73,7 @@ export function DeskProvider({ children }: { children: React.ReactNode }) {
   const [snapshot, setSnapshot] = useState<DeskSnapshot>(empty);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [morningClosedOn, setMorningClosedOn] = useState<string | null>(null);
   const surfacedKeys = useRef(new Set<string>());
   const reminderLogKeys = useRef(new Set<string>());
 
@@ -72,6 +82,9 @@ export function DeskProvider({ children }: { children: React.ReactNode }) {
       const database = getDb();
       seedIfEmpty(database);
       ensureBike(database);
+      ensureBikeFoundingSilence(database);
+      restoreTodayDone(database);
+      setMorningClosedOn(getMeta(database, MORNING_CLOSED_META_KEY));
       setSnapshot(revertLookOnlyStarts(database));
       setReady(true);
     } catch (caught) {
@@ -162,9 +175,16 @@ export function DeskProvider({ children }: { children: React.ReactNode }) {
   const finishInstance = useCallback(
     (widget: Widget, instance: Instance, nextWidget: Widget, cues: Cue[]) => {
       const database = getDb();
-      const completed: Instance = { ...instance, status: 'completed' };
+      const when = formatLocalDateTime(new Date());
+      const completed: Instance = { ...instance, status: 'completed', when };
+      const standing: Widget = {
+        ...nextWidget,
+        status: 'done',
+        section: 'today',
+        when,
+      };
       saveInstance(database, completed);
-      saveWidget(database, nextWidget);
+      saveWidget(database, standing);
       appendEvent(database, 'instance_completed', {
         subject_id: widget.subject_id,
         widget_id: widget.id,
@@ -172,7 +192,7 @@ export function DeskProvider({ children }: { children: React.ReactNode }) {
       });
       return {
         instances: replaceById(snapshot.instances, completed),
-        widgets: replaceById(snapshot.widgets, nextWidget),
+        widgets: replaceById(snapshot.widgets, standing),
         cues: applyCueIfAny(widget, cues),
       };
     },
@@ -238,8 +258,7 @@ export function DeskProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (target > 0 && nextCount >= target) {
-        const standing: Widget = { ...nextWidget, status: 'done', section: 'lifetime' };
-        const finished = finishInstance(widget, workingInstance, standing, snapshot.cues);
+        const finished = finishInstance(widget, workingInstance, nextWidget, snapshot.cues);
         persist({ ...snapshot, subjects, ...finished });
       }
     },
@@ -251,10 +270,9 @@ export function DeskProvider({ children }: { children: React.ReactNode }) {
       const widget = snapshot.widgets.find((item) => item.id === widgetId);
       const instance = snapshot.instances.find((item) => item.id === widget?.instance_id);
       if (!widget || !instance || instance.status === 'completed') return;
-      const standing: Widget = { ...widget, status: 'done', section: 'lifetime' };
       persist({
         ...snapshot,
-        ...finishInstance(widget, instance, standing, snapshot.cues),
+        ...finishInstance(widget, instance, widget, snapshot.cues),
       });
     },
     [finishInstance, persist, snapshot],
@@ -282,8 +300,6 @@ export function DeskProvider({ children }: { children: React.ReactNode }) {
       const nextWidget: Widget = {
         ...widget,
         payload: { ...widget.payload, done: true },
-        status: 'done',
-        section: 'today',
       };
       saveWidget(database, nextWidget);
       appendEvent(database, 'tick_toggled', {
@@ -323,14 +339,9 @@ export function DeskProvider({ children }: { children: React.ReactNode }) {
       }
 
       void cancelWidgetNotifications(widget.id);
-      const finishedWidget: Widget = {
-        ...widget,
-        status: 'done',
-        section: 'today',
-      };
       persist({
         ...snapshot,
-        ...finishInstance(widget, working, finishedWidget, snapshot.cues),
+        ...finishInstance(widget, working, widget, snapshot.cues),
       });
     },
     [finishInstance, persist, snapshot],
@@ -584,6 +595,170 @@ export function DeskProvider({ children }: { children: React.ReactNode }) {
     [noteReminderEvent],
   );
 
+  const placeSubjectOnToday = useCallback(
+    (current: DeskSnapshot, subject: Subject, now: Date): DeskSnapshot => {
+      const hidden = new Set(['done', 'skipped', 'archived', 'snoozed']);
+      const live = current.widgets.find(
+        (item) =>
+          item.subject_id === subject.id &&
+          item.section === 'today' &&
+          !hidden.has(item.status),
+      );
+      if (live) return current;
+
+      const parked = current.widgets.find(
+        (item) =>
+          item.subject_id === subject.id &&
+          (item.status === 'ready' || item.status === 'running'),
+      );
+      const database = getDb();
+      if (parked) {
+        const moved: Widget = { ...parked, section: 'today' };
+        saveWidget(database, moved);
+        return { ...current, widgets: replaceById(current.widgets, moved) };
+      }
+
+      const template = current.widgets.find((item) => item.subject_id === subject.id);
+      const instanceId = Crypto.randomUUID();
+      const widgetId = Crypto.randomUUID();
+      const when = formatLocalDateTime(now);
+      const instance: Instance = {
+        id: instanceId,
+        subject_id: subject.id,
+        when,
+        status: 'prepared',
+      };
+      const widget: Widget = {
+        id: widgetId,
+        type: template?.type ?? 'tick',
+        title: subject.title,
+        payload:
+          template?.type === 'counter'
+            ? { count: 0, target: subject.target?.goal ?? template.payload.target ?? 0 }
+            : template?.type === 'reminder'
+              ? { fire_at: when }
+              : { done: false },
+        status: 'ready',
+        when,
+        section: 'today',
+        subject_id: subject.id,
+        instance_id: instanceId,
+        tile_size: template?.tile_size ?? COMPACT_TILE,
+        version: 1,
+      };
+      saveInstance(database, instance);
+      saveWidget(database, widget);
+      const nextSubject: Subject = {
+        ...subject,
+        instance_ids: [...subject.instance_ids, instanceId],
+      };
+      saveSubject(database, nextSubject);
+      return {
+        ...current,
+        subjects: replaceById(current.subjects, nextSubject),
+        instances: [...current.instances, instance],
+        widgets: [...current.widgets, widget],
+      };
+    },
+    [],
+  );
+
+  const answerDrift = useCallback(
+    (subjectId: string, action: 'today' | 'weekly' | 'retire') => {
+      const database = getDb();
+      const current = loadSnapshot(database);
+      const subject = current.subjects.find((item) => item.id === subjectId);
+      if (!subject) return;
+      const now = new Date();
+      const asked = formatLocalDateTime(now);
+      let next: Subject = {
+        ...subject,
+        last_asked: asked,
+        asks_made: (subject.asks_made ?? 0) + 1,
+      };
+      let working = current;
+      switch (action) {
+        case 'today':
+          working = placeSubjectOnToday(
+            { ...current, subjects: replaceById(current.subjects, next) },
+            next,
+            now,
+          );
+          next = working.subjects.find((item) => item.id === subjectId) ?? next;
+          break;
+        case 'weekly':
+          next = {
+            ...next,
+            cadence: { count: 1, period: 'week' },
+            status: 'shrunk',
+          };
+          break;
+        case 'retire':
+          next = {
+            ...next,
+            cadence: { count: null, period: 'none' },
+            status: 'retired',
+          };
+          break;
+        default: {
+          const exhaustive: never = action;
+          return exhaustive;
+        }
+      }
+      saveSubject(database, next);
+      appendEvent(database, 'drift_answered', {
+        subject_id: subject.id,
+        payload: { action, asks_made: next.asks_made, last_asked: asked },
+      });
+      persist({
+        ...working,
+        subjects: replaceById(working.subjects, next),
+      });
+    },
+    [persist, placeSubjectOnToday],
+  );
+
+  const closeMorningCard = useCallback((now = new Date()) => {
+    const day = formatLocalDate(now);
+    const database = getDb();
+    setMeta(database, MORNING_CLOSED_META_KEY, day);
+    setMorningClosedOn(day);
+  }, []);
+
+  const answerDelta = useCallback(
+    (widgetId: string, action: 'yes' | 'leave' | 'later') => {
+      const widget = snapshot.widgets.find((item) => item.id === widgetId);
+      if (!widget) return;
+      const database = getDb();
+      appendEvent(database, 'delta_answered', {
+        subject_id: widget.subject_id,
+        widget_id: widget.id,
+        instance_id: widget.instance_id,
+        payload: { action },
+      });
+      closeMorningCard();
+      if (action === 'yes') {
+        if (widget.type === 'tick') {
+          toggleTick(widget.id);
+          return;
+        }
+        if (widget.type === 'reminder') {
+          completeReminder(widget.id);
+          return;
+        }
+        completeCounter(widget.id);
+      }
+    },
+    [closeMorningCard, completeCounter, completeReminder, snapshot.widgets, toggleTick],
+  );
+
+  const applyBikeDrift = useCallback(
+    (days: 8 | 21) => {
+      persist(restoreBikeDrift(getDb(), days));
+    },
+    [persist],
+  );
+
   const value = useMemo<DeskContextValue>(
     () => ({
       ...snapshot,
@@ -603,8 +778,15 @@ export function DeskProvider({ children }: { children: React.ReactNode }) {
       fireDogfoodReminder,
       noteReminderFired,
       noteReminderOpened,
+      morningClosedOn,
+      answerDrift,
+      answerDelta,
+      restoreBikeDrift: applyBikeDrift,
     }),
     [
+      answerDelta,
+      answerDrift,
+      applyBikeDrift,
       completeCounter,
       completeReminder,
       cueFor,
@@ -613,6 +795,7 @@ export function DeskProvider({ children }: { children: React.ReactNode }) {
       error,
       fireDogfoodReminder,
       markCueSurfaced,
+      morningClosedOn,
       noteReminderFired,
       noteReminderOpened,
       ready,

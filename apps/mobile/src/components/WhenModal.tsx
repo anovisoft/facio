@@ -9,7 +9,6 @@ type WhenModalProps = {
   initialMinutes: number;
   onSave: (hours: number, minutes: number) => void;
   onClose: () => void;
-  onDogfood: () => void;
 };
 
 function wrap(value: number, max: number): number {
@@ -26,7 +25,6 @@ export function WhenModal({
   initialMinutes,
   onSave,
   onClose,
-  onDogfood,
 }: WhenModalProps) {
   const [hours, setHours] = useState(initialHours);
   const [minutes, setMinutes] = useState(initialMinutes);
@@ -64,15 +62,6 @@ export function WhenModal({
             style={({ pressed }) => [styles.save, pressed && styles.pressed]}
           >
             <Text style={styles.saveText}>Сохранить</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={onDogfood}
-            style={({ pressed }) => [styles.dogfood, pressed && styles.pressed]}
-            accessibilityLabel="проверка: сигнал через минуту"
-          >
-            <Text style={styles.dogfoodLabel}>через минуту</Text>
-            <Text style={styles.dogfoodHint}>проверка — боевой час останется</Text>
           </Pressable>
         </View>
       </View>
@@ -174,21 +163,6 @@ const styles = StyleSheet.create({
   saveText: {
     ...typography.subtitle,
     color: colors.white,
-  },
-  dogfood: {
-    marginTop: spacing.md,
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-  },
-  dogfoodLabel: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  dogfoodHint: {
-    ...typography.caption,
-    color: colors.textMuted,
-    marginTop: 2,
   },
   pressed: {
     opacity: 0.7,

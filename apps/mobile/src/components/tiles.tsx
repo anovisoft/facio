@@ -15,25 +15,28 @@ type CounterTileProps = {
 export function CounterTile({ widget, cue, onOpen, onSurfaced }: CounterTileProps) {
   const count = widget.payload.count ?? 0;
   const target = widget.payload.target ?? 0;
+  const done = widget.status === 'done';
 
   useEffect(() => {
-    if (cue) onSurfaced();
-  }, [cue, onSurfaced]);
+    if (cue && !done) onSurfaced();
+  }, [cue, done, onSurfaced]);
 
   return (
-    <Pressable onPress={onOpen} style={styles.card}>
+    <Pressable onPress={onOpen} style={[styles.card, done && styles.cardDone]}>
       <View style={styles.top}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={[styles.title, done && styles.titleDone]} numberOfLines={1}>
           {widget.title}
         </Text>
         <KebabStub />
       </View>
       <View style={styles.bodyHit}>
-        <Text style={styles.ratio}>
+        <Text style={[styles.ratio, done && styles.ratioDone]}>
           {count}
           <Text style={styles.goal}> / {target}</Text>
         </Text>
-        {cue ? (
+        {done ? (
+          <Text style={styles.doneHint}>готово</Text>
+        ) : cue ? (
           <Text style={styles.cue} numberOfLines={3}>
             {cue.text}
           </Text>
@@ -52,19 +55,24 @@ type ReminderTileProps = {
 
 /** Row tile. Timing cue is the fire hour, not «зал до 22» as do-time text. */
 export function ReminderTile({ widget, fireClock, onOpen, onOpenWindow }: ReminderTileProps) {
+  const done = widget.status === 'done';
   return (
-    <Pressable onPress={onOpen} style={styles.rowCard}>
+    <Pressable onPress={onOpen} style={[styles.rowCard, done && styles.cardDone]}>
       <View style={styles.rowCopy}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={[styles.title, done && styles.titleDone]} numberOfLines={1}>
           {widget.title}
         </Text>
-        <Pressable
-          onPress={onOpenWindow}
-          style={({ pressed }) => [styles.clockHit, pressed && styles.pressed]}
-          accessibilityLabel="во сколько напомнить"
-        >
-          <Text style={styles.fireClock}>{fireClock || '—'}</Text>
-        </Pressable>
+        {done ? (
+          <Text style={styles.doneHint}>готово</Text>
+        ) : (
+          <Pressable
+            onPress={onOpenWindow}
+            style={({ pressed }) => [styles.clockHit, pressed && styles.pressed]}
+            accessibilityLabel="во сколько напомнить"
+          >
+            <Text style={styles.fireClock}>{fireClock || '—'}</Text>
+          </Pressable>
+        )}
       </View>
       <KebabStub />
     </Pressable>
@@ -78,11 +86,11 @@ type TickTileProps = {
 };
 
 export function TickTile({ widget, onOpen, onToggle }: TickTileProps) {
-  const done = Boolean(widget.payload.done);
+  const done = Boolean(widget.payload.done) || widget.status === 'done';
   return (
-    <Pressable onPress={onOpen} style={styles.card}>
+    <Pressable onPress={onOpen} style={[styles.card, done && styles.cardDone]}>
       <View style={styles.top}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={[styles.title, done && styles.titleDone]} numberOfLines={1}>
           {widget.title}
         </Text>
         <KebabStub />
@@ -95,7 +103,7 @@ export function TickTile({ widget, onOpen, onToggle }: TickTileProps) {
         >
           <Text style={[styles.check, done && styles.checkDone]}>{done ? '✓' : ''}</Text>
         </Pressable>
-        <Text style={styles.tickHint}>на Сегодня</Text>
+        <Text style={styles.tickHint}>{done ? 'готово' : 'на Сегодня'}</Text>
       </View>
     </Pressable>
   );
@@ -110,6 +118,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     justifyContent: 'space-between',
+  },
+  cardDone: {
+    backgroundColor: colors.surfaceMuted,
+    opacity: 0.72,
+  },
+  titleDone: {
+    color: colors.textSecondary,
+  },
+  ratioDone: {
+    color: colors.textSecondary,
+  },
+  doneHint: {
+    ...typography.caption,
+    color: colors.textMuted,
   },
   top: {
     flexDirection: 'row',

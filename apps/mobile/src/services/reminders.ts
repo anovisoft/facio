@@ -137,7 +137,7 @@ export async function scheduleDogfoodReminder(widget: Widget, seconds = 60): Pro
     return await Notifications.scheduleNotificationAsync({
       content: {
         title: widget.title,
-        body: 'проверка · сигнал через минуту',
+        body: 'напомнить через минуту',
         sound: true,
         ...(Platform.OS === 'android' ? { channelId: 'reminders' } : {}),
         data: {

@@ -1,4 +1,4 @@
-import { formatLocalDateTime, nextReminderFireAt, windowFromClosing } from './reminder';
+import { addCalendarDays, formatLocalDateTime, nextReminderFireAt, windowFromClosing } from './reminder';
 import { COMPACT_TILE, type Cue, type Instance, type Subject, type Widget } from './types';
 
 /**
@@ -16,6 +16,8 @@ export const BIKE_SUBJECT_ID = 'bike';
 export const BIKE_CUE_ID = 'bike-gym-hours';
 export const BIKE_INSTANCE_ID = 'bike-open';
 export const BIKE_WIDGET_ID = 'bike-reminder';
+export const BIKE_FOUNDING_INSTANCE_ID = 'bike-founding-completed';
+export const FOUNDING_SILENCE_DAYS = 21;
 
 export function buildBikeSeed(now: Date): {
   subject: Subject;
@@ -155,4 +157,14 @@ export function buildSeed(nowIso: string): {
 
 export function doTimeCueFor(cues: Cue[], subjectId: string): Cue | undefined {
   return cues.find((cue) => cue.subject_id === subjectId && cue.surface === 'do-time');
+}
+
+/** Founding bike case: 21 days of silence. Never-started is not drift. */
+export function buildBikeFoundingCompleted(now: Date): Instance {
+  return {
+    id: BIKE_FOUNDING_INSTANCE_ID,
+    subject_id: BIKE_SUBJECT_ID,
+    when: formatLocalDateTime(addCalendarDays(now, -FOUNDING_SILENCE_DAYS)),
+    status: 'completed',
+  };
 }

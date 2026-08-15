@@ -62,20 +62,32 @@ export function UseScreen({ navigation, route }: Props) {
   const dateLabel = quietDate(instance?.when);
   const chrome = { insets, dateLabel, onBack: () => navigation.goBack() };
 
+  const lookOnly = widget.status === 'done' || instance?.status === 'completed';
+
   switch (widget.type) {
     case 'counter':
-      return <CounterUse widget={widget} cue={cue} chrome={chrome} />;
+      return <CounterUse widget={widget} cue={cue} chrome={chrome} lookOnly={lookOnly} />;
     case 'tick':
-      return <TickUse widget={widget} chrome={chrome} onToggle={() => desk.toggleTick(widget.id)} />;
+      return (
+        <TickUse
+          widget={widget}
+          chrome={chrome}
+          lookOnly={lookOnly}
+          onToggle={() => desk.toggleTick(widget.id)}
+        />
+      );
     case 'reminder':
       return (
         <ReminderUse
           widget={widget}
           latestBy={subject?.window}
           chrome={chrome}
+          lookOnly={lookOnly}
           onComplete={() => desk.completeReminder(widget.id)}
           onSaveWindow={(hours, minutes) => desk.setReminderWindow(widget.id, hours, minutes)}
-          onDogfood={() => desk.fireDogfoodReminder(widget.id)}
+          onRemindInMinute={
+            widget.subject_id === 'bike' ? () => desk.fireDogfoodReminder(widget.id) : undefined
+          }
         />
       );
     case 'checklist':
@@ -118,10 +130,12 @@ function CounterUse({
   widget,
   cue,
   chrome,
+  lookOnly,
 }: {
   widget: Widget;
   cue?: Cue;
   chrome: Chrome;
+  lookOnly: boolean;
 }) {
   const desk = useDesk();
   const [cueDraft, setCueDraft] = useState(cue?.text ?? '');
@@ -182,33 +196,41 @@ function CounterUse({
       />
       <Text style={styles.editHint}>можно править текст и цель</Text>
 
-      <View style={styles.buttons}>
-        <Pressable
-          onPress={() => desk.tickCounter(widget.id, -1)}
-          style={({ pressed }) => [styles.step, pressed && styles.pressed]}
-          accessibilityLabel="минус"
-        >
-          <Text style={styles.stepText}>−</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => desk.tickCounter(widget.id, 1)}
-          style={({ pressed }) => [styles.step, styles.stepPlus, pressed && styles.pressed]}
-          accessibilityLabel="плюс"
-        >
-          <Text style={[styles.stepText, styles.stepPlusText]}>+</Text>
-        </Pressable>
-      </View>
+      {lookOnly ? (
+        <Text style={[styles.lookHint, { marginBottom: chrome.insets.bottom + spacing.md }]}>
+          готово
+        </Text>
+      ) : (
+        <>
+          <View style={styles.buttons}>
+            <Pressable
+              onPress={() => desk.tickCounter(widget.id, -1)}
+              style={({ pressed }) => [styles.step, pressed && styles.pressed]}
+              accessibilityLabel="минус"
+            >
+              <Text style={styles.stepText}>−</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => desk.tickCounter(widget.id, 1)}
+              style={({ pressed }) => [styles.step, styles.stepPlus, pressed && styles.pressed]}
+              accessibilityLabel="плюс"
+            >
+              <Text style={[styles.stepText, styles.stepPlusText]}>+</Text>
+            </Pressable>
+          </View>
 
-      <Pressable
-        onPress={() => desk.completeCounter(widget.id)}
-        style={({ pressed }) => [
-          styles.done,
-          { marginBottom: chrome.insets.bottom + spacing.md },
-          pressed && styles.pressed,
-        ]}
-      >
-        <Text style={styles.doneText}>Готово</Text>
-      </Pressable>
+          <Pressable
+            onPress={() => desk.completeCounter(widget.id)}
+            style={({ pressed }) => [
+              styles.done,
+              { marginBottom: chrome.insets.bottom + spacing.md },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text style={styles.doneText}>Готово</Text>
+          </Pressable>
+        </>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -216,13 +238,15 @@ function CounterUse({
 function TickUse({
   widget,
   chrome,
+  lookOnly,
   onToggle,
 }: {
   widget: Widget;
   chrome: Chrome;
+  lookOnly: boolean;
   onToggle: () => void;
 }) {
-  const done = Boolean(widget.payload.done);
+  const done = Boolean(widget.payload.done) || lookOnly;
   return (
     <View style={[styles.root, { paddingTop: chrome.insets.top }]}>
       <UseBar chrome={chrome} />
@@ -236,7 +260,7 @@ function TickUse({
           >
             <Text style={[styles.useCheck, done && styles.useCheckDone]}>{done ? '✓' : ''}</Text>
           </Pressable>
-          <Text style={styles.tickHint}>на Сегодня</Text>
+          <Text style={styles.tickHint}>{done ? 'готово' : 'на Сегодня'}</Text>
         </View>
       </View>
     </View>
@@ -247,16 +271,18 @@ function ReminderUse({
   widget,
   latestBy,
   chrome,
+  lookOnly,
   onComplete,
   onSaveWindow,
-  onDogfood,
+  onRemindInMinute,
 }: {
   widget: Widget;
   latestBy: Window | null | undefined;
   chrome: Chrome;
+  lookOnly: boolean;
   onComplete: () => void;
   onSaveWindow: (hours: number, minutes: number) => Promise<void>;
-  onDogfood: () => Promise<void>;
+  onRemindInMinute?: () => Promise<void>;
 }) {
   const [whenOpen, setWhenOpen] = useState(false);
   const clock = useMemo(
@@ -284,16 +310,34 @@ function ReminderUse({
         <Text style={styles.whenLinkText}>во сколько</Text>
       </Pressable>
 
-      <Pressable
-        onPress={onComplete}
-        style={({ pressed }) => [
-          styles.done,
-          { marginBottom: chrome.insets.bottom + spacing.md },
-          pressed && styles.pressed,
-        ]}
-      >
-        <Text style={styles.doneText}>Я проехал</Text>
-      </Pressable>
+      {onRemindInMinute ? (
+        <Pressable
+          onPress={() => {
+            void onRemindInMinute();
+          }}
+          style={({ pressed }) => [styles.minuteHit, pressed && styles.pressed]}
+        >
+          <Text style={styles.minuteLabel}>Напомнить через минуту</Text>
+          <Text style={styles.minuteHint}>час {fireClock || '19:00'} останется</Text>
+        </Pressable>
+      ) : null}
+
+      {lookOnly ? (
+        <Text style={[styles.lookHint, { marginBottom: chrome.insets.bottom + spacing.md }]}>
+          готово
+        </Text>
+      ) : (
+        <Pressable
+          onPress={onComplete}
+          style={({ pressed }) => [
+            styles.done,
+            { marginBottom: chrome.insets.bottom + spacing.md },
+            pressed && styles.pressed,
+          ]}
+        >
+          <Text style={styles.doneText}>Я проехал</Text>
+        </Pressable>
+      )}
 
       <WhenModal
         visible={whenOpen}
@@ -303,9 +347,6 @@ function ReminderUse({
         onSave={(hours, minutes) => {
           void onSaveWindow(hours, minutes);
           setWhenOpen(false);
-        }}
-        onDogfood={() => {
-          void onDogfood();
         }}
       />
     </View>
@@ -379,6 +420,12 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     marginTop: spacing.xs,
+  },
+  lookHint: {
+    ...typography.caption,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginTop: 'auto',
   },
   buttons: {
     flexDirection: 'row',
@@ -473,6 +520,21 @@ const styles = StyleSheet.create({
   whenLinkText: {
     ...typography.subtitle,
     color: colors.primary,
+  },
+  minuteHit: {
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+  minuteLabel: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+  minuteHint: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginTop: 2,
   },
   pressed: {
     opacity: 0.7,

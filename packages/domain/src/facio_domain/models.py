@@ -75,6 +75,7 @@ class RankBand(StrEnum):
     drift_card = "drift_card"
     soon_by_time = "soon_by_time"
     today_incomplete = "today_incomplete"
+    today_done = "today_done"
 
 
 class Cadence(BaseModel):
