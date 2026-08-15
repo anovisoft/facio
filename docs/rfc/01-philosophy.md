@@ -2,15 +2,20 @@
 
 ## Thesis
 
-**Users do not buy AI. They buy a place that stays with their day — and a counterpart that can work that place.**
+**Users do not buy AI. They buy the guarantee that what they figured out will still be there when it matters.**
 
-AI is the other person at the table. The shelf product is:
+Advice is abundant and free. Getting it to the moment of doing is the scarce part. The shelf product is:
 
+- **a source of method when you do not know how** — the reason the loop starts
 - a small desk of live executable widgets
 - an obvious next physical action
+- **the reason showing up with the action** — the cue at rep one, not in a note
+- a cadence that brings a practice back without being remembered
+- a signal when something has quietly stopped happening
 - a way to speak a change or ask about what is already there
-- a morning return to rhythm
 - memory of what actually happened, including failure
+
+AI is the other person at the table. Its job is not to be smart in the conversation; it is to leave something behind that has a clock on it.
 
 ## From planner to assistant
 
@@ -25,11 +30,12 @@ That philosophy was coherent. It produced an overloaded shell: too many nouns, t
 
 The new Facio optimizes for:
 
+- **survival** (a conclusion outlives the conversation that produced it)
 - **presence** (the desk is there every day)
 - **action** (widgets run, not just describe)
+- **cadence** (a practice returns without being remembered)
+- **honesty about drift** (silence is a bug, not tact)
 - **conversation as hands** (composer and chat, both about the desk)
-- **continuity** (morning check-in, reminders, memory)
-- **finite plays** (a cook, a training day) that start and end **on** the desk — without becoming a Guide entity
 
 Short achiever loops do not leave. They stop being the product’s first purpose. They become one way the assistant uses the canvas.
 
@@ -60,15 +66,15 @@ The assistant may place, fill, and edit widgets. The user may also do it with fi
 
 ## Lifelong, with endings
 
-The desk does not end. Plays on it do.
+The desk does not end. Instances on it do.
 
-Carbonara tonight completes. A training week completes. The desk remains. The next time that subject returns, facts come with it — not a resurrected Guide named Episode.
+Tonight’s session completes. The subject stays, and the next time it comes round, its cues come with it — not a resurrected Guide named Episode.
 
-Infinite life without endings becomes a junk drawer. Endings without a surviving desk become the old planner.
+Infinite life without endings becomes a junk drawer. Endings without a surviving practice become the old planner.
 
-## Empathy without nagging
+## Empathy without nagging — and silence is not empathy
 
-Good assistance reduces friction and remembers.
+Good assistance reduces friction, remembers, and **says when something stopped**.
 
 Bad assistance:
 
@@ -76,9 +82,11 @@ Bad assistance:
 - guilt about streaks
 - “come back” messages with no desk object behind them
 - parasocial chat as the product
-- forcing a plan change after a definition (“so shall I swap the brisket?” as a required next step)
+- forcing a plan change after a definition
 
-A morning line is allowed when it is a **check against the desk** with operational answers — not motivation.
+But there is a second failure, and the previous version of this file had it: **staying quiet for three weeks while a commitment rots.** That is not respect, it is abandonment with good manners.
+
+The line between the two is not volume, it is the offer. Nagging says *try harder*. Assistance says *this hasn’t happened in three weeks — want it once a week instead, or should we drop it?* One adds pressure; the other removes it and keeps the truth visible. A morning line is allowed when it is a **check against the desk** with operational answers, including the answer “let’s make this smaller.”
 
 ## Taste
 
@@ -101,11 +109,14 @@ Not:
 | We choose | We sacrifice |
 |-----------|--------------|
 | Desk as home | Chat-first assistant marketing |
-| Executable widgets as wedge | Competing as a smarter calendar |
+| **Reason + cadence + drift in one object** | Being the best at any one of the three |
+| **Persistence across shallow subjects** | Specialist depth in a vertical, this year |
+| **Cues at do-time** | Tidy settings screens nobody reads |
+| **Breaking silence on drift, with a shrink offer** | The comfort of never being the app that mentions it |
 | Mixed week on one lid | Beating Hevy / YouTube at their one screen |
 | Closed catalog, type-owned layout | iOS-style widget homework |
 | Grounded talk (mutate *or* explain) | “Every turn must PATCH json” |
 | Structured memory + hit rate | RAG-the-whole-chat as v1 |
 | Lifelong rhythm | Positioning as a goal-completion app |
-| Finite plays, no Episode noun | Guide / Identity / Finish as v1 religion |
+| Finite instances, no Episode noun | Guide / Identity / Finish as v1 religion |
 | Cost discipline | Always-on generative companionship |

@@ -1,10 +1,11 @@
 # 03 — Product
 
 ```text
-Lid (крышка)   →  one vertical feed of tiles + docked composer
+Subject        →  a practice with a cadence, cues and drift — where the reason lives
+Lid (крышка)   →  one vertical feed of tiles + docked composer; a view of what is due now
 Pan  (сковородка) →  under the lid: Talks, Deeds, Settings
 Talk           →  current chat from composer (New chat to reset); kebab jumps to that widget’s chat
-Rhythm         →  reminders + morning check
+Rhythm         →  reminders inside the window + morning check on delta or drift
 ```
 
 No bottom tabs. Horizontal category tabs are **parked**.
@@ -32,7 +33,7 @@ pan (only from lid root)              lid
 - Fullscreen Use/Inspect: left edge = **back to lid**, not pan.
 - Keyboard open: pan gesture off.
 - **Talks** — conversation list. Opening one opens that subject’s sheet (not a chat-home inbox).
-- **Deeds** — subjects (Carbonara, Training). Opens the **same kebab inspector** (carousel of instances, `+` to repeat). Last week’s carbonara lives here, not on Today.
+- **Deeds** — subjects (Push-ups, Bike, Vegetables, Project X) with their cadence and how each is holding. Opens the **same kebab inspector** (carousel of instances, `+` to repeat). Not a graveyard — this is the list of practices ([02 P11](./02-principles.md)).
 - **Settings** — bottom of the pan. Stats/achievements later.
 
 Do not dump a second widget warehouse into the pan. Live objects: lid. Dead/repeatable subjects: Deeds.
@@ -58,7 +59,7 @@ Grid: 4 columns. Sizes are **width × height** in cells. Type picks one of: `4×
 
 Kebab on every tile (top-right).
 
-**Off days.** Cook and train are episodic. If Today is empty, leave it empty — composer is still there; Soon may sit below. A user-asked Today checklist is valid furniture. Padding the grid so every morning looks busy is the planner trap and kills memory (salt never pays off if carbonara never repeats as itself).
+**Off days, and the difference that matters.** If nothing is committed today, leave Today empty — composer is still there, Soon may sit below. But if a subject is **behind its cadence**, that emptiness is drift and it gets one Today card ([02 P10](./02-principles.md), [P8](./02-principles.md)). Inventing chores so every morning looks busy is the planner trap; showing a commitment the user made himself is the product.
 
 ---
 
@@ -116,8 +117,8 @@ title
 
 Versions of one cook stay in the chat as snapshots. Carousel slots are **days / repeats**:
 
-- **Training:** `[past days…][ YYY now ][z upcoming prepared]`. If day 1–2 were widget v1 and later v2, slots are `[v1][v1][v2]…[YYY][z]` — the face of that **day**, not a diff of tonight.
-- **Carbonara:** past cooks in `x`; instead of `z`, **`+`** starts a new cook.
+- **Push-ups:** `[past sessions…][ YYY now ][z next prepared]`. If sessions 1–2 ran widget v1 and later ones v2, slots are `[v1][v1][v2]…[YYY][z]` — the face of that **session**, not a diff of tonight.
+- **Bike:** past rides in `x`; instead of `z`, **`+`** starts a new one.
 
 ---
 
@@ -151,15 +152,16 @@ See [02 P15](./02-principles.md). Lid tiles have **no** inner horizontal carouse
 
 | Widget | Typical use | Lid |
 |--------|-------------|-----|
-| Checklist | shopping, prep, daily tasks | may tick on Today/Lifetime |
+| Counter / Dose | **push-ups** (28 → 30), servings | compact; carries the do-time cue |
+| Checklist | shopping, prep, project steps | may tick on Today/Lifetime |
+| Tick with cadence | **vegetables**, anything “more often” | compact; drift comes from the cadence |
+| Reminder | **the bike** — fires inside the window | row |
 | Timer / TimerStack | countdown | may run on Today/Lifetime |
-| Timeline | cook | glance on lid; **Use** to run |
-| Stepper | strength | banner / compact; **Use** to run (buttons) |
-| Counter / Dose | target count | compact |
+| Stepper | multi-beat session | banner / compact; **Use** to run (buttons) |
+| Timeline | cook — **phase 3**, not the wedge | glance on lid; **Use** to run |
 | Calendar event | time-bound | row |
-| Reminder | fire at a time | row |
 
-Calendar/reminder without timeline/stepper/timer in v1 = daily-planner trap.
+Every type carries three things or it is a planner widget: **cadence**, **do-time cues**, and a **drift** state ([02 P13](./02-principles.md), never-do #14). A counter without the cue is Hevy with fewer features. A tick without the cadence is a checkbox.
 
 Same-intent burst (shop + prep + cook) → `group_id`. Shown as neighboring tiles or one stack **later**; not a Guide screen. No flip-stack on the lid in v0.5.
 
@@ -169,13 +171,21 @@ Same-intent burst (shop + prep + cook) → `group_id`. Shown as neighboring tile
 
 Reminders fire **deterministically**. Tap → lid (or Inspect of that object). No LLM at fire time.
 
-Morning: only if the lid has a delta. **90% snapshot** (yesterday / today facts). At most **one** question, **one** stalled object, chips Yes / No / Move to today / Postpone + remark. No delta → no card. Ignore → do not escalate.
+Reminder timing comes from the subject’s **window**, which comes from a cue. “The gym shuts at 22” makes the bike reminder fire at 19:00 — that single behaviour is most of the product’s value ([00](./00-vision.md)).
 
-Prefer a Today tile; not a third home.
+Morning: **90% snapshot** (yesterday / today facts) plus at most **one** question, on **one** object. Two triggers ([02 P8](./02-principles.md)):
 
-**Good:** “Carbonara still isn’t marked done — did you cook it?”
+- **Delta** — something moved, or is due today.
+- **Drift** — a subject is behind its own cadence.
 
-**Bad:** crush-the-day; streak shame; “how do you feel?”; asking a done widget; two questions; longer than the lid; judging the person; ceremony when yesterday and today are empty.
+No delta and no drift → no card. Prefer a Today tile; not a third home.
+
+**Good (delta):** “Push-ups aren’t marked done — did you do the set?”  
+**Good (drift):** “The bike hasn’t happened in three weeks. Move it to once a week, or drop it?”
+
+Chips: Yes / No / Move to today / Postpone + remark. A **drift** ask always carries a shrink chip (once a week / retire). Answering “no” three times shrinks the cadence, it does not raise the volume.
+
+**Bad:** crush-the-day; streak shame; “how do you feel?”; “you can do it!”; asking about a done widget; two questions; longer than the lid; judging the person; ceremony when yesterday and today are empty and nothing is drifting.
 
 ---
 
@@ -190,20 +200,41 @@ Open → lid (Today)
   → leave
 ```
 
+### The founding journey — a conclusion becomes a mechanic
+
+```text
+Composer → “my lower back takes the load on push-ups”
+  → assistant: brace the whole core and the glutes
+  → cue on subject push-ups, surface = do-time, origin = this turn
+  → centered snapshot + live tile
+Next session → counter shows “brace core + glutes” at rep one
+  → check-in after: “did the brace hold? back ok?”
+  → new cue, or a changed target
+```
+
+### Drift
+
+```text
+Bike, cadence 2×/week, nothing for three weeks
+  → one morning Today card:
+    “The bike hasn’t happened in three weeks. Once a week instead, or drop it?”
+  → chips: Today / Once a week / Retire
+```
+
 ### Two turns in one chat (default)
 
 ```text
-Composer → “add garlic to carbonara” → centered snapshot + live tile
+Composer → “target is 30 push-ups, not 25” → centered snapshot + live tile
   → collapse → composer again → same chat
   → “add call mom to today” → second centered snapshot in the same thread
-New chat (top) → blank thread; garlic chat lives in pan Talks
-Kebab on carbonara → that chat (or the one that last bound it), scrolled to the cook
+New chat (top) → blank thread; the push-up chat lives in pan Talks
+Kebab on push-ups → that chat (or the one that last bound it), scrolled to that session
 ```
 
-### Repeat last week’s carbonara
+### Repeat what happened last week
 
 ```text
-Pan → Deeds → Carbonara → carousel → +  (or Open to inspect, then +)
+Pan → Deeds → Bike → carousel → +  (or Open to inspect, then +)
 ```
 
 ---

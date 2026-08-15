@@ -31,6 +31,8 @@ Client-owned catalog. LLM fills schema; client renders and runs. Type owns tile 
 
 Opening the lid, ticking Today/Lifetime checkboxes, running a timer, firing a reminder: no model.
 
+**Drift detection and reminder timing are arithmetic too** — cadence vs instances done, window vs clock. The model may word the one morning ask; it never decides whether there is one.
+
 ## P6 — Visible mutation, reversible
 
 Structural AI edits: live tile + new **centered** snapshot in that talk. Finger ticks on the lid do not spam the thread.
@@ -39,11 +41,24 @@ Structural AI edits: live tile + new **centered** snapshot in that talk. Finger 
 
 No hostage streaks, no shame, no “you’ll lose progress” as retention.
 
-## P8 — Check-in is operational
+## P8 — Check-in is operational, and drift is a signal
 
-Morning: deterministic snapshot + at most **one** question about **one** stalled object. No delta → no card. Ignore → do not escalate.
+Morning: deterministic snapshot + at most **one** question about **one** object. Two triggers:
 
-## P9 — Memory is a fact that hits next time
+- **Delta** — something moved yesterday, or is due today.
+- **Drift** — a subject missed its own cadence. Three silent weeks on the bike is a **bug**, not politeness.
+
+No delta and no drift → no card.
+
+Ignoring an ask does not escalate *inside* one cadence period. After a full period has passed it may be asked again — same object, at most once, never louder.
+
+**A drift ask must offer to shrink the commitment, not to try harder:** move it, drop the cadence to once a week, or retire the subject. That is how this stays out of the guilt business (P7) while still breaking the silence.
+
+## P9 — A fact must reach the hands
+
+A fact stored and never surfaced did not happen. Facts attached to a subject surface **at do-time**: on the widget, in *when* the reminder fires, in the next placement. Not in a settings screen, not only in the transcript.
+
+“Brace the core and the glutes” belongs on the push-up widget at rep one. “The gym shuts at 22” belongs in the reminder firing at 19:00.
 
 Hit rate (applied + shown), not count. No raw-chat RAG as v1. No silent mining.
 
@@ -53,26 +68,35 @@ Hit rate (applied + shown), not count. No raw-chat RAG as v1. No silent mining.
 
 The lid is one feed, but **the first screen is Today** (plus at most a crumb of Lifetime). Soon / Postponed / extra Lifetime live **below the fold**. `more` is for those tails, **not** for Today.
 
-**Empty Today is allowed.** Do not invent chores so D1 looks full. Off days (no cook, no train) are filled only by what the user put there: a short Today list, a Lifetime instrument they chose, or nothing. Opening Facio is not mandatory every calendar morning. Memory pays off on **subject repeat** (next carbonara), not on daily padding.
+**Two kinds of empty Today, and they are not the same thing.**
 
-Rank v0 **inside Today** when it is non-empty: in progress → overdue → unanswered morning → soon by time → today incomplete.  
+- Empty because nothing is committed today → **allowed**. Leave it empty; do not invent chores so D1 looks full.
+- Empty while a subject is **behind its own cadence** → **must not stay silent**. That emptiness *is* the drift, and it is the exact failure this product exists for (the bike, three weeks). Surface it as one Today card (P8).
+
+Surfacing a commitment the user made himself is not padding — never-do #15 is about **invented** chores. Opening Facio is not mandatory every calendar morning. Memory pays off on **subject repeat**, not on daily filler.
+
+Rank v0 **inside Today** when it is non-empty: in progress → overdue → unanswered morning → **drift card** → soon by time → today incomplete.  
 Streaks / short-win casino: not v0.
 
-## P11 — Plays end; the desk does not
+## P11 — Instances end; subjects do not
 
-No Episode noun. Finished carbonara leaves Today. Find it later via pan → **Deeds** → kebab carousel (`+` to repeat). Standing instruments belong in **Lifetime**, not as fake infinity of a cook.
+No Episode noun. A finished session leaves Today. Find it later via pan → **Deeds** → kebab carousel (`+` to repeat).
+
+A subject with a cadence returns by design — that is the product, not fake infinity. Fake infinity is a one-off that forgot to finish. **Deeds** is the list of subjects with their cadence and how each is holding, not a graveyard.
 
 ## P12 — Cost is a product feature
 
-No pep-push into silence. Voice and win-back after the core loop. There is **no dollar figure** in this product pack; implementation must measure cost per active day before Plus.
+No pep-push into silence, and no generic win-back. A **drift ask about a subject the user created** is neither: it is bounded by that subject’s cadence and it always offers to shrink (P8).
 
-## P13 — Narrow excellence (product, not every day)
+Drift detection itself is arithmetic, so the most valuable behaviour in the product is also the cheapest. Voice comes after the core loop. There is **no dollar figure** in this product pack; implementation must measure cost per active day before Plus.
 
-The **shipped catalog** must include executable wedge types (timeline, stepper, timer) — that is what never-do “no planner-only v1” means.
+## P13 — Persistence first, depth later
 
-That does **not** mean Today is a cook every day. Episodes are episodic. P13 forbids a v1 *without* those types. It does not forbid a Today that is sometimes only a checklist the user asked for.
+The bet is **staying power across subjects**, not depth inside one. A counter with a cue, a tick with a cadence, and a reminder with a window already beat every neighbor on reason + cadence + drift ([00](./00-vision.md)).
 
-Do not add a third vertical until one of the two bars (carbonara / training day) holds against “I’ll just use YouTube / Hevy tonight.”
+So the **shipped catalog** must carry **cadence, do-time cues and drift** on every type. That — not the presence of a timeline — is what “no planner-only v1” means (never-do #14).
+
+Breadth of subjects is free: add one whenever the user has one. Depth in a runtime (cook timeline, specialist-grade stepper) waits for phase 3.
 
 ## P14 — Safety is not a sidebar
 
@@ -95,6 +119,9 @@ Visible **☰** (or equivalent) also opens the pan. Edge-only is not enough.
 
 - [ ] Can the user act in under a minute without talking?
 - [ ] Is Today obvious without scrolling a warehouse?
+- [ ] **Do this subject’s cues appear where the hands are, not in a settings screen?**
+- [ ] **If this subject went quiet for a full cadence period, would the user hear about it?**
+- [ ] **Does the drift ask offer to shrink, and never to try harder?**
 - [ ] New chat is visible at the top of the sheet; composer resume is not a trap without it?
 - [ ] Use cannot swipe into another day?
 - [ ] Chat cards are snapshots, centered, not runtimes?
