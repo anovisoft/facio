@@ -58,6 +58,24 @@ final class DriftLawTests: XCTestCase {
         XCTAssertEqual(DriftLaw.nextOffer(asksMade: 4, retireRefusals: 2), .stop)
     }
 
+    func testShouldSurfaceStopIsFalse() throws {
+        let card = DriftCard(subjectId: "bike", silentDays: 21, offer: .stop)
+        XCTAssertFalse(
+            DriftLaw.shouldSurface(card, askedAt: nil, cadence: try Cadence.of(count: 2, period: .week), now: try DomainFixtures.now())
+        )
+    }
+
+    func testShouldSurfaceHidesAskInsideCadencePeriod() throws {
+        let now = try DomainFixtures.now()
+        let asked = try XCTUnwrap(FacioJSON.date(from: "2026-08-14T12:00:00"))
+        let card = DriftCard(subjectId: "bike", silentDays: 21, offer: .onceAWeek)
+        let weekly = try Cadence.of(count: 2, period: .week)
+        XCTAssertFalse(DriftLaw.shouldSurface(card, askedAt: asked, cadence: weekly, now: now))
+        let lastPeriod = try XCTUnwrap(FacioJSON.date(from: "2026-08-07T12:00:00"))
+        XCTAssertTrue(DriftLaw.shouldSurface(card, askedAt: lastPeriod, cadence: weekly, now: now))
+        XCTAssertTrue(DriftLaw.shouldSurface(card, askedAt: nil, cadence: weekly, now: now))
+    }
+
     func testDriftCardUsesHistory() throws {
         let bike = try DomainFixtures.subject("bike")
         let last = try XCTUnwrap(FacioJSON.date(from: "2026-08-07T18:00:00"))

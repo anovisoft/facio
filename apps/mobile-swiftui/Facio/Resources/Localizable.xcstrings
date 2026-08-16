@@ -10,8 +10,14 @@
     "/" : {
 
     },
+    "%@ — не было %@. Сделать меньше?" : {
+      "comment" : "Drift card body"
+    },
     "%lld" : {
 
+    },
+    "%lld дней" : {
+      "comment" : "Drift silence in days"
     },
     "Facio" : {
 
@@ -48,6 +54,9 @@
         }
       }
     },
+    "две недели" : {
+      "comment" : "Drift silence, two weeks"
+    },
     "минус" : {
 
     },
@@ -77,6 +86,9 @@
         }
       }
     },
+    "неделю" : {
+      "comment" : "Drift silence, one week"
+    },
     "ничего на сегодня — и это нормально" : {
 
     },
@@ -97,6 +109,12 @@
     },
     "подсказка" : {
 
+    },
+    "раз в неделю" : {
+      "comment" : "Drift chip: once a week"
+    },
+    "сегодня" : {
+      "comment" : "Drift chip: move to today"
     },
     "Сегодня" : {
       "extractionState" : "manual",
@@ -131,6 +149,12 @@
           }
         }
       }
+    },
+    "три недели" : {
+      "comment" : "Drift silence, three weeks"
+    },
+    "убрать" : {
+      "comment" : "Drift chip unused stop\nDrift chip: retire"
     },
     "успеть к" : {
 

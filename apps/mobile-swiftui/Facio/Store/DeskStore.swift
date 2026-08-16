@@ -22,7 +22,7 @@ final class DeskStore {
         self.repository = repository
         self.now = now
         if let loaded = try repository.loadSnapshot() {
-            let migrated = try SeedFactory.ensureBike(in: loaded, now: now())
+            let migrated = try SeedFactory.ensureFounding(in: loaded, now: now())
             snapshot = migrated
             if migrated != loaded {
                 try repository.saveSnapshot(migrated)
@@ -41,7 +41,26 @@ final class DeskStore {
             now: now(),
             subjects: snapshot.subjects,
             instances: snapshot.instances,
-            widgets: snapshot.widgets
+            widgets: snapshot.widgets,
+            histories: snapshot.driftAsks
+        )
+    }
+
+    func subject(id: String) -> Subject? {
+        snapshot.subjects.first { $0.id == id }
+    }
+
+    func showsOnLid(subjectId: String) -> Bool {
+        subject(id: subjectId)?.status != .retired
+    }
+
+    func surfaces(_ card: DriftCard) -> Bool {
+        guard let subject = subject(id: card.subjectId) else { return false }
+        return DriftLaw.shouldSurface(
+            card,
+            askedAt: snapshot.driftAskedAt[card.subjectId],
+            cadence: subject.cadence,
+            now: now()
         )
     }
 
@@ -210,6 +229,26 @@ final class DeskStore {
         journal(.instanceCompleted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
     }
 
+    func answerDrift(subjectId: String, offer: DriftOffer) {
+        guard let card = lid.driftCard, card.subjectId == subjectId, surfaces(card) else { return }
+        switch offer {
+        case .moveToToday:
+            applyDrift(subjectId: subjectId, offer: offer, reminders: true) { next in
+                moveToToday(subjectId, in: &next)
+            }
+        case .onceAWeek:
+            applyDrift(subjectId: subjectId, offer: offer, reminders: false) { next in
+                shrinkToOnceAWeek(subjectId, in: &next)
+            }
+        case .retire:
+            applyDrift(subjectId: subjectId, offer: offer, reminders: true) { next in
+                retireSubject(subjectId, in: &next)
+            }
+        case .stop:
+            return
+        }
+    }
+
     func editCueText(cueId: String, text: String) {
         commit { next in
             guard let index = next.cues.firstIndex(where: { $0.id == cueId }) else { return }
@@ -228,6 +267,71 @@ final class DeskStore {
                 next.subjects[subjectIndex].target = Target(current: current, goal: goal)
             }
         }
+    }
+
+    private func applyDrift(
+        subjectId: String,
+        offer: DriftOffer,
+        reminders: Bool,
+        body: (inout DeskSnapshot) -> Void
+    ) {
+        let stamp = now()
+        commit(reminders: reminders) { next in
+            body(&next)
+            var state = next.driftAsks[subjectId] ?? DriftAskState()
+            state.asksMade += 1
+            next.driftAsks[subjectId] = state
+            next.driftAskedAt[subjectId] = stamp
+        }
+        journal(
+            .driftAnswered,
+            subjectId: subjectId,
+            payload: ["offer": offer.rawValue]
+        )
+        if offer == .onceAWeek {
+            journal(.subjectShrunk, subjectId: subjectId, payload: ["cadence": "1/week"])
+        }
+        if offer == .retire {
+            journal(.subjectRetired, subjectId: subjectId)
+        }
+    }
+
+    private func moveToToday(_ subjectId: String, in next: inout DeskSnapshot) {
+        let stamp = now()
+        let window = next.subjects.first { $0.id == subjectId }?.window
+        for index in next.widgets.indices where next.widgets[index].subjectId == subjectId {
+            next.widgets[index].section = .today
+            guard next.widgets[index].type == .reminder, let window else { continue }
+            let fireAt = ReminderClock.reminderFireAt(window: window, on: stamp)
+            next.widgets[index].payload.fireAt = fireAt
+            next.widgets[index].when = fireAt
+            let instanceId = next.widgets[index].instanceId
+            guard let instanceIndex = next.instances.firstIndex(where: { $0.id == instanceId }) else { continue }
+            if next.instances[instanceIndex].status == .completed {
+                let freshId = "\(subjectId)-open-\(UUID().uuidString)"
+                next.instances.append(Instance(id: freshId, subjectId: subjectId, when: fireAt, status: .prepared))
+                if let subjectIndex = next.subjects.firstIndex(where: { $0.id == subjectId }) {
+                    next.subjects[subjectIndex].instanceIds.append(freshId)
+                }
+                next.widgets[index].instanceId = freshId
+                next.widgets[index].status = .ready
+            } else {
+                next.instances[instanceIndex].when = fireAt
+            }
+        }
+    }
+
+    private func shrinkToOnceAWeek(_ subjectId: String, in next: inout DeskSnapshot) {
+        guard let weekly = try? Cadence.of(count: 1, period: .week) else { return }
+        guard let index = next.subjects.firstIndex(where: { $0.id == subjectId }) else { return }
+        var subject = SubjectLaw.shrink(next.subjects[index])
+        subject.cadence = weekly
+        next.subjects[index] = subject
+    }
+
+    private func retireSubject(_ subjectId: String, in next: inout DeskSnapshot) {
+        guard let index = next.subjects.firstIndex(where: { $0.id == subjectId }) else { return }
+        next.subjects[index] = SubjectLaw.retire(next.subjects[index])
     }
 
     private func commit(reminders: Bool = false, _ body: (inout DeskSnapshot) -> Void) {

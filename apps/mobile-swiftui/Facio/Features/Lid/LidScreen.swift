@@ -10,9 +10,13 @@ struct LidScreen: View {
                 projection: store.lid,
                 cueFor: store.surfaceCue(for:),
                 windowFor: store.windowFor(subjectId:),
+                subjectTitle: { store.subject(id: $0)?.title ?? $0 },
+                showsSubject: store.showsOnLid(subjectId:),
+                surfacesDrift: store.surfaces,
                 onOpen: { path.append(UseRoute.widget($0)) },
                 onToggleTick: store.toggleTick,
-                onSurfaced: { store.markCueSurfaced(widgetId: $0, place: "tile") }
+                onSurfaced: { store.markCueSurfaced(widgetId: $0, place: "tile") },
+                onAnswerDrift: store.answerDrift
             )
             .padding(.horizontal, FacioPalette.pagePadding)
             .padding(.bottom, 32)

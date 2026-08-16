@@ -10,6 +10,7 @@ enum JournalEventType: String, Codable, Sendable, Equatable {
     case tickToggled = "tick_toggled"
     case subjectShrunk = "subject_shrunk"
     case subjectRetired = "subject_retired"
+    case driftAnswered = "drift_answered"
 }
 
 struct JournalEvent: Codable, Sendable, Equatable, Identifiable {

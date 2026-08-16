@@ -53,6 +53,64 @@ final class DeskStoreTests: XCTestCase {
         XCTAssertEqual(reloaded.snapshot.cues.first { $0.id == "push-ups-brace" }?.hits.surfaced, afterFirst)
     }
 
+    func testAnswerDriftMoveToToday() throws {
+        let now = try XCTUnwrap(FacioJSON.date(from: "2026-08-16T12:00:00"))
+        let (store, _) = try makeDesk(now: now)
+        XCTAssertEqual(store.lid.driftCard?.subjectId, "bike")
+        XCTAssertTrue(store.surfaces(try XCTUnwrap(store.lid.driftCard)))
+        XCTAssertEqual(store.widget(id: "bike-reminder")?.section, .lifetime)
+
+        store.answerDrift(subjectId: "bike", offer: .moveToToday)
+
+        XCTAssertEqual(store.widget(id: "bike-reminder")?.section, .today)
+        XCTAssertEqual(store.snapshot.driftAsks["bike"]?.asksMade, 1)
+        XCTAssertFalse(store.surfaces(try XCTUnwrap(store.lid.driftCard)))
+        let fireHour = Calendar.current.component(.hour, from: try XCTUnwrap(store.widget(id: "bike-reminder")?.when))
+        XCTAssertEqual(fireHour, 19)
+    }
+
+    func testAnswerDriftOnceAWeekShrinksCadence() throws {
+        let now = try XCTUnwrap(FacioJSON.date(from: "2026-08-16T12:00:00"))
+        let (store, repository) = try makeDesk(now: now)
+        store.answerDrift(subjectId: "bike", offer: .onceAWeek)
+        let bike = try XCTUnwrap(store.subject(id: "bike"))
+        XCTAssertEqual(bike.status, .shrunk)
+        XCTAssertEqual(bike.cadence.count, 1)
+        XCTAssertEqual(bike.cadence.period, .week)
+        XCTAssertFalse(store.surfaces(try XCTUnwrap(store.lid.driftCard)))
+        let reloaded = try XCTUnwrap(repository.loadSnapshot())
+        XCTAssertEqual(reloaded.subjects.first { $0.id == "bike" }?.cadence.count, 1)
+        XCTAssertEqual(reloaded.subjects.first { $0.id == "bike" }?.status, .shrunk)
+    }
+
+    func testAnswerDriftRetireHidesSubjectAndAlarm() throws {
+        let now = try XCTUnwrap(FacioJSON.date(from: "2026-08-16T12:00:00"))
+        let (store, _) = try makeDesk(now: now)
+        XCTAssertFalse(ReminderScheduler.alarms(from: store.snapshot, now: now).isEmpty)
+        store.answerDrift(subjectId: "bike", offer: .retire)
+        XCTAssertEqual(store.subject(id: "bike")?.status, .retired)
+        XCTAssertFalse(store.showsOnLid(subjectId: "bike"))
+        XCTAssertNil(store.lid.driftCard)
+        XCTAssertTrue(ReminderScheduler.alarms(from: store.snapshot, now: now).isEmpty)
+    }
+
+    func testAnswerDriftDoesNotRaiseCadence() throws {
+        let now = try XCTUnwrap(FacioJSON.date(from: "2026-08-16T12:00:00"))
+        let (store, _) = try makeDesk(now: now)
+        XCTAssertEqual(store.subject(id: "bike")?.cadence.count, 2)
+        store.answerDrift(subjectId: "bike", offer: .onceAWeek)
+        XCTAssertEqual(store.subject(id: "bike")?.cadence.count, 1)
+    }
+
+    func testOldDeskJsonWithoutDriftAsksDecodes() throws {
+        let json = """
+        {"cues":[],"instances":[],"subjects":[],"widgets":[]}
+        """.data(using: .utf8)!
+        let snapshot = try FacioJSON.decoder.decode(DeskSnapshot.self, from: json)
+        XCTAssertEqual(snapshot.driftAsks, [:])
+        XCTAssertEqual(snapshot.driftAskedAt, [:])
+    }
+
     func testCompleteReminderDropsAlarm() throws {
         let now = try XCTUnwrap(FacioJSON.date(from: "2026-08-16T12:00:00"))
         let (store, _) = try makeDesk(now: now)

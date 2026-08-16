@@ -33,6 +33,7 @@
 		5553B13D63A70531F1DB8422 /* WidgetStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2864C10551B05E0EE8E3BD74 /* WidgetStatus.swift */; };
 		55EFA7802D8BDDF361A21BCA /* DisplayCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16390EEDE51BCA21EF87D58F /* DisplayCopy.swift */; };
 		5E543FB7C21F25D80B7A0FF7 /* DriftAskState.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF009F8DA4A75B690FD16F6F /* DriftAskState.swift */; };
+		658BD23F4ACB706F1C19CEB7 /* DriftTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E4FF3EA95A2EB1F3B58E372 /* DriftTile.swift */; };
 		659918BF655B0B9127307996 /* CueLawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56186C97AB845D23001563F3 /* CueLawTests.swift */; };
 		676457C255DA1A8B2A7671CD /* GlassSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50A2B65D8C84C5EF71B4C74 /* GlassSurface.swift */; };
 		691AFB13E79A53D01848D7E3 /* WidgetPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575EABA05F53B43F23160681 /* WidgetPayload.swift */; };
@@ -135,6 +136,7 @@
 		575EABA05F53B43F23160681 /* WidgetPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPayload.swift; sourceTree = "<group>"; };
 		5A65D9FE0EF09D2A8481ED7B /* CueKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueKind.swift; sourceTree = "<group>"; };
 		5A8BE137FD1137D4F1D4C801 /* PainLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PainLaw.swift; sourceTree = "<group>"; };
+		5E4FF3EA95A2EB1F3B58E372 /* DriftTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriftTile.swift; sourceTree = "<group>"; };
 		5EDFCFCEE2A01319BF949300 /* DriftLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriftLawTests.swift; sourceTree = "<group>"; };
 		62CDF841D69D1101DC6F6D8C /* ModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelTests.swift; sourceTree = "<group>"; };
 		631DFACFA004D22854CA9C24 /* UseScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UseScreen.swift; sourceTree = "<group>"; };
@@ -247,6 +249,7 @@
 			isa = PBXGroup;
 			children = (
 				DC16928D71A59480CFCA71EF /* CounterTile.swift */,
+				5E4FF3EA95A2EB1F3B58E372 /* DriftTile.swift */,
 				8BDA79F3B47DCF2FB25DE8AA /* KebabStub.swift */,
 				F7BE39810B4325D66B31ABA8 /* LidFeed.swift */,
 				3200A392C3CE6994B512A167 /* LidScreen.swift */,
@@ -559,6 +562,7 @@
 				A302868FB457DDE06975522D /* DriftCard.swift in Sources */,
 				345DDEF409CD5C9AB583BCC6 /* DriftLaw.swift in Sources */,
 				90132831C50A9557D7C00433 /* DriftOffer.swift in Sources */,
+				658BD23F4ACB706F1C19CEB7 /* DriftTile.swift in Sources */,
 				AB460B049EDE15E96FF2799C /* FacioApp.swift in Sources */,
 				DC63919D485FF0A08579AEF6 /* FacioJSON.swift in Sources */,
 				CD79F406A7315A545B225A8A /* FacioNotifications.swift in Sources */,

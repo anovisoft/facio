@@ -5,11 +5,71 @@ final class SeedFactoryTests: XCTestCase {
     func testSeedPutsFoundingSubjectsOnToday() throws {
         let now = try DomainFixtures.now()
         let seed = try SeedFactory.buildSeed(now: now)
-        XCTAssertEqual(Set(seed.widgets.map(\.section)), [.today])
-        XCTAssertEqual(Set(seed.widgets.map(\.id)), ["push-ups-counter", "vegetables-tick", "bike-reminder"])
+        XCTAssertEqual(
+            Set(seed.widgets.filter { $0.section == .today }.map(\.id)),
+            ["push-ups-counter", "vegetables-tick"]
+        )
+        XCTAssertEqual(seed.widgets.first { $0.id == "bike-reminder" }?.section, .lifetime)
         let cue = try XCTUnwrap(CueLaw.doTimeCue(in: seed.cues, subjectId: "push-ups"))
         XCTAssertEqual(cue.text, "держи корпус и ягодицы")
         XCTAssertEqual(cue.surface, .doTime)
+    }
+
+    func testSeedSurfacesBikeDrift() throws {
+        let now = try DomainFixtures.now()
+        let seed = try SeedFactory.buildSeed(now: now)
+        let silent = try XCTUnwrap(seed.instances.first { $0.id == "bike-silent" })
+        XCTAssertEqual(silent.status, .completed)
+        let days = DriftLaw.silenceDays(
+            of: try XCTUnwrap(seed.subjects.first { $0.id == "bike" }),
+            in: seed.instances,
+            now: now
+        )
+        XCTAssertEqual(days, 21)
+        let projection = LidProjectionLaw.project(
+            now: now,
+            subjects: seed.subjects,
+            instances: seed.instances,
+            widgets: seed.widgets
+        )
+        XCTAssertEqual(projection.driftCard?.subjectId, "bike")
+        XCTAssertEqual(projection.driftCard?.silentDays, 21)
+        XCTAssertEqual(projection.driftCard?.offer, .moveToToday)
+        XCTAssertTrue(projection.today.contains { $0.kind == "drift" })
+        XCTAssertFalse(projection.today.contains { item in
+            if case .widget(_, let widget) = item { return widget.id == "bike-reminder" }
+            return false
+        })
+    }
+
+    func testEnsureFoundingIsIdempotent() throws {
+        let now = try DomainFixtures.now()
+        let first = try SeedFactory.buildSeed(now: now)
+        let second = try SeedFactory.ensureFounding(in: first, now: now)
+        XCTAssertEqual(first, second)
+    }
+
+    func testEnsureDriftDoesNotInventSilenceWhenBikeAlreadyDone() throws {
+        let now = try DomainFixtures.now()
+        var snapshot = try SeedFactory.buildSeed(now: now)
+        snapshot.instances.removeAll { $0.id == "bike-silent" }
+        snapshot.subjects = snapshot.subjects.map { subject in
+            var next = subject
+            if next.id == "bike" {
+                next.instanceIds.removeAll { $0 == "bike-silent" }
+            }
+            return next
+        }
+        let recent = try XCTUnwrap(FacioJSON.date(from: "2026-08-14T18:00:00"))
+        snapshot.instances.append(Instance(id: "bike-recent", subjectId: "bike", when: recent, status: .completed))
+        snapshot.widgets = snapshot.widgets.map { widget in
+            var next = widget
+            if next.id == "bike-reminder" { next.section = .today }
+            return next
+        }
+        let migrated = try SeedFactory.ensureDrift(in: snapshot, now: now)
+        XCTAssertNil(migrated.instances.first { $0.id == "bike-silent" })
+        XCTAssertEqual(migrated.widgets.first { $0.id == "bike-reminder" }?.section, .today)
     }
 
     func testSeedBikeWindowFiresAt19FromGym22() throws {

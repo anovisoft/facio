@@ -60,7 +60,11 @@ enum SeedFactory {
                 ),
             ]
         )
-        return try ensureBike(in: snapshot, now: now)
+        return try ensureFounding(in: snapshot, now: now)
+    }
+
+    static func ensureFounding(in snapshot: DeskSnapshot, now: Date) throws -> DeskSnapshot {
+        try ensureDrift(in: try ensureBike(in: snapshot, now: now), now: now)
     }
 
     static func ensureBike(in snapshot: DeskSnapshot, now: Date) throws -> DeskSnapshot {
@@ -137,5 +141,45 @@ enum SeedFactory {
         }
 
         return next
+    }
+
+    /// Founding silence: a weekly bike with no done instance is not drift.
+    /// One completed ride 21 days ago + the live tile off Today makes the card.
+    static func ensureDrift(in snapshot: DeskSnapshot, now: Date) throws -> DeskSnapshot {
+        var next = snapshot
+        guard let subjectIndex = next.subjects.firstIndex(where: { $0.id == "bike" }) else { return next }
+        if next.subjects[subjectIndex].status == .retired { return next }
+
+        let hasActivity = next.instances.contains {
+            $0.subjectId == "bike" && ($0.status == .completed || $0.status == .inProgress)
+        }
+        guard !hasActivity else { return next }
+
+        let silentAt = silenceStamp(now: now)
+        if !next.instances.contains(where: { $0.id == "bike-silent" }) {
+            next.instances.append(
+                Instance(id: "bike-silent", subjectId: "bike", when: silentAt, status: .completed)
+            )
+        }
+        if !next.subjects[subjectIndex].instanceIds.contains("bike-silent") {
+            next.subjects[subjectIndex].instanceIds.append("bike-silent")
+        }
+        if let widgetIndex = next.widgets.firstIndex(where: { $0.id == "bike-reminder" }),
+           next.widgets[widgetIndex].section == .today,
+           next.widgets[widgetIndex].status != .done
+        {
+            next.widgets[widgetIndex].section = .lifetime
+        }
+        return next
+    }
+
+    private static func silenceStamp(now: Date) -> Date {
+        let calendar = Calendar.current
+        let day = calendar.date(byAdding: .day, value: -21, to: now) ?? now
+        var parts = calendar.dateComponents([.year, .month, .day], from: day)
+        parts.hour = 18
+        parts.minute = 0
+        parts.second = 0
+        return calendar.date(from: parts) ?? day
     }
 }

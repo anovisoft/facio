@@ -28,4 +28,12 @@ final class ReminderSchedulerTests: XCTestCase {
         seed.widgets[index].status = .done
         XCTAssertTrue(ReminderScheduler.alarms(from: seed, now: now).isEmpty)
     }
+
+    func testRetiredSubjectIsNotScheduled() throws {
+        let now = try XCTUnwrap(FacioJSON.date(from: "2026-08-16T12:00:00"))
+        var seed = try SeedFactory.buildSeed(now: now)
+        let index = try XCTUnwrap(seed.subjects.firstIndex { $0.id == "bike" })
+        seed.subjects[index].status = .retired
+        XCTAssertTrue(ReminderScheduler.alarms(from: seed, now: now).isEmpty)
+    }
 }

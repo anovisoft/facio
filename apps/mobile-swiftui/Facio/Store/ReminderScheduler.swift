@@ -20,6 +20,9 @@ enum ReminderScheduler {
     static func alarms(from snapshot: DeskSnapshot, now: Date) -> [ReminderAlarm] {
         snapshot.widgets.compactMap { widget in
             guard widget.type == .reminder, widget.status != .done else { return nil }
+            if snapshot.subjects.first(where: { $0.id == widget.subjectId })?.status == .retired {
+                return nil
+            }
             let fireAt = widget.reminderFireAt
             guard let fireAt, fireAt > now else { return nil }
             let title = DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title)

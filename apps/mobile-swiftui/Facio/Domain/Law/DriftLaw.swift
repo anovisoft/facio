@@ -65,4 +65,23 @@ enum DriftLaw {
             offer: nextOffer(asksMade: state.asksMade, retireRefusals: state.retireRefusals)
         )
     }
+
+    /// Q28: at most one ask per cadence period. `stop` means stop asking.
+    static func shouldSurface(
+        _ card: DriftCard,
+        askedAt: Date?,
+        cadence: Cadence,
+        now: Date
+    ) -> Bool {
+        if card.offer == .stop { return false }
+        guard let askedAt else { return true }
+        guard let threshold = silenceThreshold(for: cadence) else { return false }
+        let calendar = Calendar.current
+        let days = calendar.dateComponents(
+            [.day],
+            from: calendar.startOfDay(for: askedAt),
+            to: calendar.startOfDay(for: now)
+        ).day ?? 0
+        return days >= threshold
+    }
 }
