@@ -6,7 +6,8 @@
 > Goal: single source of truth **before** implementation of the rewrite
 
 This pack replaces the archive Outcome-OS RFC as day-to-day product truth.  
-Historical design: [`../../archive/docs/RFC/`](../../archive/docs/RFC/README.md) — reference only.
+Historical design: [`../../archive/docs/RFC/`](../../archive/docs/RFC/README.md) — reference only.  
+Engineering status (stack, ladder, “where we are”): [`../state/`](../state/README.md). Do not grow this folder into an eng spec.
 
 ---
 

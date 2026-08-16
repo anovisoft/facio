@@ -1,0 +1,21 @@
+---
+description: Facio FastAPI talk service — domain, validation, eval
+globs: apps/api/**/*
+alwaysApply: false
+---
+
+# Facio API
+
+Read `.cursor/skills/facio-api/SKILL.md` and `.cursor/skills/fastapi/SKILL.md` before writing the service.
+
+```python
+# ❌ BAD — model text becomes payload; pain ignored
+widget.payload = json.loads(raw_llm)
+
+# ✅ GOOD — validate against schema; pain gate before tools
+patch = validate_talk_patch(raw)
+```
+
+- Depend on `facio_domain`. Key stays on the server.
+- Do not use `fastapi-templates` (too large). No Postgres / RAG / broker in v1.
+- Goldens before widening tools. Lid execute must work with this service down.

@@ -1,4 +1,4 @@
-"""Dump Pydantic models to JSON Schema for the future TypeScript client."""
+"""Dump Pydantic models to JSON Schema for the Swift client."""
 
 from __future__ import annotations
 

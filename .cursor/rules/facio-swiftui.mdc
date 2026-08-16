@@ -1,0 +1,21 @@
+---
+description: Facio SwiftUI client — skills, identity, lid rules
+globs: apps/mobile-swiftui/**/*
+alwaysApply: false
+---
+
+# Facio SwiftUI
+
+Read `.cursor/skills/facio-swiftui/SKILL.md` and the SwiftUI expert skill before writing views.
+
+```swift
+// ❌ BAD — second drift law, or a prompt as home
+TabView { ChatHome(); Desk() }
+
+// ✅ GOOD — lid is home; law matches packages/domain/fixtures
+// 4-column pack, rank order, gaps allowed
+```
+
+- Identity: `com.anovisoft.facio`, team `SXXLPXXJMD`, iOS 18+, portrait. See `docs/state/identity.md`.
+- Use has no instance swipe. Collapse of the chat sheet does not start a new thread.
+- No third-party UI kit. No Liquid Glass unless PO asks.

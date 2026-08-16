@@ -1,0 +1,14 @@
+---
+description: Facio domain law — Python source of truth, shared fixtures
+globs: packages/domain/**/*
+alwaysApply: false
+---
+
+# Facio domain
+
+`packages/domain` is the gold law. Keep it pure: no I/O, no network, no model.
+
+- A cue without `surface` is rejected here, not in the UI.
+- Drift and reminder time are arithmetic. Do not call an LLM from this package.
+- Fixtures in `packages/domain/fixtures` are shared with the Swift client. Changing them without updating client tests is a release hole.
+- Read `.cursor/skills/facio-product/SKILL.md` if a change touches product meaning.

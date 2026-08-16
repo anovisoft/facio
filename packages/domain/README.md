@@ -30,11 +30,11 @@ pytest
 
 ## JSON Schema
 
-Контракт для будущего TS (сам TS не генерируется):
+Контракт для Swift-клиента (сам Swift отсюда не генерируется):
 
 ```bash
 facio-export-schema
 # пишет packages/schema/*.schema.json
 ```
 
-Фикстуры основателя — `fixtures/*.json`. Их потом гоняет и клиент.
+Фикстуры основателя — `fixtures/*.json`. Их гоняет и Swift-клиент. Расхождение с `packages/domain` — дыра релиза.

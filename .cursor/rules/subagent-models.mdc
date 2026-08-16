@@ -35,3 +35,16 @@ Task(model="composer-2.5", subagent_type="shell", ...)
 ```
 
 Do not pick other models unless the user explicitly asks for one.
+
+## Skills in Task prompts
+
+An mdc rule does not load into the child. Name skills in the Task `prompt`.
+
+| Work | Skills to name |
+|------|----------------|
+| Any Facio product or code | `facio-product` |
+| SwiftUI / iOS | `facio-swiftui` + SwiftUI expert skill |
+| FastAPI / talk / eval | `facio-api` + `fastapi` + `pytest-patterns` |
+| Domain law / fixtures | `facio-product` |
+
+Do not launch a SwiftUI or API implementer without those names. The lead agent keeps the lid, theme, and composer; subagents take a bounded slice after the contract exists.
