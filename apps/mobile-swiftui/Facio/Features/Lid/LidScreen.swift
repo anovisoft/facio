@@ -33,13 +33,14 @@ struct LidScreen: View {
     @Previewable @State var path = NavigationPath()
     NavigationStack(path: $path) {
         LidScreen(path: $path)
-            .environment(previewStore())
             .navigationDestination(for: UseRoute.self) { route in
                 if case .widget(let id) = route {
                     UseScreen(widgetId: id)
                 }
             }
     }
+    .environment(previewStore())
+    .environment(previewTalk())
 }
 
 @MainActor
@@ -48,4 +49,11 @@ private func previewStore() -> DeskStore {
     try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     let repository = DeskRepository(directory: directory)
     return try! DeskStore(repository: repository)
+}
+
+@MainActor
+private func previewTalk() -> TalkStore {
+    let directory = FileManager.default.temporaryDirectory.appending(path: "facio-preview-talk", directoryHint: .isDirectory)
+    try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    return try! TalkStore(repository: TalkRepository(directory: directory), client: .live())
 }

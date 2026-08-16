@@ -428,6 +428,708 @@
       "title": "Cue",
       "type": "object"
     },
+    "desk": {
+      "$defs": {
+        "Cadence": {
+          "additionalProperties": false,
+          "description": "Count per period, or `none` (one-off).\n\nThis is a count over a period, not fixed weekdays (Q26).\nDaily-ish is modelled as count=1, period=day \u2014 no extra flag.",
+          "properties": {
+            "count": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Count"
+            },
+            "period": {
+              "default": "none",
+              "enum": [
+                "day",
+                "week",
+                "none"
+              ],
+              "title": "Period",
+              "type": "string"
+            }
+          },
+          "title": "Cadence",
+          "type": "object"
+        },
+        "Cue": {
+          "additionalProperties": false,
+          "description": "A fact bound to a subject and to a place it appears.\n\n`surface` is required. A fact with nowhere to show is not a cue.\n`quote` is the selected phrase as text, never an offset into a message.",
+          "properties": {
+            "id": {
+              "title": "Id",
+              "type": "string"
+            },
+            "subject_id": {
+              "title": "Subject Id",
+              "type": "string"
+            },
+            "step_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Step Id"
+            },
+            "kind": {
+              "$ref": "#/$defs/CueKind"
+            },
+            "text": {
+              "title": "Text",
+              "type": "string"
+            },
+            "quote": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Quote"
+            },
+            "media": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PhotoMedia"
+                },
+                {
+                  "$ref": "#/$defs/LinkMedia"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Media"
+            },
+            "origin": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/CueOrigin"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "surface": {
+              "$ref": "#/$defs/CueSurface"
+            },
+            "hits": {
+              "$ref": "#/$defs/CueHits"
+            }
+          },
+          "required": [
+            "id",
+            "subject_id",
+            "kind",
+            "text",
+            "surface"
+          ],
+          "title": "Cue",
+          "type": "object"
+        },
+        "CueHits": {
+          "additionalProperties": false,
+          "properties": {
+            "surfaced": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Surfaced",
+              "type": "integer"
+            },
+            "applied": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Applied",
+              "type": "integer"
+            }
+          },
+          "title": "CueHits",
+          "type": "object"
+        },
+        "CueKind": {
+          "enum": [
+            "correction",
+            "clarification"
+          ],
+          "title": "CueKind",
+          "type": "string"
+        },
+        "CueOrigin": {
+          "additionalProperties": true,
+          "properties": {
+            "chat_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Chat Id"
+            },
+            "message_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Message Id"
+            }
+          },
+          "title": "CueOrigin",
+          "type": "object"
+        },
+        "CueSurface": {
+          "enum": [
+            "do-time",
+            "on-demand",
+            "timing",
+            "placement"
+          ],
+          "title": "CueSurface",
+          "type": "string"
+        },
+        "DriftAskState": {
+          "additionalProperties": false,
+          "description": "How far the shrink ladder has already been walked for one subject.\n\nNot a stored score. Input to `next_drift_offer` / `drift_card`.",
+          "properties": {
+            "asks_made": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Asks Made",
+              "type": "integer"
+            },
+            "retire_refusals": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Retire Refusals",
+              "type": "integer"
+            }
+          },
+          "title": "DriftAskState",
+          "type": "object"
+        },
+        "Instance": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "title": "Id",
+              "type": "string"
+            },
+            "subject_id": {
+              "title": "Subject Id",
+              "type": "string"
+            },
+            "when": {
+              "format": "date-time",
+              "title": "When",
+              "type": "string"
+            },
+            "status": {
+              "$ref": "#/$defs/InstanceStatus"
+            }
+          },
+          "required": [
+            "id",
+            "subject_id",
+            "when",
+            "status"
+          ],
+          "title": "Instance",
+          "type": "object"
+        },
+        "InstanceStatus": {
+          "enum": [
+            "completed",
+            "prepared",
+            "in_progress"
+          ],
+          "title": "InstanceStatus",
+          "type": "string"
+        },
+        "LinkMedia": {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "link",
+              "default": "link",
+              "title": "Kind",
+              "type": "string"
+            },
+            "url": {
+              "title": "Url",
+              "type": "string"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "title": "LinkMedia",
+          "type": "object"
+        },
+        "PhotoMedia": {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "photo",
+              "default": "photo",
+              "title": "Kind",
+              "type": "string"
+            },
+            "ref": {
+              "title": "Ref",
+              "type": "string"
+            }
+          },
+          "required": [
+            "ref"
+          ],
+          "title": "PhotoMedia",
+          "type": "object"
+        },
+        "Subject": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "title": "Id",
+              "type": "string"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "cadence": {
+              "$ref": "#/$defs/Cadence"
+            },
+            "window": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Window"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "cue_ids": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Cue Ids",
+              "type": "array"
+            },
+            "target": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Target"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "instance_ids": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Instance Ids",
+              "type": "array"
+            },
+            "status": {
+              "$ref": "#/$defs/SubjectStatus",
+              "default": "active"
+            }
+          },
+          "required": [
+            "id",
+            "title",
+            "cadence"
+          ],
+          "title": "Subject",
+          "type": "object"
+        },
+        "SubjectStatus": {
+          "enum": [
+            "active",
+            "shrunk",
+            "retired"
+          ],
+          "title": "SubjectStatus",
+          "type": "string"
+        },
+        "Target": {
+          "additionalProperties": false,
+          "properties": {
+            "current": {
+              "title": "Current",
+              "type": "integer"
+            },
+            "goal": {
+              "title": "Goal",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "current",
+            "goal"
+          ],
+          "title": "Target",
+          "type": "object"
+        },
+        "Widget": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "title": "Id",
+              "type": "string"
+            },
+            "type": {
+              "$ref": "#/$defs/WidgetType"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "payload": {
+              "$ref": "#/$defs/WidgetPayload"
+            },
+            "status": {
+              "$ref": "#/$defs/WidgetStatus"
+            },
+            "when": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "When"
+            },
+            "section": {
+              "$ref": "#/$defs/WidgetSection"
+            },
+            "group_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Group Id"
+            },
+            "subject_id": {
+              "title": "Subject Id",
+              "type": "string"
+            },
+            "instance_id": {
+              "title": "Instance Id",
+              "type": "string"
+            },
+            "tile_size": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Tile Size"
+            },
+            "version": {
+              "default": 1,
+              "title": "Version",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "title",
+            "status",
+            "section",
+            "subject_id",
+            "instance_id"
+          ],
+          "title": "Widget",
+          "type": "object"
+        },
+        "WidgetPayload": {
+          "additionalProperties": true,
+          "description": "Flexible payload; fields used by tests are typed, the rest may pass through.",
+          "properties": {
+            "count": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Count"
+            },
+            "target": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Target"
+            },
+            "done": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Done"
+            },
+            "items": {
+              "anyOf": [
+                {
+                  "items": {},
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Items"
+            },
+            "seconds": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Seconds"
+            },
+            "elapsed": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Elapsed"
+            },
+            "steps": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Steps"
+            },
+            "current": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Current"
+            },
+            "fire_at": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Fire At"
+            }
+          },
+          "title": "WidgetPayload",
+          "type": "object"
+        },
+        "WidgetSection": {
+          "enum": [
+            "today",
+            "lifetime",
+            "soon",
+            "postponed"
+          ],
+          "title": "WidgetSection",
+          "type": "string"
+        },
+        "WidgetStatus": {
+          "enum": [
+            "ready",
+            "running",
+            "done",
+            "skipped",
+            "snoozed",
+            "archived"
+          ],
+          "title": "WidgetStatus",
+          "type": "string"
+        },
+        "WidgetType": {
+          "enum": [
+            "counter",
+            "tick",
+            "checklist",
+            "reminder",
+            "timer",
+            "stepper"
+          ],
+          "title": "WidgetType",
+          "type": "string"
+        },
+        "Window": {
+          "additionalProperties": false,
+          "description": "When the practice can still happen.\n\n`latest_by` is the clock hour the reminder fires.\n`closes_at` is the optional source fact (gym door). Founding rule:\nlatest_by = closes_at minus 3 hours (22:00 \u2192 19:00).",
+          "properties": {
+            "latest_by": {
+              "format": "time",
+              "title": "Latest By",
+              "type": "string"
+            },
+            "closes_at": {
+              "anyOf": [
+                {
+                  "format": "time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Closes At"
+            }
+          },
+          "required": [
+            "latest_by"
+          ],
+          "title": "Window",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The whole table the talk service reads and patches.\n\nDrift is still derived, never stored. `drift_asks` / `drift_asked_at`\nare the shrink-ladder memory the lid already persists.",
+      "properties": {
+        "subjects": {
+          "items": {
+            "$ref": "#/$defs/Subject"
+          },
+          "title": "Subjects",
+          "type": "array"
+        },
+        "cues": {
+          "items": {
+            "$ref": "#/$defs/Cue"
+          },
+          "title": "Cues",
+          "type": "array"
+        },
+        "instances": {
+          "items": {
+            "$ref": "#/$defs/Instance"
+          },
+          "title": "Instances",
+          "type": "array"
+        },
+        "widgets": {
+          "items": {
+            "$ref": "#/$defs/Widget"
+          },
+          "title": "Widgets",
+          "type": "array"
+        },
+        "drift_asks": {
+          "additionalProperties": {
+            "$ref": "#/$defs/DriftAskState"
+          },
+          "title": "Drift Asks",
+          "type": "object"
+        },
+        "drift_asked_at": {
+          "additionalProperties": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "title": "Drift Asked At",
+          "type": "object"
+        }
+      },
+      "required": [
+        "subjects",
+        "cues",
+        "instances",
+        "widgets"
+      ],
+      "title": "Desk",
+      "type": "object"
+    },
     "instance": {
       "$defs": {
         "InstanceStatus": {

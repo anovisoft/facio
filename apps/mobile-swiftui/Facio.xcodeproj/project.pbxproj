@@ -28,11 +28,15 @@
 		44CC1E8EC0C1B68A74E8C884 /* LidWidgetCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BF6FCE7416C57ADDBB62CA4 /* LidWidgetCell.swift */; };
 		451E1BC082DE3D9EFD8E722E /* UseScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 631DFACFA004D22854CA9C24 /* UseScreen.swift */; };
 		48757341526A82D8B61A0A45 /* CounterUseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BDAF9C77FC3601E2540B734 /* CounterUseView.swift */; };
+		4AB9E51C1163D4566F7BA212 /* TalkClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E8B30D2D5313EF4A4D01A89 /* TalkClient.swift */; };
 		5281731F92239887C5D0AADA /* CellSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D6307D793711E160A7E95F1 /* CellSize.swift */; };
+		52838AEC313E09A097F11E0F /* TalkModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2819363B82CC457A07AD429C /* TalkModels.swift */; };
 		54A148D920190BA2B2583CCD /* PackRowMajorLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 817E2B9E5F7FA32AACFA0D58 /* PackRowMajorLayout.swift */; };
 		5553B13D63A70531F1DB8422 /* WidgetStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2864C10551B05E0EE8E3BD74 /* WidgetStatus.swift */; };
 		55EFA7802D8BDDF361A21BCA /* DisplayCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16390EEDE51BCA21EF87D58F /* DisplayCopy.swift */; };
+		5C8323A7D1ABC2BCE70993F9 /* TalkRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 603D8D5DEADE5F55E2FC0C09 /* TalkRepository.swift */; };
 		5E543FB7C21F25D80B7A0FF7 /* DriftAskState.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF009F8DA4A75B690FD16F6F /* DriftAskState.swift */; };
+		62C8CA3D2A5B6A5EB91877CD /* TalkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEF4EC197D5E264095B5F72F /* TalkStore.swift */; };
 		658BD23F4ACB706F1C19CEB7 /* DriftTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E4FF3EA95A2EB1F3B58E372 /* DriftTile.swift */; };
 		659918BF655B0B9127307996 /* CueLawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56186C97AB845D23001563F3 /* CueLawTests.swift */; };
 		676457C255DA1A8B2A7671CD /* GlassSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50A2B65D8C84C5EF71B4C74 /* GlassSurface.swift */; };
@@ -43,6 +47,7 @@
 		75C05EB773E2E4EE0249AACB /* Subject.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAEC30DEA8B4857E27A4A7F /* Subject.swift */; };
 		7657870663FD68EE5B3D29E8 /* TileCellSizeKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD204F8AA9DC6C8FF665395A /* TileCellSizeKey.swift */; };
 		76EDCEE213AACB058BF33BC3 /* TodayItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D6E063A34D0400BF603AF21 /* TodayItem.swift */; };
+		78B9B82F38E4083395203179 /* TalkStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C91084E7BBC1FDACA5BB06E1 /* TalkStoreTests.swift */; };
 		7C7643ECDF57F8C0CFE6722E /* FacioPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B5456958AB3FFDEAA962F4 /* FacioPalette.swift */; };
 		7D298E763BA501C914191CD6 /* DriftLawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EDFCFCEE2A01319BF949300 /* DriftLawTests.swift */; };
 		8592FA76C4C48628433F9921 /* SubjectLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B95D459B6FACFCD837AE400 /* SubjectLaw.swift */; };
@@ -54,9 +59,11 @@
 		90132831C50A9557D7C00433 /* DriftOffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B9DFA0CD7F67E0D5AC9DD8 /* DriftOffer.swift */; };
 		907DF5C9F5D602D431BB04D8 /* WidgetSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32DDBE6FC3377D23FE0967AD /* WidgetSection.swift */; };
 		940938E42ECF73115CA5847C /* KebabStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BDA79F3B47DCF2FB25DE8AA /* KebabStub.swift */; };
+		95DF32AAF2EB962DA93A3EEA /* TalkSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 033D03E3F2EF49F7A0B455A4 /* TalkSheet.swift */; };
 		9A3E047F8552F4735FF74D8D /* LidProjection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 917B1CD4F1F37E0C156277ED /* LidProjection.swift */; };
 		9B4EF208E5A36E31B21A1F84 /* JournalEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168C8F4467D8E6D658B6CD2B /* JournalEvent.swift */; };
 		9F50A3AF342159EBD6E77599 /* LidProjectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88264A6ED9F4B61255BD7DDB /* LidProjectionTests.swift */; };
+		A18F672C2209BC4CB9FA5CFE /* ComposerDock.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9372C7A3CDFCCEA042CD1EA /* ComposerDock.swift */; };
 		A302868FB457DDE06975522D /* DriftCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0E1F63013708C0CDD9A796 /* DriftCard.swift */; };
 		A56F6CA113385180C99DB88F /* LidProjectionLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15209F287CF3C54B427B68E7 /* LidProjectionLaw.swift */; };
 		AB460B049EDE15E96FF2799C /* FacioApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8B634C40C08056E1D5C3BE3 /* FacioApp.swift */; };
@@ -101,6 +108,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		033D03E3F2EF49F7A0B455A4 /* TalkSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkSheet.swift; sourceTree = "<group>"; };
 		09B49E7140B92D3E9AA464AE /* InstanceStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceStatus.swift; sourceTree = "<group>"; };
 		0D3996D30C44FA29B14C3CC0 /* ReminderUseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderUseView.swift; sourceTree = "<group>"; };
 		0F1D7859FE372ADE83A1624D /* FacioNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacioNotifications.swift; sourceTree = "<group>"; };
@@ -116,6 +124,7 @@
 		1B95D459B6FACFCD837AE400 /* SubjectLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectLaw.swift; sourceTree = "<group>"; };
 		229688020B5F18B40C1B5B52 /* DeskStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskStoreTests.swift; sourceTree = "<group>"; };
 		26A5270986AC8D7DF3C69962 /* Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Widget.swift; sourceTree = "<group>"; };
+		2819363B82CC457A07AD429C /* TalkModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkModels.swift; sourceTree = "<group>"; };
 		2864C10551B05E0EE8E3BD74 /* WidgetStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStatus.swift; sourceTree = "<group>"; };
 		2A6B4866C56C0FC894B32F56 /* FacioJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacioJSON.swift; sourceTree = "<group>"; };
 		2C9638F827F32F9586B9E461 /* WidgetType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetType.swift; sourceTree = "<group>"; };
@@ -138,6 +147,7 @@
 		5A8BE137FD1137D4F1D4C801 /* PainLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PainLaw.swift; sourceTree = "<group>"; };
 		5E4FF3EA95A2EB1F3B58E372 /* DriftTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriftTile.swift; sourceTree = "<group>"; };
 		5EDFCFCEE2A01319BF949300 /* DriftLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriftLawTests.swift; sourceTree = "<group>"; };
+		603D8D5DEADE5F55E2FC0C09 /* TalkRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkRepository.swift; sourceTree = "<group>"; };
 		62CDF841D69D1101DC6F6D8C /* ModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelTests.swift; sourceTree = "<group>"; };
 		631DFACFA004D22854CA9C24 /* UseScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UseScreen.swift; sourceTree = "<group>"; };
 		65B603FB21AFD077EB3D5D60 /* cues.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = cues.json; sourceTree = "<group>"; };
@@ -158,6 +168,7 @@
 		8BDA79F3B47DCF2FB25DE8AA /* KebabStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KebabStub.swift; sourceTree = "<group>"; };
 		8BDAF9C77FC3601E2540B734 /* CounterUseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterUseView.swift; sourceTree = "<group>"; };
 		8D6307D793711E160A7E95F1 /* CellSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellSize.swift; sourceTree = "<group>"; };
+		8E8B30D2D5313EF4A4D01A89 /* TalkClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkClient.swift; sourceTree = "<group>"; };
 		917B1CD4F1F37E0C156277ED /* LidProjection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidProjection.swift; sourceTree = "<group>"; };
 		A146AEC282C47C9A81593E81 /* ReminderClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderClock.swift; sourceTree = "<group>"; };
 		A1917B89AB52F3F1B358D6B6 /* SeedFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedFactory.swift; sourceTree = "<group>"; };
@@ -167,9 +178,11 @@
 		B0E229F45A55405B1B2CEA7A /* FacioTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FacioTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B3918C83AA817DE136D7B372 /* LidSectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidSectionHeader.swift; sourceTree = "<group>"; };
 		B3D3253DFAFD9354F4669F20 /* Target.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Target.swift; sourceTree = "<group>"; };
+		B9372C7A3CDFCCEA042CD1EA /* ComposerDock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerDock.swift; sourceTree = "<group>"; };
 		BD204F8AA9DC6C8FF665395A /* TileCellSizeKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileCellSizeKey.swift; sourceTree = "<group>"; };
 		BF009F8DA4A75B690FD16F6F /* DriftAskState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriftAskState.swift; sourceTree = "<group>"; };
 		C8CCBB0988B07C32B0BC9696 /* scenarios.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = scenarios.json; sourceTree = "<group>"; };
+		C91084E7BBC1FDACA5BB06E1 /* TalkStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkStoreTests.swift; sourceTree = "<group>"; };
 		CA765E2AAC9E1E3AB182595F /* ReminderClockTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderClockTests.swift; sourceTree = "<group>"; };
 		CDB0BDAA3DA77E97E85EA286 /* AtmosphereBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtmosphereBackground.swift; sourceTree = "<group>"; };
 		D2AD6F13DFE3734FB09352F3 /* CueSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueSurface.swift; sourceTree = "<group>"; };
@@ -178,6 +191,7 @@
 		DA2072492E534903ADD78273 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		DB6CF10F8A46994C86FE0B08 /* PainLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PainLawTests.swift; sourceTree = "<group>"; };
 		DC16928D71A59480CFCA71EF /* CounterTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterTile.swift; sourceTree = "<group>"; };
+		DEF4EC197D5E264095B5F72F /* TalkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkStore.swift; sourceTree = "<group>"; };
 		E87C40DF529781195716FE29 /* UseRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UseRoute.swift; sourceTree = "<group>"; };
 		EB5247A982C89F51EF171CE1 /* CueLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueLaw.swift; sourceTree = "<group>"; };
 		EFDEE4B7588D7385EF4AC36B /* subjects.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = subjects.json; sourceTree = "<group>"; };
@@ -209,6 +223,7 @@
 				DB0FB5194C5E0A008BE15768 /* Features */,
 				D2FD15682016D123DC606632 /* Resources */,
 				B199D3E661E454317D7EA277 /* Store */,
+				BDCE921D4ED8D6F1E6CA2501 /* Talk */,
 				EF9139663720663050F64351 /* Theme */,
 			);
 			path = Facio;
@@ -285,6 +300,7 @@
 				CA765E2AAC9E1E3AB182595F /* ReminderClockTests.swift */,
 				828B398A50029A7EAAB3EEA0 /* ReminderSchedulerTests.swift */,
 				6F3E244A61989C75715FE3E2 /* SeedFactoryTests.swift */,
+				C91084E7BBC1FDACA5BB06E1 /* TalkStoreTests.swift */,
 			);
 			path = FacioTests;
 			sourceTree = "<group>";
@@ -350,6 +366,19 @@
 				AC4EA05B53F8DFC8285A8257 /* domain */,
 			);
 			path = packages;
+			sourceTree = "<group>";
+		};
+		BDCE921D4ED8D6F1E6CA2501 /* Talk */ = {
+			isa = PBXGroup;
+			children = (
+				B9372C7A3CDFCCEA042CD1EA /* ComposerDock.swift */,
+				8E8B30D2D5313EF4A4D01A89 /* TalkClient.swift */,
+				2819363B82CC457A07AD429C /* TalkModels.swift */,
+				603D8D5DEADE5F55E2FC0C09 /* TalkRepository.swift */,
+				033D03E3F2EF49F7A0B455A4 /* TalkSheet.swift */,
+				DEF4EC197D5E264095B5F72F /* TalkStore.swift */,
+			);
+			path = Talk;
 			sourceTree = "<group>";
 		};
 		CA625529805F1FDE600341A1 /* Products */ = {
@@ -534,6 +563,7 @@
 				4008641D49A21F72B7CB5BC6 /* ReminderClockTests.swift in Sources */,
 				18BC5721A6C1050650784A51 /* ReminderSchedulerTests.swift in Sources */,
 				CED80102E7BC05B485A6D7B9 /* SeedFactoryTests.swift in Sources */,
+				78B9B82F38E4083395203179 /* TalkStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -545,6 +575,7 @@
 				8C72CAB113FAB3711DEC1DDE /* Cadence.swift in Sources */,
 				5281731F92239887C5D0AADA /* CellSize.swift in Sources */,
 				D0CF96CCCA14B32C9AEDE378 /* ClockTime.swift in Sources */,
+				A18F672C2209BC4CB9FA5CFE /* ComposerDock.swift in Sources */,
 				BF0251F53D0946A92068A6B9 /* CounterTile.swift in Sources */,
 				48757341526A82D8B61A0A45 /* CounterUseView.swift in Sources */,
 				717FA4011EEEDBEABFEE35B6 /* Cue.swift in Sources */,
@@ -591,6 +622,11 @@
 				75C05EB773E2E4EE0249AACB /* Subject.swift in Sources */,
 				8592FA76C4C48628433F9921 /* SubjectLaw.swift in Sources */,
 				F7896392618DEA3364CFDD57 /* SubjectStatus.swift in Sources */,
+				4AB9E51C1163D4566F7BA212 /* TalkClient.swift in Sources */,
+				52838AEC313E09A097F11E0F /* TalkModels.swift in Sources */,
+				5C8323A7D1ABC2BCE70993F9 /* TalkRepository.swift in Sources */,
+				95DF32AAF2EB962DA93A3EEA /* TalkSheet.swift in Sources */,
+				62C8CA3D2A5B6A5EB91877CD /* TalkStore.swift in Sources */,
 				134293B3F4B983D145ABEE9F /* Target.swift in Sources */,
 				BA090ABB20B0D16D1CC7954D /* TickTile.swift in Sources */,
 				0DCB06101BDB12C43AEF0870 /* TickUseView.swift in Sources */,

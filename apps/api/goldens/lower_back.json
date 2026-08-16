@@ -1,0 +1,33 @@
+{
+  "id": "lower_back",
+  "utterance": "поясница забирает нагрузку",
+  "match": ["поясница забирает", "lower back is taking", "поясница забирает нагрузку"],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "add_cue",
+          "arguments": {
+            "id": "push-ups-brace-talk",
+            "subject_id": "push-ups",
+            "kind": "correction",
+            "text": "держи корпус и ягодицы, не поясницу",
+            "surface": "do-time"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Держи корпус и ягодицы, не поясницу. Это не медсовет. Если тяжело, лучше меньше повторов, не больше."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": ["add_cue"],
+    "cue": {
+      "subject_id": "push-ups",
+      "surface": "do-time",
+      "text_contains": ["корпус", "ягодиц", "поясниц"]
+    }
+  }
+}

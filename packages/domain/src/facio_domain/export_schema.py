@@ -9,6 +9,7 @@ from pathlib import Path
 from facio_domain.models import (
     Cadence,
     Cue,
+    Desk,
     DriftAskState,
     DriftCard,
     Instance,
@@ -25,6 +26,7 @@ _MODELS: dict[str, type] = {
     "target": Target,
     "subject": Subject,
     "cue": Cue,
+    "desk": Desk,
     "instance": Instance,
     "widget": Widget,
     "drift_ask_state": DriftAskState,

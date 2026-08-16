@@ -1,0 +1,37 @@
+[project]
+name = "facio-api"
+version = "0.0.1"
+description = "Facio talk service: utterance + desk in, validated patch out."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "facio-domain",
+    "fastapi[standard]>=0.115",
+    "httpx>=0.27",
+    "pydantic-settings>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.fastapi]
+entrypoint = "facio_api.main:app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+markers = [
+    "unit: no network",
+    "integration: FastAPI ASGI client",
+]

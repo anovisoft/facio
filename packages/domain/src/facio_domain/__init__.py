@@ -1,7 +1,9 @@
 """Facio domain law — models and pure functions. No I/O, no network."""
 
 from facio_domain.cues import add_cue, default_surface
+from facio_domain.desk import founding_desk
 from facio_domain.pain import reports_pain
+from facio_domain.tools import apply_tool, snapshot_cards, times_per_week
 from facio_domain.drift import (
     drift_card,
     is_drifting,
@@ -15,6 +17,7 @@ from facio_domain.models import (
     Cue,
     CueKind,
     CueSurface,
+    Desk,
     DriftAskState,
     DriftCard,
     DriftOffer,
@@ -39,6 +42,7 @@ __all__ = [
     "Cue",
     "CueKind",
     "CueSurface",
+    "Desk",
     "DriftAskState",
     "DriftCard",
     "DriftOffer",
@@ -55,8 +59,12 @@ __all__ = [
     "WidgetType",
     "Window",
     "add_cue",
+    "apply_tool",
     "default_surface",
+    "founding_desk",
     "reports_pain",
+    "snapshot_cards",
+    "times_per_week",
     "drift_card",
     "is_drifting",
     "lid_projection",

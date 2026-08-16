@@ -299,3 +299,20 @@ class LidProjection(BaseModel):
     soon: list[Widget]
     postponed: list[Widget]
     drift_card: DriftCard | None = None
+
+
+class Desk(BaseModel):
+    """The whole table the talk service reads and patches.
+
+    Drift is still derived, never stored. `drift_asks` / `drift_asked_at`
+    are the shrink-ladder memory the lid already persists.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    subjects: list[Subject]
+    cues: list[Cue]
+    instances: list[Instance]
+    widgets: list[Widget]
+    drift_asks: dict[str, DriftAskState] = Field(default_factory=dict)
+    drift_asked_at: dict[str, datetime] = Field(default_factory=dict)

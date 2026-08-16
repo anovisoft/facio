@@ -30,7 +30,11 @@ Pain policy runs **before** tools: if the turn reports pain, refuse any raise of
 
 ## Eval
 
-Golden utterances → expected tool calls and resulting desk. Required before widening the tool loop (RFC Q22). Prefer fixture subjects from `packages/domain/fixtures`.
+Golden utterances → expected tool calls and resulting desk. Required before widening the tool loop (RFC Q22). Files live in `apps/api/goldens`. Prefer fixture subjects from `packages/domain/fixtures`.
+
+Default `FACIO_TALK_MODE=scripted` so the founding turns run without a paid key. Live mode needs `FACIO_MODEL_API_KEY` on the server only.
+
+Run locally with Compose from the repo root (`docker compose up --build`). One service, port 8000. Do not copy `archive/docker-compose.yml` (Postgres). In the image, goldens are `FACIO_GOLDENS_DIR`. `fastapi dev` needs `fastapi[standard]`.
 
 ## Tests
 

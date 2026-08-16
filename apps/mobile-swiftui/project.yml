@@ -45,6 +45,9 @@ targets:
         UIRequiresFullScreen: true
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        FacioTalkURL: http://127.0.0.1:8000
     entitlements:
       path: Facio/Facio.entitlements
       properties: {}

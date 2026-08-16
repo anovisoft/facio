@@ -3,6 +3,7 @@ import SwiftUI
 struct UseScreen: View {
     let widgetId: String
     @Environment(DeskStore.self) private var store
+    @Environment(TalkStore.self) private var talk
 
     var body: some View {
         Group {
@@ -20,6 +21,12 @@ struct UseScreen: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .toolbarTitleDisplayMode(.large)
         .facioChrome()
+        .onAppear { talk.focusedWidgetId = widgetId }
+        .onDisappear {
+            if talk.focusedWidgetId == widgetId {
+                talk.focusedWidgetId = nil
+            }
+        }
     }
 
     @ViewBuilder

@@ -1,0 +1,25 @@
+services:
+  talk:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: facio-talk
+    ports:
+      - "8000:8000"
+    environment:
+      FACIO_TALK_MODE: ${FACIO_TALK_MODE:-scripted}
+      FACIO_GOLDENS_DIR: /app/apps/api/goldens
+      FACIO_MODEL_API_KEY: ${FACIO_MODEL_API_KEY:-}
+      FACIO_MODEL_BASE_URL: ${FACIO_MODEL_BASE_URL:-https://api.openai.com/v1}
+      FACIO_MODEL_NAME: ${FACIO_MODEL_NAME:-gpt-4o-mini}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/v1/health')",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 8

@@ -119,6 +119,31 @@ final class DeskStoreTests: XCTestCase {
         XCTAssertTrue(ReminderScheduler.alarms(from: store.snapshot, now: now).isEmpty)
     }
 
+    func testApplyTalkWritesCueAndKeepsTile() throws {
+        let (store, repository) = try makeDesk()
+        var desk = store.snapshot
+        let cue = CueLaw.addCue(
+            id: "push-ups-brace-talk",
+            subjectId: "push-ups",
+            kind: .correction,
+            text: "держи корпус и ягодицы",
+            surface: .doTime,
+            origin: CueOrigin(chatId: "golden", messageId: nil)
+        )
+        desk.cues.append(cue)
+        if let index = desk.subjects.firstIndex(where: { $0.id == "push-ups" }) {
+            desk.subjects[index].cueIds.append(cue.id)
+        }
+
+        store.applyTalk(desk)
+
+        XCTAssertEqual(store.cueFor(subjectId: "push-ups")?.id, "push-ups-brace-talk")
+        XCTAssertEqual(store.cueFor(subjectId: "push-ups")?.text, "держи корпус и ягодицы")
+        XCTAssertEqual(store.widget(id: "push-ups-counter")?.counterCount, 28)
+        let reloaded = try XCTUnwrap(repository.loadSnapshot())
+        XCTAssertEqual(reloaded.cues.last?.id, "push-ups-brace-talk")
+    }
+
     private func makeDesk(now: Date = Date()) throws -> (DeskStore, DeskRepository) {
         let directory = FileManager.default.temporaryDirectory
             .appending(path: "facio-desk-\(UUID().uuidString)", directoryHint: .isDirectory)

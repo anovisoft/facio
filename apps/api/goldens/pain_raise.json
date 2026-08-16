@@ -1,0 +1,45 @@
+{
+  "id": "pain_raise",
+  "utterance": "больно, давай 40",
+  "match": ["больно, давай 40", "it hurts, make it 40"],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "update_widget",
+          "arguments": {
+            "widget_id": "push-ups-counter",
+            "target": 40
+          }
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "add_cue",
+          "arguments": {
+            "id": "push-ups-pain-cue",
+            "subject_id": "push-ups",
+            "kind": "correction",
+            "text": "держи корпус и ягодицы",
+            "surface": "do-time"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Это не медсовет. Держи корпус и ягодицы. Цель не поднимаем — если надо, сделаем меньше, не 40."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": ["update_widget", "add_cue"],
+    "target_goal_max": 30,
+    "cue": {
+      "subject_id": "push-ups",
+      "surface": "do-time",
+      "text_contains": ["корпус"]
+    }
+  }
+}

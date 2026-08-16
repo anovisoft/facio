@@ -249,6 +249,28 @@ final class DeskStore {
         }
     }
 
+    func applyTalk(_ desk: DeskSnapshot) {
+        let previous = snapshot
+        let written = desk.cues.filter { incoming in
+            previous.cues.first { $0.id == incoming.id } != incoming
+        }
+        commit(reminders: true) { next in
+            next = desk
+        }
+        for cue in written {
+            journal(.cueWritten, subjectId: cue.subjectId, cueId: cue.id, payload: ["text": cue.text])
+        }
+        for subject in desk.subjects {
+            let before = previous.subjects.first { $0.id == subject.id }
+            if subject.status == .shrunk, before?.status != .shrunk {
+                journal(.subjectShrunk, subjectId: subject.id)
+            }
+            if subject.status == .retired, before?.status != .retired {
+                journal(.subjectRetired, subjectId: subject.id)
+            }
+        }
+    }
+
     func editCueText(cueId: String, text: String) {
         commit { next in
             guard let index = next.cues.firstIndex(where: { $0.id == cueId }) else { return }
