@@ -26,18 +26,20 @@ struct UseScreen: View {
     private func content(for widget: Widget) -> some View {
         let instance = store.snapshot.instances.first { $0.id == widget.instanceId }
         let lookOnly = widget.status == .done || instance?.status == .completed
-        let cue = store.cueFor(subjectId: widget.subjectId)
+        let cue = store.surfaceCue(for: widget)
 
         switch widget.type {
         case .counter:
-            CounterUseView(widget: widget, cue: cue)
+            CounterUseView(widget: widget, cue: store.cueFor(subjectId: widget.subjectId))
         case .tick:
             TickUseView(
                 widget: widget,
                 lookOnly: lookOnly,
                 onToggle: { store.toggleTick(widgetId: widget.id) }
             )
-        case .checklist, .reminder, .timer, .stepper:
+        case .reminder:
+            ReminderUseView(widget: widget, cue: cue)
+        case .checklist, .timer, .stepper:
             ContentUnavailableView {
                 Text("Этот тип ещё не открывается.")
             }

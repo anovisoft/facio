@@ -21,14 +21,40 @@ struct FacioTileButton<Content: View>: View {
     @ViewBuilder var content: () -> Content
 
     var body: some View {
+        let shape = RoundedRectangle(cornerRadius: FacioPalette.tileRadius, style: .continuous)
         Button(action: action) {
             content()
                 .padding(16)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .contentShape(RoundedRectangle(cornerRadius: FacioPalette.tileRadius, style: .continuous))
+                .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .topLeading)
+                .contentShape(shape)
                 .facioGlass(dimmed: dimmed)
         }
         .buttonStyle(.plain)
+        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+        .clipShape(shape)
+    }
+}
+
+struct FacioGlassButton: ViewModifier {
+    var prominent: Bool
+    var capsule: Bool = false
+
+    func body(content: Content) -> some View {
+        if #available(iOS 26, *) {
+            if prominent {
+                content.buttonStyle(.glassProminent)
+            } else {
+                content.buttonStyle(.glass)
+            }
+        } else if capsule {
+            content
+                .buttonStyle(.borderedProminent)
+                .buttonBorderShape(.capsule)
+        } else {
+            content
+                .buttonStyle(.bordered)
+                .buttonBorderShape(.roundedRectangle)
+        }
     }
 }
 
@@ -48,6 +74,19 @@ extension View {
         } else {
             background(.ultraThinMaterial, in: shape)
                 .opacity(dimmed ? 0.75 : 1)
+        }
+    }
+
+    func facioGlassButton(prominent: Bool, capsule: Bool = false) -> some View {
+        modifier(FacioGlassButton(prominent: prominent, capsule: capsule))
+    }
+
+    @ViewBuilder
+    func facioCapsuleGlass() -> some View {
+        if #available(iOS 26, *) {
+            glassEffect(.regular.interactive(), in: .capsule)
+        } else {
+            background(.ultraThinMaterial, in: Capsule())
         }
     }
 

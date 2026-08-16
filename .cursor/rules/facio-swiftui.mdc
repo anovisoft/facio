@@ -18,5 +18,6 @@ TabView { ChatHome(); Desk() }
 
 - Identity: `com.anovisoft.facio`, team `SXXLPXXJMD`, iOS 18+, portrait. See `docs/state/identity.md`.
 - Use has no instance swipe. Left-edge interactive pop is back (system bar, do not hide it).
-- Liquid Glass on (PO). No brand-green accent. Semantic colors. Material fallback below iOS 26.
+- Liquid Glass on (PO). No brand-green accent. Semantic colors. Material fallback below iOS 26. `GlassEffectContainer` is for Use −/+, not the lid pack.
 - Theme follows the system. Atmosphere is a weak gradient in `containerBackground`, never hit-tests. Whole tile opens Use. Counter Use keeps steppers after done. Lid tick is a symbol inside the tile.
+- Reminder: wide 4×2 row like other tiles (kebab, primary title). 4×1 overflows the next tile. Use time is a live chip + `@State` after save; tap opens a ~340pt bottom sheet: wide hour/minute wheels + Сохранить at the bottom. No sheet title, no DatePicker, no `.clipped` on the wheel, no Atmosphere on the sheet, no `.fitted` / `.medium`. `@Observable` draft → parent callback → whole `snapshot` replace. Gym hours 06:00…closes_at.

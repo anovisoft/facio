@@ -56,7 +56,7 @@ struct CounterUseView: View {
                             .frame(maxWidth: .infinity, minHeight: 56)
                     }
                     .accessibilityLabel("минус")
-                    .modifier(FacioGlassButton(prominent: false))
+                        .facioGlassButton(prominent: false)
 
                     Button {
                         store.tickCounter(widgetId: widget.id, delta: 1)
@@ -66,7 +66,7 @@ struct CounterUseView: View {
                             .frame(maxWidth: .infinity, minHeight: 56)
                     }
                     .accessibilityLabel("плюс")
-                    .modifier(FacioGlassButton(prominent: true))
+                        .facioGlassButton(prominent: true)
                 }
             }
 
@@ -80,7 +80,7 @@ struct CounterUseView: View {
                     .font(.headline)
                     .frame(maxWidth: .infinity, minHeight: 52)
             }
-            .modifier(FacioGlassButton(prominent: true, capsule: true))
+            .facioGlassButton(prominent: true, capsule: true)
         }
         .padding(.horizontal, FacioPalette.pagePadding)
         .padding(.bottom, 8)
@@ -107,29 +107,6 @@ struct CounterUseView: View {
         }
         if goal != target {
             store.editTarget(widgetId: widget.id, goal: goal)
-        }
-    }
-}
-
-private struct FacioGlassButton: ViewModifier {
-    var prominent: Bool
-    var capsule: Bool = false
-
-    func body(content: Content) -> some View {
-        if #available(iOS 26, *) {
-            if prominent {
-                content.buttonStyle(.glassProminent)
-            } else {
-                content.buttonStyle(.glass)
-            }
-        } else if capsule {
-            content
-                .buttonStyle(.borderedProminent)
-                .buttonBorderShape(.capsule)
-        } else {
-            content
-                .buttonStyle(.bordered)
-                .buttonBorderShape(.roundedRectangle)
         }
     }
 }

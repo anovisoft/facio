@@ -1,6 +1,6 @@
 import Foundation
 
-struct ClockTime: Codable, Sendable, Equatable, Hashable {
+struct ClockTime: Codable, Sendable, Equatable, Hashable, Comparable {
     var hour: Int
     var minute: Int
     var second: Int
@@ -29,5 +29,13 @@ struct ClockTime: Codable, Sendable, Equatable, Hashable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(String(format: "%02d:%02d:%02d", hour, minute, second))
+    }
+
+    var shortLabel: String {
+        String(format: "%d:%02d", hour, minute)
+    }
+
+    static func < (lhs: ClockTime, rhs: ClockTime) -> Bool {
+        (lhs.hour, lhs.minute, lhs.second) < (rhs.hour, rhs.minute, rhs.second)
     }
 }

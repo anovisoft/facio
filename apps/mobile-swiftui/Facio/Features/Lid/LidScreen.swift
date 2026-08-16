@@ -5,10 +5,12 @@ struct LidScreen: View {
     @Binding var path: NavigationPath
 
     var body: some View {
+        let _ = store.generation
         ScrollView {
             LidFeed(
                 projection: store.lid,
-                cueFor: store.cueFor(subjectId:),
+                cueFor: store.surfaceCue(for:),
+                windowFor: store.windowFor(subjectId:),
                 onOpen: { path.append(UseRoute.widget($0)) },
                 onToggleTick: store.toggleTick,
                 onSurfaced: { store.markCueSurfaced(widgetId: $0, place: "tile") }

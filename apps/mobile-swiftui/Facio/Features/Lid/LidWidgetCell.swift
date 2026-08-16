@@ -3,6 +3,7 @@ import SwiftUI
 struct LidWidgetCell: View {
     let widget: Widget
     let cue: Cue?
+    let window: TimeWindow?
     let onOpen: () -> Void
     let onToggleTick: () -> Void
     let onSurfaced: () -> Void
@@ -14,7 +15,15 @@ struct LidWidgetCell: View {
                 CounterTile(widget: widget, cue: cue, onOpen: onOpen, onSurfaced: onSurfaced)
             case .tick:
                 TickTile(widget: widget, onOpen: onOpen, onToggle: onToggleTick)
-            case .checklist, .reminder, .timer, .stepper:
+            case .reminder:
+                ReminderTile(
+                    widget: widget,
+                    cue: cue,
+                    window: window,
+                    onOpen: onOpen,
+                    onSurfaced: onSurfaced
+                )
+            case .checklist, .timer, .stepper:
                 FacioTileButton(action: onOpen) {
                     Text(DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title))
                         .font(.headline)
@@ -23,5 +32,6 @@ struct LidWidgetCell: View {
             }
         }
         .tileCellSize(TileCells.size(for: widget.tileSize))
+        .clipped()
     }
 }

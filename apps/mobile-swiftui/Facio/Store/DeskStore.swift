@@ -5,6 +5,7 @@ import Observation
 @MainActor
 final class DeskStore {
     private(set) var snapshot: DeskSnapshot
+    private(set) var generation = 0
     private let repository: DeskRepository
     private let now: () -> Date
 
@@ -20,7 +21,11 @@ final class DeskStore {
         self.repository = repository
         self.now = now
         if let loaded = try repository.loadSnapshot() {
-            snapshot = loaded
+            let migrated = try SeedFactory.ensureBike(in: loaded, now: now())
+            snapshot = migrated
+            if migrated != loaded {
+                try repository.saveSnapshot(migrated)
+            }
         } else {
             snapshot = try SeedFactory.buildSeed(now: now())
             try repository.saveSnapshot(snapshot)
@@ -40,13 +45,21 @@ final class DeskStore {
         CueLaw.doTimeCue(in: snapshot.cues, subjectId: subjectId)
     }
 
+    func surfaceCue(for widget: Widget) -> Cue? {
+        CueLaw.surfaceCue(in: snapshot.cues, subjectId: widget.subjectId, widgetType: widget.type)
+    }
+
+    func windowFor(subjectId: String) -> TimeWindow? {
+        snapshot.subjects.first { $0.id == subjectId }?.window
+    }
+
     func widget(id: String) -> Widget? {
         snapshot.widgets.first { $0.id == id }
     }
 
     func markCueSurfaced(widgetId: String, place: String) {
         guard let widget = widget(id: widgetId),
-              let cue = cueFor(subjectId: widget.subjectId),
+              let cue = surfaceCue(for: widget),
               widget.status != .done
         else { return }
         mutateCue(id: cue.id) { $0.hits.surfaced += 1 }
@@ -124,6 +137,48 @@ final class DeskStore {
         }
     }
 
+    func editReminderLatestBy(widgetId: String, latestBy: ClockTime) {
+        guard let widgetIndex = snapshot.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+        var widget = snapshot.widgets[widgetIndex]
+        guard widget.type == .reminder else { return }
+        guard let subjectIndex = snapshot.subjects.firstIndex(where: { $0.id == widget.subjectId }),
+              var window = snapshot.subjects[subjectIndex].window
+        else { return }
+        let clock = ReminderClock.clamp(latestBy, to: window)
+        window.latestBy = clock
+        let day = Calendar.current.startOfDay(for: widget.payload.fireAt ?? widget.when ?? now())
+        let fireAt = ReminderClock.date(on: day, clock: clock)
+        widget.payload.fireAt = fireAt
+        widget.when = fireAt
+        var next = snapshot
+        next.subjects[subjectIndex].window = window
+        next.widgets[widgetIndex] = widget
+        if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }),
+           next.instances[instanceIndex].status != .completed
+        {
+            next.instances[instanceIndex].when = fireAt
+        }
+        snapshot = next
+        persist()
+    }
+
+    func completeReminder(widgetId: String) {
+        guard var widget = widget(id: widgetId), widget.type == .reminder, widget.status != .done else { return }
+        let stamp = now()
+        widget.status = .done
+        widget.when = stamp
+        replace(widget)
+        setInstance(id: widget.instanceId) { instance in
+            instance.status = .completed
+            instance.when = stamp
+        }
+        if let cue = surfaceCue(for: widget) {
+            mutateCue(id: cue.id) { $0.hits.applied += 1 }
+            journal(.cueApplied, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId, cueId: cue.id)
+        }
+        journal(.instanceCompleted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
+    }
+
     func editCueText(cueId: String, text: String) {
         mutateCue(id: cueId) { $0.text = text }
         journal(.cueWritten, cueId: cueId, payload: ["text": text])
@@ -182,6 +237,8 @@ final class DeskStore {
     }
 
     private func persist() {
+        generation += 1
         try? repository.saveSnapshot(snapshot)
+        ReminderScheduler.enqueue(snapshot: snapshot, now: now())
     }
 }

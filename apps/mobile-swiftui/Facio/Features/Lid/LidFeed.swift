@@ -2,7 +2,8 @@ import SwiftUI
 
 struct LidFeed: View {
     let projection: LidProjection
-    let cueFor: (String) -> Cue?
+    let cueFor: (Widget) -> Cue?
+    let windowFor: (String) -> TimeWindow?
     let onOpen: (String) -> Void
     let onToggleTick: (String) -> Void
     let onSurfaced: (String) -> Void
@@ -38,17 +39,16 @@ struct LidFeed: View {
                 .foregroundStyle(.secondary)
                 .padding(.vertical, 8)
         } else {
-            FacioGlassCluster(spacing: FacioPalette.gridGap) {
-                PackRowMajorLayout(gap: FacioPalette.gridGap) {
-                    ForEach(widgets) { widget in
-                        LidWidgetCell(
-                            widget: widget,
-                            cue: cueFor(widget.subjectId),
-                            onOpen: { onOpen(widget.id) },
-                            onToggleTick: { onToggleTick(widget.id) },
-                            onSurfaced: { onSurfaced(widget.id) }
-                        )
-                    }
+            PackRowMajorLayout(gap: FacioPalette.gridGap) {
+                ForEach(widgets) { widget in
+                    LidWidgetCell(
+                        widget: widget,
+                        cue: cueFor(widget),
+                        window: windowFor(widget.subjectId),
+                        onOpen: { onOpen(widget.id) },
+                        onToggleTick: { onToggleTick(widget.id) },
+                        onSurfaced: { onSurfaced(widget.id) }
+                    )
                 }
             }
         }

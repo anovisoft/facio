@@ -20,6 +20,21 @@ final class CueLawTests: XCTestCase {
         XCTAssertEqual(cue.quote, "hinge")
     }
 
+    func testTimingCueIsTheSurfaceForReminder() {
+        let cue = CueLaw.addCue(
+            id: "c3",
+            subjectId: "bike",
+            kind: .correction,
+            text: "зал до 22",
+            surface: .timing
+        )
+        XCTAssertEqual(
+            CueLaw.surfaceCue(in: [cue], subjectId: "bike", widgetType: .reminder)?.id,
+            "c3"
+        )
+        XCTAssertNil(CueLaw.doTimeCue(in: [cue], subjectId: "bike"))
+    }
+
     func testAddCueKeepsExplicitSurface() {
         let cue = CueLaw.addCue(
             id: "c3",

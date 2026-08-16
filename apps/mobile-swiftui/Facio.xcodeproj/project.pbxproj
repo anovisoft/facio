@@ -11,6 +11,9 @@
 		0B5492F1132E9FBFDB1308EA /* PainLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8BE137FD1137D4F1D4C801 /* PainLaw.swift */; };
 		0DCB06101BDB12C43AEF0870 /* TickUseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B2748A2C229B2F4EEFF8E66 /* TickUseView.swift */; };
 		134293B3F4B983D145ABEE9F /* Target.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3D3253DFAFD9354F4669F20 /* Target.swift */; };
+		14FB19DF959B7C5392244DAD /* ReminderTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4911636F00FC033987EB181 /* ReminderTile.swift */; };
+		18BC5721A6C1050650784A51 /* ReminderSchedulerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 828B398A50029A7EAAB3EEA0 /* ReminderSchedulerTests.swift */; };
+		1B3D96A2D920DD5CBBC15C23 /* ReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 763D4ABA686C63D908F49AEA /* ReminderScheduler.swift */; };
 		1D265B66C39C1DAB0EFF827F /* Widget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26A5270986AC8D7DF3C69962 /* Widget.swift */; };
 		1D6C0D73D2B773C10F6FB200 /* InstanceStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09B49E7140B92D3E9AA464AE /* InstanceStatus.swift */; };
 		26003A5D3C7BB87E42847112 /* UseRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87C40DF529781195716FE29 /* UseRoute.swift */; };
@@ -18,6 +21,7 @@
 		385D0E5D386E16F6CBAB6C98 /* subjects.json in Resources */ = {isa = PBXBuildFile; fileRef = EFDEE4B7588D7385EF4AC36B /* subjects.json */; };
 		39464013547D2961625B7BED /* FacioTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DE3C9083825C5AA83F71546 /* FacioTheme.swift */; };
 		3963C8E508A997723D6B1054 /* CueLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB5247A982C89F51EF171CE1 /* CueLaw.swift */; };
+		3ABA170A8B876DBF8F1196A7 /* ReminderUseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3996D30C44FA29B14C3CC0 /* ReminderUseView.swift */; };
 		4008641D49A21F72B7CB5BC6 /* ReminderClockTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA765E2AAC9E1E3AB182595F /* ReminderClockTests.swift */; };
 		40D34C7A15AA15890A10E38C /* ReminderClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = A146AEC282C47C9A81593E81 /* ReminderClock.swift */; };
 		4481C68552510F52EAF8B391 /* LidFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7BE39810B4325D66B31ABA8 /* LidFeed.swift */; };
@@ -68,6 +72,7 @@
 		C320C96EB2A1BB2C8B925B59 /* LidSectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3918C83AA817DE136D7B372 /* LidSectionHeader.swift */; };
 		CBA06C3A5C7845636196F10A /* ModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62CDF841D69D1101DC6F6D8C /* ModelTests.swift */; };
 		CBFC8BF518CF11B3D528AECA /* widgets.json in Resources */ = {isa = PBXBuildFile; fileRef = 81BADA927DD64EEBCA8F07F7 /* widgets.json */; };
+		CD79F406A7315A545B225A8A /* FacioNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F1D7859FE372ADE83A1624D /* FacioNotifications.swift */; };
 		CEC4FE2F2DE12A8C5177FBED /* CueKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A65D9FE0EF09D2A8481ED7B /* CueKind.swift */; };
 		CED80102E7BC05B485A6D7B9 /* SeedFactoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F3E244A61989C75715FE3E2 /* SeedFactoryTests.swift */; };
 		CFAFDDFB103D2A060CF1B6CA /* cues.json in Resources */ = {isa = PBXBuildFile; fileRef = 65B603FB21AFD077EB3D5D60 /* cues.json */; };
@@ -79,6 +84,7 @@
 		DC63919D485FF0A08579AEF6 /* FacioJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A6B4866C56C0FC894B32F56 /* FacioJSON.swift */; };
 		E145CBC55BC4FD719D463D3B /* RankBand.swift in Sources */ = {isa = PBXBuildFile; fileRef = A565FEE3663C57F852802132 /* RankBand.swift */; };
 		E3D7F69606181C16E5DB131C /* WidgetType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9638F827F32F9586B9E461 /* WidgetType.swift */; };
+		E43CD102B93498279D882748 /* DeskStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229688020B5F18B40C1B5B52 /* DeskStoreTests.swift */; };
 		F7896392618DEA3364CFDD57 /* SubjectStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAEA9232D081EAF6EAF8BE2B /* SubjectStatus.swift */; };
 		F8D115041D6077185ED190A6 /* DomainTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1881B07D94D95992419D2480 /* DomainTestSupport.swift */; };
 /* End PBXBuildFile section */
@@ -95,6 +101,8 @@
 
 /* Begin PBXFileReference section */
 		09B49E7140B92D3E9AA464AE /* InstanceStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceStatus.swift; sourceTree = "<group>"; };
+		0D3996D30C44FA29B14C3CC0 /* ReminderUseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderUseView.swift; sourceTree = "<group>"; };
+		0F1D7859FE372ADE83A1624D /* FacioNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacioNotifications.swift; sourceTree = "<group>"; };
 		1016DF38D6C3A774AA95E8B5 /* DeskRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskRepository.swift; sourceTree = "<group>"; };
 		12BCA9438FAD0EB8554108A5 /* Instance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instance.swift; sourceTree = "<group>"; };
 		131D42EFFB9F1F2770F97660 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -105,6 +113,7 @@
 		16CFE0044D8D096495F3CB81 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		1881B07D94D95992419D2480 /* DomainTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainTestSupport.swift; sourceTree = "<group>"; };
 		1B95D459B6FACFCD837AE400 /* SubjectLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectLaw.swift; sourceTree = "<group>"; };
+		229688020B5F18B40C1B5B52 /* DeskStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskStoreTests.swift; sourceTree = "<group>"; };
 		26A5270986AC8D7DF3C69962 /* Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Widget.swift; sourceTree = "<group>"; };
 		2864C10551B05E0EE8E3BD74 /* WidgetStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStatus.swift; sourceTree = "<group>"; };
 		2A6B4866C56C0FC894B32F56 /* FacioJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacioJSON.swift; sourceTree = "<group>"; };
@@ -137,9 +146,11 @@
 		6E6443189A8C3DC61F6850C5 /* DeskStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskStore.swift; sourceTree = "<group>"; };
 		6F3E244A61989C75715FE3E2 /* SeedFactoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedFactoryTests.swift; sourceTree = "<group>"; };
 		712ADE31FC9A01A67851A26C /* CueOrigin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueOrigin.swift; sourceTree = "<group>"; };
+		763D4ABA686C63D908F49AEA /* ReminderScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderScheduler.swift; sourceTree = "<group>"; };
 		786AEABFA4B9FBC87D0A2311 /* Cue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cue.swift; sourceTree = "<group>"; };
 		817E2B9E5F7FA32AACFA0D58 /* PackRowMajorLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackRowMajorLayout.swift; sourceTree = "<group>"; };
 		81BADA927DD64EEBCA8F07F7 /* widgets.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = widgets.json; sourceTree = "<group>"; };
+		828B398A50029A7EAAB3EEA0 /* ReminderSchedulerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderSchedulerTests.swift; sourceTree = "<group>"; };
 		85B5456958AB3FFDEAA962F4 /* FacioPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacioPalette.swift; sourceTree = "<group>"; };
 		88264A6ED9F4B61255BD7DDB /* LidProjectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidProjectionTests.swift; sourceTree = "<group>"; };
 		8BDA79F3B47DCF2FB25DE8AA /* KebabStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KebabStub.swift; sourceTree = "<group>"; };
@@ -160,6 +171,7 @@
 		CA765E2AAC9E1E3AB182595F /* ReminderClockTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderClockTests.swift; sourceTree = "<group>"; };
 		CDB0BDAA3DA77E97E85EA286 /* AtmosphereBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtmosphereBackground.swift; sourceTree = "<group>"; };
 		D2AD6F13DFE3734FB09352F3 /* CueSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueSurface.swift; sourceTree = "<group>"; };
+		D4911636F00FC033987EB181 /* ReminderTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderTile.swift; sourceTree = "<group>"; };
 		D8B634C40C08056E1D5C3BE3 /* FacioApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacioApp.swift; sourceTree = "<group>"; };
 		DA2072492E534903ADD78273 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		DB6CF10F8A46994C86FE0B08 /* PainLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PainLawTests.swift; sourceTree = "<group>"; };
@@ -213,6 +225,7 @@
 			isa = PBXGroup;
 			children = (
 				8BDAF9C77FC3601E2540B734 /* CounterUseView.swift */,
+				0D3996D30C44FA29B14C3CC0 /* ReminderUseView.swift */,
 				3B2748A2C229B2F4EEFF8E66 /* TickUseView.swift */,
 				E87C40DF529781195716FE29 /* UseRoute.swift */,
 				631DFACFA004D22854CA9C24 /* UseScreen.swift */,
@@ -224,6 +237,7 @@
 			isa = PBXGroup;
 			children = (
 				D8B634C40C08056E1D5C3BE3 /* FacioApp.swift */,
+				0F1D7859FE372ADE83A1624D /* FacioNotifications.swift */,
 				16CFE0044D8D096495F3CB81 /* RootView.swift */,
 			);
 			path = App;
@@ -239,6 +253,7 @@
 				B3918C83AA817DE136D7B372 /* LidSectionHeader.swift */,
 				6BF6FCE7416C57ADDBB62CA4 /* LidWidgetCell.swift */,
 				817E2B9E5F7FA32AACFA0D58 /* PackRowMajorLayout.swift */,
+				D4911636F00FC033987EB181 /* ReminderTile.swift */,
 				4AC446C1A84AAAD4F0ECC41D /* TickTile.swift */,
 				BD204F8AA9DC6C8FF665395A /* TileCellSizeKey.swift */,
 			);
@@ -257,6 +272,7 @@
 			isa = PBXGroup;
 			children = (
 				56186C97AB845D23001563F3 /* CueLawTests.swift */,
+				229688020B5F18B40C1B5B52 /* DeskStoreTests.swift */,
 				1881B07D94D95992419D2480 /* DomainTestSupport.swift */,
 				5EDFCFCEE2A01319BF949300 /* DriftLawTests.swift */,
 				88264A6ED9F4B61255BD7DDB /* LidProjectionTests.swift */,
@@ -264,6 +280,7 @@
 				360413F490CB306BB68500A5 /* PackLawTests.swift */,
 				DB6CF10F8A46994C86FE0B08 /* PainLawTests.swift */,
 				CA765E2AAC9E1E3AB182595F /* ReminderClockTests.swift */,
+				828B398A50029A7EAAB3EEA0 /* ReminderSchedulerTests.swift */,
 				6F3E244A61989C75715FE3E2 /* SeedFactoryTests.swift */,
 			);
 			path = FacioTests;
@@ -283,6 +300,7 @@
 			children = (
 				1016DF38D6C3A774AA95E8B5 /* DeskRepository.swift */,
 				6E6443189A8C3DC61F6850C5 /* DeskStore.swift */,
+				763D4ABA686C63D908F49AEA /* ReminderScheduler.swift */,
 			);
 			path = Store;
 			sourceTree = "<group>";
@@ -503,6 +521,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				659918BF655B0B9127307996 /* CueLawTests.swift in Sources */,
+				E43CD102B93498279D882748 /* DeskStoreTests.swift in Sources */,
 				F8D115041D6077185ED190A6 /* DomainTestSupport.swift in Sources */,
 				7D298E763BA501C914191CD6 /* DriftLawTests.swift in Sources */,
 				9F50A3AF342159EBD6E77599 /* LidProjectionTests.swift in Sources */,
@@ -510,6 +529,7 @@
 				885E0C15BF71F5E736ADCF66 /* PackLawTests.swift in Sources */,
 				C02AB68F2948B995641C037F /* PainLawTests.swift in Sources */,
 				4008641D49A21F72B7CB5BC6 /* ReminderClockTests.swift in Sources */,
+				18BC5721A6C1050650784A51 /* ReminderSchedulerTests.swift in Sources */,
 				CED80102E7BC05B485A6D7B9 /* SeedFactoryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -541,6 +561,7 @@
 				90132831C50A9557D7C00433 /* DriftOffer.swift in Sources */,
 				AB460B049EDE15E96FF2799C /* FacioApp.swift in Sources */,
 				DC63919D485FF0A08579AEF6 /* FacioJSON.swift in Sources */,
+				CD79F406A7315A545B225A8A /* FacioNotifications.swift in Sources */,
 				7C7643ECDF57F8C0CFE6722E /* FacioPalette.swift in Sources */,
 				39464013547D2961625B7BED /* FacioTheme.swift in Sources */,
 				676457C255DA1A8B2A7671CD /* GlassSurface.swift in Sources */,
@@ -558,6 +579,9 @@
 				0B5492F1132E9FBFDB1308EA /* PainLaw.swift in Sources */,
 				E145CBC55BC4FD719D463D3B /* RankBand.swift in Sources */,
 				40D34C7A15AA15890A10E38C /* ReminderClock.swift in Sources */,
+				1B3D96A2D920DD5CBBC15C23 /* ReminderScheduler.swift in Sources */,
+				14FB19DF959B7C5392244DAD /* ReminderTile.swift in Sources */,
+				3ABA170A8B876DBF8F1196A7 /* ReminderUseView.swift in Sources */,
 				899BB97F1303019BB6DC0AC9 /* RootView.swift in Sources */,
 				BEFF770731B445B54C21CE78 /* SeedFactory.swift in Sources */,
 				75C05EB773E2E4EE0249AACB /* Subject.swift in Sources */,

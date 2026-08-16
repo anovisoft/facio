@@ -20,4 +20,17 @@ final class PackLawTests: XCTestCase {
         }
         XCTAssertEqual(packed.placements.map(\.item), ["wide", "compact"])
     }
+
+    func testWideReminderDoesNotShareCellsWithNextCompact() {
+        let packed = PackLaw.packRowMajor(["veg", "bike", "push"]) { item in
+            item == "bike" ? CellSize(width: 4, height: 2) : CellSize(width: 2, height: 2)
+        }
+        XCTAssertEqual(packed.placements[0].row, 0)
+        XCTAssertEqual(packed.placements[0].height, 2)
+        XCTAssertEqual(packed.placements[1].row, 2)
+        XCTAssertEqual(packed.placements[1].height, 2)
+        XCTAssertEqual(packed.placements[2].row, 4)
+        XCTAssertEqual(packed.placements[2].height, 2)
+        XCTAssertEqual(packed.rowCount, 6)
+    }
 }

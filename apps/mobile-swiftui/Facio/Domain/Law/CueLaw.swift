@@ -37,4 +37,17 @@ enum CueLaw {
     static func doTimeCue(in cues: [Cue], subjectId: String) -> Cue? {
         cues.last { $0.subjectId == subjectId && $0.surface == .doTime }
     }
+
+    static func timingCue(in cues: [Cue], subjectId: String) -> Cue? {
+        cues.last { $0.subjectId == subjectId && $0.surface == .timing }
+    }
+
+    static func surfaceCue(in cues: [Cue], subjectId: String, widgetType: WidgetType) -> Cue? {
+        switch widgetType {
+        case .reminder:
+            timingCue(in: cues, subjectId: subjectId)
+        case .counter, .tick, .checklist, .timer, .stepper:
+            doTimeCue(in: cues, subjectId: subjectId)
+        }
+    }
 }

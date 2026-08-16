@@ -9,4 +9,8 @@ enum DisplayCopy {
         default: stored
         }
     }
+
+    static func succeedBy(_ window: TimeWindow) -> String {
+        String(localized: "успеть к \(window.latestBy.shortLabel)", comment: "Reminder window deadline")
+    }
 }

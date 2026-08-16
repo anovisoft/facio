@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct RootView: View {
+    @Environment(DeskStore.self) private var store
     @State private var path = NavigationPath()
 
     var body: some View {
@@ -15,6 +16,12 @@ struct RootView: View {
                         }
                     }
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .facioOpenLid)) { _ in
+            path = NavigationPath()
+        }
+        .task {
+            await ReminderScheduler.sync(snapshot: store.snapshot, now: Date())
         }
     }
 }
