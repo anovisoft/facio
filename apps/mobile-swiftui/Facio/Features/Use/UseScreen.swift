@@ -18,8 +18,8 @@ struct UseScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(AtmosphereBackground())
         .toolbarTitleDisplayMode(.large)
+        .facioChrome()
     }
 
     @ViewBuilder
@@ -30,7 +30,7 @@ struct UseScreen: View {
 
         switch widget.type {
         case .counter:
-            CounterUseView(widget: widget, cue: cue, lookOnly: lookOnly)
+            CounterUseView(widget: widget, cue: cue)
         case .tick:
             TickUseView(
                 widget: widget,

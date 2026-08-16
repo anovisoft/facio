@@ -19,3 +19,4 @@ TabView { ChatHome(); Desk() }
 - Identity: `com.anovisoft.facio`, team `SXXLPXXJMD`, iOS 18+, portrait. See `docs/state/identity.md`.
 - Use has no instance swipe. Left-edge interactive pop is back (system bar, do not hide it).
 - Liquid Glass on (PO). No brand-green accent. Semantic colors. Material fallback below iOS 26.
+- Theme follows the system. Atmosphere is a weak gradient in `containerBackground`, never hit-tests. Whole tile opens Use. Counter Use keeps steppers after done. Lid tick is a symbol inside the tile.

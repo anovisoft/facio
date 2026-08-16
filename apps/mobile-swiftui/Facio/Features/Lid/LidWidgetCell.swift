@@ -15,15 +15,11 @@ struct LidWidgetCell: View {
             case .tick:
                 TickTile(widget: widget, onOpen: onOpen, onToggle: onToggleTick)
             case .checklist, .reminder, .timer, .stepper:
-                Button(action: onOpen) {
+                FacioTileButton(action: onOpen) {
                     Text(DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title))
                         .font(.headline)
                         .foregroundStyle(.primary)
-                        .padding(16)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                        .facioGlass()
                 }
-                .buttonStyle(.plain)
             }
         }
         .tileCellSize(TileCells.size(for: widget.tileSize))

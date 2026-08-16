@@ -16,6 +16,7 @@
 		26003A5D3C7BB87E42847112 /* UseRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87C40DF529781195716FE29 /* UseRoute.swift */; };
 		345DDEF409CD5C9AB583BCC6 /* DriftLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A290997900023858134E738 /* DriftLaw.swift */; };
 		385D0E5D386E16F6CBAB6C98 /* subjects.json in Resources */ = {isa = PBXBuildFile; fileRef = EFDEE4B7588D7385EF4AC36B /* subjects.json */; };
+		39464013547D2961625B7BED /* FacioTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DE3C9083825C5AA83F71546 /* FacioTheme.swift */; };
 		3963C8E508A997723D6B1054 /* CueLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB5247A982C89F51EF171CE1 /* CueLaw.swift */; };
 		4008641D49A21F72B7CB5BC6 /* ReminderClockTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA765E2AAC9E1E3AB182595F /* ReminderClockTests.swift */; };
 		40D34C7A15AA15890A10E38C /* ReminderClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = A146AEC282C47C9A81593E81 /* ReminderClock.swift */; };
@@ -108,6 +109,7 @@
 		2864C10551B05E0EE8E3BD74 /* WidgetStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStatus.swift; sourceTree = "<group>"; };
 		2A6B4866C56C0FC894B32F56 /* FacioJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacioJSON.swift; sourceTree = "<group>"; };
 		2C9638F827F32F9586B9E461 /* WidgetType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetType.swift; sourceTree = "<group>"; };
+		2DE3C9083825C5AA83F71546 /* FacioTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacioTheme.swift; sourceTree = "<group>"; };
 		3200A392C3CE6994B512A167 /* LidScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidScreen.swift; sourceTree = "<group>"; };
 		3256792637DD71353427374C /* Facio.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Facio.entitlements; sourceTree = "<group>"; };
 		32DDBE6FC3377D23FE0967AD /* WidgetSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSection.swift; sourceTree = "<group>"; };
@@ -388,6 +390,7 @@
 			children = (
 				CDB0BDAA3DA77E97E85EA286 /* AtmosphereBackground.swift */,
 				85B5456958AB3FFDEAA962F4 /* FacioPalette.swift */,
+				2DE3C9083825C5AA83F71546 /* FacioTheme.swift */,
 				F50A2B65D8C84C5EF71B4C74 /* GlassSurface.swift */,
 			);
 			path = Theme;
@@ -539,6 +542,7 @@
 				AB460B049EDE15E96FF2799C /* FacioApp.swift in Sources */,
 				DC63919D485FF0A08579AEF6 /* FacioJSON.swift in Sources */,
 				7C7643ECDF57F8C0CFE6722E /* FacioPalette.swift in Sources */,
+				39464013547D2961625B7BED /* FacioTheme.swift in Sources */,
 				676457C255DA1A8B2A7671CD /* GlassSurface.swift in Sources */,
 				D4C5D4A6EC46647EEE6702E6 /* Instance.swift in Sources */,
 				1D6C0D73D2B773C10F6FB200 /* InstanceStatus.swift in Sources */,

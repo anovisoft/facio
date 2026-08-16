@@ -1,37 +1,39 @@
 import SwiftUI
 
 struct AtmosphereBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         ZStack {
-            Color(red: 0.78, green: 0.80, blue: 0.84)
-            RadialGradient(
+            LinearGradient(
                 colors: [
-                    Color(red: 0.93, green: 0.86, blue: 0.78).opacity(0.95),
-                    Color.clear,
+                    FacioTheme.atmosphereTop(for: colorScheme),
+                    FacioTheme.atmosphereBottom(for: colorScheme),
                 ],
-                center: UnitPoint(x: 0.12, y: 0.08),
-                startRadius: 10,
-                endRadius: 380
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
             )
             RadialGradient(
-                colors: [
-                    Color(red: 0.62, green: 0.70, blue: 0.82).opacity(0.85),
-                    Color.clear,
-                ],
-                center: UnitPoint(x: 0.92, y: 0.22),
-                startRadius: 20,
-                endRadius: 420
+                colors: [FacioTheme.warmSpot(for: colorScheme), Color.clear],
+                center: UnitPoint(x: 0.10, y: 0.06),
+                startRadius: 8,
+                endRadius: 360
             )
             RadialGradient(
-                colors: [
-                    Color(red: 0.88, green: 0.80, blue: 0.86).opacity(0.55),
-                    Color.clear,
-                ],
-                center: UnitPoint(x: 0.55, y: 0.92),
-                startRadius: 40,
-                endRadius: 480
+                colors: [FacioTheme.coolSpot(for: colorScheme), Color.clear],
+                center: UnitPoint(x: 0.94, y: 0.28),
+                startRadius: 16,
+                endRadius: 400
+            )
+            RadialGradient(
+                colors: [FacioTheme.roseSpot(for: colorScheme), Color.clear],
+                center: UnitPoint(x: 0.48, y: 0.96),
+                startRadius: 24,
+                endRadius: 440
             )
         }
         .ignoresSafeArea()
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }

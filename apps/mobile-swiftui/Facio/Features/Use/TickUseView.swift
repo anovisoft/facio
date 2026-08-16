@@ -9,13 +9,13 @@ struct TickUseView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            HStack(spacing: 14) {
+            HStack(spacing: 12) {
                 Button(action: onToggle) {
-                    Image(systemName: done ? "checkmark" : "")
-                        .font(.title2.weight(.bold))
-                        .foregroundStyle(.primary)
-                        .frame(width: 56, height: 56)
-                        .facioCircleGlass(interactive: true)
+                    Image(systemName: done ? "checkmark.circle.fill" : "circle")
+                        .font(.title2)
+                        .foregroundStyle(done ? .primary : .secondary)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("галочка")

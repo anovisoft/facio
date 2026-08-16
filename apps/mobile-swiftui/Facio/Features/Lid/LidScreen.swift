@@ -17,9 +17,10 @@ struct LidScreen: View {
             .padding(.bottom, 32)
         }
         .scrollIndicators(.hidden)
-        .background(AtmosphereBackground())
+        .background(.clear)
         .navigationTitle("Facio")
         .toolbarTitleDisplayMode(.large)
+        .facioChrome()
     }
 }
 

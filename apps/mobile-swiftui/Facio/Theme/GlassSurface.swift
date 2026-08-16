@@ -15,6 +15,23 @@ struct FacioGlassCluster<Content: View>: View {
     }
 }
 
+struct FacioTileButton<Content: View>: View {
+    var dimmed: Bool = false
+    let action: () -> Void
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        Button(action: action) {
+            content()
+                .padding(16)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .contentShape(RoundedRectangle(cornerRadius: FacioPalette.tileRadius, style: .continuous))
+                .facioGlass(dimmed: dimmed)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 extension View {
     @ViewBuilder
     func facioGlass(dimmed: Bool = false, interactive: Bool = true) -> some View {

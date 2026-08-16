@@ -3,7 +3,6 @@ import SwiftUI
 struct CounterUseView: View {
     let widget: Widget
     let cue: Cue?
-    let lookOnly: Bool
 
     @Environment(DeskStore.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -47,49 +46,44 @@ struct CounterUseView: View {
 
             Spacer()
 
-            if lookOnly {
-                Text("готово")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            } else {
-                FacioGlassCluster(spacing: 12) {
-                    HStack(spacing: 12) {
-                        Button {
-                            store.tickCounter(widgetId: widget.id, delta: -1)
-                        } label: {
-                            Image(systemName: "minus")
-                                .font(.title2.weight(.semibold))
-                                .frame(maxWidth: .infinity, minHeight: 56)
-                        }
-                        .accessibilityLabel("минус")
-                        .modifier(FacioGlassButton(prominent: false))
-
-                        Button {
-                            store.tickCounter(widgetId: widget.id, delta: 1)
-                        } label: {
-                            Image(systemName: "plus")
-                                .font(.title2.weight(.semibold))
-                                .frame(maxWidth: .infinity, minHeight: 56)
-                        }
-                        .accessibilityLabel("плюс")
-                        .modifier(FacioGlassButton(prominent: true))
+            FacioGlassCluster(spacing: 12) {
+                HStack(spacing: 12) {
+                    Button {
+                        store.tickCounter(widgetId: widget.id, delta: -1)
+                    } label: {
+                        Image(systemName: "minus")
+                            .font(.title2.weight(.semibold))
+                            .frame(maxWidth: .infinity, minHeight: 56)
                     }
-                }
+                    .accessibilityLabel("минус")
+                    .modifier(FacioGlassButton(prominent: false))
 
-                Button {
-                    commitCue()
-                    commitGoal()
-                    store.completeCounter(widgetId: widget.id)
-                    dismiss()
-                } label: {
-                    Text("Готово")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity, minHeight: 52)
+                    Button {
+                        store.tickCounter(widgetId: widget.id, delta: 1)
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.title2.weight(.semibold))
+                            .frame(maxWidth: .infinity, minHeight: 56)
+                    }
+                    .accessibilityLabel("плюс")
+                    .modifier(FacioGlassButton(prominent: true))
                 }
-                .modifier(FacioGlassButton(prominent: true, capsule: true))
             }
+
+            Button {
+                commitCue()
+                commitGoal()
+                store.completeCounter(widgetId: widget.id)
+                dismiss()
+            } label: {
+                Text("Готово")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, minHeight: 52)
+            }
+            .modifier(FacioGlassButton(prominent: true, capsule: true))
         }
         .padding(.horizontal, FacioPalette.pagePadding)
+        .padding(.bottom, 8)
         .onAppear {
             cueDraft = cue?.text ?? ""
             goalDraft = String(target)

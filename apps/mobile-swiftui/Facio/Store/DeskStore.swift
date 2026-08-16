@@ -8,6 +8,14 @@ final class DeskStore {
     private let repository: DeskRepository
     private let now: () -> Date
 
+    static func live() -> DeskStore {
+        do {
+            return try DeskStore(repository: try DeskRepository.applicationSupport())
+        } catch {
+            fatalError("desk warehouse failed: \(error)")
+        }
+    }
+
     init(repository: DeskRepository, now: @escaping () -> Date = Date.init) throws {
         self.repository = repository
         self.now = now
@@ -53,10 +61,14 @@ final class DeskStore {
     }
 
     func tickCounter(widgetId: String, delta: Int) {
-        guard var widget = widget(id: widgetId), widget.type == .counter, widget.status != .done else { return }
+        guard var widget = widget(id: widgetId), widget.type == .counter else { return }
         let next = max(0, (widget.payload.count ?? 0) + delta)
         widget.payload.count = next
-        if widget.status == .ready {
+        if widget.status == .done {
+            widget.status = .running
+            widget.when = nil
+            setInstance(id: widget.instanceId) { $0.status = .inProgress }
+        } else if widget.status == .ready {
             widget.status = .running
             setInstance(id: widget.instanceId) { $0.status = .inProgress }
             journal(.instanceStarted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)

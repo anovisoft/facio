@@ -11,7 +11,7 @@ struct CounterTile: View {
     private var target: Int { widget.payload.target ?? 0 }
 
     var body: some View {
-        Button(action: onOpen) {
+        FacioTileButton(dimmed: done, action: onOpen) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top, spacing: 8) {
                     Text(DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title))
@@ -40,11 +40,7 @@ struct CounterTile: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .facioGlass(dimmed: done)
         }
-        .buttonStyle(.plain)
         .accessibilityLabel(accessibilityLabel)
         .onAppear {
             if cue != nil, !done { onSurfaced() }

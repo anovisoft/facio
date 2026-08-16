@@ -16,6 +16,7 @@ Before writing views, read:
 - New app at `apps/mobile-swiftui`. Identity from [`docs/state/identity.md`](../../../docs/state/identity.md): `Facio`, `com.anovisoft.facio`, team `SXXLPXXJMD`, iOS 18+, portrait, no iPad.
 - No third-party UI kits unless PO asks.
 - Liquid Glass is on (PO, 2026-08-16): tiles, Use controls, grouped in `GlassEffectContainer`. `#available(iOS 26)` with material fallback. Do not invent a brand-green accent — semantic `primary` / `secondary`, tint only for meaning.
+- Theme follows the system. Atmosphere is a weak gradient (not a flat fill) via `containerBackground(for: .navigation)` plus an inert window-level copy. Atmosphere never hit-tests. Whole tile opens Use (`contentShape` on the glass), not only the title row. Counter Use keeps − / + / Готово after done; tick Use uses a normal 44pt checkbox, not a hero circle. Lid tick mark is a 36pt symbol inside the tile — do not overlay glass-on-glass.
 - Localize via `String(localized:)`. User-facing copy may be Russian; identifiers stay English and match the RFC (`Subject`, `Cue`, `Widget`, `surface`).
 
 ## Law on device

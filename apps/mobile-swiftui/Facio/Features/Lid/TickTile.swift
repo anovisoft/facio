@@ -8,7 +8,7 @@ struct TickTile: View {
     private var done: Bool { widget.payload.done == true || widget.status == .done }
 
     var body: some View {
-        Button(action: onOpen) {
+        FacioTileButton(dimmed: done, action: onOpen) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top, spacing: 8) {
                     Text(DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title))
@@ -21,11 +21,11 @@ struct TickTile: View {
                 Spacer(minLength: 0)
                 HStack(spacing: 10) {
                     Button(action: onToggle) {
-                        Image(systemName: done ? "checkmark" : "")
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(.primary)
+                        Image(systemName: done ? "checkmark.circle.fill" : "circle")
+                            .font(.title2)
+                            .foregroundStyle(done ? .primary : .secondary)
                             .frame(width: 36, height: 36)
-                            .facioCircleGlass(interactive: true)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("галочка")
@@ -34,11 +34,7 @@ struct TickTile: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .facioGlass(dimmed: done)
         }
-        .buttonStyle(.plain)
         .accessibilityLabel(DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title))
     }
 }
