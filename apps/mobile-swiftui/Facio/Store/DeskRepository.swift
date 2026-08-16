@@ -39,6 +39,27 @@ struct DeskRepository: Sendable {
         }
     }
 
+    func surfacedPlaces(on day: Date) -> Set<String> {
+        guard FileManager.default.fileExists(atPath: journalURL.path),
+              let data = try? Data(contentsOf: journalURL),
+              let text = String(data: data, encoding: .utf8)
+        else { return [] }
+        let start = Calendar.current.startOfDay(for: day)
+        guard let end = Calendar.current.date(byAdding: .day, value: 1, to: start) else { return [] }
+        var places: Set<String> = []
+        for line in text.split(whereSeparator: \.isNewline) {
+            guard let event = try? FacioJSON.decoder.decode(JournalEvent.self, from: Data(line.utf8)),
+                  event.type == .cueSurfaced,
+                  event.at >= start,
+                  event.at < end,
+                  let widgetId = event.widgetId,
+                  let place = event.payload?["place"]
+            else { continue }
+            places.insert("\(widgetId)|\(place)")
+        }
+        return places
+    }
+
     func append(_ event: JournalEvent) throws {
         var data = try FacioJSON.encoder.encode(event)
         data.append(0x0A)

@@ -4,18 +4,20 @@ struct LidWidgetCell: View {
     let widget: Widget
     let cue: Cue?
     let window: TimeWindow?
-    let onOpen: () -> Void
-    let onToggleTick: () -> Void
+    let onOpen: (() -> Void)?
+    let onToggleTick: (() -> Void)?
     let onSurfaced: () -> Void
 
     var body: some View {
-        Group {
-            switch widget.type {
-            case .counter:
+        switch widget.type {
+        case .counter:
+            sized(
                 CounterTile(widget: widget, cue: cue, onOpen: onOpen, onSurfaced: onSurfaced)
-            case .tick:
-                TickTile(widget: widget, onOpen: onOpen, onToggle: onToggleTick)
-            case .reminder:
+            )
+        case .tick:
+            sized(TickTile(widget: widget, onOpen: onOpen, onToggle: onToggleTick))
+        case .reminder:
+            sized(
                 ReminderTile(
                     widget: widget,
                     cue: cue,
@@ -23,15 +25,15 @@ struct LidWidgetCell: View {
                     onOpen: onOpen,
                     onSurfaced: onSurfaced
                 )
-            case .checklist, .timer, .stepper:
-                FacioTileButton(action: onOpen) {
-                    Text(DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title))
-                        .font(.headline)
-                        .foregroundStyle(.primary)
-                }
-            }
+            )
+        case .checklist, .timer, .stepper:
+            EmptyView()
         }
-        .tileCellSize(TileCells.size(for: widget.tileSize))
-        .clipped()
+    }
+
+    private func sized<Tile: View>(_ tile: Tile) -> some View {
+        tile
+            .tileCellSize(TileCells.size(for: widget.tileSize))
+            .clipped()
     }
 }

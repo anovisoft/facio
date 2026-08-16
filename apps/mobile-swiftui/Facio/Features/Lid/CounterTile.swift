@@ -3,12 +3,12 @@ import SwiftUI
 struct CounterTile: View {
     let widget: Widget
     let cue: Cue?
-    let onOpen: () -> Void
+    let onOpen: (() -> Void)?
     let onSurfaced: () -> Void
 
     private var done: Bool { widget.status == .done }
-    private var count: Int { widget.payload.count ?? 0 }
-    private var target: Int { widget.payload.target ?? 0 }
+    private var count: Int { widget.counterCount }
+    private var target: Int { widget.counterTarget }
 
     var body: some View {
         FacioTileButton(dimmed: done, action: onOpen) {

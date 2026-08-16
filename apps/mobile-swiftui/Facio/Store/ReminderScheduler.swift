@@ -20,7 +20,7 @@ enum ReminderScheduler {
     static func alarms(from snapshot: DeskSnapshot, now: Date) -> [ReminderAlarm] {
         snapshot.widgets.compactMap { widget in
             guard widget.type == .reminder, widget.status != .done else { return nil }
-            let fireAt = widget.payload.fireAt ?? widget.when
+            let fireAt = widget.reminderFireAt
             guard let fireAt, fireAt > now else { return nil }
             let title = DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title)
             let window = snapshot.subjects.first { $0.id == widget.subjectId }?.window
@@ -37,10 +37,10 @@ enum ReminderScheduler {
     }
 
     static func enqueue(snapshot: DeskSnapshot, now: Date) {
-        Task { await sync(snapshot: snapshot, now: now) }
+        Task { await gate.enqueue(snapshot: snapshot, now: now) }
     }
 
-    static func sync(snapshot: DeskSnapshot, now: Date) async {
+    fileprivate static func sync(snapshot: DeskSnapshot, now: Date) async {
         let center = UNUserNotificationCenter.current()
         let granted = await requestAuthorization(center)
         guard granted else { return }
@@ -74,5 +74,29 @@ enum ReminderScheduler {
             let request = UNNotificationRequest(identifier: alarm.id, content: content, trigger: trigger)
             try? await center.add(request)
         }
+    }
+
+    private static let gate = ReminderGate()
+}
+
+/// Coalesces overlapping `enqueue` calls so an older wipe/re-add cannot
+/// resurrect a completed or rescheduled reminder.
+private actor ReminderGate {
+    private var latest: (DeskSnapshot, Date)?
+    private var running = false
+
+    func enqueue(snapshot: DeskSnapshot, now: Date) {
+        latest = (snapshot, now)
+        guard !running else { return }
+        running = true
+        Task { await drain() }
+    }
+
+    private func drain() async {
+        while let (snapshot, now) = latest {
+            latest = nil
+            await ReminderScheduler.sync(snapshot: snapshot, now: now)
+        }
+        running = false
     }
 }

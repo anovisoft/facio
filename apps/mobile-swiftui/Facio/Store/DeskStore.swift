@@ -5,9 +5,10 @@ import Observation
 @MainActor
 final class DeskStore {
     private(set) var snapshot: DeskSnapshot
-    private(set) var generation = 0
     private let repository: DeskRepository
     private let now: () -> Date
+    private var surfacedDay = Date.distantPast
+    private var surfacedPlaces: Set<String> = []
 
     static func live() -> DeskStore {
         do {
@@ -30,6 +31,9 @@ final class DeskStore {
             snapshot = try SeedFactory.buildSeed(now: now())
             try repository.saveSnapshot(snapshot)
         }
+        let day = Calendar.current.startOfDay(for: now())
+        surfacedDay = day
+        surfacedPlaces = repository.surfacedPlaces(on: day)
     }
 
     var lid: LidProjection {
@@ -62,7 +66,17 @@ final class DeskStore {
               let cue = surfaceCue(for: widget),
               widget.status != .done
         else { return }
-        mutateCue(id: cue.id) { $0.hits.surfaced += 1 }
+        let day = Calendar.current.startOfDay(for: now())
+        if day != surfacedDay {
+            surfacedDay = day
+            surfacedPlaces = repository.surfacedPlaces(on: day)
+        }
+        let key = "\(widgetId)|\(place)"
+        guard surfacedPlaces.insert(key).inserted else { return }
+        commit { next in
+            guard let index = next.cues.firstIndex(where: { $0.id == cue.id }) else { return }
+            next.cues[index].hits.surfaced += 1
+        }
         journal(
             .cueSurfaced,
             subjectId: widget.subjectId,
@@ -74,56 +88,70 @@ final class DeskStore {
     }
 
     func tickCounter(widgetId: String, delta: Int) {
-        guard var widget = widget(id: widgetId), widget.type == .counter else { return }
-        let next = max(0, (widget.payload.count ?? 0) + delta)
-        widget.payload.count = next
-        if widget.status == .done {
-            widget.status = .running
-            widget.when = nil
-            setInstance(id: widget.instanceId) { $0.status = .inProgress }
-        } else if widget.status == .ready {
-            widget.status = .running
-            setInstance(id: widget.instanceId) { $0.status = .inProgress }
+        guard let widget = widget(id: widgetId), widget.type == .counter else { return }
+        let nextCount = max(0, widget.counterCount + delta)
+        let wasDone = widget.status == .done
+        let wasReady = widget.status == .ready
+        commit { next in
+            guard let index = next.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            next.widgets[index].payload.count = nextCount
+            if wasDone || wasReady {
+                next.widgets[index].status = .running
+                if wasDone { next.widgets[index].when = nil }
+            }
+            if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }),
+               wasDone || wasReady
+            {
+                next.instances[instanceIndex].status = .inProgress
+            }
+        }
+        if wasReady {
             journal(.instanceStarted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
         }
-        replace(widget)
         journal(
             .counterTicked,
             subjectId: widget.subjectId,
             widgetId: widgetId,
             instanceId: widget.instanceId,
-            payload: ["count": String(next)]
+            payload: ["count": String(nextCount)]
         )
     }
 
     func completeCounter(widgetId: String) {
-        guard var widget = widget(id: widgetId), widget.type == .counter, widget.status != .done else { return }
+        guard let widget = widget(id: widgetId), widget.type == .counter, widget.status != .done else { return }
         let stamp = now()
-        widget.status = .done
-        widget.when = stamp
-        replace(widget)
-        setInstance(id: widget.instanceId) { instance in
-            instance.status = .completed
-            instance.when = stamp
+        let cue = cueFor(subjectId: widget.subjectId)
+        commit { next in
+            guard let index = next.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            next.widgets[index].status = .done
+            next.widgets[index].when = stamp
+            if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
+                next.instances[instanceIndex].status = .completed
+                next.instances[instanceIndex].when = stamp
+            }
+            if let cue, let cueIndex = next.cues.firstIndex(where: { $0.id == cue.id }) {
+                next.cues[cueIndex].hits.applied += 1
+            }
         }
-        if let cue = cueFor(subjectId: widget.subjectId) {
-            mutateCue(id: cue.id) { $0.hits.applied += 1 }
+        if let cue {
             journal(.cueApplied, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId, cueId: cue.id)
         }
         journal(.instanceCompleted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
     }
 
     func toggleTick(widgetId: String) {
-        guard var widget = widget(id: widgetId), widget.type == .tick else { return }
+        guard let widget = widget(id: widgetId), widget.type == .tick else { return }
         let stamp = now()
         let makingDone = widget.status != .done
-        widget.payload.done = makingDone
-        widget.status = makingDone ? .done : .ready
-        widget.when = makingDone ? stamp : nil
-        replace(widget)
-        setInstance(id: widget.instanceId) { instance in
-            instance.status = makingDone ? .completed : .prepared
-            instance.when = stamp
+        commit { next in
+            guard let index = next.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            next.widgets[index].payload.done = makingDone
+            next.widgets[index].status = makingDone ? .done : .ready
+            next.widgets[index].when = makingDone ? stamp : nil
+            if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
+                next.instances[instanceIndex].status = makingDone ? .completed : .prepared
+                next.instances[instanceIndex].when = stamp
+            }
         }
         journal(
             .tickToggled,
@@ -138,81 +166,79 @@ final class DeskStore {
     }
 
     func editReminderLatestBy(widgetId: String, latestBy: ClockTime) {
-        guard let widgetIndex = snapshot.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
-        var widget = snapshot.widgets[widgetIndex]
-        guard widget.type == .reminder else { return }
-        guard let subjectIndex = snapshot.subjects.firstIndex(where: { $0.id == widget.subjectId }),
-              var window = snapshot.subjects[subjectIndex].window
-        else { return }
+        guard let widget = widget(id: widgetId), widget.type == .reminder else { return }
+        guard let window = windowFor(subjectId: widget.subjectId) else { return }
         let clock = ReminderClock.clamp(latestBy, to: window)
-        window.latestBy = clock
-        let day = Calendar.current.startOfDay(for: widget.payload.fireAt ?? widget.when ?? now())
+        let day = Calendar.current.startOfDay(for: widget.reminderFireAt ?? now())
         let fireAt = ReminderClock.date(on: day, clock: clock)
-        widget.payload.fireAt = fireAt
-        widget.when = fireAt
-        var next = snapshot
-        next.subjects[subjectIndex].window = window
-        next.widgets[widgetIndex] = widget
-        if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }),
-           next.instances[instanceIndex].status != .completed
-        {
-            next.instances[instanceIndex].when = fireAt
+        commit(reminders: true) { next in
+            guard let widgetIndex = next.widgets.firstIndex(where: { $0.id == widgetId }),
+                  let subjectIndex = next.subjects.firstIndex(where: { $0.id == widget.subjectId }),
+                  var nextWindow = next.subjects[subjectIndex].window
+            else { return }
+            nextWindow.latestBy = clock
+            next.subjects[subjectIndex].window = nextWindow
+            next.widgets[widgetIndex].payload.fireAt = fireAt
+            next.widgets[widgetIndex].when = fireAt
+            if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }),
+               next.instances[instanceIndex].status != .completed
+            {
+                next.instances[instanceIndex].when = fireAt
+            }
         }
-        snapshot = next
-        persist()
     }
 
     func completeReminder(widgetId: String) {
-        guard var widget = widget(id: widgetId), widget.type == .reminder, widget.status != .done else { return }
+        guard let widget = widget(id: widgetId), widget.type == .reminder, widget.status != .done else { return }
         let stamp = now()
-        widget.status = .done
-        widget.when = stamp
-        replace(widget)
-        setInstance(id: widget.instanceId) { instance in
-            instance.status = .completed
-            instance.when = stamp
+        let cue = surfaceCue(for: widget)
+        commit(reminders: true) { next in
+            guard let index = next.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            next.widgets[index].status = .done
+            next.widgets[index].when = stamp
+            if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
+                next.instances[instanceIndex].status = .completed
+                next.instances[instanceIndex].when = stamp
+            }
+            if let cue, let cueIndex = next.cues.firstIndex(where: { $0.id == cue.id }) {
+                next.cues[cueIndex].hits.applied += 1
+            }
         }
-        if let cue = surfaceCue(for: widget) {
-            mutateCue(id: cue.id) { $0.hits.applied += 1 }
+        if let cue {
             journal(.cueApplied, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId, cueId: cue.id)
         }
         journal(.instanceCompleted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
     }
 
     func editCueText(cueId: String, text: String) {
-        mutateCue(id: cueId) { $0.text = text }
+        commit { next in
+            guard let index = next.cues.firstIndex(where: { $0.id == cueId }) else { return }
+            next.cues[index].text = text
+        }
         journal(.cueWritten, cueId: cueId, payload: ["text": text])
     }
 
     func editTarget(widgetId: String, goal: Int) {
-        guard var widget = widget(id: widgetId) else { return }
-        widget.payload.target = goal
-        replace(widget)
-        if let index = snapshot.subjects.firstIndex(where: { $0.id == widget.subjectId }) {
-            var subject = snapshot.subjects[index]
-            let current = subject.target?.current ?? widget.payload.count ?? 0
-            subject.target = Target(current: current, goal: goal)
-            snapshot.subjects[index] = subject
+        guard let widget = widget(id: widgetId) else { return }
+        commit { next in
+            guard let widgetIndex = next.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            next.widgets[widgetIndex].payload.target = goal
+            if let subjectIndex = next.subjects.firstIndex(where: { $0.id == widget.subjectId }) {
+                let current = next.subjects[subjectIndex].target?.current ?? next.widgets[widgetIndex].counterCount
+                next.subjects[subjectIndex].target = Target(current: current, goal: goal)
+            }
         }
-        persist()
     }
 
-    private func replace(_ widget: Widget) {
-        guard let index = snapshot.widgets.firstIndex(where: { $0.id == widget.id }) else { return }
-        snapshot.widgets[index] = widget
-        persist()
-    }
-
-    private func mutateCue(id: String, _ body: (inout Cue) -> Void) {
-        guard let index = snapshot.cues.firstIndex(where: { $0.id == id }) else { return }
-        body(&snapshot.cues[index])
-        persist()
-    }
-
-    private func setInstance(id: String, _ body: (inout Instance) -> Void) {
-        guard let index = snapshot.instances.firstIndex(where: { $0.id == id }) else { return }
-        body(&snapshot.instances[index])
-        persist()
+    private func commit(reminders: Bool = false, _ body: (inout DeskSnapshot) -> Void) {
+        var next = snapshot
+        body(&next)
+        guard next != snapshot else { return }
+        snapshot = next
+        try? repository.saveSnapshot(next)
+        if reminders {
+            ReminderScheduler.enqueue(snapshot: next, now: now())
+        }
     }
 
     private func journal(
@@ -234,11 +260,5 @@ final class DeskStore {
             payload: payload
         )
         try? repository.append(event)
-    }
-
-    private func persist() {
-        generation += 1
-        try? repository.saveSnapshot(snapshot)
-        ReminderScheduler.enqueue(snapshot: snapshot, now: now())
     }
 }

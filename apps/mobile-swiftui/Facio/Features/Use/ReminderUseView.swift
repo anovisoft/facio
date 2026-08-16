@@ -10,8 +10,7 @@ struct ReminderUseView: View {
     @State private var savedClock: ClockTime?
 
     private var window: TimeWindow? {
-        _ = store.generation
-        return store.windowFor(subjectId: widget.subjectId)
+        store.windowFor(subjectId: widget.subjectId)
     }
 
     private var deadline: ClockTime? {

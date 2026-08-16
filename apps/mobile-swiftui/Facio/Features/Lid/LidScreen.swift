@@ -5,7 +5,6 @@ struct LidScreen: View {
     @Binding var path: NavigationPath
 
     var body: some View {
-        let _ = store.generation
         ScrollView {
             LidFeed(
                 projection: store.lid,

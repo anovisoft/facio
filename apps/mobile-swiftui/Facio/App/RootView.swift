@@ -21,7 +21,7 @@ struct RootView: View {
             path = NavigationPath()
         }
         .task {
-            await ReminderScheduler.sync(snapshot: store.snapshot, now: Date())
+            ReminderScheduler.enqueue(snapshot: store.snapshot, now: Date())
         }
     }
 }

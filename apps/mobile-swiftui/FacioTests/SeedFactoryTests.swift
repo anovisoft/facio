@@ -37,6 +37,22 @@ final class SeedFactoryTests: XCTestCase {
         XCTAssertEqual(first, second)
     }
 
+    func testEnsureBikeBackfillsMissingWindow() throws {
+        let now = try DomainFixtures.now()
+        var snapshot = try SeedFactory.buildSeed(now: now)
+        let index = try XCTUnwrap(snapshot.subjects.firstIndex { $0.id == "bike" })
+        snapshot.subjects[index].window = nil
+        let widgetIndex = try XCTUnwrap(snapshot.widgets.firstIndex { $0.id == "bike-reminder" })
+        snapshot.widgets[widgetIndex].payload.fireAt = now
+        snapshot.widgets[widgetIndex].when = now
+        let migrated = try SeedFactory.ensureBike(in: snapshot, now: now)
+        XCTAssertEqual(migrated.subjects[index].window?.latestBy.hour, 19)
+        XCTAssertEqual(migrated.subjects[index].window?.closesAt?.hour, 22)
+        let fireAt = ReminderClock.reminderFireAt(window: try XCTUnwrap(migrated.subjects[index].window), on: now)
+        XCTAssertEqual(migrated.widgets[widgetIndex].payload.fireAt, fireAt)
+        XCTAssertEqual(migrated.widgets[widgetIndex].when, fireAt)
+    }
+
     func testEnsureBikePromotesBannerToWide() throws {
         let now = try DomainFixtures.now()
         var snapshot = try SeedFactory.buildSeed(now: now)

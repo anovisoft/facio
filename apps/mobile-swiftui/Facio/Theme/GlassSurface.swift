@@ -17,19 +17,24 @@ struct FacioGlassCluster<Content: View>: View {
 
 struct FacioTileButton<Content: View>: View {
     var dimmed: Bool = false
-    let action: () -> Void
+    var action: (() -> Void)?
     @ViewBuilder var content: () -> Content
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: FacioPalette.tileRadius, style: .continuous)
-        Button(action: action) {
-            content()
-                .padding(16)
-                .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .topLeading)
-                .contentShape(shape)
-                .facioGlass(dimmed: dimmed)
+        let chrome = content()
+            .padding(16)
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .topLeading)
+            .contentShape(shape)
+            .facioGlass(dimmed: dimmed)
+        Group {
+            if let action {
+                Button(action: action) { chrome }
+                    .buttonStyle(.plain)
+            } else {
+                chrome
+            }
         }
-        .buttonStyle(.plain)
         .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
         .clipShape(shape)
     }
@@ -79,23 +84,5 @@ extension View {
 
     func facioGlassButton(prominent: Bool, capsule: Bool = false) -> some View {
         modifier(FacioGlassButton(prominent: prominent, capsule: capsule))
-    }
-
-    @ViewBuilder
-    func facioCapsuleGlass() -> some View {
-        if #available(iOS 26, *) {
-            glassEffect(.regular.interactive(), in: .capsule)
-        } else {
-            background(.ultraThinMaterial, in: Capsule())
-        }
-    }
-
-    @ViewBuilder
-    func facioCircleGlass(interactive: Bool = true) -> some View {
-        if #available(iOS 26, *) {
-            glassEffect(interactive ? .regular.interactive() : .regular, in: .circle)
-        } else {
-            background(.ultraThinMaterial, in: Circle())
-        }
     }
 }

@@ -69,7 +69,13 @@ enum SeedFactory {
         let fireAt = ReminderClock.reminderFireAt(window: window, on: now)
         let cadence = try Cadence.of(count: 2, period: .week)
 
-        if !next.subjects.contains(where: { $0.id == "bike" }) {
+        var backfilledWindow = false
+        if let index = next.subjects.firstIndex(where: { $0.id == "bike" }) {
+            if next.subjects[index].window == nil {
+                next.subjects[index].window = window
+                backfilledWindow = true
+            }
+        } else {
             next.subjects.append(
                 Subject(
                     id: "bike",
@@ -98,9 +104,20 @@ enum SeedFactory {
             next.instances.append(Instance(id: "bike-open", subjectId: "bike", when: fireAt, status: .prepared))
         }
 
+        if backfilledWindow,
+           let instanceIndex = next.instances.firstIndex(where: { $0.id == "bike-open" }),
+           next.instances[instanceIndex].status != .completed
+        {
+            next.instances[instanceIndex].when = fireAt
+        }
+
         if let index = next.widgets.firstIndex(where: { $0.id == "bike-reminder" }) {
             if next.widgets[index].tileSize != .wide {
                 next.widgets[index].tileSize = .wide
+            }
+            if backfilledWindow {
+                next.widgets[index].payload.fireAt = fireAt
+                next.widgets[index].when = fireAt
             }
         } else {
             next.widgets.append(

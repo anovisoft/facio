@@ -56,4 +56,9 @@ struct Widget: Codable, Sendable, Equatable, Identifiable {
         self.tileSize = tileSize
         self.version = version
     }
+
+    var counterCount: Int { payload.count ?? 0 }
+    var counterTarget: Int { payload.target ?? 0 }
+    var isTickDone: Bool { payload.done == true || status == .done }
+    var reminderFireAt: Date? { payload.fireAt ?? when }
 }

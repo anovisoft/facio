@@ -9,8 +9,8 @@ struct CounterUseView: View {
     @State private var cueDraft = ""
     @State private var goalDraft = ""
 
-    private var count: Int { widget.payload.count ?? 0 }
-    private var target: Int { widget.payload.target ?? 0 }
+    private var count: Int { widget.counterCount }
+    private var target: Int { widget.counterTarget }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {

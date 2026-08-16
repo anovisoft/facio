@@ -24,8 +24,6 @@ struct UseScreen: View {
 
     @ViewBuilder
     private func content(for widget: Widget) -> some View {
-        let instance = store.snapshot.instances.first { $0.id == widget.instanceId }
-        let lookOnly = widget.status == .done || instance?.status == .completed
         let cue = store.surfaceCue(for: widget)
 
         switch widget.type {
@@ -34,7 +32,6 @@ struct UseScreen: View {
         case .tick:
             TickUseView(
                 widget: widget,
-                lookOnly: lookOnly,
                 onToggle: { store.toggleTick(widgetId: widget.id) }
             )
         case .reminder:

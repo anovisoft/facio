@@ -4,7 +4,7 @@ struct ReminderTile: View {
     let widget: Widget
     let cue: Cue?
     let window: TimeWindow?
-    let onOpen: () -> Void
+    let onOpen: (() -> Void)?
     let onSurfaced: () -> Void
 
     private var done: Bool { widget.status == .done }
