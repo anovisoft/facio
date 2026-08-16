@@ -1,0 +1,76 @@
+name: Facio
+options:
+  bundleIdPrefix: com.anovisoft
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+  defaultConfig: Debug
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: SXXLPXXJMD
+    SWIFT_VERSION: "6.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+
+targets:
+  Facio:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: Facio
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.anovisoft.facio
+        PRODUCT_NAME: Facio
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: 1
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: Facio/Info.plist
+        INFOPLIST_KEY_CFBundleDisplayName: Facio
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+        SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_ENTITLEMENTS: Facio/Facio.entitlements
+        SWIFT_STRICT_CONCURRENCY: complete
+        SWIFT_EMIT_LOC_STRINGS: YES
+    info:
+      path: Facio/Info.plist
+      properties:
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        ITSAppUsesNonExemptEncryption: false
+        UIRequiresFullScreen: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+    entitlements:
+      path: Facio/Facio.entitlements
+      properties: {}
+    scheme:
+      testTargets:
+        - FacioTests
+
+  FacioTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: FacioTests
+      - path: ../../packages/domain/fixtures/subjects.json
+        buildPhase: resources
+      - path: ../../packages/domain/fixtures/cues.json
+        buildPhase: resources
+      - path: ../../packages/domain/fixtures/widgets.json
+        buildPhase: resources
+      - path: ../../packages/domain/fixtures/scenarios.json
+        buildPhase: resources
+    dependencies:
+      - target: Facio
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.anovisoft.facio.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Facio.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Facio"
+        BUNDLE_LOADER: "$(TEST_HOST)"

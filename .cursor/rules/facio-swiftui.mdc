@@ -17,5 +17,5 @@ TabView { ChatHome(); Desk() }
 ```
 
 - Identity: `com.anovisoft.facio`, team `SXXLPXXJMD`, iOS 18+, portrait. See `docs/state/identity.md`.
-- Use has no instance swipe. Collapse of the chat sheet does not start a new thread.
-- No third-party UI kit. No Liquid Glass unless PO asks.
+- Use has no instance swipe. Left-edge interactive pop is back (system bar, do not hide it).
+- Liquid Glass on (PO). No brand-green accent. Semantic colors. Material fallback below iOS 26.

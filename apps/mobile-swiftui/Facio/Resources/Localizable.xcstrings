@@ -1,0 +1,120 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    " / %lld" : {
+
+    },
+    "/" : {
+
+    },
+    "%lld" : {
+
+    },
+    "Facio" : {
+
+    },
+    "Lifetime" : {
+
+    },
+    "В ближайшее время" : {
+
+    },
+    "Велосипед" : {
+      "comment" : "Subject title for the exercise bike"
+    },
+    "галочка" : {
+
+    },
+    "готово" : {
+
+    },
+    "Готово" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово"
+          }
+        }
+      }
+    },
+    "минус" : {
+
+    },
+    "можно править текст и цель" : {
+
+    },
+    "на Сегодня" : {
+
+    },
+    "Назад" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назад"
+          }
+        }
+      }
+    },
+    "ничего на сегодня — и это нормально" : {
+
+    },
+    "Овощи" : {
+      "comment" : "Subject title for vegetables"
+    },
+    "Отжимания" : {
+      "comment" : "Subject title for push-ups"
+    },
+    "Отложили" : {
+
+    },
+    "плюс" : {
+
+    },
+    "подсказка" : {
+
+    },
+    "Сегодня" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сегодня"
+          }
+        }
+      }
+    },
+    "цель" : {
+
+    },
+    "Этого виджета уже нет на крышке." : {
+
+    },
+    "Этот тип ещё не открывается." : {
+
+    }
+  },
+  "version" : "1.0"
+}

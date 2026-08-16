@@ -14,7 +14,8 @@ Before writing views, read:
 ## App
 
 - New app at `apps/mobile-swiftui`. Identity from [`docs/state/identity.md`](../../../docs/state/identity.md): `Facio`, `com.anovisoft.facio`, team `SXXLPXXJMD`, iOS 18+, portrait, no iPad.
-- No third-party UI kits unless PO asks. No Liquid Glass unless PO asks.
+- No third-party UI kits unless PO asks.
+- Liquid Glass is on (PO, 2026-08-16): tiles, Use controls, grouped in `GlassEffectContainer`. `#available(iOS 26)` with material fallback. Do not invent a brand-green accent — semantic `primary` / `secondary`, tint only for meaning.
 - Localize via `String(localized:)`. User-facing copy may be Russian; identifiers stay English and match the RFC (`Subject`, `Cue`, `Widget`, `surface`).
 
 ## Law on device
