@@ -6,54 +6,45 @@ struct PanHost<Content: View>: View {
     var enabled: Bool
     @ViewBuilder var panContent: () -> PanScreen
     @ViewBuilder var content: () -> Content
-    @State private var hostWidth: CGFloat = 390
 
     var body: some View {
-        let width = min(FacioPalette.panMaxWidth, hostWidth * FacioPalette.panWidthRatio)
+        let width = min(FacioPalette.panMaxWidth, FacioPalette.deviceWidth * FacioPalette.panWidthRatio)
         let revealed = enabled ? pan.revealed(width: width) : 0
         let progress = min(1, revealed / max(width, 1))
         let radius = FacioPalette.deviceCornerRadius * progress
         let card = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        let insets = FacioPalette.deviceSafeArea
 
-        ZStack(alignment: .leading) {
+        ZStack {
             AtmosphereBackground()
-            panContent()
-                .frame(width: width, alignment: .topLeading)
-                .frame(maxHeight: .infinity, alignment: .top)
-                .contentShape(Rectangle())
-                .allowsHitTesting(revealed > 8)
-                .accessibilityHidden(revealed < 12)
-                .zIndex(revealed > 8 ? 2 : 0)
-            content()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .overlay {
-                    if revealed > 0 {
+            PanSlideLayout(panWidth: width, revealed: revealed) {
+                panContent()
+                    .padding(.top, insets.top)
+                    .padding(.bottom, insets.bottom)
+                    .clipped()
+                    .contentShape(Rectangle())
+                    .allowsHitTesting(revealed > 8)
+                    .accessibilityHidden(revealed < 12)
+                content()
+                    .overlay {
                         Color.black.opacity(0.2 * Double(progress))
-                            .ignoresSafeArea()
+                            .allowsHitTesting(revealed > 8)
                             .onTapGesture { pan.close() }
                             .gesture(closeDrag(width: width))
                             .accessibilityLabel("Закрыть сковородку")
                             .accessibilityAddTraits(.isButton)
+                            .accessibilityHidden(revealed < 8)
                     }
-                }
-                .compositingGroup()
-                .clipShape(card)
-                .shadow(color: .black.opacity(0.22 * progress), radius: 28, x: -6, y: 0)
-                .offset(x: revealed)
-                .zIndex(1)
+                    .compositingGroup()
+                    .clipShape(card)
+                    .shadow(color: .black.opacity(0.22 * progress), radius: 28, x: -6, y: 0)
+            }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipped()
         .ignoresSafeArea()
         .animation(.spring(response: 0.38, dampingFraction: 0.86), value: pan.isOpen)
         .environment(\.panWidth, width)
-        .background {
-            GeometryReader { geo in
-                Color.clear
-                    .onAppear { hostWidth = geo.size.width }
-                    .onChange(of: geo.size.width) { _, value in
-                        hostWidth = value
-                    }
-            }
-        }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
             pan.keyboardUp = true
         }

@@ -17,8 +17,6 @@ struct PanScreen: View {
         .padding(.horizontal, FacioPalette.pagePadding)
         .padding(.top, 16)
         .padding(.bottom, 24)
-        .safeAreaPadding(.top)
-        .safeAreaPadding(.bottom)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .contentShape(Rectangle())
     }

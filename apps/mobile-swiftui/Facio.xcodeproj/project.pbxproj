@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		052FA366606AAEC785EF96C8 /* PanSlideLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51F8867C130DB247F132A685 /* PanSlideLaw.swift */; };
 		079E769A3CEA5BBE60C3E1AD /* DeskRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1016DF38D6C3A774AA95E8B5 /* DeskRepository.swift */; };
 		0B5492F1132E9FBFDB1308EA /* PainLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8BE137FD1137D4F1D4C801 /* PainLaw.swift */; };
 		0DCB06101BDB12C43AEF0870 /* TickUseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B2748A2C229B2F4EEFF8E66 /* TickUseView.swift */; };
@@ -96,9 +97,11 @@
 		CFAFDDFB103D2A060CF1B6CA /* cues.json in Resources */ = {isa = PBXBuildFile; fileRef = 65B603FB21AFD077EB3D5D60 /* cues.json */; };
 		D0CF96CCCA14B32C9AEDE378 /* ClockTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4B4E3102AE125BCB9EF4D90 /* ClockTime.swift */; };
 		D4C5D4A6EC46647EEE6702E6 /* Instance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12BCA9438FAD0EB8554108A5 /* Instance.swift */; };
+		D751B872E2922B8D13286939 /* PanSlideLawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEE730939DE8F5EDB6705986 /* PanSlideLawTests.swift */; };
 		D8FCB5DFE0B87308832BF4A8 /* TimeWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D4E6FAE6EB30076BA7E2A98 /* TimeWindow.swift */; };
 		D8FDF08880B717913BD028E8 /* CueSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2AD6F13DFE3734FB09352F3 /* CueSurface.swift */; };
 		DA1973F444879C2A591C2B86 /* CueHits.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5321A8600DA0169C882C0AAD /* CueHits.swift */; };
+		DBEBC0EACAEED58E1E8A90CB /* PanSlideLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80D06C5ECF67C0D9989DE687 /* PanSlideLayout.swift */; };
 		DC63919D485FF0A08579AEF6 /* FacioJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A6B4866C56C0FC894B32F56 /* FacioJSON.swift */; };
 		E145CBC55BC4FD719D463D3B /* RankBand.swift in Sources */ = {isa = PBXBuildFile; fileRef = A565FEE3663C57F852802132 /* RankBand.swift */; };
 		E1E209A2DE8B5A43ACEC19A1 /* PanScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A1B5F0456FC90DCCEB83E66 /* PanScreen.swift */; };
@@ -157,6 +160,7 @@
 		4AC446C1A84AAAD4F0ECC41D /* TickTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TickTile.swift; sourceTree = "<group>"; };
 		4ADF2CBCE21AC8ED3A81CE62 /* PanHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanHost.swift; sourceTree = "<group>"; };
 		4EBC4FC8DF186C356E69E6CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		51F8867C130DB247F132A685 /* PanSlideLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanSlideLaw.swift; sourceTree = "<group>"; };
 		5321A8600DA0169C882C0AAD /* CueHits.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueHits.swift; sourceTree = "<group>"; };
 		56186C97AB845D23001563F3 /* CueLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueLawTests.swift; sourceTree = "<group>"; };
 		575EABA05F53B43F23160681 /* WidgetPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPayload.swift; sourceTree = "<group>"; };
@@ -179,6 +183,7 @@
 		763D4ABA686C63D908F49AEA /* ReminderScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderScheduler.swift; sourceTree = "<group>"; };
 		7655C26A705784207BD2B24E /* DeskRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskRoute.swift; sourceTree = "<group>"; };
 		786AEABFA4B9FBC87D0A2311 /* Cue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cue.swift; sourceTree = "<group>"; };
+		80D06C5ECF67C0D9989DE687 /* PanSlideLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanSlideLayout.swift; sourceTree = "<group>"; };
 		817E2B9E5F7FA32AACFA0D58 /* PackRowMajorLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackRowMajorLayout.swift; sourceTree = "<group>"; };
 		81BADA927DD64EEBCA8F07F7 /* widgets.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = widgets.json; sourceTree = "<group>"; };
 		828B398A50029A7EAAB3EEA0 /* ReminderSchedulerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderSchedulerTests.swift; sourceTree = "<group>"; };
@@ -201,6 +206,7 @@
 		B3D3253DFAFD9354F4669F20 /* Target.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Target.swift; sourceTree = "<group>"; };
 		B9372C7A3CDFCCEA042CD1EA /* ComposerDock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerDock.swift; sourceTree = "<group>"; };
 		BD204F8AA9DC6C8FF665395A /* TileCellSizeKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileCellSizeKey.swift; sourceTree = "<group>"; };
+		BEE730939DE8F5EDB6705986 /* PanSlideLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanSlideLawTests.swift; sourceTree = "<group>"; };
 		BF009F8DA4A75B690FD16F6F /* DriftAskState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriftAskState.swift; sourceTree = "<group>"; };
 		C8CCBB0988B07C32B0BC9696 /* scenarios.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = scenarios.json; sourceTree = "<group>"; };
 		C91084E7BBC1FDACA5BB06E1 /* TalkStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkStoreTests.swift; sourceTree = "<group>"; };
@@ -268,6 +274,8 @@
 				4ADF2CBCE21AC8ED3A81CE62 /* PanHost.swift */,
 				4A1B5F0456FC90DCCEB83E66 /* PanScreen.swift */,
 				03D73A5FEA5CBC3F73850E86 /* PanSession.swift */,
+				51F8867C130DB247F132A685 /* PanSlideLaw.swift */,
+				80D06C5ECF67C0D9989DE687 /* PanSlideLayout.swift */,
 				90B3D5D86107F0A29686ED79 /* TalksList.swift */,
 			);
 			path = Pan;
@@ -350,6 +358,7 @@
 				62CDF841D69D1101DC6F6D8C /* ModelTests.swift */,
 				360413F490CB306BB68500A5 /* PackLawTests.swift */,
 				DB6CF10F8A46994C86FE0B08 /* PainLawTests.swift */,
+				BEE730939DE8F5EDB6705986 /* PanSlideLawTests.swift */,
 				CA765E2AAC9E1E3AB182595F /* ReminderClockTests.swift */,
 				828B398A50029A7EAAB3EEA0 /* ReminderSchedulerTests.swift */,
 				6F3E244A61989C75715FE3E2 /* SeedFactoryTests.swift */,
@@ -618,6 +627,7 @@
 				CBA06C3A5C7845636196F10A /* ModelTests.swift in Sources */,
 				885E0C15BF71F5E736ADCF66 /* PackLawTests.swift in Sources */,
 				C02AB68F2948B995641C037F /* PainLawTests.swift in Sources */,
+				D751B872E2922B8D13286939 /* PanSlideLawTests.swift in Sources */,
 				4008641D49A21F72B7CB5BC6 /* ReminderClockTests.swift in Sources */,
 				18BC5721A6C1050650784A51 /* ReminderSchedulerTests.swift in Sources */,
 				CED80102E7BC05B485A6D7B9 /* SeedFactoryTests.swift in Sources */,
@@ -680,6 +690,8 @@
 				0FC842D51F4D409BE6BCAF6E /* PanHost.swift in Sources */,
 				E1E209A2DE8B5A43ACEC19A1 /* PanScreen.swift in Sources */,
 				1AC764C1628B3D93CF80EA14 /* PanSession.swift in Sources */,
+				052FA366606AAEC785EF96C8 /* PanSlideLaw.swift in Sources */,
+				DBEBC0EACAEED58E1E8A90CB /* PanSlideLayout.swift in Sources */,
 				E145CBC55BC4FD719D463D3B /* RankBand.swift in Sources */,
 				40D34C7A15AA15890A10E38C /* ReminderClock.swift in Sources */,
 				1B3D96A2D920DD5CBBC15C23 /* ReminderScheduler.swift in Sources */,

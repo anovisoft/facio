@@ -3,32 +3,32 @@ import SwiftUI
 struct LidScreen: View {
     @Environment(DeskStore.self) private var store
     @Environment(PanSession.self) private var pan
-    @Environment(\.panWidth) private var panWidth
     @Binding var path: NavigationPath
     var onKebab: (String) -> Void
 
-    private var restoredLeading: CGFloat {
-        pan.revealed(width: panWidth) > 8 ? FacioPalette.pagePadding : 0
-    }
-
     var body: some View {
         ScrollView {
-            LidFeed(
-                projection: store.lid,
-                cueFor: store.surfaceCue(for:),
-                windowFor: store.windowFor(subjectId:),
-                subjectTitle: { store.subject(id: $0)?.title ?? $0 },
-                showsSubject: store.showsOnLid(subjectId:),
-                surfacesDrift: store.surfaces,
-                onOpen: { path.append(DeskRoute.use(widgetId: $0)) },
-                onInspect: { path.append(DeskRoute.inspect(subjectId: $0, instanceId: $1)) },
-                onKebab: onKebab,
-                onToggleTick: store.toggleTick,
-                onSurfaced: { store.markCueSurfaced(widgetId: $0, place: "tile") },
-                onAnswerDrift: store.answerDrift
-            )
-            .padding(.leading, FacioPalette.pagePadding - restoredLeading)
-            .padding(.trailing, FacioPalette.pagePadding)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Facio")
+                    .font(.largeTitle.weight(.bold))
+                    .foregroundStyle(.primary)
+                    .accessibilityAddTraits(.isHeader)
+                LidFeed(
+                    projection: store.lid,
+                    cueFor: store.surfaceCue(for:),
+                    windowFor: store.windowFor(subjectId:),
+                    subjectTitle: { store.subject(id: $0)?.title ?? $0 },
+                    showsSubject: store.showsOnLid(subjectId:),
+                    surfacesDrift: store.surfaces,
+                    onOpen: { path.append(DeskRoute.use(widgetId: $0)) },
+                    onInspect: { path.append(DeskRoute.inspect(subjectId: $0, instanceId: $1)) },
+                    onKebab: onKebab,
+                    onToggleTick: store.toggleTick,
+                    onSurfaced: { store.markCueSurfaced(widgetId: $0, place: "tile") },
+                    onAnswerDrift: store.answerDrift
+                )
+            }
+            .padding(.horizontal, FacioPalette.pagePadding)
             .padding(.bottom, 32)
         }
         .scrollIndicators(.hidden)
@@ -36,10 +36,12 @@ struct LidScreen: View {
         .overlay(alignment: .leading) {
             PanGutter()
         }
-        .safeAreaPadding(.leading, restoredLeading)
         .navigationTitle("Facio")
-        .toolbarTitleDisplayMode(.large)
+        .toolbarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                EmptyView()
+            }
             ToolbarItem(placement: .topBarLeading) {
                 Button {
                     pan.open()

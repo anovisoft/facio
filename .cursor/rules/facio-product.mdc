@@ -11,5 +11,5 @@ Before Facio code or a product call, read `.cursor/skills/facio-product/SKILL.md
 - Lid / ticks / drift / reminder time: no LLM. Home is the lid, not a prompt.
 - Drift is arithmetic. Drift asks offer shrink, never "try harder".
 - A conclusion left as text only is a bug. Pain never raises target or cadence.
-- Wedge: founding loop at production quality. Pan, sync, voice, cooking — only if PO says so.
+- Wedge: founding loop at production quality. Pan / Deeds / Inspect accepted at minimum. Sync, voice, cooking — only if PO says so.
 - Do not rewrite `docs/rfc` to justify a feature. Engineering status lives in `docs/state`.
