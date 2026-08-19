@@ -8,6 +8,8 @@ struct LidFeed: View {
     let showsSubject: (String) -> Bool
     let surfacesDrift: (DriftCard) -> Bool
     let onOpen: (String) -> Void
+    let onInspect: (String, String) -> Void
+    let onKebab: (String) -> Void
     let onToggleTick: (String) -> Void
     let onSurfaced: (String) -> Void
     let onAnswerDrift: (String, DriftOffer) -> Void
@@ -84,8 +86,15 @@ struct LidFeed: View {
                     widget: widget,
                     cue: cueFor(widget),
                     window: windowFor(widget.subjectId),
-                    onOpen: opensUse ? { onOpen(widget.id) } : nil,
+                    onOpen: {
+                        if opensUse {
+                            onOpen(widget.id)
+                        } else {
+                            onInspect(widget.subjectId, widget.instanceId)
+                        }
+                    },
                     onToggleTick: opensUse ? { onToggleTick(widget.id) } : nil,
+                    onKebab: { onKebab(widget.subjectId) },
                     onSurfaced: { onSurfaced(widget.id) }
                 )
             }

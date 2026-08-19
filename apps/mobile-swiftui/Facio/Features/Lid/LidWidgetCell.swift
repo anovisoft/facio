@@ -6,16 +6,21 @@ struct LidWidgetCell: View {
     let window: TimeWindow?
     let onOpen: (() -> Void)?
     let onToggleTick: (() -> Void)?
+    let onKebab: () -> Void
     let onSurfaced: () -> Void
 
     var body: some View {
         switch widget.type {
         case .counter:
             sized(
-                CounterTile(widget: widget, cue: cue, onOpen: onOpen, onSurfaced: onSurfaced)
+                CounterTile(widget: widget, cue: cue, onOpen: onOpen, onKebab: onKebab, onSurfaced: onSurfaced)
+                    .facioKebab(onKebab)
             )
         case .tick:
-            sized(TickTile(widget: widget, onOpen: onOpen, onToggle: onToggleTick))
+            sized(
+                TickTile(widget: widget, onOpen: onOpen, onToggle: onToggleTick, onKebab: onKebab)
+                    .facioKebab(onKebab)
+            )
         case .reminder:
             sized(
                 ReminderTile(
@@ -23,8 +28,10 @@ struct LidWidgetCell: View {
                     cue: cue,
                     window: window,
                     onOpen: onOpen,
+                    onKebab: onKebab,
                     onSurfaced: onSurfaced
                 )
+                .facioKebab(onKebab)
             )
         case .checklist, .timer, .stepper:
             EmptyView()

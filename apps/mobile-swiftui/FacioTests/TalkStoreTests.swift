@@ -34,6 +34,32 @@ final class TalkStoreTests: XCTestCase {
         XCTAssertEqual(talk.current.messages.count, 1)
     }
 
+    func testOpenArchivedSwapsCurrentAndOpensSheet() throws {
+        let talk = try makeTalk()
+        talk.appendUser("поясница")
+        let first = talk.current.id
+        talk.newChat()
+        talk.appendUser("овощи")
+        let second = talk.current.id
+
+        talk.open(threadId: first)
+
+        XCTAssertEqual(talk.current.id, first)
+        XCTAssertTrue(talk.sheetOpen)
+        XCTAssertEqual(talk.archived.first?.id, second)
+        XCTAssertEqual(talk.listedThreads.count, 2)
+    }
+
+    func testOpenCurrentJustOpensSheet() throws {
+        let talk = try makeTalk()
+        talk.appendUser("hi")
+        let id = talk.current.id
+        talk.open(threadId: id)
+        XCTAssertEqual(talk.current.id, id)
+        XCTAssertTrue(talk.sheetOpen)
+        XCTAssertTrue(talk.archived.isEmpty)
+    }
+
     func testTalkTurnResponseDecodesSnakeCase() throws {
         let json = """
         {"text":"ok","desk":{"subjects":[],"cues":[],"instances":[],"widgets":[]},"mutated":true,"snapshots":[{"widget_id":"push-ups-counter","subject_id":"push-ups","instance_id":"push-ups-open","version":1,"title":"push-ups","line":"28 / 30"}],"thread_id":"t1"}

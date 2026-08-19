@@ -80,6 +80,52 @@ final class DeskStore {
         snapshot.widgets.first { $0.id == id }
     }
 
+    func widget(instanceId: String) -> Widget? {
+        snapshot.widgets.first { $0.instanceId == instanceId }
+    }
+
+    func instances(for subjectId: String) -> [Instance] {
+        InstanceLaw.sorted(snapshot.instances, subjectId: subjectId)
+    }
+
+    func preferredInstanceId(subjectId: String) -> String? {
+        if let live = templateWidget(subjectId: subjectId) {
+            return live.instanceId
+        }
+        return instances(for: subjectId).last?.id
+    }
+
+    @discardableResult
+    func addInstance(subjectId: String) -> String? {
+        guard subject(id: subjectId) != nil else { return nil }
+        guard let template = templateWidget(subjectId: subjectId) else { return nil }
+        let stamp = now()
+        let instanceId = "\(subjectId)-\(UUID().uuidString)"
+        let payload = InstanceLaw.resetPayload(
+            of: template,
+            now: stamp,
+            window: windowFor(subjectId: subjectId)
+        )
+        let clone = InstanceLaw.shouldClone(template: template, now: stamp)
+        commit(reminders: template.type == .reminder) { next in
+            next.instances.append(Instance(id: instanceId, subjectId: subjectId, when: stamp, status: .prepared))
+            if let subjectIndex = next.subjects.firstIndex(where: { $0.id == subjectId }) {
+                next.subjects[subjectIndex].instanceIds.append(instanceId)
+            }
+            if clone {
+                next.widgets.append(InstanceLaw.newWidget(from: template, instanceId: instanceId, payload: payload, now: stamp))
+            } else if let widgetIndex = next.widgets.firstIndex(where: { $0.id == template.id }) {
+                next.widgets[widgetIndex] = InstanceLaw.rebind(
+                    next.widgets[widgetIndex],
+                    instanceId: instanceId,
+                    payload: payload,
+                    now: stamp
+                )
+            }
+        }
+        return instanceId
+    }
+
     func markCueSurfaced(widgetId: String, place: String) {
         guard let widget = widget(id: widgetId),
               let cue = surfaceCue(for: widget),
@@ -289,6 +335,13 @@ final class DeskStore {
                 next.subjects[subjectIndex].target = Target(current: current, goal: goal)
             }
         }
+    }
+
+    private func templateWidget(subjectId: String) -> Widget? {
+        let all = snapshot.widgets.filter { $0.subjectId == subjectId && $0.type.showsOnLid }
+        if let live = all.first(where: { $0.section == .today && $0.status != .done }) { return live }
+        if let doneToday = all.first(where: { InstanceLaw.isDoneToday($0, now: now()) }) { return doneToday }
+        return all.first
     }
 
     private func applyDrift(

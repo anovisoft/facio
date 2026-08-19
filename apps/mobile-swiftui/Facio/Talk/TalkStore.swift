@@ -50,6 +50,46 @@ final class TalkStore {
         current.updatedAt = stamp
     }
 
+    var listedThreads: [ChatThread] {
+        var rows: [ChatThread] = []
+        if !current.messages.isEmpty {
+            rows.append(current)
+        }
+        rows.append(contentsOf: archived)
+        return rows
+    }
+
+    func lastBinding(subjectId: String) -> (thread: ChatThread, snapshot: ChatSnapshot)? {
+        let threads = [current] + archived
+        for thread in threads {
+            if let snapshot = thread.messages.reversed().compactMap(\.snapshot).first(where: { $0.subjectId == subjectId }) {
+                return (thread, snapshot)
+            }
+        }
+        return nil
+    }
+
+    func open(threadId: String) {
+        if current.id == threadId {
+            sheetOpen = true
+            persist()
+            return
+        }
+        guard let index = archived.firstIndex(where: { $0.id == threadId }) else { return }
+        let chosen = archived.remove(at: index)
+        if !current.messages.isEmpty {
+            archived.insert(current, at: 0)
+            if archived.count > 50 {
+                archived = Array(archived.prefix(50))
+            }
+        }
+        current = chosen
+        draft = ""
+        errorMessage = nil
+        sheetOpen = true
+        persist()
+    }
+
     func newChat() {
         let stamp = now()
         if current.messages.isEmpty {

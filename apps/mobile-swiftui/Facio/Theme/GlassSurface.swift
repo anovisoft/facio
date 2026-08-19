@@ -18,7 +18,9 @@ struct FacioGlassCluster<Content: View>: View {
 struct FacioTileButton<Content: View>: View {
     var dimmed: Bool = false
     var action: (() -> Void)?
+    var onLongPress: (() -> Void)?
     @ViewBuilder var content: () -> Content
+    @State private var pressGate = PressGate()
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: FacioPalette.tileRadius, style: .continuous)
@@ -29,15 +31,35 @@ struct FacioTileButton<Content: View>: View {
             .facioGlass(dimmed: dimmed)
         Group {
             if let action {
-                Button(action: action) { chrome }
-                    .buttonStyle(.plain)
+                Button {
+                    if pressGate.longPressFired {
+                        pressGate.longPressFired = false
+                        return
+                    }
+                    action()
+                } label: {
+                    chrome
+                }
+                .buttonStyle(.plain)
             } else {
                 chrome
             }
         }
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: 0.45)
+                .onEnded { _ in
+                    guard let onLongPress else { return }
+                    pressGate.longPressFired = true
+                    onLongPress()
+                }
+        )
         .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
         .clipShape(shape)
     }
+}
+
+private final class PressGate {
+    var longPressFired = false
 }
 
 struct FacioGlassButton: ViewModifier {
@@ -84,5 +106,18 @@ extension View {
 
     func facioGlassButton(prominent: Bool, capsule: Bool = false) -> some View {
         modifier(FacioGlassButton(prominent: prominent, capsule: capsule))
+    }
+
+    func facioKebab(_ action: @escaping () -> Void) -> some View {
+        overlay(alignment: .topTrailing) {
+            Button(action: action) {
+                Color.clear
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Ещё")
+            .accessibilityHint("или удерживайте плитку")
+        }
     }
 }

@@ -45,4 +45,77 @@ enum DisplayCopy {
             String(localized: "убрать", comment: "Drift chip unused stop")
         }
     }
+
+    static func cadence(_ cadence: Cadence) -> String {
+        if cadence.isNone {
+            return String(localized: "без ритма", comment: "Cadence none")
+        }
+        let count = cadence.count ?? 0
+        switch cadence.period {
+        case .day:
+            if count == 1 {
+                return String(localized: "каждый день", comment: "Cadence 1/day")
+            }
+            return String(localized: "\(count)× в день", comment: "Cadence n/day")
+        case .week:
+            if count == 1 {
+                return String(localized: "раз в неделю", comment: "Cadence 1/week")
+            }
+            return String(localized: "\(count)× в неделю", comment: "Cadence n/week")
+        case .none:
+            return String(localized: "без ритма", comment: "Cadence none")
+        }
+    }
+
+    static func holding(
+        subject: Subject,
+        instances: [Instance],
+        now: Date,
+        liveSection: WidgetSection?,
+        liveStatus: WidgetStatus?
+    ) -> String {
+        if subject.status == .retired {
+            return String(localized: "убрана", comment: "Deed holding: retired")
+        }
+        if DriftLaw.isDrifting(subject, instances: instances, now: now),
+           let days = DriftLaw.silenceDays(of: subject, in: instances, now: now)
+        {
+            return String(localized: "не было \(silencePhrase(days))", comment: "Deed holding: drift")
+        }
+        if liveStatus == .done, liveSection == .today {
+            return String(localized: "готово сегодня", comment: "Deed holding: done today")
+        }
+        if liveSection == .today {
+            return String(localized: "на Сегодня", comment: "Deed holding: on today")
+        }
+        if liveSection == .lifetime {
+            return String(localized: "под рукой", comment: "Deed holding: lifetime")
+        }
+        if liveSection == .soon {
+            return String(localized: "скоро", comment: "Deed holding: soon")
+        }
+        if liveSection == .postponed {
+            return String(localized: "отложили", comment: "Deed holding: postponed")
+        }
+        return String(localized: "ещё не начинали", comment: "Deed holding: never")
+    }
+
+    static func loudDate(_ date: Date) -> String {
+        date.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "ru_RU")))
+    }
+
+    static func chipDate(_ date: Date) -> String {
+        date.formatted(.dateTime.day().month(.abbreviated).locale(Locale(identifier: "ru_RU")))
+    }
+
+    static func instanceStatus(_ status: InstanceStatus) -> String {
+        switch status {
+        case .completed:
+            return String(localized: "готово", comment: "Instance completed")
+        case .prepared:
+            return String(localized: "готовится", comment: "Instance prepared")
+        case .inProgress:
+            return String(localized: "в работе", comment: "Instance in progress")
+        }
+    }
 }

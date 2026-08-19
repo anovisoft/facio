@@ -119,6 +119,48 @@ final class DeskStoreTests: XCTestCase {
         XCTAssertTrue(ReminderScheduler.alarms(from: store.snapshot, now: now).isEmpty)
     }
 
+    func testAddInstanceRebindsLifetimeReminderToToday() throws {
+        let now = try XCTUnwrap(FacioJSON.date(from: "2026-08-16T12:00:00"))
+        let (store, _) = try makeDesk(now: now)
+        XCTAssertEqual(store.widget(id: "bike-reminder")?.section, .lifetime)
+        let before = store.instances(for: "bike").count
+
+        let created = try XCTUnwrap(store.addInstance(subjectId: "bike"))
+
+        XCTAssertEqual(store.instances(for: "bike").count, before + 1)
+        let widget = try XCTUnwrap(store.widget(id: "bike-reminder"))
+        XCTAssertEqual(widget.instanceId, created)
+        XCTAssertEqual(widget.section, .today)
+        XCTAssertEqual(widget.status, .ready)
+        XCTAssertNil(store.widget(id: "w-\(created)"))
+    }
+
+    func testAddInstanceClonesWhenTodayReady() throws {
+        let (store, _) = try makeDesk()
+        let created = try XCTUnwrap(store.addInstance(subjectId: "push-ups"))
+        XCTAssertEqual(store.widget(id: "push-ups-counter")?.instanceId, "push-ups-open")
+        let clone = try XCTUnwrap(store.widget(id: "w-\(created)"))
+        XCTAssertEqual(clone.section, .today)
+        XCTAssertEqual(clone.counterCount, 0)
+        XCTAssertEqual(clone.counterTarget, 30)
+        XCTAssertEqual(clone.status, .ready)
+    }
+
+    func testAddInstanceKeepsDoneTodayAndAddsFreshTile() throws {
+        let now = try XCTUnwrap(FacioJSON.date(from: "2026-08-16T12:00:00"))
+        let (store, _) = try makeDesk(now: now)
+        store.completeCounter(widgetId: "push-ups-counter")
+        XCTAssertEqual(store.widget(id: "push-ups-counter")?.status, .done)
+
+        let created = try XCTUnwrap(store.addInstance(subjectId: "push-ups"))
+
+        XCTAssertEqual(store.widget(id: "push-ups-counter")?.status, .done)
+        XCTAssertEqual(store.widget(id: "push-ups-counter")?.instanceId, "push-ups-open")
+        let clone = try XCTUnwrap(store.widget(id: "w-\(created)"))
+        XCTAssertEqual(clone.status, .ready)
+        XCTAssertEqual(clone.section, .today)
+    }
+
     func testApplyTalkWritesCueAndKeepsTile() throws {
         let (store, repository) = try makeDesk()
         var desk = store.snapshot

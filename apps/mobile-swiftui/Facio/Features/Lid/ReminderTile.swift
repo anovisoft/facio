@@ -5,12 +5,13 @@ struct ReminderTile: View {
     let cue: Cue?
     let window: TimeWindow?
     let onOpen: (() -> Void)?
+    let onKebab: () -> Void
     let onSurfaced: () -> Void
 
     private var done: Bool { widget.status == .done }
 
     var body: some View {
-        FacioTileButton(dimmed: done, action: onOpen) {
+        FacioTileButton(dimmed: done, action: onOpen, onLongPress: onKebab) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .top, spacing: 8) {
                     Text(DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title))

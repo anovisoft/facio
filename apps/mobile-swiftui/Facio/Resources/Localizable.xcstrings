@@ -16,8 +16,24 @@
     "%lld" : {
 
     },
+    "%lld / %lld" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld / %2$lld"
+          }
+        }
+      }
+    },
     "%lld дней" : {
       "comment" : "Drift silence in days"
+    },
+    "%lld× в день" : {
+      "comment" : "Cadence n/day"
+    },
+    "%lld× в неделю" : {
+      "comment" : "Cadence n/week"
     },
     "Facio" : {
 
@@ -25,8 +41,17 @@
     "Lifetime" : {
 
     },
+    "архив пуст" : {
+
+    },
+    "без ритма" : {
+      "comment" : "Cadence none"
+    },
     "В ближайшее время" : {
 
+    },
+    "в работе" : {
+      "comment" : "Instance in progress"
     },
     "Велосипед" : {
       "comment" : "Subject title for the exercise bike"
@@ -34,8 +59,11 @@
     "галочка" : {
 
     },
+    "готовится" : {
+      "comment" : "Instance prepared"
+    },
     "готово" : {
-
+      "comment" : "Instance completed"
     },
     "Готово" : {
       "extractionState" : "manual",
@@ -54,8 +82,29 @@
         }
       }
     },
+    "готово сегодня" : {
+      "comment" : "Deed holding: done today"
+    },
     "две недели" : {
       "comment" : "Drift silence, two weeks"
+    },
+    "Ещё" : {
+
+    },
+    "ещё не начинали" : {
+      "comment" : "Deed holding: never"
+    },
+    "ещё не начинался" : {
+
+    },
+    "Закрыть сковородку" : {
+
+    },
+    "или удерживайте плитку" : {
+
+    },
+    "каждый день" : {
+      "comment" : "Cadence 1/day"
     },
     "минус" : {
 
@@ -67,7 +116,7 @@
 
     },
     "на Сегодня" : {
-
+      "comment" : "Deed holding: on today"
     },
     "Назад" : {
       "extractionState" : "manual",
@@ -86,10 +135,22 @@
         }
       }
     },
+    "Настройки" : {
+
+    },
+    "Настройки, позже" : {
+
+    },
+    "не было %@" : {
+      "comment" : "Deed holding: drift"
+    },
     "неделю" : {
       "comment" : "Drift silence, one week"
     },
     "ничего на сегодня — и это нормально" : {
+
+    },
+    "Новый случай" : {
 
     },
     "Новый чат" : {
@@ -104,6 +165,12 @@
     "открывает выбор времени" : {
 
     },
+    "Открыть" : {
+
+    },
+    "отложили" : {
+      "comment" : "Deed holding: postponed"
+    },
     "Отложили" : {
 
     },
@@ -113,14 +180,29 @@
     "плюс" : {
 
     },
+    "под рукой" : {
+      "comment" : "Deed holding: lifetime"
+    },
     "подсказка" : {
 
     },
+    "Практики" : {
+
+    },
     "раз в неделю" : {
-      "comment" : "Drift chip: once a week"
+      "comment" : "Cadence 1/week\nDrift chip: once a week"
+    },
+    "разговор" : {
+      "comment" : "Talks row fallback"
+    },
+    "Разговор" : {
+
     },
     "Разговор сейчас без трубы. Крышка работает." : {
       "comment" : "Talk transport error"
+    },
+    "Разговоры" : {
+
     },
     "сегодня" : {
       "comment" : "Drift chip: move to today"
@@ -142,6 +224,15 @@
         }
       }
     },
+    "сейчас" : {
+
+    },
+    "Сковородка" : {
+
+    },
+    "скоро" : {
+      "comment" : "Deed holding: soon"
+    },
     "Сохранить" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -161,6 +252,9 @@
     },
     "три недели" : {
       "comment" : "Drift silence, three weeks"
+    },
+    "убрана" : {
+      "comment" : "Deed holding: retired"
     },
     "убрать" : {
       "comment" : "Drift chip unused stop\nDrift chip: retire"

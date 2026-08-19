@@ -73,3 +73,14 @@ extension View {
         modifier(FacioChrome())
     }
 }
+
+private struct PanWidthKey: EnvironmentKey {
+    static let defaultValue: CGFloat = FacioPalette.panMaxWidth
+}
+
+extension EnvironmentValues {
+    var panWidth: CGFloat {
+        get { self[PanWidthKey.self] }
+        set { self[PanWidthKey.self] = newValue }
+    }
+}

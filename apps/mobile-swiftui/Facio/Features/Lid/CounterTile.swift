@@ -4,6 +4,7 @@ struct CounterTile: View {
     let widget: Widget
     let cue: Cue?
     let onOpen: (() -> Void)?
+    let onKebab: () -> Void
     let onSurfaced: () -> Void
 
     private var done: Bool { widget.status == .done }
@@ -11,7 +12,7 @@ struct CounterTile: View {
     private var target: Int { widget.counterTarget }
 
     var body: some View {
-        FacioTileButton(dimmed: done, action: onOpen) {
+        FacioTileButton(dimmed: done, action: onOpen, onLongPress: onKebab) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top, spacing: 8) {
                     Text(DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title))
