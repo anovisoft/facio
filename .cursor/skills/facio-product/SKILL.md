@@ -25,7 +25,7 @@ Reason + cadence + drift live in one `Subject`. A `Cue` without `surface` is rej
 
 ## Wedge
 
-Ship the founding loop to production quality: counter + tick + reminder, cue at do-time, window, drift card, talk that materializes. Pan / Deeds / Inspect — step 5, accepted PO at minimum (2026-08-19). Sync, voice, cooking — not until PO says so.
+Ship the founding loop to production quality: counter + tick + reminder, cue at do-time, window, drift card, talk that materializes. Pan / Deeds / Inspect — step 5, accepted PO at minimum (2026-08-19). Founding lid+pan accepted as a dogfooded hypothesis the same evening. Next: plan RFC-like talk (MCP/tools), possibly incomplete — not sync, voice, or cooking until PO says so.
 
 Impressive = that loop on a native lid, readable in a ~90s recording. Not catalog breadth.
 
