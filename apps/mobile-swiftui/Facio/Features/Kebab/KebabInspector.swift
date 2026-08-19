@@ -7,7 +7,19 @@ struct KebabInspector: View {
 
     @Environment(DeskStore.self) private var store
     @Environment(TalkStore.self) private var talk
-    @State private var selectedId = ""
+    @State private var selectedId: String
+
+    init(
+        subjectId: String,
+        startingInstanceId: String,
+        onInspect: @escaping (String, String) -> Void,
+        onTalk: @escaping (String?) -> Void
+    ) {
+        self.subjectId = subjectId
+        self.onInspect = onInspect
+        self.onTalk = onTalk
+        _selectedId = State(initialValue: startingInstanceId)
+    }
 
     var body: some View {
         let instances = store.instances(for: subjectId)
@@ -35,7 +47,6 @@ struct KebabInspector: View {
         .padding(.horizontal, FacioPalette.pagePadding)
         .padding(.top, 20)
         .padding(.bottom, 16)
-        .onAppear(perform: pickDefault)
         .onChange(of: instances.map(\.id)) { _, ids in
             if selectedId.isEmpty || !ids.contains(selectedId) {
                 selectedId = ids.last ?? ""
@@ -75,12 +86,6 @@ struct KebabInspector: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Разговор")
-    }
-
-    private func pickDefault() {
-        if selectedId.isEmpty {
-            selectedId = store.preferredInstanceId(subjectId: subjectId) ?? ""
-        }
     }
 
     private func add() {

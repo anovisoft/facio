@@ -5,7 +5,13 @@ struct InspectScreen: View {
     let instanceId: String
 
     @Environment(DeskStore.self) private var store
-    @State private var selectedId = ""
+    @State private var selectedId: String
+
+    init(subjectId: String, instanceId: String) {
+        self.subjectId = subjectId
+        self.instanceId = instanceId
+        _selectedId = State(initialValue: instanceId)
+    }
 
     var body: some View {
         let instances = store.instances(for: subjectId)
@@ -36,8 +42,8 @@ struct InspectScreen: View {
         .navigationTitle(DisplayCopy.title(subjectId: subjectId, stored: store.subject(id: subjectId)?.title ?? subjectId))
         .toolbarTitleDisplayMode(.inline)
         .facioChrome()
-        .onAppear {
-            selectedId = instanceId
+        .onChange(of: instanceId) { _, id in
+            selectedId = id
         }
         .onChange(of: instances.map(\.id)) { _, ids in
             if !ids.contains(selectedId) {

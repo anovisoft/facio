@@ -23,7 +23,6 @@ struct PanGutter: View {
             }
             .onEnded { value in
                 pan.endDrag(
-                    translation: value.translation.width,
                     predicted: value.predictedEndTranslation.width,
                     width: panWidth
                 )

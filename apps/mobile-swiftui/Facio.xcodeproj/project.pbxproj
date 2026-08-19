@@ -18,6 +18,7 @@
 		1AC764C1628B3D93CF80EA14 /* PanSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03D73A5FEA5CBC3F73850E86 /* PanSession.swift */; };
 		1B02BF0A453F9A1AA97A89A8 /* DeedsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 351992D19882EFE33B85CA88 /* DeedsList.swift */; };
 		1B3D96A2D920DD5CBBC15C23 /* ReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 763D4ABA686C63D908F49AEA /* ReminderScheduler.swift */; };
+		1B52ED9C8C00124B71EC174F /* PanSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DB45BC7CD8A1FCED3925597 /* PanSessionTests.swift */; };
 		1D265B66C39C1DAB0EFF827F /* Widget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26A5270986AC8D7DF3C69962 /* Widget.swift */; };
 		1D6C0D73D2B773C10F6FB200 /* InstanceStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09B49E7140B92D3E9AA464AE /* InstanceStatus.swift */; };
 		25BFF7A3B7E47419AFE23BD4 /* InstanceLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FD625BD89099DBE924C2B9D /* InstanceLaw.swift */; };
@@ -107,6 +108,7 @@
 		E1E209A2DE8B5A43ACEC19A1 /* PanScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A1B5F0456FC90DCCEB83E66 /* PanScreen.swift */; };
 		E3D7F69606181C16E5DB131C /* WidgetType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9638F827F32F9586B9E461 /* WidgetType.swift */; };
 		E43CD102B93498279D882748 /* DeskStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229688020B5F18B40C1B5B52 /* DeskStoreTests.swift */; };
+		F2FDFF0299168974DE7CFDDE /* WindowMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DB3BDE083C265BE8C20EEDB /* WindowMetrics.swift */; };
 		F7896392618DEA3364CFDD57 /* SubjectStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAEA9232D081EAF6EAF8BE2B /* SubjectStatus.swift */; };
 		F8D115041D6077185ED190A6 /* DomainTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1881B07D94D95992419D2480 /* DomainTestSupport.swift */; };
 /* End PBXBuildFile section */
@@ -155,10 +157,12 @@
 		3B2748A2C229B2F4EEFF8E66 /* TickUseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TickUseView.swift; sourceTree = "<group>"; };
 		3CAE9C5EA7020260E61819B3 /* TileSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileSize.swift; sourceTree = "<group>"; };
 		3D4E6FAE6EB30076BA7E2A98 /* TimeWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeWindow.swift; sourceTree = "<group>"; };
+		3DB45BC7CD8A1FCED3925597 /* PanSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanSessionTests.swift; sourceTree = "<group>"; };
 		48CFE8F85A9299CAFAD6DD51 /* DeskSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskSnapshot.swift; sourceTree = "<group>"; };
 		4A1B5F0456FC90DCCEB83E66 /* PanScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanScreen.swift; sourceTree = "<group>"; };
 		4AC446C1A84AAAD4F0ECC41D /* TickTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TickTile.swift; sourceTree = "<group>"; };
 		4ADF2CBCE21AC8ED3A81CE62 /* PanHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanHost.swift; sourceTree = "<group>"; };
+		4DB3BDE083C265BE8C20EEDB /* WindowMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowMetrics.swift; sourceTree = "<group>"; };
 		4EBC4FC8DF186C356E69E6CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		51F8867C130DB247F132A685 /* PanSlideLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanSlideLaw.swift; sourceTree = "<group>"; };
 		5321A8600DA0169C882C0AAD /* CueHits.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueHits.swift; sourceTree = "<group>"; };
@@ -358,6 +362,7 @@
 				62CDF841D69D1101DC6F6D8C /* ModelTests.swift */,
 				360413F490CB306BB68500A5 /* PackLawTests.swift */,
 				DB6CF10F8A46994C86FE0B08 /* PainLawTests.swift */,
+				3DB45BC7CD8A1FCED3925597 /* PanSessionTests.swift */,
 				BEE730939DE8F5EDB6705986 /* PanSlideLawTests.swift */,
 				CA765E2AAC9E1E3AB182595F /* ReminderClockTests.swift */,
 				828B398A50029A7EAAB3EEA0 /* ReminderSchedulerTests.swift */,
@@ -508,6 +513,7 @@
 				85B5456958AB3FFDEAA962F4 /* FacioPalette.swift */,
 				2DE3C9083825C5AA83F71546 /* FacioTheme.swift */,
 				F50A2B65D8C84C5EF71B4C74 /* GlassSurface.swift */,
+				4DB3BDE083C265BE8C20EEDB /* WindowMetrics.swift */,
 			);
 			path = Theme;
 			sourceTree = "<group>";
@@ -627,6 +633,7 @@
 				CBA06C3A5C7845636196F10A /* ModelTests.swift in Sources */,
 				885E0C15BF71F5E736ADCF66 /* PackLawTests.swift in Sources */,
 				C02AB68F2948B995641C037F /* PainLawTests.swift in Sources */,
+				1B52ED9C8C00124B71EC174F /* PanSessionTests.swift in Sources */,
 				D751B872E2922B8D13286939 /* PanSlideLawTests.swift in Sources */,
 				4008641D49A21F72B7CB5BC6 /* ReminderClockTests.swift in Sources */,
 				18BC5721A6C1050650784A51 /* ReminderSchedulerTests.swift in Sources */,
@@ -721,6 +728,7 @@
 				907DF5C9F5D602D431BB04D8 /* WidgetSection.swift in Sources */,
 				5553B13D63A70531F1DB8422 /* WidgetStatus.swift in Sources */,
 				E3D7F69606181C16E5DB131C /* WidgetType.swift in Sources */,
+				F2FDFF0299168974DE7CFDDE /* WindowMetrics.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

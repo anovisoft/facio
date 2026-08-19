@@ -6,6 +6,7 @@ struct RootView: View {
     @State private var path = NavigationPath()
     @State private var pan = PanSession()
     @State private var kebab: SubjectRef?
+    @State private var pendingTalk: PendingTalk?
 
     var body: some View {
         @Bindable var talk = talk
@@ -34,23 +35,17 @@ struct RootView: View {
             }
         }
         .environment(pan)
-        .sheet(item: $kebab) { target in
+        .sheet(item: $kebab, onDismiss: presentPendingTalk) { target in
             KebabInspector(
                 subjectId: target.id,
+                startingInstanceId: store.preferredInstanceId(subjectId: target.id) ?? "",
                 onInspect: { subjectId, instanceId in
                     kebab = nil
                     path.append(DeskRoute.inspect(subjectId: subjectId, instanceId: instanceId))
                 },
                 onTalk: { threadId in
+                    pendingTalk = threadId.map { .existing($0) } ?? .fresh
                     kebab = nil
-                    Task { @MainActor in
-                        try? await Task.sleep(for: .milliseconds(400))
-                        if let threadId {
-                            talk.open(threadId: threadId)
-                        } else {
-                            talk.sheetOpen = true
-                        }
-                    }
                 }
             )
             .presentationDetents([.height(440)])
@@ -72,4 +67,20 @@ struct RootView: View {
             ReminderScheduler.enqueue(snapshot: store.snapshot, now: Date())
         }
     }
+
+    private func presentPendingTalk() {
+        guard let pendingTalk else { return }
+        self.pendingTalk = nil
+        switch pendingTalk {
+        case .existing(let threadId):
+            talk.open(threadId: threadId)
+        case .fresh:
+            talk.sheetOpen = true
+        }
+    }
+}
+
+private enum PendingTalk: Equatable {
+    case existing(String)
+    case fresh
 }

@@ -36,12 +36,8 @@ struct LidScreen: View {
         .overlay(alignment: .leading) {
             PanGutter()
         }
-        .navigationTitle("Facio")
-        .toolbarTitleDisplayMode(.inline)
+        .facioLidTitle()
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                EmptyView()
-            }
             ToolbarItem(placement: .topBarLeading) {
                 Button {
                     pan.open()

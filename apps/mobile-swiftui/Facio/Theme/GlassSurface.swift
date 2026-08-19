@@ -20,7 +20,7 @@ struct FacioTileButton<Content: View>: View {
     var action: (() -> Void)?
     var onLongPress: (() -> Void)?
     @ViewBuilder var content: () -> Content
-    @State private var pressGate = PressGate()
+    @State private var tapLock = LongPressTapLock()
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: FacioPalette.tileRadius, style: .continuous)
@@ -32,8 +32,8 @@ struct FacioTileButton<Content: View>: View {
         Group {
             if let action {
                 Button {
-                    if pressGate.longPressFired {
-                        pressGate.longPressFired = false
+                    if tapLock.consumed {
+                        tapLock.consumed = false
                         return
                     }
                     action()
@@ -49,7 +49,7 @@ struct FacioTileButton<Content: View>: View {
             LongPressGesture(minimumDuration: 0.45)
                 .onEnded { _ in
                     guard let onLongPress else { return }
-                    pressGate.longPressFired = true
+                    tapLock.consumed = true
                     onLongPress()
                 }
         )
@@ -58,8 +58,10 @@ struct FacioTileButton<Content: View>: View {
     }
 }
 
-private final class PressGate {
-    var longPressFired = false
+/// Button still fires after a simultaneous long-press. `@State` would update
+/// too late for the button action to bail; this flag is read in the same turn.
+private final class LongPressTapLock {
+    var consumed = false
 }
 
 struct FacioGlassButton: ViewModifier {

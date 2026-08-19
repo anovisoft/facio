@@ -27,6 +27,23 @@ final class InstanceLawTests: XCTestCase {
         XCTAssertFalse(InstanceLaw.shouldClone(template: done, now: now))
     }
 
+    func testPreferredLivePicksTodayReadyFirst() {
+        let today = widget(section: .today, status: .ready)
+        let lifetime = widget(section: .lifetime, status: .ready)
+        var lifetimeAlt = lifetime
+        lifetimeAlt.id = "other"
+        lifetimeAlt.instanceId = "other"
+        let picked = InstanceLaw.preferredLive(in: [lifetimeAlt, today], subjectId: "push-ups", now: now)
+        XCTAssertEqual(picked?.id, today.id)
+    }
+
+    func testPreferredLiveFallsBackToDoneToday() {
+        var done = widget(section: .today, status: .done)
+        done.when = now
+        let picked = InstanceLaw.preferredLive(in: [done], subjectId: "push-ups", now: now)
+        XCTAssertEqual(picked?.id, done.id)
+    }
+
     func testResetCounterStartsAtZero() {
         let payload = InstanceLaw.resetPayload(of: widget(section: .today, status: .ready), now: now, window: nil)
         XCTAssertEqual(payload.count, 0)

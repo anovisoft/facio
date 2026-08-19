@@ -72,6 +72,19 @@ extension View {
     func facioChrome() -> some View {
         modifier(FacioChrome())
     }
+
+    /// Large «Facio» lives in the lid scroll with `pagePadding`. Keep
+    /// `navigationTitle` so Use's back reads «Facio»; hide the inline principal
+    /// so the bar does not draw a second title. Do not use `safeAreaPadding(.leading)`.
+    func facioLidTitle() -> some View {
+        navigationTitle("Facio")
+            .toolbarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    EmptyView()
+                }
+            }
+    }
 }
 
 private struct PanWidthKey: EnvironmentKey {

@@ -65,6 +65,17 @@ enum InstanceLaw {
         return next
     }
 
+    static func preferredLive(in widgets: [Widget], subjectId: String, now: Date) -> Widget? {
+        let all = widgets.filter { $0.subjectId == subjectId && $0.type.showsOnLid }
+        if let today = all.first(where: { $0.section == .today && $0.status != .done }) {
+            return today
+        }
+        if let done = all.first(where: { isDoneToday($0, now: now) }) {
+            return done
+        }
+        return all.first
+    }
+
     static func sorted(_ instances: [Instance], subjectId: String) -> [Instance] {
         instances
             .filter { $0.subjectId == subjectId }

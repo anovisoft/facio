@@ -338,10 +338,7 @@ final class DeskStore {
     }
 
     private func templateWidget(subjectId: String) -> Widget? {
-        let all = snapshot.widgets.filter { $0.subjectId == subjectId && $0.type.showsOnLid }
-        if let live = all.first(where: { $0.section == .today && $0.status != .done }) { return live }
-        if let doneToday = all.first(where: { InstanceLaw.isDoneToday($0, now: now()) }) { return doneToday }
-        return all.first
+        InstanceLaw.preferredLive(in: snapshot.widgets, subjectId: subjectId, now: now())
     }
 
     private func applyDrift(

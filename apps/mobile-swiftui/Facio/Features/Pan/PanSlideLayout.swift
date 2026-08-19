@@ -10,9 +10,7 @@ struct PanSlideLayout: Layout, Animatable {
     }
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        proposal.replacingUnspecifiedDimensions(
-            by: CGSize(width: 390, height: 844)
-        )
+        proposal.replacingUnspecifiedDimensions(by: PanSlideLaw.fallbackContainer)
     }
 
     func placeSubviews(
