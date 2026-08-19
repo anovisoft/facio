@@ -9,16 +9,25 @@ The model key stays on this process. The lid does not need this service to open 
 From the repo root:
 
 ```bash
+cp apps/api/.env.example .env
 docker compose up --build
 ```
 
 Simulator talks to `http://127.0.0.1:8000`. Default mode is `scripted` (goldens, no paid key).
 
-Live model — env on the host, not in the image:
+Live model — pick the model in `.env`; only the matching key is required:
 
 ```bash
-FACIO_TALK_MODE=live FACIO_MODEL_API_KEY=... docker compose up --build
+# .env
+FACIO_TALK_MODE=live
+FACIO_MODEL_NAME=haiku
+FACIO_ANTHROPIC_API_KEY=sk-ant-...
+# FACIO_OPENAI_API_KEY=           # optional, unused while the model is Haiku
+
+docker compose up --build
 ```
+
+`FACIO_MODEL_NAME=gpt-4o-mini` (or `gpt`) uses `FACIO_OPENAI_API_KEY`. `haiku` / `claude-haiku-4-5` uses `FACIO_ANTHROPIC_API_KEY`.
 
 ## Local venv
 
@@ -27,5 +36,6 @@ cd apps/api
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ../../packages/domain -e ".[dev]"
+cp .env.example .env
 fastapi dev
 ```

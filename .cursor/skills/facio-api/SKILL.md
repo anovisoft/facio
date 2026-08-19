@@ -32,9 +32,9 @@ Pain policy runs **before** tools: if the turn reports pain, refuse any raise of
 
 Golden utterances → expected tool calls and resulting desk. Required before widening the tool loop (RFC Q22). Files live in `apps/api/goldens`. Prefer fixture subjects from `packages/domain/fixtures`.
 
-Default `FACIO_TALK_MODE=scripted` so the founding turns run without a paid key. Live mode needs `FACIO_MODEL_API_KEY` on the server only.
+Default `FACIO_TALK_MODE=scripted` so the founding turns run without a paid key. Live mode: `FACIO_MODEL_NAME` selects the vendor (`gpt-4o-mini` / `gpt` → OpenAI, `haiku` / `claude-haiku-4-5` → Anthropic Haiku). Only the matching key is required (`FACIO_OPENAI_API_KEY` or `FACIO_ANTHROPIC_API_KEY`); the other may be empty. Keys stay on the server.
 
-Run locally with Compose from the repo root (`docker compose up --build`). One service, port 8000. Do not copy `archive/docker-compose.yml` (Postgres). In the image, goldens are `FACIO_GOLDENS_DIR`. `fastapi dev` needs `fastapi[standard]`.
+Run locally with Compose from the repo root (`docker compose up --build`). One service, port 8000. Copy `apps/api/.env.example` to `.env` (compose) and/or `apps/api/.env` (`fastapi dev`). Do not copy `archive/docker-compose.yml` (Postgres). In the image, goldens are `FACIO_GOLDENS_DIR`. `fastapi dev` needs `fastapi[standard]`.
 
 ## Tests
 

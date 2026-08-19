@@ -49,7 +49,7 @@ struct TalkSheet: View {
             .navigationTitle("Facio")
             .toolbarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         talk.newChat()
                     } label: {
@@ -60,30 +60,9 @@ struct TalkSheet: View {
                 }
             }
             .safeAreaInset(edge: .bottom) {
-                HStack(alignment: .bottom, spacing: 8) {
-                    TextField(talk.placeholder, text: $talk.draft, axis: .vertical)
-                        .textFieldStyle(.plain)
-                        .lineLimit(1...5)
-                        .focused($composerFocused)
-                        .accessibilityLabel(talk.placeholder)
-                        .onSubmit {
-                            Task { await send() }
-                        }
-                    Button {
-                        Task { await send() }
-                    } label: {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .font(.system(size: 32))
-                            .symbolRenderingMode(.hierarchical)
-                    }
-                    .disabled(talk.sending || talk.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    .accessibilityLabel("Отправить")
+                TalkComposerBar(talk: talk, focused: $composerFocused) {
+                    Task { await send() }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .facioGlass()
-                .padding(.horizontal, FacioPalette.pagePadding)
-                .padding(.bottom, 8)
             }
         }
         .presentationDetents([.fraction(0.94)])
@@ -105,6 +84,35 @@ struct TalkSheet: View {
         } else if let last = talk.current.messages.last {
             proxy.scrollTo(last.id, anchor: .bottom)
         }
+    }
+}
+
+private struct TalkComposerBar: View {
+    @Bindable var talk: TalkStore
+    var focused: FocusState<Bool>.Binding
+    var onSend: () -> Void
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 8) {
+            TextField(talk.placeholder, text: $talk.draft)
+                .font(.body)
+                .textFieldStyle(.plain)
+                .focused(focused)
+                .accessibilityLabel(talk.placeholder)
+                .onSubmit(onSend)
+            Button(action: onSend) {
+                Image(systemName: "arrow.up.circle.fill")
+                    .font(.system(size: 32))
+                    .symbolRenderingMode(.hierarchical)
+            }
+            .disabled(talk.sending || talk.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .accessibilityLabel("Отправить")
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .facioGlass()
+        .padding(.horizontal, FacioPalette.pagePadding)
+        .padding(.bottom, 8)
     }
 }
 

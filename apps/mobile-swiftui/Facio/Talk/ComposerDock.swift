@@ -1,5 +1,26 @@
 import SwiftUI
 
+/// Pins the composer above the home indicator on the current screen.
+/// Do not put this on `NavigationStack` — pushed Use does not inherit that inset,
+/// and «Готово» sits under the dock.
+struct FacioComposerDock: ViewModifier {
+    @Environment(TalkStore.self) private var talk
+
+    func body(content: Content) -> some View {
+        content.safeAreaInset(edge: .bottom, spacing: 0) {
+            if !talk.sheetOpen {
+                ComposerDock()
+            }
+        }
+    }
+}
+
+extension View {
+    func facioComposerDock() -> some View {
+        modifier(FacioComposerDock())
+    }
+}
+
 struct ComposerDock: View {
     @Environment(TalkStore.self) private var talk
 

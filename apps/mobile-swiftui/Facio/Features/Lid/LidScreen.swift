@@ -26,6 +26,7 @@ struct LidScreen: View {
         .navigationTitle("Facio")
         .toolbarTitleDisplayMode(.large)
         .facioChrome()
+        .facioComposerDock()
     }
 }
 

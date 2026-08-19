@@ -12,5 +12,6 @@ EXPOSE 8000
 
 ENV FACIO_TALK_MODE=scripted
 ENV FACIO_GOLDENS_DIR=/app/apps/api/goldens
+ENV FACIO_MODEL_NAME=gpt-4o-mini
 
 CMD ["uvicorn", "facio_api.main:app", "--host", "0.0.0.0", "--port", "8000"]

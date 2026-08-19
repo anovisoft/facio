@@ -11,7 +11,12 @@ from facio_api.main import app
 
 @pytest.fixture
 def settings() -> Settings:
-    return Settings(talk_mode="scripted", model_api_key=None)
+    return Settings(
+        talk_mode="scripted",
+        model_name="gpt-4o-mini",
+        openai_api_key=None,
+        anthropic_api_key=None,
+    )
 
 
 @pytest.fixture

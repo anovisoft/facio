@@ -18,11 +18,6 @@ struct RootView: View {
                         }
                     }
             }
-            .safeAreaInset(edge: .bottom) {
-                if !talk.sheetOpen {
-                    ComposerDock()
-                }
-            }
         }
         .sheet(isPresented: $talk.sheetOpen) {
             TalkSheet { widgetId in

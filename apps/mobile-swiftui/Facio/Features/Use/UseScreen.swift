@@ -21,6 +21,7 @@ struct UseScreen: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .toolbarTitleDisplayMode(.large)
         .facioChrome()
+        .facioComposerDock()
         .onAppear { talk.focusedWidgetId = widgetId }
         .onDisappear {
             if talk.focusedWidgetId == widgetId {

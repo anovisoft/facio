@@ -6,12 +6,13 @@ services:
     container_name: facio-talk
     ports:
       - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
+      - path: apps/api/.env
+        required: false
     environment:
-      FACIO_TALK_MODE: ${FACIO_TALK_MODE:-scripted}
       FACIO_GOLDENS_DIR: /app/apps/api/goldens
-      FACIO_MODEL_API_KEY: ${FACIO_MODEL_API_KEY:-}
-      FACIO_MODEL_BASE_URL: ${FACIO_MODEL_BASE_URL:-https://api.openai.com/v1}
-      FACIO_MODEL_NAME: ${FACIO_MODEL_NAME:-gpt-4o-mini}
     healthcheck:
       test:
         [
