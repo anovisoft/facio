@@ -433,6 +433,15 @@ def _update_widget(desk: Desk, args: dict[str, Any], **_: Any) -> ToolOutcome:
         _replace_subject(desk, subject.model_copy(update={"target": Target(current=current, goal=int(args["target"]))}))
     if "count" in args and args["count"] is not None:
         payload.count = int(args["count"])
+        if widget.type == WidgetType.counter:
+            subject = _require_subject(desk, widget.subject_id)
+            if subject.target is not None:
+                _replace_subject(
+                    desk,
+                    subject.model_copy(
+                        update={"target": Target(current=int(args["count"]), goal=subject.target.goal)}
+                    ),
+                )
     next_widget = _bump(widget.model_copy(update={"title": title, "payload": payload}))
     _replace_widget(desk, next_widget)
     return ToolOutcome(
@@ -555,6 +564,8 @@ def _set_reminder(desk: Desk, args: dict[str, Any], *, now: datetime, **_: Any) 
         instance = next((row for row in desk.instances if row.id == widget.instance_id), None)
         if instance is not None and instance.status != InstanceStatus.completed:
             _replace_instance(desk, instance.model_copy(update={"when": fire_at}))
+    if not touched:
+        touched.append(_create_reminder_widget(desk, subject.id, fire_at))
     return ToolOutcome(
         desk=desk,
         name="set_reminder",
@@ -567,6 +578,34 @@ def _set_reminder(desk: Desk, args: dict[str, Any], *, now: datetime, **_: Any) 
         mutated=True,
         snapshot_widget_ids=touched,
     )
+
+
+def _create_reminder_widget(desk: Desk, subject_id: str, fire_at: datetime) -> str:
+    subject = _require_subject(desk, subject_id)
+    instance_id = _new_id(f"{subject_id}-open")
+    widget_id = _new_id("reminder")
+    desk.instances.append(
+        Instance(id=instance_id, subject_id=subject_id, when=fire_at, status=InstanceStatus.prepared)
+    )
+    if instance_id not in subject.instance_ids:
+        _replace_subject(
+            desk,
+            subject.model_copy(update={"instance_ids": [*subject.instance_ids, instance_id]}),
+        )
+    widget = Widget(
+        id=widget_id,
+        type=WidgetType.reminder,
+        title=subject.title,
+        payload=WidgetPayload(fire_at=fire_at),
+        status=WidgetStatus.ready,
+        when=fire_at,
+        section=WidgetSection.today,
+        subject_id=subject_id,
+        instance_id=instance_id,
+        tile_size=_default_tile(WidgetType.reminder),
+    )
+    desk.widgets.append(widget)
+    return widget_id
 
 
 def _list_cues(desk: Desk, args: dict[str, Any], **_: Any) -> ToolOutcome:

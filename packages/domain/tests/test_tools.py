@@ -165,6 +165,36 @@ def test_create_widget_tick_on_new_subject_does_not_spawn_reminder() -> None:
     assert not any(row.type == WidgetType.reminder for row in widgets)
 
 
+def test_update_widget_count_writes_target_current() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(desk, "update_widget", {"widget_id": "push-ups-counter", "count": 4})
+    assert outcome.ok
+    subject = next(row for row in outcome.desk.subjects if row.id == "push-ups")
+    assert subject.target is not None
+    assert subject.target.current == 4
+    assert subject.target.goal == 30
+    widget = next(row for row in outcome.desk.widgets if row.id == "push-ups-counter")
+    assert widget.payload.count == 4
+
+
+def test_set_reminder_creates_widget_when_subject_has_none() -> None:
+    desk = founding_desk(now=NOW)
+    assert not any(row.type == WidgetType.reminder and row.subject_id == "vegetables" for row in desk.widgets)
+    outcome = _apply(desk, "set_reminder", {"subject_id": "vegetables", "latest_by": "19:00"})
+    assert outcome.ok
+    reminders = [
+        row for row in outcome.desk.widgets if row.subject_id == "vegetables" and row.type == WidgetType.reminder
+    ]
+    assert len(reminders) == 1
+    assert reminders[0].tile_size == "4x2"
+    assert reminders[0].payload.fire_at is not None
+    assert reminders[0].payload.fire_at.hour == 19
+    bike_reminders = [
+        row for row in outcome.desk.widgets if row.subject_id == "bike" and row.type == WidgetType.reminder
+    ]
+    assert len(bike_reminders) == 1
+
+
 def test_create_widget_reminder_is_allowed() -> None:
     desk = founding_desk(now=NOW)
     outcome = _apply(
@@ -189,6 +219,10 @@ def test_set_reminder_from_closing_is_arithmetic() -> None:
     fire = next(row.payload.fire_at for row in outcome.desk.widgets if row.id == "bike-reminder")
     assert fire is not None
     assert fire.hour == 19
+    bike_reminders = [
+        row for row in outcome.desk.widgets if row.subject_id == "bike" and row.type == WidgetType.reminder
+    ]
+    assert len(bike_reminders) == 1
 
 
 def test_orphan_cue_is_rejected() -> None:

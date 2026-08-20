@@ -1,0 +1,57 @@
+{
+  "id": "method_4_to_30",
+  "utterance": "могу 4, хочу 30 подряд, как?",
+  "match": ["могу 4", "хочу 30 подряд"],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "list_desk",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "update_widget",
+          "arguments": {
+            "widget_id": "push-ups-counter",
+            "target": 30,
+            "count": 4
+          }
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "add_cue",
+          "arguments": {
+            "id": "push-ups-method-talk",
+            "subject_id": "push-ups",
+            "kind": "correction",
+            "text": "четыре чистых, корпус как доска",
+            "surface": "do-time"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Четыре чистых отжимания — корпус как доска, не гонись за числом. Цель 30 оставляем на столе: сначала качество, потом объём."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": ["list_desk", "update_widget", "add_cue"],
+    "forbidden_tools": ["set_reminder"],
+    "target_current": 4,
+    "target_goal_max": 30,
+    "times_per_week_max": 3,
+    "cue": {
+      "subject_id": "push-ups",
+      "surface": "do-time",
+      "text_contains": ["чистых", "корпус"]
+    }
+  }
+}

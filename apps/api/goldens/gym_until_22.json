@@ -1,0 +1,25 @@
+{
+  "id": "gym_until_22",
+  "utterance": "зал до 22",
+  "match": ["зал до 22"],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "set_reminder",
+          "arguments": {
+            "subject_id": "bike",
+            "closes_at": "22:00"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Зал до 22 — окно само даст 19:00."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": ["set_reminder"]
+  }
+}

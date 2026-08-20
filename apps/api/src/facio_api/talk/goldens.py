@@ -31,6 +31,9 @@ class GoldenExpect(BaseModel):
     tools: list[str] = Field(default_factory=list)
     snapshots_empty: bool | None = None
     target_goal_max: int | None = None
+    target_current: int | None = None
+    times_per_week_max: float | None = None
+    forbidden_tools: list[str] = Field(default_factory=list)
     cue: GoldenExpectCue | None = None
 
 

@@ -1,0 +1,27 @@
+{
+  "id": "gym_no_clock",
+  "utterance": "запиши зал",
+  "match": ["запиши зал"],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "create_widget",
+          "arguments": {
+            "type": "counter",
+            "title": "зал",
+            "subject_id": "gym"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Записал зал на стол. Час не ставлю — не просил."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": ["create_widget"],
+    "forbidden_tools": ["set_reminder"]
+  }
+}

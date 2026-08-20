@@ -25,7 +25,7 @@ Reason + cadence + drift live in one `Subject`. A `Cue` without `surface` is rej
 
 ## Wedge
 
-Ship the founding loop to production quality: counter + tick + reminder, cue at do-time, window, drift card, talk that materializes. Pan / Deeds / Inspect — step 5, accepted PO at minimum (2026-08-19). Founding lid+pan accepted as a dogfooded hypothesis the same evening. Next: waves **В1–В3** in `docs/state/plan.md` (accepted PO 2026-08-20). **В1.0–В1.1 done.** Next **В1.2**. Talk-created gym has no reminder until miss or an explicit clock. Voice, cooking, sports-corpus RAG — only if PO says so. Lead = PM; human = PO; Task subagents = developers (skills named per `AGENTS.md`).
+Ship the founding loop to production quality: counter + tick + reminder, cue at do-time, window, drift card, talk that materializes. Pan / Deeds / Inspect — step 5, accepted PO at minimum (2026-08-19). Founding lid+pan accepted as a dogfooded hypothesis the same evening. Next: waves **В1–В3** in `docs/state/plan.md` (accepted PO 2026-08-20). **В1.0–В1.2 done.** Next **В1.3**. Talk-created gym has no reminder until miss or an explicit clock. Voice, cooking, sports-corpus RAG — only if PO says so. Lead = PM; human = PO; Task subagents = developers (skills named per `AGENTS.md`).
 
 Impressive = that loop on a native lid, readable in a ~90s recording. Not catalog breadth.
 
