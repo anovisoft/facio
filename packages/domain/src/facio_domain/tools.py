@@ -60,6 +60,7 @@ SURFACE_REQUIRED = "surface_required"
 UNKNOWN_TOOL = "unknown_tool"
 NOT_FOUND = "not_found"
 INVALID = "invalid"
+UNSUPPORTED_WIDGET_TYPE = "unsupported_widget_type"
 
 
 @dataclass
@@ -366,6 +367,8 @@ def _create_widget(desk: Desk, args: dict[str, Any], *, now: datetime, **_: Any)
         section = WidgetSection(str(args.get("section") or "today"))
     except ValueError as error:
         raise ToolFail(INVALID) from error
+    if widget_type in {WidgetType.checklist, WidgetType.timer, WidgetType.stepper}:
+        raise ToolFail(UNSUPPORTED_WIDGET_TYPE)
     subject = _subject(desk, subject_id)
     if subject is None:
         cadence = _cadence_from_args(args, fallback=Cadence.none())

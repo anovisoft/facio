@@ -11,5 +11,5 @@ Before Facio code or a product call, read `.cursor/skills/facio-product/SKILL.md
 - Lid / ticks / drift / reminder time: no LLM. Home is the lid, not a prompt.
 - Drift is arithmetic. Drift asks offer shrink, never "try harder".
 - A conclusion left as text only is a bug. Pain never raises target or cadence.
-- Wedge: founding loop at production quality. Pan / Deeds / Inspect accepted at minimum; lid+pan dogfooded as a hypothesis. Next is waves В1–В3 in `docs/state/plan.md` (accepted PO 2026-08-20; В1.0 done, next В1.1). Talk-created gym has no reminder until miss or an explicit clock. Voice, cooking — only if PO says so. Lead agent = PM; human = PO; subagents = developers.
+- Wedge: founding loop at production quality. Pan / Deeds / Inspect accepted at minimum; lid+pan dogfooded as a hypothesis. Next is waves В1–В3 in `docs/state/plan.md` (accepted PO 2026-08-20; В1.0–В1.1 done, next В1.2). Talk-created gym has no reminder until miss or an explicit clock. Voice, cooking — only if PO says so. Lead agent = PM; human = PO; subagents = developers.
 - Do not rewrite `docs/rfc` to justify a feature. Engineering status lives in `docs/state`.

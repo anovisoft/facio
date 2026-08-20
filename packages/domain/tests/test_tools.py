@@ -2,13 +2,16 @@ from __future__ import annotations
 
 from datetime import datetime, time
 
+import pytest
+
 from facio_domain.cues import add_cue
 from facio_domain.desk import founding_desk
-from facio_domain.models import CueOrigin, CueSurface
+from facio_domain.models import CueOrigin, CueSurface, WidgetType
 from facio_domain.pain import reports_pain
 from facio_domain.tools import (
     PAIN_FORBIDS_RAISE,
     SURFACE_REQUIRED,
+    UNSUPPORTED_WIDGET_TYPE,
     apply_tool,
     snapshot_cards,
     times_per_week,
@@ -113,6 +116,66 @@ def test_pain_blocks_cadence_raise() -> None:
     assert outcome.error == PAIN_FORBIDS_RAISE
     cadence = next(row.cadence for row in desk.subjects if row.id == "push-ups")
     assert times_per_week(cadence) == 3
+
+
+@pytest.mark.parametrize("widget_type", ["checklist", "timer", "stepper"])
+def test_create_widget_empty_type_is_rejected(widget_type: str) -> None:
+    desk = founding_desk(now=NOW)
+    subject_ids = {row.id for row in desk.subjects}
+    widget_count = len(desk.widgets)
+    outcome = _apply(
+        desk,
+        "create_widget",
+        {"type": widget_type, "title": "пусто", "subject_id": "empty-type-new"},
+    )
+    assert outcome.ok is False
+    assert outcome.mutated is False
+    assert outcome.error == UNSUPPORTED_WIDGET_TYPE
+    assert outcome.desk is desk
+    assert len(outcome.desk.widgets) == widget_count
+    assert "empty-type-new" not in {row.id for row in outcome.desk.subjects}
+    assert {row.id for row in outcome.desk.subjects} == subject_ids
+
+
+def test_create_widget_counter_on_new_subject_does_not_spawn_reminder() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "create_widget",
+        {"type": "counter", "title": "зал", "subject_id": "gym-counter-new", "target": 30},
+    )
+    assert outcome.ok
+    widgets = [row for row in outcome.desk.widgets if row.subject_id == "gym-counter-new"]
+    assert len(widgets) == 1
+    assert widgets[0].type == WidgetType.counter
+    assert not any(row.type == WidgetType.reminder for row in widgets)
+
+
+def test_create_widget_tick_on_new_subject_does_not_spawn_reminder() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "create_widget",
+        {"type": "tick", "title": "овощи", "subject_id": "veg-tick-new"},
+    )
+    assert outcome.ok
+    widgets = [row for row in outcome.desk.widgets if row.subject_id == "veg-tick-new"]
+    assert len(widgets) == 1
+    assert widgets[0].type == WidgetType.tick
+    assert not any(row.type == WidgetType.reminder for row in widgets)
+
+
+def test_create_widget_reminder_is_allowed() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "create_widget",
+        {"type": "reminder", "title": "час", "subject_id": "nap-reminder-new"},
+    )
+    assert outcome.ok
+    widgets = [row for row in outcome.desk.widgets if row.subject_id == "nap-reminder-new"]
+    assert len(widgets) == 1
+    assert widgets[0].type == WidgetType.reminder
 
 
 def test_set_reminder_from_closing_is_arithmetic() -> None:
