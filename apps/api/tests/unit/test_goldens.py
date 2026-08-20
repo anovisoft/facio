@@ -53,6 +53,7 @@ def test_goldens_are_present() -> None:
         "lower_back",
         "method_4_to_30",
         "miss_skip",
+        "named_hour_beats_closing",
         "pain_raise",
         "remind_at_19",
     }
@@ -215,6 +216,28 @@ async def test_gym_until_22_is_arithmetic() -> None:
     assert bike.window is not None
     assert bike.window.latest_by == time(19, 0)
     assert bike.window.closes_at == time(22, 0)
+
+
+async def test_named_hour_beats_closing_formula() -> None:
+    golden = match_golden("к 23 он уже закрывается. Напоминай мне пойти в зал в 19 часов")
+    assert golden is not None
+    assert golden.id == "named_hour_beats_closing"
+    result = await _play(golden.utterance)
+    assert result.mutated is True
+    reminder = next(call for call in result.tool_calls if call.name == "set_reminder")
+    assert reminder.arguments["latest_by"] in {"19:00", "19:00:00"}
+    assert reminder.arguments["closes_at"] in {"23:00", "23:00:00"}
+    gym = _subject(result.desk, reminder.arguments["subject_id"])
+    assert gym.window is not None
+    assert gym.window.latest_by == time(19, 0)
+    assert gym.window.closes_at == time(23, 0)
+    fire = next(
+        row.payload.fire_at
+        for row in result.desk.widgets
+        if row.subject_id == gym.id and row.type == WidgetType.reminder
+    )
+    assert fire is not None
+    assert fire.hour == 19
 
 
 async def test_cadence_shrink_does_not_raise_goal() -> None:

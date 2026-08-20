@@ -16,6 +16,11 @@ from facio_api.talk.spec import SYSTEM_PROMPT, tool_schemas
 
 MAX_ROUNDS = 8
 MAX_UTTERANCE = 4000
+EMPTY_TOOLS_NUDGE = (
+    "Если реплика пишет стол — запись, пропуск, час, ритм, цель, подсказка — вызови инструменты сейчас. "
+    "Умолчание уже есть, не спрашивай «какая практика». "
+    "Болтать можно. Чистое объяснение или бред — только текст."
+)
 
 
 class TalkError(Exception):
@@ -46,10 +51,12 @@ async def run_turn(
     snapshot_ids: list[str] = []
     text = ""
     tools = tool_schemas()
+    first_complete = True
 
     for _ in range(MAX_ROUNDS):
         turn = await provider.complete(messages, tools)
         if turn.tool_calls:
+            first_complete = False
             messages.append(_assistant_tools(turn))
             for call in turn.tool_calls:
                 outcome = apply_tool(
@@ -89,6 +96,11 @@ async def run_turn(
                 )
             continue
         text = (turn.text or "").strip()
+        if first_complete:
+            first_complete = False
+            messages.append({"role": "assistant", "content": turn.text or ""})
+            messages.append({"role": "user", "content": EMPTY_TOOLS_NUDGE})
+            continue
         break
 
     if not text:

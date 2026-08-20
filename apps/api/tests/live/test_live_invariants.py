@@ -135,6 +135,31 @@ async def test_gym_until_22_is_arithmetic(live_play) -> None:
     assert bike.window.latest_by == time(19, 0)
 
 
+NAMED_HOUR_AND_DOOR = (
+    "Хочу пойти в зал, но постоянно забываю про него и к 23 он уже закрывается. "
+    "Напоминай мне о том что мне нужно пойти в зал в 19 часов"
+)
+
+
+async def test_named_hour_beats_closing_formula(live_play) -> None:
+    result = await live_play(NAMED_HOUR_AND_DOOR)
+    assert result.mutated is True
+    reminder = next(call for call in result.tool_calls if call.name == "set_reminder")
+    assert _hhmm(reminder.arguments.get("latest_by")) == (19, 0)
+    assert _hhmm(reminder.arguments.get("latest_by")) != (20, 0)
+    subject = _subject(result.desk, str(reminder.arguments["subject_id"]))
+    assert subject.window is not None
+    assert subject.window.latest_by == time(19, 0)
+    assert subject.window.latest_by != time(20, 0)
+    fires = [
+        row.payload.fire_at
+        for row in result.desk.widgets
+        if row.subject_id == subject.id and row.type == WidgetType.reminder
+    ]
+    assert fires and fires[0] is not None
+    assert fires[0].hour == 19
+
+
 async def test_cadence_shrink_does_not_raise_goal(live_play) -> None:
     result = await live_play("давай раз в неделю")
     assert result.mutated is True

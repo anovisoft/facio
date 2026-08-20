@@ -117,8 +117,9 @@ class Window(BaseModel):
     """When the practice can still happen.
 
     `latest_by` is the clock hour the reminder fires.
-    `closes_at` is the optional source fact (gym door). Founding rule:
-    latest_by = closes_at minus 3 hours (22:00 → 19:00).
+    `closes_at` is the optional source fact (gym door). If the hour was not
+    stated, latest_by = closes_at minus 3 hours (22:00 → 19:00). A stated
+    latest_by wins; do not replace 19:00 with 23:00 − 3h = 20:00.
     """
 
     model_config = ConfigDict(extra="forbid")

@@ -1,0 +1,38 @@
+{
+  "id": "named_hour_beats_closing",
+  "utterance": "к 23 он уже закрывается. Напоминай мне пойти в зал в 19 часов",
+  "match": ["к 23 он уже закрывается"],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "create_widget",
+          "arguments": {
+            "type": "reminder",
+            "title": "зал",
+            "subject_id": "gym"
+          }
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "set_reminder",
+          "arguments": {
+            "subject_id": "gym",
+            "latest_by": "19:00",
+            "closes_at": "23:00"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Напомню в 19:00. До 23 — дверь зала, не 20:00."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": ["create_widget", "set_reminder"]
+  }
+}

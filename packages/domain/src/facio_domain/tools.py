@@ -541,14 +541,16 @@ def _set_reminder(desk: Desk, args: dict[str, Any], *, now: datetime, **_: Any) 
     subject = _require_subject(desk, str(args.get("subject_id", "")))
     closes_raw = args.get("closes_at")
     latest_raw = args.get("latest_by")
-    if closes_raw:
-        window = window_from_closing(_parse_clock(str(closes_raw)))
-    elif latest_raw:
+    if latest_raw:
         latest = _parse_clock(str(latest_raw))
-        if subject.window is not None:
+        if closes_raw:
+            window = Window(latest_by=latest, closes_at=_parse_clock(str(closes_raw)))
+        elif subject.window is not None:
             window = subject.window.model_copy(update={"latest_by": latest})
         else:
             window = Window(latest_by=latest)
+    elif closes_raw:
+        window = window_from_closing(_parse_clock(str(closes_raw)))
     else:
         raise ToolFail(INVALID)
     _replace_subject(desk, subject.model_copy(update={"window": window}))

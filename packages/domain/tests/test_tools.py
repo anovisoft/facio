@@ -208,6 +208,34 @@ def test_create_widget_reminder_is_allowed() -> None:
     assert widgets[0].type == WidgetType.reminder
 
 
+def test_set_reminder_stated_hour_beats_closing_formula() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "set_reminder",
+        {"subject_id": "bike", "latest_by": "19:00", "closes_at": "23:00"},
+    )
+    assert outcome.ok
+    window = next(row.window for row in outcome.desk.subjects if row.id == "bike")
+    assert window is not None
+    assert window.latest_by == time(19, 0)
+    assert window.closes_at == time(23, 0)
+    fire = next(row.payload.fire_at for row in outcome.desk.widgets if row.id == "bike-reminder")
+    assert fire is not None
+    assert fire.hour == 19
+    assert fire.hour != 20
+
+
+def test_set_reminder_closing_only_23_is_20() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(desk, "set_reminder", {"subject_id": "bike", "closes_at": "23:00"})
+    assert outcome.ok
+    window = next(row.window for row in outcome.desk.subjects if row.id == "bike")
+    assert window is not None
+    assert window.latest_by == time(20, 0)
+    assert window.closes_at == time(23, 0)
+
+
 def test_set_reminder_from_closing_is_arithmetic() -> None:
     desk = founding_desk(now=NOW)
     outcome = _apply(desk, "set_reminder", {"subject_id": "bike", "closes_at": "22:00"})
