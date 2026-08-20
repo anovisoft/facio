@@ -13,6 +13,15 @@
     "%@ — не было %@. Сделать меньше?" : {
       "comment" : "Drift card body"
     },
+    "%@, готово" : {
+      "comment" : "Inspect horizon done day"
+    },
+    "%@, к делу" : {
+      "comment" : "Inspect horizon due day"
+    },
+    "%@, пусто" : {
+      "comment" : "Inspect horizon empty day"
+    },
     "%lld" : {
 
     },
@@ -58,6 +67,9 @@
     },
     "галочка" : {
 
+    },
+    "готов тренироваться?" : {
+      "comment" : "Pause check-in reminder body"
     },
     "готовится" : {
       "comment" : "Instance prepared"
@@ -115,6 +127,9 @@
     "можно править текст и цель" : {
 
     },
+    "на паузе" : {
+      "comment" : "Deed holding: paused"
+    },
     "на Сегодня" : {
       "comment" : "Deed holding: on today"
     },
@@ -146,6 +161,9 @@
     },
     "неделю" : {
       "comment" : "Drift silence, one week"
+    },
+    "Неделя" : {
+
     },
     "ничего на сегодня — и это нормально" : {
 

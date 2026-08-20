@@ -36,4 +36,36 @@ final class ReminderSchedulerTests: XCTestCase {
         seed.subjects[index].status = .retired
         XCTAssertTrue(ReminderScheduler.alarms(from: seed, now: now).isEmpty)
     }
+
+    func testFrozenSubjectSilencesGymAndSchedulesCheckIn() throws {
+        let now = try XCTUnwrap(FacioJSON.date(from: "2026-08-16T12:00:00"))
+        var seed = try SeedFactory.buildSeed(now: now)
+        let index = try XCTUnwrap(seed.subjects.firstIndex { $0.id == "bike" })
+        seed.subjects[index] = SubjectLaw.freeze(seed.subjects[index], now: now)
+        let alarms = ReminderScheduler.alarms(from: seed, now: now)
+        XCTAssertFalse(alarms.contains { $0.id == ReminderScheduler.alarmId(widgetId: "bike-reminder") })
+        let checkIn = try XCTUnwrap(alarms.first { $0.id == ReminderScheduler.checkInAlarmId(subjectId: "bike") })
+        XCTAssertEqual(checkIn.fireAt, SubjectLaw.pauseCheckInAt(now))
+        XCTAssertEqual(checkIn.body, DisplayCopy.pauseCheckInBody)
+        XCTAssertEqual(
+            checkIn.title,
+            DisplayCopy.title(subjectId: "bike", stored: seed.subjects[index].title)
+        )
+    }
+
+    func testThawRemovesCheckIn() throws {
+        let now = try XCTUnwrap(FacioJSON.date(from: "2026-08-16T12:00:00"))
+        var seed = try SeedFactory.buildSeed(now: now)
+        let index = try XCTUnwrap(seed.subjects.firstIndex { $0.id == "bike" })
+        seed.subjects[index] = SubjectLaw.freeze(seed.subjects[index], now: now)
+        XCTAssertTrue(
+            ReminderScheduler.alarms(from: seed, now: now)
+                .contains { $0.id == ReminderScheduler.checkInAlarmId(subjectId: "bike") }
+        )
+        seed.subjects[index] = SubjectLaw.thaw(seed.subjects[index])
+        XCTAssertFalse(
+            ReminderScheduler.alarms(from: seed, now: now)
+                .contains { $0.id == ReminderScheduler.checkInAlarmId(subjectId: "bike") }
+        )
+    }
 }

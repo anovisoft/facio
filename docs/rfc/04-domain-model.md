@@ -67,7 +67,8 @@ A **subject** is a practice that recurs: `push-ups`, `exercise bike`, `vegetable
 | cue_ids | facts that must surface at do-time, ordered |
 | target | optional progression state (28 → 30 reps) |
 | instance_ids | occurrences in time |
-| status | active / shrunk / retired |
+| status | active / shrunk / paused / retired |
+| paused_at | set when `paused`; empty otherwise. Check-in fire = `paused_at` + 2 days (scheduler, not LLM) |
 
 Invariants:
 
@@ -76,6 +77,7 @@ Invariants:
 - Cadence is a count per period, so missing Tuesday is not a failure — missing the *count* is.
 - `cadence: none` with no instances is not drift; it is a finished thing.
 - Retiring or shrinking a subject keeps its instances and cues. Nothing is deleted as punishment.
+- **Pause is not shrink and not retire.** Pain + a miss freezes the practice: cadence and target stay; usual reminders are silent; a one-shot local check-in asks «готов тренироваться?» after two days. Thaw only when the person says it let go. Pause does not raise volume.
 
 **Instance** — one occurrence in time (Monday’s session, tonight’s ride). Carousel lists instances. `+` creates one. `z` is a prepared future one.
 

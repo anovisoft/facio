@@ -10,6 +10,10 @@ enum DisplayCopy {
         }
     }
 
+    static var pauseCheckInBody: String {
+        String(localized: "готов тренироваться?", comment: "Pause check-in reminder body")
+    }
+
     static func succeedBy(_ window: TimeWindow) -> String {
         String(localized: "успеть к \(window.latestBy.shortLabel)", comment: "Reminder window deadline")
     }
@@ -76,6 +80,9 @@ enum DisplayCopy {
     ) -> String {
         if subject.status == .retired {
             return String(localized: "убрана", comment: "Deed holding: retired")
+        }
+        if subject.status == .paused {
+            return String(localized: "на паузе", comment: "Deed holding: paused")
         }
         if DriftLaw.isDrifting(subject, instances: instances, now: now),
            let days = DriftLaw.silenceDays(of: subject, in: instances, now: now)

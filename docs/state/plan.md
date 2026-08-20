@@ -3,7 +3,7 @@
 Порядок из RFC (вопрос 23), уточнённый 2026-08-16.  
 Продуктовые фазы клина — в [00](../rfc/00-vision.md). Здесь — инженерные шаги.
 
-Правило: не прыгать через шаг без явной причины. Шаги 0–5 приняты (5 на минималках). Дальше — волны **В1–В3** (принят PO, 2026-08-20): рот → неделя/пауза локально → база и облако. **В1.0–В1.6 готовы.** Дальше **В2.1**. RFC не переписывать.
+Правило: не прыгать через шаг без явной причины. Шаги 0–5 приняты (5 на минималках). Дальше — волны **В1–В3** (принят PO, 2026-08-20): рот → неделя/пауза локально → база и облако. **В1.0–В1.6 готовы. В2.1–В2.2 готовы.** Дальше **В2.3**. Не говорить «В2 готов». RFC не переписывать под фичу; пауза — принятый кусок волны, статус `paused` дописан в [04](../rfc/04-domain-model.md) / tools в [05](../rfc/05-ai-and-memory.md).
 
 ---
 
@@ -89,7 +89,7 @@
 
 Не новый номер в Q23. Черновик **Р.1–Р.5** (2026-08-19) **снят** этим текстом. Пользователь «MCP» не слышит. Сущности «план / Guide / Path» не заводим: CRUD = практика + виджет + ритм + подсказка.
 
-Принят PO 2026-08-20. Ведёт **PM**; субагенты — разработчики, скилы по `AGENTS.md`. **В1.0–В1.6 готовы** (В1.4 принят PO; час 19 vs 20 принят PO). Дальше **В2.1**. Не прыгать в В2.2/В3.
+Принят PO 2026-08-20. Ведёт **PM**; субагенты — разработчики, скилы по `AGENTS.md`. **В1.0–В1.6 готовы** (В1.4 принят PO; час 19 vs 20 принят PO). **В2.1–В2.2 готовы.** Дальше **В2.3**. Не прыгать в В3.
 
 «Таймер» в этой цели — **напоминание** (виджет `reminder` + окно), не countdown `timer`. Countdown по-прежнему пустой тип на крышке.
 
@@ -124,7 +124,7 @@
 Cursor/агент -- MCP (тот же процесс) ---------------------------------^
 ```
 
-Новые имена — только с золотыми той волны (Q22). В1 новых имён нет.
+Новые имена — только с золотыми той волны (Q22). В1 новых имён нет. В2.3 добавляет `freeze_subject` / `thaw_subject` **вместе** с золотыми.
 
 Целевая нарезка `apps/api` (один пакет, один деплой, не флот):
 
@@ -517,11 +517,91 @@ Inspect (`InspectScreen`):
 
 **Зачем.** «Сегодня пропустил, спина болела» → не рост цели; офер заморозить, пока не скажет, что отпустило; через 2 дня пуш «готов тренироваться?» с устройства.
 
+**Статус: код готов** (2026-08-20). Domain 77, API 52 (live skip), xcode 118. Ждём PO на симуляторе.
+
 **Входит.** Статус паузы в законе (не `shrink` / не `retire`). Обычные напоминания практики молчат, пока пауза. Одноразовый локальный чек-ин через `ReminderScheduler`, текст шаблонный, LLM в момент выстрела нет. Золотые до новых имён (Q22): боль+пропуск → freeze, цель не 40; «отпустило» → снять паузу.
 
-**Не входит.** APNs. RAG. «Постарайся».
+**Не входит.** APNs. RAG. «Постарайся». Крышка-календарь. Полир UI. Postgres. `fastapi-templates`. Новые talk-имена сверх `freeze_subject` / `thaw_subject`. Live-хак `addopts`.
 
-**Готово когда.** На симуляторе реплика про спину замораживает; подставленные «+2 дня» дают локальный пуш; ответ в чате снимает паузу.
+**Готово когда.** На симуляторе реплика про спину замораживает; подставленные «+2 дня» дают локальный пуш; ответ в чате снимает паузу. Domain pytest + `apps/api` pytest (live skip) + xcodebuild test зелёные.
+
+**Контракт (PM, 2026-08-20).** Пауза — статус практики, не карточка срыва и не shrink.
+
+Q22: золотые `pain_skip_freeze` и `thaw_pause` **в том же диффе**, что имена. Игла `miss_skip` = «сегодня не сходил» — **не** класть её в новую реплику (`match_golden` берёт первый файл).
+
+Закон:
+
+```text
+packages/domain/src/facio_domain/models.py      # SubjectStatus.paused; Subject.paused_at: datetime | None = None
+packages/domain/src/facio_domain/subjects.py    # freeze_subject / thaw_subject + pause_check_in_at
+packages/domain/src/facio_domain/tools.py       # freeze_subject, thaw_subject in TOOL_NAMES (стало 18)
+packages/domain/src/facio_domain/drift.py       # paused → не срыв
+packages/domain/src/facio_domain/slots.py       # paused как retired: без проекций; реальные случаи показать
+packages/domain/src/facio_domain/lid.py         # виджеты paused-субъекта не на крышке (все секции)
+packages/domain/tests/test_tools.py             # freeze/thaw; pain всё ещё режет raise
+packages/schema/                                # python -m facio_domain.export_schema
+```
+
+Правила закона:
+
+1. `freeze_subject(s, now)`: `status=paused`, `paused_at=now`. Цель и ритм **не** трогать. Инстансы и cue не удалять. Повторный freeze сдвигает `paused_at` (новый чек-ин +2д). Retired → `invalid`.
+2. `thaw_subject(s)`: только из `paused` → `active`, `paused_at=None`. Не paused → `invalid`. Не shrink, не retire.
+3. `pause_check_in_at(paused_at) = paused_at + 2 days`. Константа `PAUSE_CHECK_IN = timedelta(days=2)`. Не LLM.
+4. `is_drifting`: `paused` как `retired` — False.
+5. `slot_horizon`: paused без проекций (как retired).
+6. `lid_projection`: виджет с `subject.status == paused` не попадает в today / lifetime / soon / postponed.
+7. Tools: `freeze_subject({subject_id})`, `thaw_subject({subject_id})`. Pain **не** блокирует freeze (это не raise). Pain по-прежнему блокирует set_cadence/update target вверх.
+
+Рот:
+
+```text
+apps/api/src/facio_api/talk/spec.py             # схемы + SYSTEM_PROMPT
+apps/api/goldens/pain_skip_freeze.json
+apps/api/goldens/thaw_pause.json
+apps/api/tests/unit/test_goldens.py             # ids + два теста
+apps/api/src/facio_api/mcp/session.py           # «16 имён» → TOOL_NAMES (длина списка)
+```
+
+Промпт (добавить, founding-буллеты не ломать):
+
+- Боль + пропуск → `skip` due-виджета **и** `freeze_subject` этой практики. Не `update_widget` цель вверх. Не shrink/retire. Не «постарайся».
+- Умолчание пропуска без имени — `bike` / `bike-reminder` (как `miss_skip`).
+- «отпустило» / готов снова → `thaw_subject` той же практики (focused или единственная paused).
+- Сказать «заморозил» без tool — баг.
+
+Золотые:
+
+- `pain_skip_freeze`: utterance **«сегодня пропустил, спина болела»**, match `["спина болела"]` (не пересекать `сегодня не сходил`). Scripted: `skip` `bike-reminder`, затем `freeze_subject` `bike`. Expect: mutated, tools `skip`+`freeze_subject`, forbidden `set_reminder` и raise, push-ups goal ≤ 30, bike `status=paused`, `paused_at` = now хода.
+- `thaw_pause`: utterance **«отпустило»**, match `["отпустило"]`. Scripted: `thaw_subject` `bike`. **Стол теста — не founding as-is:** сначала `freeze_subject` bike на founding, потом `run_turn`. После: bike `active`, `paused_at is None`.
+
+Live (опционально, `-m live`): инвариант «спина болела» → bike paused, goal push-ups не 40. Не расширять `live_play` ради thaw, если долго.
+
+Крышка:
+
+```text
+apps/mobile-swiftui/Facio/Domain/Models/SubjectStatus.swift   # paused
+apps/mobile-swiftui/Facio/Domain/Models/Subject.swift         # pausedAt
+apps/mobile-swiftui/Facio/Domain/Law/SubjectLaw.swift         # freeze/thaw
+apps/mobile-swiftui/Facio/Domain/Law/DriftLaw.swift           # paused → не срыв
+apps/mobile-swiftui/Facio/Domain/Law/SlotLaw.swift            # paused без проекций
+apps/mobile-swiftui/Facio/Domain/Law/LidProjectionLaw.swift   # скрыть виджеты paused
+apps/mobile-swiftui/Facio/Domain/Law/DisplayCopy.swift        # check-in body
+apps/mobile-swiftui/Facio/Store/ReminderScheduler.swift
+apps/mobile-swiftui/FacioTests/ReminderSchedulerTests.swift
+apps/mobile-swiftui/FacioTests/SubjectLawTests.swift          # или ModelTests + scheduler
+```
+
+Пуш:
+
+1. `ReminderScheduler.alarms`: reminder-виджет **молчит**, если субъект `retired` **или** `paused`.
+2. Для каждого `paused` с `pausedAt`: `fireAt = pausedAt + 2 days`; если `fireAt > now`, добавить будильник. Id: `reminder:check-in:{subjectId}` — префикс `reminder:` уже стирает pending в `apply`.
+3. Title = `DisplayCopy.title`. Body = шаблон **«готов тренироваться?»** (`DisplayCopy.pauseCheckInBody`). Не LLM. Тап как сейчас → крышка.
+4. После thaw `pausedAt` нет — чек-ин не ставится. Повторный freeze двигает час.
+5. Тест: founding bike freeze at `now` → нет gym-alarm `reminder:bike-reminder` (или fire в прошлом — как сейчас), есть check-in на `now+2d`. Retired без check-in. Thaw → check-in пропал.
+
+Не трогать: LidFeed вёрстку, pan, dock, Use, Inspect полосу (кроме того что SlotLaw сам перестанет проецировать paused), RFC сверх уже внесённых строк, archive, Postgres, APNs, `generation`.
+
+Готово: `packages/domain/.venv/bin/pytest packages/domain`; `cd apps/api && .venv/bin/pytest`; `cd apps/mobile-swiftui && xcodegen generate && xcodebuild -scheme Facio -destination 'platform=iOS Simulator,name=iPhone 17' test`.
 
 ---
 

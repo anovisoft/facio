@@ -14,4 +14,8 @@ def test_export_schema_writes_contract(tmp_path: Path) -> None:
     assert "facio.schema.json" in names
     cue_required = Cue.model_json_schema()["required"]
     assert "surface" in cue_required
-    assert "drift" not in Subject.model_json_schema().get("properties", {})
+    properties = Subject.model_json_schema().get("properties", {})
+    assert "drift" not in properties
+    assert "paused_at" in properties
+    status_enum = Subject.model_json_schema()["$defs"]["SubjectStatus"]["enum"]
+    assert "paused" in status_enum

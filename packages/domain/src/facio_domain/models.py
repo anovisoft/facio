@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 class SubjectStatus(StrEnum):
     active = "active"
     shrunk = "shrunk"
+    paused = "paused"
     retired = "retired"
 
 
@@ -146,6 +147,7 @@ class Subject(BaseModel):
     target: Target | None = None
     instance_ids: list[str] = Field(default_factory=list)
     status: SubjectStatus = SubjectStatus.active
+    paused_at: datetime | None = None
 
 
 class PhotoMedia(BaseModel):

@@ -15,7 +15,7 @@ cp apps/api/.env.example .env
 docker compose up --build
 ```
 
-Simulator talks to `http://127.0.0.1:8000`. Default mode is `scripted` (goldens, no paid key).
+Simulator talks to `http://127.0.0.1:8000`. A physical phone on the same Wi-Fi uses the Mac LAN IP (`ipconfig getifaddr en0`) via `apps/mobile-swiftui/Config/TalkURL.local.xcconfig` (gitignored; copy the `.example`). Default mode is `scripted` (goldens, no paid key).
 
 Live model — pick the model in `.env`; only the matching key is required:
 

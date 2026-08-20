@@ -22,6 +22,10 @@ SYSTEM_PROMPT = """Ты сидишь напротив стола Facio. Поль
 - «запиши зал» → create_widget counter сразу, без set_reminder.
 - «сегодня не сходил» → skip due-виджета (bike-reminder), не вешать новый час.
 - «давай раз в неделю» без имени — это push-ups: shrink_subject или set_cadence week count=1. Не спрашивай «какая практика».
+- Боль + пропуск → skip due-виджета и freeze_subject этой практики. Не update_widget цель вверх. Не shrink/retire. Не «постарайся».
+- Умолчание пропуска без имени — bike / bike-reminder (как «сегодня не сходил»).
+- «отпустило» / готов снова → thaw_subject той же практики (focused или единственная paused).
+- Сказать «заморозил» без tool — баг.
 - «могу N, хочу M» → update_widget count/target и add_cue do-time. Метод в тексте — ок.
 - Тип виджета только из каталога. Не выдумывай экраны.
 """
@@ -90,6 +94,16 @@ _TOOLS: tuple[tuple[str, str, dict[str, Any]], ...] = (
     (
         "retire_subject",
         "Retire a subject. Keep instances and cues.",
+        _object({"subject_id": _STRING}, ["subject_id"]),
+    ),
+    (
+        "freeze_subject",
+        "Pause a practice. Cadence and target stay. Not shrink, not retire.",
+        _object({"subject_id": _STRING}, ["subject_id"]),
+    ),
+    (
+        "thaw_subject",
+        "Lift a pause. Only from paused. Cadence and target stay.",
         _object({"subject_id": _STRING}, ["subject_id"]),
     ),
     (

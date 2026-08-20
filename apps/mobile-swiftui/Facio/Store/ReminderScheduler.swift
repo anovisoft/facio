@@ -17,16 +17,22 @@ enum ReminderScheduler {
         idPrefix + widgetId
     }
 
+    static func checkInAlarmId(subjectId: String) -> String {
+        idPrefix + "check-in:" + subjectId
+    }
+
     static func alarms(from snapshot: DeskSnapshot, now: Date) -> [ReminderAlarm] {
-        snapshot.widgets.compactMap { widget in
+        let bySubject = Dictionary(uniqueKeysWithValues: snapshot.subjects.map { ($0.id, $0) })
+        var alarms: [ReminderAlarm] = snapshot.widgets.compactMap { widget in
             guard widget.type == .reminder, widget.status != .done else { return nil }
-            if snapshot.subjects.first(where: { $0.id == widget.subjectId })?.status == .retired {
+            let subject = bySubject[widget.subjectId]
+            if subject?.status == .retired || subject?.status == .paused {
                 return nil
             }
             let fireAt = widget.reminderFireAt
             guard let fireAt, fireAt > now else { return nil }
             let title = DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title)
-            let window = snapshot.subjects.first { $0.id == widget.subjectId }?.window
+            let window = subject?.window
             let cue = CueLaw.timingCue(in: snapshot.cues, subjectId: widget.subjectId)
             let deadline = window.map(DisplayCopy.succeedBy)
             let body = [deadline, cue?.text].compactMap { $0 }.joined(separator: " · ")
@@ -37,6 +43,20 @@ enum ReminderScheduler {
                 body: body.isEmpty ? title : body
             )
         }
+        for subject in snapshot.subjects where subject.status == .paused {
+            guard let pausedAt = subject.pausedAt else { continue }
+            let fireAt = SubjectLaw.pauseCheckInAt(pausedAt)
+            guard fireAt > now else { continue }
+            alarms.append(
+                ReminderAlarm(
+                    id: checkInAlarmId(subjectId: subject.id),
+                    fireAt: fireAt,
+                    title: DisplayCopy.title(subjectId: subject.id, stored: subject.title),
+                    body: DisplayCopy.pauseCheckInBody
+                )
+            )
+        }
+        return alarms
     }
 
     static func enqueue(snapshot: DeskSnapshot, now: Date) {

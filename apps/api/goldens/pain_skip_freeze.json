@@ -1,0 +1,31 @@
+{
+  "id": "pain_skip_freeze",
+  "utterance": "сегодня пропустил, спина болела",
+  "match": ["спина болела"],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "skip",
+          "arguments": {
+            "widget_id": "bike-reminder"
+          }
+        },
+        {
+          "name": "freeze_subject",
+          "arguments": {
+            "subject_id": "bike"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Заморозил велосипед. Цель не поднимаю. Когда отпустит — скажи."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": ["skip", "freeze_subject"],
+    "forbidden_tools": ["set_reminder", "set_cadence", "update_widget", "shrink_subject", "retire_subject"]
+  }
+}

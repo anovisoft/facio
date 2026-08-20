@@ -14,6 +14,7 @@ from facio_domain.models import (
     LidProjection,
     RankBand,
     Subject,
+    SubjectStatus,
     Widget,
     WidgetSection,
     WidgetStatus,
@@ -27,6 +28,13 @@ _HIDDEN_TODAY = frozenset(
         WidgetStatus.snoozed,
     }
 )
+
+
+def _without_paused(
+    subjects: Sequence[Subject], widgets: Sequence[Widget]
+) -> list[Widget]:
+    paused = {subject.id for subject in subjects if subject.status == SubjectStatus.paused}
+    return [widget for widget in widgets if widget.subject_id not in paused]
 
 
 def _band_index(band: RankBand) -> int:
@@ -116,19 +124,20 @@ def lid_projection(
     step does not invent a morning engine.
     """
     card = drift_card(subjects, instances, now, histories)
+    visible = _without_paused(subjects, widgets)
 
-    today_widgets = _today_widgets(widgets, now)
+    today_widgets = _today_widgets(visible, now)
     today_ids = {widget.id for widget in today_widgets}
     lifetime = [
         widget
-        for widget in widgets
+        for widget in visible
         if widget.section == WidgetSection.lifetime
         and widget.id not in today_ids
         and widget.status != WidgetStatus.done
     ]
-    soon = [widget for widget in widgets if widget.section == WidgetSection.soon]
+    soon = [widget for widget in visible if widget.section == WidgetSection.soon]
     postponed = [
-        widget for widget in widgets if widget.section == WidgetSection.postponed
+        widget for widget in visible if widget.section == WidgetSection.postponed
     ]
 
     today: list[WidgetTodayItem | DriftTodayItem] = [

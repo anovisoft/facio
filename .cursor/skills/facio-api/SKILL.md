@@ -19,7 +19,7 @@ Do **not** follow `.cursor/skills/fastapi-templates/` in **В1–В2** — that 
 - Package: `apps/api`, entry `facio_api`. Depend on `facio_domain`.
 - Talk is the job until wave 3: accept a desk snapshot + utterance, return a validated patch and assistant text. Wave 3 adds server of record, Sign in with Apple, push jobs — still this app, not a second repo.
 - Model key stays on the server. The client never sees it.
-- No Postgres, vector index, broker, or RAG until wave **В3**. Wave 1 talk stays snapshot-in / validated desk-out. **В1.0–В1.6 done.** Talking is allowed; a desk write without a tool is a bug. `run_turn` sends one empty-tools nudge. `pytest -m live` (or `--live`) asserts B1.2 desk invariants; default `pytest` skips live even if `.env` has keys. Live 8/8 (2026-08-20). MCP is `facio_api.mcp` (stdio, same 16 names, `apply_tool`). Do not add empty `accounts/` / `desk/` / `jobs/` before those steps.
+- No Postgres, vector index, broker, or RAG until wave **В3**. Wave 1 talk stays snapshot-in / validated desk-out. **В1.0–В1.6 done.** Talking is allowed; a desk write without a tool is a bug. `run_turn` sends one empty-tools nudge. `pytest -m live` (or `--live`) asserts B1.2 desk invariants; default `pytest` skips live even if `.env` has keys. Live 8/8 (2026-08-20). MCP is `facio_api.mcp` (stdio, `TOOL_NAMES`, `apply_tool`). В2.3 is in: `freeze_subject` / `thaw_subject` with goldens `pain_skip_freeze` / `thaw_pause` (Q22). Do not add empty `accounts/` / `desk/` / `jobs/` before those steps.
 - Lid execute stays on device. This service must not be required to open Today or tick a widget.
 
 ## Tools and patches

@@ -21,13 +21,14 @@ enum LidProjectionLaw {
         histories: [String: DriftAskState] = [:]
     ) -> LidProjection {
         let card = DriftLaw.driftCard(subjects: subjects, instances: instances, now: now, histories: histories)
-        let todayWidgets = todayWidgets(from: widgets, now: now)
+        let visible = withoutPaused(subjects: subjects, widgets: widgets)
+        let todayWidgets = todayWidgets(from: visible, now: now)
         let todayIds = Set(todayWidgets.map(\.id))
-        let lifetime = widgets
+        let lifetime = visible
             .filter { $0.section == .lifetime && !todayIds.contains($0.id) && $0.status != .done }
             .sorted { $0.id < $1.id }
-        let soon = widgets.filter { $0.section == .soon }.sorted { $0.id < $1.id }
-        let postponed = widgets.filter { $0.section == .postponed }.sorted { $0.id < $1.id }
+        let soon = visible.filter { $0.section == .soon }.sorted { $0.id < $1.id }
+        let postponed = visible.filter { $0.section == .postponed }.sorted { $0.id < $1.id }
 
         var today: [TodayItem] = todayWidgets.map { widget in
             .widget(band: widgetRankBand(widget, now: now), widget: widget)
@@ -46,6 +47,11 @@ enum LidProjectionLaw {
             postponed: postponed,
             driftCard: card
         )
+    }
+
+    private static func withoutPaused(subjects: [Subject], widgets: [Widget]) -> [Widget] {
+        let paused = Set(subjects.filter { $0.status == .paused }.map(\.id))
+        return widgets.filter { !paused.contains($0.subjectId) }
     }
 
     private static func isDoneToday(_ widget: Widget, now: Date) -> Bool {

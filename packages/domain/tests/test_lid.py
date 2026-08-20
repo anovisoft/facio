@@ -7,6 +7,7 @@ from facio_domain.lid import lid_projection
 from facio_domain.models import (
     DriftTodayItem,
     RankBand,
+    SubjectStatus,
     Widget,
     WidgetPayload,
     WidgetSection,
@@ -192,3 +193,28 @@ def test_sections_pass_through(subjects, widgets, now) -> None:
     assert projection.today == []
     assert projection.soon == []
     assert projection.postponed == []
+
+
+def test_paused_bike_reminder_leaves_all_sections(subjects, widgets, now) -> None:
+    paused = [
+        subject.model_copy(update={"status": SubjectStatus.paused, "paused_at": now})
+        if subject.id == "bike"
+        else subject
+        for subject in subjects
+    ]
+    today_bike = next(row for row in widgets if row.id == "bike-reminder").model_copy(
+        update={"section": WidgetSection.today}
+    )
+    projection = lid_projection(now, paused, [], [*widgets, today_bike])
+    today_ids = {
+        item.widget.id
+        for item in projection.today
+        if isinstance(item, WidgetTodayItem)
+    }
+    section_ids = {
+        widget.id
+        for widget in [*projection.lifetime, *projection.soon, *projection.postponed]
+    }
+    assert "bike-reminder" not in today_ids
+    assert "bike-reminder" not in section_ids
+    assert "push-ups-counter" in section_ids

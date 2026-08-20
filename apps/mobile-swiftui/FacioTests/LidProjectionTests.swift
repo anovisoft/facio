@@ -96,6 +96,32 @@ final class LidProjectionTests: XCTestCase {
         XCTAssertTrue(projection.today.isEmpty)
     }
 
+    func testPausedBikeReminderLeavesAllSections() throws {
+        var subjects = try DomainFixtures.subjects()
+        let now = try DomainFixtures.now()
+        let index = try XCTUnwrap(subjects.firstIndex { $0.id == "bike" })
+        subjects[index] = SubjectLaw.freeze(subjects[index], now: now)
+        var widgets = try DomainFixtures.widgets()
+        let reminderIndex = try XCTUnwrap(widgets.firstIndex { $0.id == "bike-reminder" })
+        var todayBike = widgets[reminderIndex]
+        todayBike.section = .today
+        widgets.append(todayBike)
+        let projection = LidProjectionLaw.project(
+            now: now,
+            subjects: subjects,
+            instances: [],
+            widgets: widgets
+        )
+        let todayIds = projection.today.compactMap { item -> String? in
+            if case .widget(_, let widget) = item { return widget.id }
+            return nil
+        }
+        let sectionIds = Set(projection.lifetime.map(\.id) + projection.soon.map(\.id) + projection.postponed.map(\.id))
+        XCTAssertFalse(todayIds.contains("bike-reminder"))
+        XCTAssertFalse(sectionIds.contains("bike-reminder"))
+        XCTAssertTrue(sectionIds.contains("push-ups-counter"))
+    }
+
     private func widget(
         _ id: String,
         status: WidgetStatus = .ready,

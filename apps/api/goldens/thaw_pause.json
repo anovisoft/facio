@@ -1,0 +1,24 @@
+{
+  "id": "thaw_pause",
+  "utterance": "отпустило",
+  "match": ["отпустило"],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "thaw_subject",
+          "arguments": {
+            "subject_id": "bike"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Снял паузу с велосипеда."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": ["thaw_subject"]
+  }
+}

@@ -22,7 +22,7 @@ CUE_ARGS = {
 def test_names_match_tool_names() -> None:
     session = DeskSession(founding_desk(now=NOW), now=NOW)
     assert session.names() == list(TOOL_NAMES)
-    assert len(session.names()) == 16
+    assert len(session.names()) == len(TOOL_NAMES)
 
 
 def test_list_desk_matches_direct_apply() -> None:

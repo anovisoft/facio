@@ -9,6 +9,7 @@ struct Subject: Codable, Sendable, Equatable, Identifiable {
     var target: Target?
     var instanceIds: [String]
     var status: SubjectStatus
+    var pausedAt: Date?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -19,6 +20,7 @@ struct Subject: Codable, Sendable, Equatable, Identifiable {
         case target
         case instanceIds = "instance_ids"
         case status
+        case pausedAt = "paused_at"
     }
 
     init(
@@ -29,7 +31,8 @@ struct Subject: Codable, Sendable, Equatable, Identifiable {
         cueIds: [String] = [],
         target: Target? = nil,
         instanceIds: [String] = [],
-        status: SubjectStatus = .active
+        status: SubjectStatus = .active,
+        pausedAt: Date? = nil
     ) {
         self.id = id
         self.title = title
@@ -39,5 +42,19 @@ struct Subject: Codable, Sendable, Equatable, Identifiable {
         self.target = target
         self.instanceIds = instanceIds
         self.status = status
+        self.pausedAt = pausedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        cadence = try container.decode(Cadence.self, forKey: .cadence)
+        window = try container.decodeIfPresent(TimeWindow.self, forKey: .window)
+        cueIds = try container.decodeIfPresent([String].self, forKey: .cueIds) ?? []
+        target = try container.decodeIfPresent(Target.self, forKey: .target)
+        instanceIds = try container.decodeIfPresent([String].self, forKey: .instanceIds) ?? []
+        status = try container.decodeIfPresent(SubjectStatus.self, forKey: .status) ?? .active
+        pausedAt = try container.decodeIfPresent(Date.self, forKey: .pausedAt)
     }
 }

@@ -54,6 +54,14 @@ def test_retired_subject_is_not_drifting(bike: Subject, now: datetime) -> None:
     assert is_drifting(retired, instances, now) is False
 
 
+def test_paused_subject_is_not_drifting(bike: Subject, now: datetime) -> None:
+    paused = bike.model_copy(
+        update={"status": SubjectStatus.paused, "paused_at": now}
+    )
+    instances = [_instance("bike", "2026-07-25T18:00:00")]
+    assert is_drifting(paused, instances, now) is False
+
+
 def test_drift_card_picks_oldest_silence(
     bike: Subject, vegetables: Subject, now: datetime
 ) -> None:

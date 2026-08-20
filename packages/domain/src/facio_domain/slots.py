@@ -115,7 +115,7 @@ def _projections(
     origin: date,
     last: date,
 ) -> list[Slot]:
-    if subject.status == SubjectStatus.retired:
+    if subject.status in {SubjectStatus.retired, SubjectStatus.paused}:
         return []
     cadence = subject.cadence
     match cadence.period:

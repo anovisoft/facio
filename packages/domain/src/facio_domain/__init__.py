@@ -36,7 +36,13 @@ from facio_domain.models import (
     Window,
 )
 from facio_domain.reminder import reminder_fire_at, window_from_closing
-from facio_domain.subjects import retire_subject, shrink_subject
+from facio_domain.subjects import (
+    freeze_subject,
+    pause_check_in_at,
+    retire_subject,
+    shrink_subject,
+    thaw_subject,
+)
 
 __all__ = [
     "Cadence",
@@ -67,6 +73,8 @@ __all__ = [
     "apply_tool",
     "default_surface",
     "founding_desk",
+    "freeze_subject",
+    "pause_check_in_at",
     "reports_pain",
     "snapshot_cards",
     "times_per_week",
@@ -77,6 +85,7 @@ __all__ = [
     "reminder_fire_at",
     "retire_subject",
     "shrink_subject",
+    "thaw_subject",
     "silence_days",
     "silence_threshold",
     "slot_horizon",

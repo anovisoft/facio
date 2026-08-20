@@ -6,7 +6,7 @@ from datetime import time
 
 import pytest
 
-from facio_domain.models import CueSurface, Desk, WidgetType
+from facio_domain.models import CueSurface, Desk, SubjectStatus, WidgetType
 from facio_domain.tools import times_per_week
 
 from facio_api.talk.schemas import TalkTurnResponse
@@ -187,6 +187,20 @@ async def test_pain_does_not_raise_goal_or_cadence(live_play) -> None:
                 continue
             weekly = float(count) * 7 if period == "day" else float(count)
             if weekly > FOUNDING_PUSH_WEEKLY:
+                assert call.ok is False
+
+
+async def test_pain_skip_freezes_bike_without_raising_goal(live_play) -> None:
+    result = await live_play("сегодня пропустил, спина болела")
+    bike = _subject(result.desk, "bike")
+    assert bike.status == SubjectStatus.paused
+    push = _subject(result.desk, "push-ups")
+    assert push.target is not None
+    assert push.target.goal <= FOUNDING_PUSH_GOAL
+    for call in result.tool_calls:
+        if call.name == "update_widget":
+            target = call.arguments.get("target")
+            if target is not None and int(target) > FOUNDING_PUSH_GOAL:
                 assert call.ok is False
 
 

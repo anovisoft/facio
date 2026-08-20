@@ -3,8 +3,8 @@ from __future__ import annotations
 from datetime import datetime, time
 
 from facio_domain.desk import founding_desk
-from facio_domain.models import CueSurface, Desk, WidgetType
-from facio_domain.tools import times_per_week
+from facio_domain.models import CueSurface, Desk, SubjectStatus, WidgetType
+from facio_domain.tools import apply_tool, times_per_week
 
 from facio_api.providers.scripted import ScriptedProvider
 from facio_api.talk.goldens import load_goldens, match_golden
@@ -55,7 +55,9 @@ def test_goldens_are_present() -> None:
         "miss_skip",
         "named_hour_beats_closing",
         "pain_raise",
+        "pain_skip_freeze",
         "remind_at_19",
+        "thaw_pause",
     }
 
 
@@ -268,3 +270,59 @@ async def test_unknown_utterance_stays_text_only() -> None:
     result = await _play(utterance)
     assert result.mutated is False
     assert result.tool_calls == []
+
+
+async def test_pain_skip_freeze_pauses_bike_without_raising() -> None:
+    utterance = "сегодня пропустил, спина болела"
+    golden = match_golden(utterance)
+    assert golden is not None
+    assert golden.id == "pain_skip_freeze"
+    assert "сегодня не сходил" not in utterance
+    result = await _play(golden.utterance)
+    names = _names(result)
+    assert result.mutated is True
+    assert names == golden.expect.tools
+    for name in golden.expect.forbidden_tools:
+        assert name not in names
+    skip = next(call for call in result.tool_calls if call.name == "skip")
+    assert skip.arguments["widget_id"] == "bike-reminder"
+    freeze = next(call for call in result.tool_calls if call.name == "freeze_subject")
+    assert freeze.arguments["subject_id"] == "bike"
+    assert freeze.ok is True
+    bike = _subject(result.desk, "bike")
+    assert bike.status == SubjectStatus.paused
+    assert bike.paused_at == NOW
+    push = _subject(result.desk, "push-ups")
+    assert push.target is not None
+    assert push.target.goal <= 30
+
+
+async def test_thaw_pause_restores_bike() -> None:
+    golden = match_golden("отпустило")
+    assert golden is not None
+    assert golden.id == "thaw_pause"
+    frozen = apply_tool(
+        founding_desk(now=NOW),
+        "freeze_subject",
+        {"subject_id": "bike"},
+        pain=False,
+        now=NOW,
+    )
+    assert frozen.ok
+    result = await run_turn(
+        TalkTurnRequest(
+            utterance=golden.utterance,
+            desk=frozen.desk,
+            thread=[],
+            thread_id="golden",
+            now=NOW,
+        ),
+        ScriptedProvider.for_utterance(golden.utterance),
+        now=NOW,
+    )
+    names = _names(result)
+    assert result.mutated is True
+    assert names == golden.expect.tools
+    bike = _subject(result.desk, "bike")
+    assert bike.status == SubjectStatus.active
+    assert bike.paused_at is None

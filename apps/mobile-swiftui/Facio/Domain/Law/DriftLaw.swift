@@ -29,7 +29,7 @@ enum DriftLaw {
     }
 
     static func isDrifting(_ subject: Subject, instances: [Instance], now: Date) -> Bool {
-        if subject.status == .retired { return false }
+        if subject.status == .retired || subject.status == .paused { return false }
         guard let threshold = silenceThreshold(for: subject.cadence) else { return false }
         guard let days = silenceDays(of: subject, in: instances, now: now) else { return false }
         return days >= threshold

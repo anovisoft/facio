@@ -19,6 +19,9 @@ targets:
     deploymentTarget: "18.0"
     sources:
       - path: Facio
+    configFiles:
+      Debug: Config/TalkURL.xcconfig
+      Release: Config/TalkURL.xcconfig
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.anovisoft.facio
@@ -47,7 +50,8 @@ targets:
           - UIInterfaceOrientationPortrait
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
-        FacioTalkURL: http://127.0.0.1:8000
+        NSLocalNetworkUsageDescription: Facio ходит на компьютер в этой Wi-Fi, чтобы рот работал.
+        FacioTalkURL: $(FACIO_TALK_URL)
     entitlements:
       path: Facio/Facio.entitlements
       properties: {}

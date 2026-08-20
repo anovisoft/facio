@@ -1,10 +1,18 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 import pytest
 from pydantic import ValidationError
 
 from facio_domain.models import Cadence, Cue, CueKind, Subject, SubjectStatus
-from facio_domain.subjects import retire_subject, shrink_subject
+from facio_domain.subjects import (
+    freeze_subject,
+    pause_check_in_at,
+    retire_subject,
+    shrink_subject,
+    thaw_subject,
+)
 
 
 def test_subject_has_no_stored_drift(push_ups: Subject) -> None:
@@ -85,3 +93,32 @@ def test_retire_and_shrink_keep_instances_and_cues(push_ups: Subject) -> None:
     assert retired.instance_ids == marked.instance_ids
     assert shrunk.cue_ids == marked.cue_ids
     assert retired.cue_ids == marked.cue_ids
+
+
+def test_freeze_and_thaw_keep_cadence_target_instances_and_cues(push_ups: Subject) -> None:
+    now = datetime(2026, 8, 15, 12, 0, 0)
+    marked = push_ups.model_copy(
+        update={"instance_ids": ["a"], "cue_ids": ["push-ups-brace"]}
+    )
+    frozen = freeze_subject(marked, now)
+    assert frozen.status == SubjectStatus.paused
+    assert frozen.paused_at == now
+    assert frozen.cadence == marked.cadence
+    assert frozen.target == marked.target
+    assert frozen.instance_ids == marked.instance_ids
+    assert frozen.cue_ids == marked.cue_ids
+    again = freeze_subject(frozen, datetime(2026, 8, 16, 9, 0, 0))
+    assert again.paused_at == datetime(2026, 8, 16, 9, 0, 0)
+    assert again.cadence == marked.cadence
+    thawed = thaw_subject(frozen)
+    assert thawed.status == SubjectStatus.active
+    assert thawed.paused_at is None
+    assert thawed.cadence == marked.cadence
+    assert thawed.target == marked.target
+    assert thawed.instance_ids == marked.instance_ids
+    assert thawed.cue_ids == marked.cue_ids
+
+
+def test_pause_check_in_at_is_two_days() -> None:
+    now = datetime(2026, 8, 15, 12, 0, 0)
+    assert pause_check_in_at(now) == datetime(2026, 8, 17, 12, 0, 0)

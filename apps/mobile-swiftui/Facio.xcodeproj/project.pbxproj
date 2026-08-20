@@ -140,6 +140,7 @@
 		1016DF38D6C3A774AA95E8B5 /* DeskRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskRepository.swift; sourceTree = "<group>"; };
 		12BCA9438FAD0EB8554108A5 /* Instance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instance.swift; sourceTree = "<group>"; };
 		131D42EFFB9F1F2770F97660 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		1377E6F8F845B6FD7C2B8337 /* TalkURL.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = TalkURL.xcconfig; sourceTree = "<group>"; };
 		14F80C2FE128D42C6903550B /* Facio.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Facio.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		15209F287CF3C54B427B68E7 /* LidProjectionLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidProjectionLaw.swift; sourceTree = "<group>"; };
 		16390EEDE51BCA21EF87D58F /* DisplayCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayCopy.swift; sourceTree = "<group>"; };
@@ -252,6 +253,7 @@
 		174268013F18236AFC948BD5 = {
 			isa = PBXGroup;
 			children = (
+				3CAC313E84D57E3AAEEA74CE /* Config */,
 				1E1811952F6F3206E92E58DF /* Facio */,
 				ACC5102EBA39B0AC9DD5DCEC /* FacioTests */,
 				211A4057D4375EFFC82958DE /* fasio */,
@@ -319,6 +321,14 @@
 				16CFE0044D8D096495F3CB81 /* RootView.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		3CAC313E84D57E3AAEEA74CE /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				1377E6F8F845B6FD7C2B8337 /* TalkURL.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		4679AD887F36B6D8067784ED /* Inspect */ = {
@@ -912,6 +922,7 @@
 		};
 		BCE4CA95E2057E6632579C28 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1377E6F8F845B6FD7C2B8337 /* TalkURL.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Facio/Facio.entitlements;
@@ -958,6 +969,7 @@
 		};
 		E4E572EF7EC22B1EBD004797 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1377E6F8F845B6FD7C2B8337 /* TalkURL.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Facio/Facio.entitlements;

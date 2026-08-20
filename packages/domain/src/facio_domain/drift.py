@@ -77,7 +77,7 @@ def is_drifting(
     Missing a weekday at 3×/week is not failure; v0 drift is silence (Q27),
     not an under-count of a partially filled period.
     """
-    if subject.status == SubjectStatus.retired:
+    if subject.status in {SubjectStatus.retired, SubjectStatus.paused}:
         return False
     threshold = silence_threshold(subject.cadence)
     if threshold is None:

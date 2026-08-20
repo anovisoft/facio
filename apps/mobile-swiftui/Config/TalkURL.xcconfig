@@ -1,0 +1,5 @@
+// Default: simulator on the same Mac. Override with TalkURL.local.xcconfig
+// for a physical phone on the same Wi-Fi (file is gitignored).
+// `$()` breaks `//` so xcconfig does not treat the URL as a comment.
+FACIO_TALK_URL = http:/$()/127.0.0.1:8000
+#include? "TalkURL.local.xcconfig"

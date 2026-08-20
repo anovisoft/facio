@@ -139,6 +139,20 @@ final class SlotLawTests: XCTestCase {
         XCTAssertTrue(owned.allSatisfy { $0.instanceId != nil })
     }
 
+    func testPausedSubjectShowsRealInstanceWithoutProjections() throws {
+        let origin = SlotLaw.startOfDay(for: noon(2026, 8, 12))
+        let desk = try desk(
+            [subject("bike", cadence: Cadence.of(count: 2, period: .week), status: .paused)],
+            [Instance(id: "bike-open", subjectId: "bike", when: noon(2026, 8, 12), status: .prepared)]
+        )
+        let horizon = SlotLaw.horizon(desk: desk, origin: origin)
+        let owned = slots(horizon, subjectId: "bike")
+        XCTAssertEqual(owned.count, 1)
+        XCTAssertEqual(owned[0].instanceId, "bike-open")
+        XCTAssertEqual(owned[0].kind, .due)
+        XCTAssertTrue(owned.allSatisfy { $0.instanceId != nil })
+    }
+
     func testTwoInstancesSameSubjectSameDayBothEmitted() throws {
         let origin = SlotLaw.startOfDay(for: noon(2026, 8, 12))
         let morning = noon(2026, 8, 12)

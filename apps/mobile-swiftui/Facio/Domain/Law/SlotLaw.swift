@@ -105,7 +105,7 @@ enum SlotLaw {
         last: Date,
         calendar: Calendar
     ) -> [Slot] {
-        if subject.status == .retired { return [] }
+        if subject.status == .retired || subject.status == .paused { return [] }
         let cadence = subject.cadence
         switch cadence.period {
         case .none:

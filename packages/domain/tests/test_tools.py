@@ -6,9 +6,10 @@ import pytest
 
 from facio_domain.cues import add_cue
 from facio_domain.desk import founding_desk
-from facio_domain.models import CueOrigin, CueSurface, WidgetType
+from facio_domain.models import CueOrigin, CueSurface, SubjectStatus, WidgetType
 from facio_domain.pain import reports_pain
 from facio_domain.tools import (
+    INVALID,
     PAIN_FORBIDS_RAISE,
     SURFACE_REQUIRED,
     UNSUPPORTED_WIDGET_TYPE,
@@ -116,6 +117,58 @@ def test_pain_blocks_cadence_raise() -> None:
     assert outcome.error == PAIN_FORBIDS_RAISE
     cadence = next(row.cadence for row in desk.subjects if row.id == "push-ups")
     assert times_per_week(cadence) == 3
+
+
+def test_pain_does_not_block_freeze() -> None:
+    desk = founding_desk(now=NOW)
+    bike = next(row for row in desk.subjects if row.id == "bike")
+    cadence = bike.cadence
+    target = bike.target
+    instance_ids = list(bike.instance_ids)
+    cue_ids = list(bike.cue_ids)
+    outcome = _apply(desk, "freeze_subject", {"subject_id": "bike"}, pain=True)
+    assert outcome.ok
+    frozen = next(row for row in outcome.desk.subjects if row.id == "bike")
+    assert frozen.status == SubjectStatus.paused
+    assert frozen.paused_at == NOW
+    assert frozen.cadence == cadence
+    assert frozen.target == target
+    assert frozen.instance_ids == instance_ids
+    assert frozen.cue_ids == cue_ids
+    widgets = [row for row in outcome.desk.widgets if row.subject_id == "bike"]
+    assert any(row.id == "bike-reminder" for row in widgets)
+
+
+def test_freeze_retired_is_invalid() -> None:
+    desk = founding_desk(now=NOW)
+    retired = _apply(desk, "retire_subject", {"subject_id": "bike"})
+    outcome = _apply(retired.desk, "freeze_subject", {"subject_id": "bike"})
+    assert not outcome.ok
+    assert outcome.error == INVALID
+    assert outcome.desk is retired.desk
+    bike = next(row for row in outcome.desk.subjects if row.id == "bike")
+    assert bike.status == SubjectStatus.retired
+    assert bike.paused_at is None
+
+
+def test_thaw_restores_active_and_clears_paused_at() -> None:
+    desk = founding_desk(now=NOW)
+    frozen = _apply(desk, "freeze_subject", {"subject_id": "bike"})
+    outcome = _apply(frozen.desk, "thaw_subject", {"subject_id": "bike"})
+    assert outcome.ok
+    bike = next(row for row in outcome.desk.subjects if row.id == "bike")
+    assert bike.status == SubjectStatus.active
+    assert bike.paused_at is None
+
+
+def test_thaw_without_pause_is_invalid() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(desk, "thaw_subject", {"subject_id": "bike"})
+    assert not outcome.ok
+    assert outcome.error == INVALID
+    assert outcome.desk is desk
+    bike = next(row for row in outcome.desk.subjects if row.id == "bike")
+    assert bike.status == SubjectStatus.active
 
 
 @pytest.mark.parametrize("widget_type", ["checklist", "timer", "stepper"])

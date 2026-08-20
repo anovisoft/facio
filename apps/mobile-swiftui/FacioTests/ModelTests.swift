@@ -62,4 +62,41 @@ final class ModelTests: XCTestCase {
         XCTAssertEqual(retired.instanceIds, marked.instanceIds)
         XCTAssertEqual(shrunk.cueIds, marked.cueIds)
     }
+
+    func testFreezeAndThawKeepCadenceTargetInstancesAndCues() throws {
+        var marked = try DomainFixtures.subject("push-ups")
+        marked.instanceIds = ["a"]
+        let now = try DomainFixtures.now()
+        let frozen = SubjectLaw.freeze(marked, now: now)
+        XCTAssertEqual(frozen.status, .paused)
+        XCTAssertEqual(frozen.pausedAt, now)
+        XCTAssertEqual(frozen.cadence, marked.cadence)
+        XCTAssertEqual(frozen.target, marked.target)
+        XCTAssertEqual(frozen.instanceIds, marked.instanceIds)
+        XCTAssertEqual(frozen.cueIds, marked.cueIds)
+        let later = try XCTUnwrap(FacioJSON.date(from: "2026-08-16T09:00:00"))
+        let again = SubjectLaw.freeze(frozen, now: later)
+        XCTAssertEqual(again.pausedAt, later)
+        XCTAssertEqual(again.cadence, marked.cadence)
+        let thawed = SubjectLaw.thaw(frozen)
+        XCTAssertEqual(thawed.status, .active)
+        XCTAssertNil(thawed.pausedAt)
+        XCTAssertEqual(thawed.cadence, marked.cadence)
+        XCTAssertEqual(thawed.target, marked.target)
+        XCTAssertEqual(thawed.instanceIds, marked.instanceIds)
+        XCTAssertEqual(thawed.cueIds, marked.cueIds)
+        XCTAssertEqual(
+            SubjectLaw.pauseCheckInAt(now),
+            now.addingTimeInterval(SubjectLaw.pauseCheckIn)
+        )
+    }
+
+    func testOldSubjectJsonWithoutPausedAtDecodes() throws {
+        let json = Data(
+            #"{"id":"bike","title":"exercise bike","cadence":{"count":2,"period":"week"},"status":"active"}"#.utf8
+        )
+        let subject = try FacioJSON.decoder.decode(Subject.self, from: json)
+        XCTAssertNil(subject.pausedAt)
+        XCTAssertEqual(subject.status, .active)
+    }
 }

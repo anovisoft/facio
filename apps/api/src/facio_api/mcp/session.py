@@ -12,7 +12,7 @@ MCP_ORIGIN = CueOrigin(chat_id="mcp")
 
 
 class DeskSession:
-    """Hold one desk snapshot and apply the same 16 names as talk."""
+    """Hold one desk snapshot and apply the same names as talk."""
 
     def __init__(self, desk: Desk, *, now: datetime, pain: bool = False) -> None:
         self.desk = desk

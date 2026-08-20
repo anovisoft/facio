@@ -203,6 +203,20 @@ def test_retired_subject_shows_real_instance_without_projections() -> None:
     assert all(slot.instance_id is not None for slot in slots)
 
 
+def test_paused_subject_shows_real_instance_without_projections() -> None:
+    origin = date(2026, 8, 12)
+    desk = _desk(
+        [_subject("bike", Cadence.of(2, "week"), status=SubjectStatus.paused)],
+        [_instance("bike-open", "bike", datetime(2026, 8, 12, 8, 0, 0))],
+    )
+    horizon = slot_horizon(desk, origin)
+    slots = _slots(horizon, "bike")
+    assert len(slots) == 1
+    assert slots[0].instance_id == "bike-open"
+    assert slots[0].kind == SlotKind.due
+    assert all(slot.instance_id is not None for slot in slots)
+
+
 def test_two_instances_same_subject_same_day_both_emitted() -> None:
     origin = date(2026, 8, 12)
     when = datetime(2026, 8, 12, 8, 0, 0)

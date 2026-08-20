@@ -106,7 +106,7 @@ It is sewn into the **subject and its step** — not into a Guide. That noun sta
 ## Tools (conceptual)
 
 - `list_desk`, `get_widget`
-- `get_subject`, `set_cadence`, `shrink_subject`, `retire_subject`
+- `get_subject`, `set_cadence`, `shrink_subject`, `retire_subject`, `freeze_subject`, `thaw_subject`
 - `create_widget`, `update_widget`, `archive_widget`
 - `complete`, `skip`, `postpone`, `move_to_date`
 - `set_reminder`

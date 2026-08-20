@@ -1,0 +1,6 @@
+// Copy to TalkURL.local.xcconfig (gitignored). Then:
+//   ipconfig getifaddr en0
+//   xcodegen generate
+// Rebuild onto the phone. Same Wi-Fi, not a guest/isolated network.
+// `$()` breaks `//` so xcconfig does not treat the URL as a comment.
+FACIO_TALK_URL = http:/$()/192.168.1.17:8000

@@ -36,6 +36,16 @@ final class DriftLawTests: XCTestCase {
         XCTAssertFalse(DriftLaw.isDrifting(bike, instances: instances, now: try DomainFixtures.now()))
     }
 
+    func testPausedSubjectIsNotDrifting() throws {
+        var bike = try DomainFixtures.subject("bike")
+        let now = try DomainFixtures.now()
+        bike.status = .paused
+        bike.pausedAt = now
+        let last = try XCTUnwrap(FacioJSON.date(from: "2026-07-25T18:00:00"))
+        let instances = [Instance(id: "old", subjectId: "bike", when: last, status: .completed)]
+        XCTAssertFalse(DriftLaw.isDrifting(bike, instances: instances, now: now))
+    }
+
     func testDriftCardPicksOldestSilence() throws {
         let bike = try DomainFixtures.subject("bike")
         let vegetables = try DomainFixtures.subject("vegetables")

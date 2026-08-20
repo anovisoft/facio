@@ -335,6 +335,19 @@
         "status": {
           "$ref": "#/$defs/SubjectStatus",
           "default": "active"
+        },
+        "paused_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Paused At"
         }
       },
       "required": [
@@ -349,6 +362,7 @@
       "enum": [
         "active",
         "shrunk",
+        "paused",
         "retired"
       ],
       "title": "SubjectStatus",
@@ -616,7 +630,7 @@
     },
     "Window": {
       "additionalProperties": false,
-      "description": "When the practice can still happen.\n\n`latest_by` is the clock hour the reminder fires.\n`closes_at` is the optional source fact (gym door). Founding rule:\nlatest_by = closes_at minus 3 hours (22:00 \u2192 19:00).",
+      "description": "When the practice can still happen.\n\n`latest_by` is the clock hour the reminder fires.\n`closes_at` is the optional source fact (gym door). If the hour was not\nstated, latest_by = closes_at minus 3 hours (22:00 \u2192 19:00). A stated\nlatest_by wins; do not replace 19:00 with 23:00 \u2212 3h = 20:00.",
       "properties": {
         "latest_by": {
           "format": "time",

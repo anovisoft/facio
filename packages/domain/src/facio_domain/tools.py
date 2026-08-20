@@ -34,7 +34,7 @@ from facio_domain.models import (
     Window,
 )
 from facio_domain.reminder import reminder_fire_at, window_from_closing
-from facio_domain.subjects import retire_subject, shrink_subject
+from facio_domain.subjects import freeze_subject, retire_subject, shrink_subject, thaw_subject
 
 TOOL_NAMES = (
     "list_desk",
@@ -43,6 +43,8 @@ TOOL_NAMES = (
     "set_cadence",
     "shrink_subject",
     "retire_subject",
+    "freeze_subject",
+    "thaw_subject",
     "create_widget",
     "update_widget",
     "archive_widget",
@@ -351,6 +353,42 @@ def _retire(desk: Desk, args: dict[str, Any], **_: Any) -> ToolOutcome:
         name="retire_subject",
         ok=True,
         data={"subject_id": subject.id, "status": SubjectStatus.retired},
+        mutated=True,
+        snapshot_widget_ids=_widgets_for(desk, subject.id),
+    )
+
+
+def _freeze(desk: Desk, args: dict[str, Any], *, now: datetime, **_: Any) -> ToolOutcome:
+    subject = _require_subject(desk, str(args.get("subject_id", "")))
+    if subject.status == SubjectStatus.retired:
+        raise ToolFail(INVALID)
+    next_subject = freeze_subject(subject, now)
+    _replace_subject(desk, next_subject)
+    paused_at = next_subject.paused_at
+    return ToolOutcome(
+        desk=desk,
+        name="freeze_subject",
+        ok=True,
+        data={
+            "subject_id": subject.id,
+            "status": SubjectStatus.paused,
+            "paused_at": paused_at.isoformat(timespec="seconds") if paused_at else None,
+        },
+        mutated=True,
+        snapshot_widget_ids=_widgets_for(desk, subject.id),
+    )
+
+
+def _thaw(desk: Desk, args: dict[str, Any], **_: Any) -> ToolOutcome:
+    subject = _require_subject(desk, str(args.get("subject_id", "")))
+    if subject.status != SubjectStatus.paused:
+        raise ToolFail(INVALID)
+    _replace_subject(desk, thaw_subject(subject))
+    return ToolOutcome(
+        desk=desk,
+        name="thaw_subject",
+        ok=True,
+        data={"subject_id": subject.id, "status": SubjectStatus.active},
         mutated=True,
         snapshot_widget_ids=_widgets_for(desk, subject.id),
     )
@@ -693,6 +731,8 @@ _DISPATCH = {
     "set_cadence": _set_cadence,
     "shrink_subject": _shrink,
     "retire_subject": _retire,
+    "freeze_subject": _freeze,
+    "thaw_subject": _thaw,
     "create_widget": _create_widget,
     "update_widget": _update_widget,
     "archive_widget": _archive_widget,
