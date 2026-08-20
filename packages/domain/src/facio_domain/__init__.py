@@ -12,6 +12,7 @@ from facio_domain.drift import (
     silence_threshold,
 )
 from facio_domain.lid import lid_projection, widget_rank_band
+from facio_domain.slots import DayStrip, Horizon, Slot, SlotKind, slot_horizon
 from facio_domain.models import (
     Cadence,
     Cue,
@@ -42,14 +43,18 @@ __all__ = [
     "Cue",
     "CueKind",
     "CueSurface",
+    "DayStrip",
     "Desk",
     "DriftAskState",
     "DriftCard",
     "DriftOffer",
+    "Horizon",
     "Instance",
     "InstanceStatus",
     "LidProjection",
     "RankBand",
+    "Slot",
+    "SlotKind",
     "Subject",
     "SubjectStatus",
     "Target",
@@ -74,6 +79,7 @@ __all__ = [
     "shrink_subject",
     "silence_days",
     "silence_threshold",
+    "slot_horizon",
     "widget_rank_band",
     "window_from_closing",
 ]

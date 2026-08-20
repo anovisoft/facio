@@ -16,6 +16,13 @@ struct InspectScreen: View {
     var body: some View {
         let instances = store.instances(for: subjectId)
         let selected = instances.first { $0.id == selectedId } ?? instances.first { $0.id == instanceId }
+        let origin = SlotLaw.startOfDay(for: Date())
+        let horizon = SlotLaw.horizon(desk: store.snapshot, origin: origin)
+        let laterHere = horizon.later.filter { day in
+            store.snapshot.instances.contains { instance in
+                instance.subjectId == subjectId && SlotLaw.isSameDay(instance.when, day)
+            }
+        }
         VStack(alignment: .leading, spacing: 20) {
             if let selected {
                 Text(DisplayCopy.loudDate(selected.when))
@@ -24,6 +31,17 @@ struct InspectScreen: View {
                     .fixedSize(horizontal: false, vertical: true)
                 Text(DisplayCopy.instanceStatus(selected.status))
                     .font(.title3)
+                    .foregroundStyle(.secondary)
+            }
+            InspectHorizonStrip(
+                days: horizon.days,
+                subjectId: subjectId,
+                selectedId: selectedId,
+                onSelectInstance: { selectedId = $0 }
+            )
+            ForEach(laterHere, id: \.timeIntervalSinceReferenceDate) { day in
+                Text(DisplayCopy.loudDate(day))
+                    .font(.title3.weight(.semibold))
                     .foregroundStyle(.secondary)
             }
             InstanceStrip(instances: instances, selectedId: $selectedId, onAdd: add)
