@@ -17,6 +17,6 @@ patch = validate_talk_patch(raw)
 ```
 
 - Depend on `facio_domain`. Keys stay on the server. `FACIO_MODEL_NAME` picks the vendor (`gpt-4o-mini` → OpenAI, `haiku` → Anthropic). Only the matching key is required.
-- Do not use `fastapi-templates` (too large). No Postgres / RAG / broker in v1.
+- Do not use `fastapi-templates` in В1–В2. В3 may use it for Postgres / accounts / desk. No Postgres / RAG / broker before В3.
 - Local run: Compose from repo root (`talk` :8000). Need `fastapi[standard]` if using `fastapi dev`.
 - Goldens before widening tools. Lid execute must work with this service down.

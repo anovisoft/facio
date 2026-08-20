@@ -12,14 +12,14 @@ Before writing the service, read:
 3. `.cursor/skills/fastapi/SKILL.md`
 4. `.cursor/skills/pytest-patterns/SKILL.md` when adding tests
 
-Do **not** follow `.cursor/skills/fastapi-templates/` — that layout is too large for this service.
+Do **not** follow `.cursor/skills/fastapi-templates/` in **В1–В2** — that layout assumes DB, JWT, CRUD layers from day one. **В3 may use it** for Postgres session, repositories, and account/desk wiring. Still: one package, law in `facio_domain`, no broker «на вырост», no second repo, Sign in with Apple not generic users CRUD. Do **not** keep the step-4 stub: after **В1.0**, `facio_api` is a service package (`main` factory, `config`, `routers`, `talk`, `providers`; later `mcp`, then `accounts` / `desk` / `jobs`).
 
 ## Shape
 
 - Package: `apps/api`, entry `facio_api`. Depend on `facio_domain`.
-- Talk is the job: accept a desk snapshot + utterance, return a validated patch and assistant text.
+- Talk is the job until wave 3: accept a desk snapshot + utterance, return a validated patch and assistant text. Wave 3 adds server of record, Sign in with Apple, push jobs — still this app, not a second repo.
 - Model key stays on the server. The client never sees it.
-- No Postgres, vector index, broker, or RAG in v1.
+- No Postgres, vector index, broker, or RAG until wave **В3**. Wave 1 talk stays snapshot-in / validated desk-out. **В1.0** (in progress, PO accepted 2026-08-20) splits the package: `create_app()`, health and talk on separate routers, providers as a package. Do not add empty `mcp/` / `accounts/` / `desk/` / `jobs/` before those steps.
 - Lid execute stays on device. This service must not be required to open Today or tick a widget.
 
 ## Tools and patches
@@ -38,4 +38,4 @@ Run locally with Compose from the repo root (`docker compose up --build`). One s
 
 ## Tests
 
-Keep `facio_domain` tests as the law. API tests cover validation, pain gate, and goldens. Mock the model provider; do not mock domain arithmetic.
+Keep `facio_domain` tests as the law. API tests cover validation, pain gate, and goldens; from В1.0 also router wiring. Mock the model provider; do not mock domain arithmetic. Wave 3 adds integration tests against a test database — still not a mocked ORM.

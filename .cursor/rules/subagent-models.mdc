@@ -47,4 +47,4 @@ An mdc rule does not load into the child. Name skills in the Task `prompt`.
 | FastAPI / talk / eval | `facio-api` + `fastapi` + `pytest-patterns` |
 | Domain law / fixtures | `facio-product` |
 
-Do not launch a SwiftUI or API implementer without those names. The lead agent keeps the lid, theme, and composer; subagents take a bounded slice after the contract exists.
+Do not launch a SwiftUI or API implementer without those names. The lead agent is **PM**: keeps the lid, theme, and composer; writes the contract; reviews the diff. Subagents are **developers**: bounded slice only after the contract exists.

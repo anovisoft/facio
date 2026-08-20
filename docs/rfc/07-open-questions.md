@@ -28,7 +28,7 @@ Do not invent these in implementation. Default until decided: the conservative c
 | Q16 | Horizontal category tabs | **Parked.** |
 | Q17 | Kebab vs current chat if widget never appeared | Current chat + widget as send-context. |
 | Q18 | Odd grid sizes and packing | Prefer `4×1` / `2×2` / `4×2` / `4×4`. Packing v0 in [03](./03-product.md): row-major in rank order, gaps allowed, no reflow. Revisit against a real week, not by adding a layout engine. |
-| Q19 | Auth | Device-id was prototype-only. Real accounts before multi-device sync. Provider TBD. |
+| Q19 | Auth | Device-id was prototype-only. Real accounts before multi-device sync. **Locked 2026-08-20 (PO):** iOS v1 = Sign in with Apple. Lid and talk work without login until wave 3. **Google parked** until a second platform (Android or web). If any third-party login ships, Sign in with Apple stays required. |
 | Q20 | Source of truth / offline | **Server of record** for widget state (as archive 0.1). Lid **reads from cache** so execute works offline (P5). Mutations queue and sync. Conflict: last-write-wins on **structure** (payload, `version`). **Runtime progress is not LWW** — ticks, elapsed timers and stepper position merge per item, and a stale structural write must never drop them ([06](./06-never-do.md) AI #2). Plain LWW over the whole widget silently eats a set logged offline, which is P5 failing at exactly the moment it matters. Still not designed here. |
 | Q21 | Reminder infra | OS local notification from the reminder object. Server fan-out later if local is not enough. No LLM at fire. |
 | Q22 | Eval harness | Required before widening the tool loop (create / mutate / explain). Not optional polish. |
@@ -71,4 +71,4 @@ Blueprint DSL, Intent Economy, Coach billing, social, “any intent,” speciali
 ## What “done” means for this concept pack
 
 Enough to implement **product** against when the locked list at the top holds.  
-Not done: Q16, Q19–Q24 as real designs, Q26–Q29 as measured answers, visual polish, implementation tickets.
+Not done: Q16, Q19–Q24 as real designs (Q19 **provider** locked 2026-08-20: Sign in with Apple on iOS; Google parked; session/sync still undesigned), Q26–Q29 as measured answers, visual polish, implementation tickets.
