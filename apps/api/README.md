@@ -40,4 +40,6 @@ source .venv/bin/activate
 pip install -e ../../packages/domain -e ".[dev]"
 cp .env.example .env
 fastapi dev
+# eval: pytest            # live skipped
+#       pytest -m live    # vendor; needs the key for FACIO_MODEL_NAME
 ```

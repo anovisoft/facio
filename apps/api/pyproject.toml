@@ -30,9 +30,10 @@ entrypoint = "facio_api.main:app"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "tests"]
 asyncio_mode = "auto"
 markers = [
     "unit: no network",
     "integration: FastAPI ASGI client",
+    "live: real vendor; opt in with pytest -m live or --live",
 ]

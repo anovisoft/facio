@@ -19,7 +19,7 @@ Do **not** follow `.cursor/skills/fastapi-templates/` in **В1–В2** — that 
 - Package: `apps/api`, entry `facio_api`. Depend on `facio_domain`.
 - Talk is the job until wave 3: accept a desk snapshot + utterance, return a validated patch and assistant text. Wave 3 adds server of record, Sign in with Apple, push jobs — still this app, not a second repo.
 - Model key stays on the server. The client never sees it.
-- No Postgres, vector index, broker, or RAG until wave **В3**. Wave 1 talk stays snapshot-in / validated desk-out. **В1.0–В1.4 done; В1.5 next** (live harness). MCP is `facio_api.mcp` (stdio, same 16 names, `apply_tool`). Do not add empty `accounts/` / `desk/` / `jobs/` before those steps.
+- No Postgres, vector index, broker, or RAG until wave **В3**. Wave 1 talk stays snapshot-in / validated desk-out. **В1.0–В1.5 harness done.** `pytest -m live` (or `--live`) asserts B1.2 desk invariants against the vendor; default `pytest` skips live even if `.env` has keys. First live run: 3/8 — model answered in text without tools; do not silently rewrite `SYSTEM_PROMPT`. MCP is `facio_api.mcp` (stdio, same 16 names, `apply_tool`). Do not add empty `accounts/` / `desk/` / `jobs/` before those steps.
 - Lid execute stays on device. This service must not be required to open Today or tick a widget.
 
 ## Tools and patches
@@ -38,4 +38,4 @@ Run locally with Compose from the repo root (`docker compose up --build`). One s
 
 ## Tests
 
-Keep `facio_domain` tests as the law. API tests cover validation, pain gate, and goldens; from В1.0 also router wiring. Mock the model provider; do not mock domain arithmetic. Wave 3 adds integration tests against a test database — still not a mocked ORM.
+Keep `facio_domain` tests as the law. API tests cover validation, pain gate, and goldens; from В1.0 also router wiring. Mock the model provider in unit/integration; do not mock domain arithmetic. `pytest -m live` (or `--live`) hits the vendor; default `pytest` skips those tests even if keys exist. Wave 3 adds integration tests against a test database — still not a mocked ORM.

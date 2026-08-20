@@ -9,6 +9,15 @@ from facio_api.config import Settings, get_settings
 from facio_api.main import app
 
 
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        "--live",
+        action="store_true",
+        default=False,
+        help="run live vendor invariant tests",
+    )
+
+
 @pytest.fixture
 def settings() -> Settings:
     return Settings(
