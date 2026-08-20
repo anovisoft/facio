@@ -5,10 +5,10 @@ from datetime import datetime
 from facio_domain.desk import founding_desk
 from facio_domain.models import CueSurface
 
-from facio_api.goldens import load_goldens, match_golden
-from facio_api.provider import ScriptedProvider
-from facio_api.schemas import TalkTurnRequest
-from facio_api.turn import run_turn
+from facio_api.providers.scripted import ScriptedProvider
+from facio_api.talk.goldens import load_goldens, match_golden
+from facio_api.talk.loop import run_turn
+from facio_api.talk.schemas import TalkTurnRequest
 
 NOW = datetime(2026, 8, 15, 12, 0, 0)
 

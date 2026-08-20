@@ -4,7 +4,7 @@ from facio_domain.desk import founding_desk
 
 from facio_api.config import Settings, get_settings
 from facio_api.main import app
-from facio_api.schemas import TalkTurnRequest
+from facio_api.talk.schemas import TalkTurnRequest
 
 
 async def test_health(client) -> None:

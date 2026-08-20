@@ -7,6 +7,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+import facio_api
+
 
 class ScriptedToolCall(BaseModel):
     name: str
@@ -44,7 +46,7 @@ def goldens_dir() -> Path:
     override = os.environ.get("FACIO_GOLDENS_DIR")
     if override:
         return Path(override)
-    return Path(__file__).resolve().parents[2] / "goldens"
+    return Path(facio_api.__file__).resolve().parents[2] / "goldens"
 
 
 def load_goldens() -> list[Golden]:

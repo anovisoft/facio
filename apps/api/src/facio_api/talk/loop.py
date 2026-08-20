@@ -10,9 +10,9 @@ from facio_domain.models import CueOrigin, Desk
 from facio_domain.pain import reports_pain
 from facio_domain.tools import apply_tool, snapshot_cards
 
-from facio_api.provider import ModelProvider, ModelTurn
-from facio_api.schemas import SnapshotCard, TalkTurnRequest, TalkTurnResponse, ToolCallRecord
-from facio_api.spec import SYSTEM_PROMPT, tool_schemas
+from facio_api.providers.types import ModelProvider, ModelTurn
+from facio_api.talk.schemas import SnapshotCard, TalkTurnRequest, TalkTurnResponse, ToolCallRecord
+from facio_api.talk.spec import SYSTEM_PROMPT, tool_schemas
 
 MAX_ROUNDS = 8
 MAX_UTTERANCE = 4000

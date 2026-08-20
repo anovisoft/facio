@@ -9,17 +9,17 @@ from facio_api.config import (
     canonical_model,
     provider_family,
 )
-from facio_api.provider import (
+from facio_api.providers.anthropic import (
     AnthropicProvider,
-    LiveProviderError,
-    OpenAIProvider,
-    ScriptedProvider,
     anthropic_body_to_turn,
     openai_messages_to_anthropic,
     openai_tools_to_anthropic,
-    provider_for,
 )
-from facio_api.spec import tool_schemas
+from facio_api.providers.factory import provider_for
+from facio_api.providers.openai import OpenAIProvider
+from facio_api.providers.scripted import ScriptedProvider
+from facio_api.providers.types import LiveProviderError
+from facio_api.talk.spec import tool_schemas
 
 
 @pytest.mark.parametrize(
@@ -193,7 +193,7 @@ async def test_anthropic_complete_posts_messages_api(monkeypatch: pytest.MonkeyP
             captured["json"] = json
             return FakeResponse()
 
-    monkeypatch.setattr("facio_api.provider.httpx.AsyncClient", FakeClient)
+    monkeypatch.setattr("facio_api.providers.anthropic.httpx.AsyncClient", FakeClient)
     settings = Settings(
         talk_mode="live",
         model_name="haiku",
@@ -242,7 +242,7 @@ async def test_openai_complete_uses_openai_key(monkeypatch: pytest.MonkeyPatch) 
             captured["json"] = json
             return FakeResponse()
 
-    monkeypatch.setattr("facio_api.provider.httpx.AsyncClient", FakeClient)
+    monkeypatch.setattr("facio_api.providers.openai.httpx.AsyncClient", FakeClient)
     settings = Settings(
         talk_mode="live",
         model_name="gpt-4o-mini",

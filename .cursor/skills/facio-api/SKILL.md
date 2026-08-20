@@ -19,7 +19,7 @@ Do **not** follow `.cursor/skills/fastapi-templates/` in **В1–В2** — that 
 - Package: `apps/api`, entry `facio_api`. Depend on `facio_domain`.
 - Talk is the job until wave 3: accept a desk snapshot + utterance, return a validated patch and assistant text. Wave 3 adds server of record, Sign in with Apple, push jobs — still this app, not a second repo.
 - Model key stays on the server. The client never sees it.
-- No Postgres, vector index, broker, or RAG until wave **В3**. Wave 1 talk stays snapshot-in / validated desk-out. **В1.0** (in progress, PO accepted 2026-08-20) splits the package: `create_app()`, health and talk on separate routers, providers as a package. Do not add empty `mcp/` / `accounts/` / `desk/` / `jobs/` before those steps.
+- No Postgres, vector index, broker, or RAG until wave **В3**. Wave 1 talk stays snapshot-in / validated desk-out. **В1.0 done** (2026-08-20): `create_app()`, health and talk on separate routers, `talk/` + `providers/`. Do not add empty `mcp/` / `accounts/` / `desk/` / `jobs/` before those steps.
 - Lid execute stays on device. This service must not be required to open Today or tick a widget.
 
 ## Tools and patches
