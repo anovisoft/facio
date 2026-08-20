@@ -295,13 +295,22 @@ final class DeskStore {
         }
     }
 
-    func applyTalk(_ desk: DeskSnapshot) {
+    func applyTalk(_ desk: DeskSnapshot, toolCalls: [TalkToolCall] = []) {
         let previous = snapshot
         let written = desk.cues.filter { incoming in
             previous.cues.first { $0.id == incoming.id } != incoming
         }
+        let touchedIds = Self.widgetIdsTouchedByTalk(toolCalls)
         commit(reminders: true) { next in
-            next = desk
+            var incoming = desk
+            for local in previous.widgets where local.status == .running {
+                guard !touchedIds.contains(local.id),
+                      let index = incoming.widgets.firstIndex(where: { $0.id == local.id })
+                else { continue }
+                incoming.widgets[index].payload.count = local.payload.count
+                incoming.widgets[index].status = .running
+            }
+            next = incoming
         }
         for cue in written {
             journal(.cueWritten, subjectId: cue.subjectId, cueId: cue.id, payload: ["text": cue.text])
@@ -404,6 +413,18 @@ final class DeskStore {
     private func retireSubject(_ subjectId: String, in next: inout DeskSnapshot) {
         guard let index = next.subjects.firstIndex(where: { $0.id == subjectId }) else { return }
         next.subjects[index] = SubjectLaw.retire(next.subjects[index])
+    }
+
+    private static func widgetIdsTouchedByTalk(_ toolCalls: [TalkToolCall]) -> Set<String> {
+        Set(toolCalls.compactMap { call in
+            guard call.ok else { return nil }
+            switch call.name {
+            case "update_widget", "create_widget":
+                return call.arguments["widget_id"]?.string ?? call.arguments["id"]?.string
+            default:
+                return nil
+            }
+        })
     }
 
     private func commit(reminders: Bool = false, _ body: (inout DeskSnapshot) -> Void) {

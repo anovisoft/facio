@@ -69,6 +69,23 @@ final class TalkStoreTests: XCTestCase {
         XCTAssertTrue(response.mutated)
         XCTAssertEqual(response.snapshots[0].widgetId, "push-ups-counter")
         XCTAssertEqual(response.threadId, "t1")
+        XCTAssertEqual(response.toolCalls, [])
+    }
+
+    func testTalkTurnResponseDecodesToolCalls() throws {
+        let json = """
+        {"text":"ok","desk":{"subjects":[],"cues":[],"instances":[],"widgets":[]},"mutated":true,"tool_calls":[{"name":"update_widget","arguments":{"widget_id":"push-ups-counter","count":4},"ok":true,"error":null},{"name":"add_cue","arguments":{"surface":"do-time"},"ok":false,"error":"pain_forbids_raise"}]}
+        """.data(using: .utf8)!
+        let response = try FacioJSON.decoder.decode(TalkTurnResponse.self, from: json)
+        XCTAssertEqual(response.toolCalls.count, 2)
+        XCTAssertEqual(response.toolCalls[0].name, "update_widget")
+        XCTAssertEqual(response.toolCalls[0].ok, true)
+        XCTAssertNil(response.toolCalls[0].error)
+        XCTAssertEqual(response.toolCalls[0].arguments["widget_id"], .string("push-ups-counter"))
+        XCTAssertEqual(response.toolCalls[0].arguments["count"], .int(4))
+        XCTAssertEqual(response.toolCalls[1].name, "add_cue")
+        XCTAssertEqual(response.toolCalls[1].ok, false)
+        XCTAssertEqual(response.toolCalls[1].error, "pain_forbids_raise")
     }
 
     func testSendAppendsAssistantAndSnapshot() async throws {

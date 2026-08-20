@@ -90,11 +90,57 @@ struct TalkTurnRequest: Encodable, Sendable {
     }
 }
 
+enum TalkJSONValue: Decodable, Sendable, Equatable {
+    case string(String)
+    case int(Int)
+    case double(Double)
+    case bool(Bool)
+    case object([String: TalkJSONValue])
+    case array([TalkJSONValue])
+    case null
+
+    var string: String? {
+        switch self {
+        case .string(let value): value
+        default: nil
+        }
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if container.decodeNil() {
+            self = .null
+        } else if let value = try? container.decode(Bool.self) {
+            self = .bool(value)
+        } else if let value = try? container.decode(Int.self) {
+            self = .int(value)
+        } else if let value = try? container.decode(Double.self) {
+            self = .double(value)
+        } else if let value = try? container.decode(String.self) {
+            self = .string(value)
+        } else if let value = try? container.decode([String: TalkJSONValue].self) {
+            self = .object(value)
+        } else if let value = try? container.decode([TalkJSONValue].self) {
+            self = .array(value)
+        } else {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "unsupported JSON value")
+        }
+    }
+}
+
+struct TalkToolCall: Decodable, Sendable, Equatable {
+    var name: String
+    var arguments: [String: TalkJSONValue] = [:]
+    var ok: Bool
+    var error: String? = nil
+}
+
 struct TalkTurnResponse: Decodable, Sendable, Equatable {
     var text: String
     var desk: DeskSnapshot
     var mutated: Bool
     var snapshots: [ChatSnapshot]
+    var toolCalls: [TalkToolCall]
     var threadId: String?
 
     enum CodingKeys: String, CodingKey {
@@ -102,14 +148,23 @@ struct TalkTurnResponse: Decodable, Sendable, Equatable {
         case desk
         case mutated
         case snapshots
+        case toolCalls = "tool_calls"
         case threadId = "thread_id"
     }
 
-    init(text: String, desk: DeskSnapshot, mutated: Bool, snapshots: [ChatSnapshot] = [], threadId: String? = nil) {
+    init(
+        text: String,
+        desk: DeskSnapshot,
+        mutated: Bool,
+        snapshots: [ChatSnapshot] = [],
+        toolCalls: [TalkToolCall] = [],
+        threadId: String? = nil
+    ) {
         self.text = text
         self.desk = desk
         self.mutated = mutated
         self.snapshots = snapshots
+        self.toolCalls = toolCalls
         self.threadId = threadId
     }
 
@@ -119,6 +174,7 @@ struct TalkTurnResponse: Decodable, Sendable, Equatable {
         desk = try container.decode(DeskSnapshot.self, forKey: .desk)
         mutated = try container.decode(Bool.self, forKey: .mutated)
         snapshots = try container.decodeIfPresent([ChatSnapshot].self, forKey: .snapshots) ?? []
+        toolCalls = try container.decodeIfPresent([TalkToolCall].self, forKey: .toolCalls) ?? []
         threadId = try container.decodeIfPresent(String.self, forKey: .threadId)
     }
 }

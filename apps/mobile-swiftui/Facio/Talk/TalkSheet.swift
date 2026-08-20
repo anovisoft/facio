@@ -74,7 +74,7 @@ struct TalkSheet: View {
 
     private func send() async {
         if let response = await talk.send(desk: store.snapshot) {
-            store.applyTalk(response.desk)
+            store.applyTalk(response.desk, toolCalls: response.toolCalls)
         }
     }
 
