@@ -1,4 +1,21 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: facio-postgres
+    environment:
+      POSTGRES_USER: facio
+      POSTGRES_PASSWORD: facio
+      POSTGRES_DB: facio
+    ports:
+      - "5432:5432"
+    volumes:
+      - facio_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U facio -d facio"]
+      interval: 5s
+      timeout: 3s
+      retries: 8
+
   talk:
     build:
       context: .
@@ -13,6 +30,10 @@ services:
         required: false
     environment:
       FACIO_GOLDENS_DIR: /app/apps/api/goldens
+      FACIO_DATABASE_URL: postgresql+asyncpg://facio:facio@postgres:5432/facio
+    depends_on:
+      postgres:
+        condition: service_healthy
     healthcheck:
       test:
         [
@@ -24,3 +45,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 8
+
+volumes:
+  facio_postgres_data:

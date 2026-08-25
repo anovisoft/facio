@@ -11,6 +11,7 @@ dependencies = [
 
 [project.scripts]
 facio-export-schema = "facio_domain.export_schema:main"
+facio-desk-at = "facio_domain.desk_at:main"
 
 [build-system]
 requires = ["setuptools>=68"]

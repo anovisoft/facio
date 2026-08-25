@@ -56,6 +56,7 @@ class Settings(BaseSettings):
     anthropic_api_key: str | None = None
     openai_base_url: str = "https://api.openai.com/v1"
     anthropic_base_url: str = "https://api.anthropic.com"
+    database_url: str = "postgresql+asyncpg://facio:facio@localhost:5432/facio"
 
     @field_validator("openai_api_key", "anthropic_api_key", mode="before")
     @classmethod
