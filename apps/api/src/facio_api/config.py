@@ -57,6 +57,9 @@ class Settings(BaseSettings):
     openai_base_url: str = "https://api.openai.com/v1"
     anthropic_base_url: str = "https://api.anthropic.com"
     database_url: str = "postgresql+asyncpg://facio:facio@localhost:5432/facio"
+    apple_team_id: str = "SXXLPXXJMD"
+    apple_bundle_id: str = "com.anovisoft.facio"
+    session_secret: str = "dev-insecure-session-secret-change-me"
 
     @field_validator("openai_api_key", "anthropic_api_key", mode="before")
     @classmethod

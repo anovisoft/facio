@@ -340,6 +340,11 @@ final class DeskStoreTests: XCTestCase {
             .appending(path: "facio-desk-\(UUID().uuidString)", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let repository = DeskRepository(directory: directory)
+        // Fresh installs start empty (demo seed disabled — 2026-08-25); these
+        // tests exercise store behavior on top of the founding subjects, so
+        // pre-populate the repository the way an already-seeded device would
+        // already have on disk, instead of relying on init to seed it.
+        try repository.saveSnapshot(SeedFactory.buildSeed(now: now))
         return (try DeskStore(repository: repository, now: { now }), repository)
     }
 }

@@ -6,6 +6,7 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+from facio_api.accounts.models import AccountRow  # noqa: F401
 from facio_api.config import get_settings
 from facio_api.desk.database import Base
 from facio_api.desk.models import DeskSnapshotRow  # noqa: F401

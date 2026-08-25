@@ -300,6 +300,22 @@ final class DeskStore {
         }
     }
 
+    /// Same shape as `applyTalk`'s merge (a full-desk overwrite must not drop
+    /// local `running` progress), for a desk pulled from `/v1/desk` (В3.1/M3)
+    /// instead of a talk turn. No cue journal — that's talk-specific.
+    func applyServerDesk(_ desk: DeskSnapshot) {
+        let previous = snapshot
+        commit(reminders: true) { next in
+            var incoming = desk
+            for local in previous.widgets where local.status == .running {
+                guard let index = incoming.widgets.firstIndex(where: { $0.id == local.id }) else { continue }
+                incoming.widgets[index].payload.count = local.payload.count
+                incoming.widgets[index].status = .running
+            }
+            next = incoming
+        }
+    }
+
     func applyTalk(_ desk: DeskSnapshot, toolCalls: [TalkToolCall] = []) {
         let previous = snapshot
         let written = desk.cues.filter { incoming in
