@@ -22,13 +22,18 @@ final class DeskStore {
         self.repository = repository
         self.now = now
         if let loaded = try repository.loadSnapshot() {
-            let migrated = try SeedFactory.ensureFounding(in: loaded, now: now())
+            // Bike/drift backfill disabled for dogfood alongside the founding seed below — 2026-08-25.
+            // let migrated = try SeedFactory.ensureFounding(in: loaded, now: now())
+            let migrated = loaded
             snapshot = migrated
             if migrated != loaded {
                 try repository.saveSnapshot(migrated)
             }
         } else {
-            snapshot = try SeedFactory.buildSeed(now: now())
+            // Demo founding seed (push-ups / vegetables / bike) disabled for dogfood — 2026-08-25.
+            // Re-enable (or restyle as onboarding examples) via SeedFactory.buildSeed(now:).
+            // snapshot = try SeedFactory.buildSeed(now: now())
+            snapshot = DeskSnapshot(subjects: [], cues: [], instances: [], widgets: [])
             try repository.saveSnapshot(snapshot)
         }
         let day = Calendar.current.startOfDay(for: now())
