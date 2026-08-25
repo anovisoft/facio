@@ -14,6 +14,10 @@ enum DisplayCopy {
         String(localized: "готов тренироваться?", comment: "Pause check-in reminder body")
     }
 
+    static var pausedNow: String {
+        String(localized: "на паузе", comment: "Paused practice is not due today")
+    }
+
     static func succeedBy(_ window: TimeWindow) -> String {
         String(localized: "успеть к \(window.latestBy.shortLabel)", comment: "Reminder window deadline")
     }

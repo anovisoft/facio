@@ -29,9 +29,15 @@ struct InspectScreen: View {
                     .font(.largeTitle.weight(.bold))
                     .foregroundStyle(.primary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text(DisplayCopy.instanceStatus(selected.status))
-                    .font(.title3)
-                    .foregroundStyle(.secondary)
+                if store.subject(id: subjectId)?.status == .paused {
+                    Text(DisplayCopy.pausedNow)
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text(DisplayCopy.instanceStatus(selected.status))
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                }
             }
             InspectHorizonStrip(
                 days: horizon.days,

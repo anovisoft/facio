@@ -10,7 +10,7 @@ struct UseScreen: View {
             if let widget = store.widget(id: widgetId) {
                 content(for: widget)
                     .navigationTitle(DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title))
-                    .modifier(UseDateSubtitle(dateLabel: quietDate(store.snapshot.instances.first { $0.id == widget.instanceId }?.when)))
+                    .modifier(UseDateSubtitle(dateLabel: dateLabel(for: widget)))
             } else {
                 ContentUnavailableView {
                     Text("Этого виджета уже нет на крышке.")
@@ -32,27 +32,53 @@ struct UseScreen: View {
 
     @ViewBuilder
     private func content(for widget: Widget) -> some View {
-        let cue = store.surfaceCue(for: widget)
-
-        switch widget.type {
-        case .counter:
-            CounterUseView(widget: widget, cue: store.cueFor(subjectId: widget.subjectId))
-        case .tick:
-            TickUseView(
-                widget: widget,
-                onToggle: { store.toggleTick(widgetId: widget.id) }
-            )
-        case .reminder:
-            ReminderUseView(widget: widget, cue: cue)
-        case .checklist, .timer, .stepper:
-            ContentUnavailableView {
-                Text("Этот тип ещё не открывается.")
+        if store.subject(id: widget.subjectId)?.status == .paused {
+            PausedUseView()
+        } else {
+            let cue = store.surfaceCue(for: widget)
+            switch widget.type {
+            case .counter:
+                CounterUseView(widget: widget, cue: store.cueFor(subjectId: widget.subjectId))
+            case .tick:
+                TickUseView(
+                    widget: widget,
+                    onToggle: { store.toggleTick(widgetId: widget.id) }
+                )
+            case .reminder:
+                ReminderUseView(widget: widget, cue: cue)
+            case .checklist, .timer, .stepper:
+                ContentUnavailableView {
+                    Text("Этот тип ещё не открывается.")
+                }
             }
         }
     }
 
+    private func dateLabel(for widget: Widget) -> String {
+        if store.subject(id: widget.subjectId)?.status == .paused {
+            return DisplayCopy.pausedNow
+        }
+        return quietDate(store.snapshot.instances.first { $0.id == widget.instanceId }?.when)
+    }
+
     private func quietDate(_ date: Date?) -> String {
         (date ?? Date.now).formatted(.dateTime.day().month(.wide).locale(Locale(identifier: "ru_RU")))
+    }
+}
+
+private struct PausedUseView: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(DisplayCopy.pausedNow)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(.primary)
+            Text("Сегодня этого нет.")
+                .font(.body)
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .padding(.horizontal, FacioPalette.pagePadding)
+        .padding(.top, 8)
     }
 }
 

@@ -108,3 +108,16 @@ async def test_unknown_stays_unmutated_after_nudge() -> None:
     assert result.mutated is False
     assert result.tool_calls == []
     assert provider.complete_count == 2
+
+
+async def test_leaked_rules_are_stripped_from_user_text() -> None:
+    leak = (
+        "Понял. Записываю: реплика → инструменты сразу по умолчаниям "
+        "(focused_widget или виджет Сегодня)."
+    )
+    provider = SequenceProvider([ModelTurn(text=leak), ModelTurn(text=leak)])
+    result = await run_turn(_request("верни велосипед"), provider, now=NOW)
+    assert result.mutated is False
+    assert "инструмент" not in result.text.casefold()
+    assert "focused_widget" not in result.text
+    assert result.text == "Записал бы на стол — напиши ещё раз короче."

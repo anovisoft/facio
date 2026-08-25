@@ -4,7 +4,7 @@ struct TalkSheet: View {
     @Environment(TalkStore.self) private var talk
     @Environment(DeskStore.self) private var store
     @FocusState private var composerFocused: Bool
-    var onOpenWidget: (String) -> Void
+    var onOpenSnapshot: (ChatSnapshot) -> Void
 
     var body: some View {
         @Bindable var talk = talk
@@ -20,7 +20,7 @@ struct TalkSheet: View {
                                 .padding(.top, 8)
                         }
                         ForEach(talk.current.messages) { message in
-                            TalkBubble(message: message, onOpenWidget: onOpenWidget)
+                            TalkBubble(message: message, onOpenSnapshot: onOpenSnapshot)
                                 .id(message.id)
                         }
                         if talk.sending {
@@ -118,7 +118,7 @@ private struct TalkComposerBar: View {
 
 private struct TalkBubble: View {
     let message: ChatMessage
-    var onOpenWidget: (String) -> Void
+    var onOpenSnapshot: (ChatSnapshot) -> Void
 
     var body: some View {
         switch message.kind {
@@ -143,7 +143,7 @@ private struct TalkBubble: View {
         case .snapshot:
             if let snapshot = message.snapshot {
                 SnapshotCard(snapshot: snapshot) {
-                    onOpenWidget(snapshot.widgetId)
+                    onOpenSnapshot(snapshot)
                 }
             }
         }

@@ -6,7 +6,7 @@ import pytest
 
 from facio_domain.cues import add_cue
 from facio_domain.desk import founding_desk
-from facio_domain.models import CueOrigin, CueSurface, SubjectStatus, WidgetType
+from facio_domain.models import CueOrigin, CueSurface, SubjectStatus, WidgetStatus, WidgetType
 from facio_domain.pain import reports_pain
 from facio_domain.tools import (
     INVALID,
@@ -161,6 +161,16 @@ def test_thaw_restores_active_and_clears_paused_at() -> None:
     assert bike.paused_at is None
 
 
+def test_thaw_unskips_the_subjects_widgets() -> None:
+    desk = founding_desk(now=NOW)
+    skipped = _apply(desk, "skip", {"widget_id": "bike-reminder"})
+    frozen = _apply(skipped.desk, "freeze_subject", {"subject_id": "bike"})
+    outcome = _apply(frozen.desk, "thaw_subject", {"subject_id": "bike"})
+    assert outcome.ok
+    widget = next(row for row in outcome.desk.widgets if row.id == "bike-reminder")
+    assert widget.status == WidgetStatus.ready
+
+
 def test_thaw_without_pause_is_invalid() -> None:
     desk = founding_desk(now=NOW)
     outcome = _apply(desk, "thaw_subject", {"subject_id": "bike"})
@@ -279,14 +289,43 @@ def test_set_reminder_stated_hour_beats_closing_formula() -> None:
     assert fire.hour != 20
 
 
-def test_set_reminder_closing_only_23_is_20() -> None:
+def test_set_reminder_closing_only_keeps_named_hour() -> None:
     desk = founding_desk(now=NOW)
-    outcome = _apply(desk, "set_reminder", {"subject_id": "bike", "closes_at": "23:00"})
+    named = _apply(desk, "set_reminder", {"subject_id": "bike", "latest_by": "18:00"})
+    outcome = _apply(named.desk, "set_reminder", {"subject_id": "bike", "closes_at": "23:00"})
     assert outcome.ok
     window = next(row.window for row in outcome.desk.subjects if row.id == "bike")
     assert window is not None
-    assert window.latest_by == time(20, 0)
+    assert window.latest_by == time(18, 0)
     assert window.closes_at == time(23, 0)
+    fire = next(row.payload.fire_at for row in outcome.desk.widgets if row.id == "bike-reminder")
+    assert fire is not None
+    assert fire.hour == 18
+    cards = snapshot_cards(outcome.desk, outcome.snapshot_widget_ids)
+    assert cards[0]["line"] == "18:00 · зал до 23"
+
+
+def test_set_reminder_closing_only_without_hour_uses_formula() -> None:
+    desk = founding_desk(now=NOW)
+    created = _apply(
+        desk,
+        "create_widget",
+        {"type": "counter", "title": "зал", "subject_id": "gym"},
+    )
+    outcome = _apply(created.desk, "set_reminder", {"subject_id": "gym", "closes_at": "22:00"})
+    assert outcome.ok
+    window = next(row.window for row in outcome.desk.subjects if row.id == "gym")
+    assert window is not None
+    assert window.latest_by == time(19, 0)
+    assert window.closes_at == time(22, 0)
+
+
+def test_freeze_snapshot_says_paused() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(desk, "freeze_subject", {"subject_id": "bike"})
+    cards = snapshot_cards(outcome.desk, outcome.snapshot_widget_ids)
+    assert cards
+    assert cards[0]["line"] == "на паузе"
 
 
 def test_set_reminder_from_closing_is_arithmetic() -> None:

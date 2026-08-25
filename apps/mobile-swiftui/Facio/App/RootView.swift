@@ -52,9 +52,13 @@ struct RootView: View {
             .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $talk.sheetOpen) {
-            TalkSheet { widgetId in
+            TalkSheet { card in
                 talk.sheetOpen = false
-                path.append(DeskRoute.use(widgetId: widgetId))
+                if store.subject(id: card.subjectId)?.status == .paused {
+                    path.append(DeskRoute.inspect(subjectId: card.subjectId, instanceId: card.instanceId))
+                } else {
+                    path.append(DeskRoute.use(widgetId: card.widgetId))
+                }
             }
         }
         .onChange(of: path.count) { _, count in

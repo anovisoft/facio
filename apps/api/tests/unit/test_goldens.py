@@ -297,6 +297,12 @@ async def test_pain_skip_freeze_pauses_bike_without_raising() -> None:
     assert push.target.goal <= 30
 
 
+def test_match_thaw_phrases() -> None:
+    assert match_golden("отпустило").id == "thaw_pause"
+    assert match_golden("спина прошла").id == "thaw_pause"
+    assert match_golden("верни велосипед").id == "thaw_pause"
+
+
 async def test_thaw_pause_restores_bike() -> None:
     golden = match_golden("отпустило")
     assert golden is not None

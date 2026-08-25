@@ -128,7 +128,7 @@
 
     },
     "на паузе" : {
-      "comment" : "Deed holding: paused"
+      "comment" : "Deed holding: paused\nPaused practice is not due today"
     },
     "на Сегодня" : {
       "comment" : "Deed holding: on today"
@@ -241,6 +241,9 @@
           }
         }
       }
+    },
+    "Сегодня этого нет." : {
+
     },
     "сейчас" : {
 

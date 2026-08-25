@@ -248,6 +248,9 @@ def _timing_cue(desk: Desk, subject_id: str) -> Cue | None:
 
 
 def _snapshot_line(desk: Desk, widget: Widget) -> str:
+    subject = _subject(desk, widget.subject_id)
+    if subject is not None and subject.status == SubjectStatus.paused:
+        return "на паузе"
     if widget.type == WidgetType.counter:
         count = widget.payload.count or 0
         target = widget.payload.target or 0
@@ -257,13 +260,23 @@ def _snapshot_line(desk: Desk, widget: Widget) -> str:
     if widget.type == WidgetType.tick:
         return "готово" if widget.payload.done or widget.status == WidgetStatus.done else "не сделано"
     if widget.type == WidgetType.reminder:
-        cue = _timing_cue(desk, widget.subject_id)
+        if widget.status == WidgetStatus.skipped:
+            return "сегодня нет"
         fire = widget.payload.fire_at or widget.when
         clock = fire.strftime("%H:%M") if fire else ""
-        if cue:
-            return f"{clock} · {cue.text}".strip(" ·")
-        return clock
+        door = None
+        if subject is not None and subject.window is not None and subject.window.closes_at is not None:
+            door = _door_phrase(subject.window.closes_at)
+        cue = _timing_cue(desk, widget.subject_id)
+        detail = door or (cue.text if cue else "")
+        return f"{clock} · {detail}".strip(" ·") if detail else clock
     return widget.title
+
+
+def _door_phrase(closes_at: time) -> str:
+    if closes_at.minute:
+        return f"зал до {closes_at.hour}:{closes_at.minute:02d}"
+    return f"зал до {closes_at.hour}"
 
 
 def _dump_subject(subject: Subject) -> dict[str, Any]:
@@ -384,6 +397,9 @@ def _thaw(desk: Desk, args: dict[str, Any], **_: Any) -> ToolOutcome:
     if subject.status != SubjectStatus.paused:
         raise ToolFail(INVALID)
     _replace_subject(desk, thaw_subject(subject))
+    for widget in desk.widgets:
+        if widget.subject_id == subject.id and widget.status == WidgetStatus.skipped:
+            _replace_widget(desk, widget.model_copy(update={"status": WidgetStatus.ready}))
     return ToolOutcome(
         desk=desk,
         name="thaw_subject",
@@ -588,7 +604,11 @@ def _set_reminder(desk: Desk, args: dict[str, Any], *, now: datetime, **_: Any) 
         else:
             window = Window(latest_by=latest)
     elif closes_raw:
-        window = window_from_closing(_parse_clock(str(closes_raw)))
+        closes = _parse_clock(str(closes_raw))
+        if subject.window is not None:
+            window = subject.window.model_copy(update={"closes_at": closes})
+        else:
+            window = window_from_closing(closes)
     else:
         raise ToolFail(INVALID)
     _replace_subject(desk, subject.model_copy(update={"window": window}))

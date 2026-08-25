@@ -17,10 +17,29 @@ from facio_api.talk.spec import SYSTEM_PROMPT, tool_schemas
 MAX_ROUNDS = 8
 MAX_UTTERANCE = 4000
 EMPTY_TOOLS_NUDGE = (
-    "Если реплика пишет стол — запись, пропуск, час, ритм, цель, подсказка — вызови инструменты сейчас. "
-    "Умолчание уже есть, не спрашивай «какая практика». "
-    "Болтать можно. Чистое объяснение или бред — только текст."
+    "Запись на стол — вызови инструмент сейчас. Не пересказывай правила. "
+    "Человеку потом только короткая фраза."
 )
+_LEAK_NEEDLES = (
+    "инструмент",
+    "focused_widget",
+    "bike-reminder",
+    "set_reminder",
+    "thaw_subject",
+    "freeze_subject",
+    "умолчани",
+    "tool_call",
+)
+
+
+def _human_text(text: str, *, mutated: bool) -> str:
+    compact = text.strip()
+    if not compact:
+        return "Готово." if mutated else "Могу объяснить или записать на стол — напиши ещё раз."
+    lower = compact.casefold()
+    if any(needle in lower for needle in _LEAK_NEEDLES):
+        return "Готово." if mutated else "Записал бы на стол — напиши ещё раз короче."
+    return compact
 
 
 class TalkError(Exception):
@@ -103,8 +122,7 @@ async def run_turn(
             continue
         break
 
-    if not text:
-        text = "Готово." if mutated else "Могу объяснить или записать на стол — напиши ещё раз."
+    text = _human_text(text, mutated=mutated)
     cards = [SnapshotCard.model_validate(row) for row in snapshot_cards(desk, snapshot_ids)] if mutated else []
     return TalkTurnResponse(
         text=text,
