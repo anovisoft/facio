@@ -1,0 +1,33 @@
+name: domain tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install domain package
+        run: pip install -e packages/domain
+
+      - name: Run domain tests
+        run: pytest packages/domain -v
+
+      - name: Check the exported schema is current
+        run: |
+          facio-export-schema
+          git diff --exit-code -- packages/schema || {
+            echo "Exported JSON Schema differs from what is committed. Run facio-export-schema and commit the result."
+            exit 1
+          }
