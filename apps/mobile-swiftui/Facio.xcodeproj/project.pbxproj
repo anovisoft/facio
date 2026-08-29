@@ -125,6 +125,7 @@
 		E3D7F69606181C16E5DB131C /* WidgetType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9638F827F32F9586B9E461 /* WidgetType.swift */; };
 		E43CD102B93498279D882748 /* DeskStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229688020B5F18B40C1B5B52 /* DeskStoreTests.swift */; };
 		F2FDFF0299168974DE7CFDDE /* WindowMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DB3BDE083C265BE8C20EEDB /* WindowMetrics.swift */; };
+		F5B8067F8E06FD1C1F755A85 /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E8172CAF1A5C6B58854F61 /* SettingsScreen.swift */; };
 		F7896392618DEA3364CFDD57 /* SubjectStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAEA9232D081EAF6EAF8BE2B /* SubjectStatus.swift */; };
 		F8D115041D6077185ED190A6 /* DomainTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1881B07D94D95992419D2480 /* DomainTestSupport.swift */; };
 /* End PBXBuildFile section */
@@ -262,6 +263,7 @@
 		F4B4E3102AE125BCB9EF4D90 /* ClockTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockTime.swift; sourceTree = "<group>"; };
 		F50A2B65D8C84C5EF71B4C74 /* GlassSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassSurface.swift; sourceTree = "<group>"; };
 		F513B53ED03A650AA4FBACEF /* Cadence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cadence.swift; sourceTree = "<group>"; };
+		F5E8172CAF1A5C6B58854F61 /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
 		F7BE39810B4325D66B31ABA8 /* LidFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidFeed.swift; sourceTree = "<group>"; };
 		F95B6699402F7C8AB7D08FB8 /* DayStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayStrip.swift; sourceTree = "<group>"; };
 		FAEA9232D081EAF6EAF8BE2B /* SubjectStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectStatus.swift; sourceTree = "<group>"; };
@@ -378,6 +380,14 @@
 				2C82A425B50E627261D99C7E /* KebabInspector.swift */,
 			);
 			path = Kebab;
+			sourceTree = "<group>";
+		};
+		A7F6B66FF65EBA67511A49F4 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				F5E8172CAF1A5C6B58854F61 /* SettingsScreen.swift */,
+			);
+			path = Settings;
 			sourceTree = "<group>";
 		};
 		AB9683710CF3332F642FDD89 /* Lid */ = {
@@ -538,6 +548,7 @@
 				8502426CE63C0DCDE5AB22F4 /* Kebab */,
 				AB9683710CF3332F642FDD89 /* Lid */,
 				2A5DC75A54DEC53814A234BD /* Pan */,
+				A7F6B66FF65EBA67511A49F4 /* Settings */,
 				2BCA5AF1E0A807E44E3573F5 /* Use */,
 			);
 			path = Features;
@@ -785,6 +796,7 @@
 				899BB97F1303019BB6DC0AC9 /* RootView.swift in Sources */,
 				BEFF770731B445B54C21CE78 /* SeedFactory.swift in Sources */,
 				010024F9B037BBAC91F82850 /* SessionStore.swift in Sources */,
+				F5B8067F8E06FD1C1F755A85 /* SettingsScreen.swift in Sources */,
 				0D5958CFDF5042E78A875511 /* Slot.swift in Sources */,
 				AE0EE9B28482E1A88A7E2076 /* SlotKind.swift in Sources */,
 				D0424EB025D914F5938631C6 /* SlotLaw.swift in Sources */,

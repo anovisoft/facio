@@ -282,6 +282,42 @@
         }
       }
     },
+    "Аккаунт": {
+      "comment": "Settings section: the account block",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Аккаунт"
+          }
+        }
+      }
+    },
+    "Аккаунт Apple": {
+      "comment": "Settings: signed in without a name",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple account"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Аккаунт Apple"
+          }
+        }
+      }
+    },
     "архив пуст": {
       "extractionState": "manual",
       "localizations": {
@@ -366,6 +402,114 @@
           "stringUnit": {
             "state": "translated",
             "value": "Велосипед"
+          }
+        }
+      }
+    },
+    "Версия": {
+      "comment": "Settings: app version row",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Версия"
+          }
+        }
+      }
+    },
+    "Вход не выполнен": {
+      "comment": "Settings: signed out",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not signed in"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вход не выполнен"
+          }
+        }
+      }
+    },
+    "Вход не обязателен: без него всё работает на устройстве.": {
+      "comment": "Settings footer while signed out",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing in is optional: without it everything works on this device."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вход не обязателен: без него всё работает на устройстве."
+          }
+        }
+      }
+    },
+    "Вход сейчас не проходит. Крышка работает.": {
+      "comment": "Settings: sign-in failed, calm line",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-in isn't going through right now. The lid still works."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вход сейчас не проходит. Крышка работает."
+          }
+        }
+      }
+    },
+    "Выйти": {
+      "comment": "Settings: sign out button",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign out"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выйти"
+          }
+        }
+      }
+    },
+    "Выход не стирает стол — он остаётся на устройстве.": {
+      "comment": "Settings footer while signed in",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing out does not erase the table — it stays on this device."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выход не стирает стол — он остаётся на устройстве."
           }
         }
       }
@@ -719,23 +863,6 @@
         }
       }
     },
-    "Настройки, позже": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Settings, later"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Настройки, позже"
-          }
-        }
-      }
-    },
     "не было %@": {
       "comment": "Deed holding: drift",
       "extractionState": "manual",
@@ -1014,6 +1141,24 @@
         }
       }
     },
+    "последний синк %@": {
+      "comment": "Settings: last sync stamp",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "last sync %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "последний синк %@"
+          }
+        }
+      }
+    },
     "Практики": {
       "extractionState": "manual",
       "localizations": {
@@ -1188,6 +1333,60 @@
         }
       }
     },
+    "синк без сети": {
+      "comment": "Settings: sync could not reach the server",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sync has no network"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "синк без сети"
+          }
+        }
+      }
+    },
+    "синк идёт": {
+      "comment": "Settings: sync in flight",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "syncing"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "синк идёт"
+          }
+        }
+      }
+    },
+    "синка ещё не было": {
+      "comment": "Settings: signed in, never synced",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no sync yet"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "синка ещё не было"
+          }
+        }
+      }
+    },
     "Сковородка": {
       "extractionState": "manual",
       "localizations": {
@@ -1236,6 +1435,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сохранить"
+          }
+        }
+      }
+    },
+    "только на устройстве": {
+      "comment": "Settings: no account, desk is local",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on this device only"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "только на устройстве"
           }
         }
       }

@@ -3,10 +3,15 @@ import SwiftUI
 struct RootView: View {
     @Environment(DeskStore.self) private var store
     @Environment(TalkStore.self) private var talk
+    @Environment(\.scenePhase) private var scenePhase
     @State private var path = NavigationPath()
     @State private var pan = PanSession()
     @State private var kebab: SubjectRef?
     @State private var pendingTalk: PendingTalk?
+    /// Built here, not in `FacioApp.init` — the warehouse is a `@State`
+    /// factory and this hangs off the same instance.
+    @State private var sync: DeskSyncCoordinator?
+    @State private var settingsOpen = false
 
     var body: some View {
         @Bindable var talk = talk
@@ -19,7 +24,8 @@ struct RootView: View {
                 onOpenDeed: { subjectId in
                     pan.close()
                     kebab = SubjectRef(id: subjectId)
-                }
+                },
+                onOpenSettings: { settingsOpen = true }
             )
         } content: {
             NavigationStack(path: $path) {
@@ -61,14 +67,31 @@ struct RootView: View {
                 }
             }
         }
+        .sheet(isPresented: $settingsOpen) {
+            if let sync {
+                SettingsScreen(sync: sync) { settingsOpen = false }
+            }
+        }
         .onChange(of: path.count) { _, count in
             if count > 0 { pan.close() }
         }
         .onReceive(NotificationCenter.default.publisher(for: .facioOpenLid)) { _ in
             path = NavigationPath()
         }
+        // Local changes reach the server without a hook inside `commit`.
+        // Silent without a session — the lid stays a local device.
+        .onChange(of: store.snapshot) { _, _ in
+            sync?.syncSoon()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            guard let sync, phase == .active || phase == .background else { return }
+            Task { await sync.sync() }
+        }
         .task {
             ReminderScheduler.enqueue(snapshot: store.snapshot, now: Date())
+            let coordinator = sync ?? DeskSyncCoordinator(deskStore: store)
+            sync = coordinator
+            await coordinator.sync()
         }
     }
 
