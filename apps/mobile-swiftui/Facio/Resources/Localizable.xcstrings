@@ -947,6 +947,24 @@
         }
       }
     },
+    "Свернуть разговор": {
+      "comment": "Collapse the expanded talk back into the kebab miniature",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collapse the talk"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Свернуть разговор"
+          }
+        }
+      }
+    },
     "Сегодня": {
       "extractionState": "manual",
       "localizations": {

@@ -86,14 +86,17 @@ final class TalkStore {
         threads.first { $0.id == id }
     }
 
-    func open(threadId: String, anchorMessageId: String? = nil) {
+    /// Bring a thread forward and stand on a message inside it, **without
+    /// opening anything**. The kebab expands the talk where it stands, so it
+    /// needs the promotion without a second sheet arriving over the inspector.
+    @discardableResult
+    func promote(threadId: String, anchorMessageId: String? = nil) -> Bool {
         self.anchorMessageId = anchorMessageId
         if current.id == threadId {
-            sheetOpen = true
             persist()
-            return
+            return true
         }
-        guard let index = archived.firstIndex(where: { $0.id == threadId }) else { return }
+        guard let index = archived.firstIndex(where: { $0.id == threadId }) else { return false }
         let chosen = archived.remove(at: index)
         if !current.messages.isEmpty {
             archived.insert(current, at: 0)
@@ -104,8 +107,13 @@ final class TalkStore {
         current = chosen
         draft = ""
         errorMessage = nil
-        sheetOpen = true
         persist()
+        return true
+    }
+
+    func open(threadId: String, anchorMessageId: String? = nil) {
+        guard promote(threadId: threadId, anchorMessageId: anchorMessageId) else { return }
+        sheetOpen = true
     }
 
     func newChat() {

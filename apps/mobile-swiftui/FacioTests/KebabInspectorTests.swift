@@ -200,6 +200,133 @@ final class KebabInspectorTests: XCTestCase {
         XCTAssertEqual(store.removeFromLid(subjectId: "push-ups"), false, "already off the lid")
     }
 
+    // MARK: - A slot wears the face of that session
+
+    /// 03-product: the slots are `[v1][v1][v2]…[YYY][z]` — «the face of that
+    /// session, not a diff of tonight». Last week's set keeps last week's
+    /// number even after `+` starts a fresh one today.
+    func testSlotWearsTheFaceOfThatSessionNotTonights() throws {
+        let now = try stamp("2026-08-16T12:00:00")
+        let (store, _) = try makeDesk(now: now)
+        let past = try XCTUnwrap(store.instances(for: "push-ups").last)
+        let pastFace = InstanceFaceLaw.face(
+            instance: past,
+            widget: store.widget(instanceId: past.id),
+            now: now
+        )
+        XCTAssertEqual(pastFace, .counter(count: 28, goal: 30))
+
+        let freshId = try XCTUnwrap(store.addInstance(subjectId: "push-ups"))
+        let fresh = try XCTUnwrap(store.instances(for: "push-ups").first { $0.id == freshId })
+
+        XCTAssertEqual(
+            InstanceFaceLaw.face(instance: fresh, widget: store.widget(instanceId: fresh.id), now: now),
+            .counter(count: 0, goal: 30),
+            "tonight starts at zero"
+        )
+        XCTAssertEqual(
+            InstanceFaceLaw.face(instance: past, widget: store.widget(instanceId: past.id), now: now),
+            pastFace,
+            "the earlier session must not be repainted with tonight's number"
+        )
+    }
+
+    /// Every catalog type can draw a face, including the three R1 added — and
+    /// each of them is a picture: no tick, no beat, no countdown (never-do #6).
+    func testEveryTypeDrawsAStillFace() throws {
+        let now = try stamp("2026-08-16T12:00:00")
+        let instance = Instance(id: "i", subjectId: "s", when: now, status: .completed)
+        func face(_ type: WidgetType, _ payload: WidgetPayload) -> InstanceFace {
+            InstanceFaceLaw.face(
+                instance: instance,
+                widget: Widget(
+                    id: "w",
+                    type: type,
+                    title: "t",
+                    payload: payload,
+                    status: .ready,
+                    section: .today,
+                    subjectId: "s",
+                    instanceId: "i"
+                ),
+                now: now
+            )
+        }
+
+        XCTAssertEqual(face(.tick, WidgetPayload(done: true)), .tick(done: true))
+        XCTAssertEqual(
+            face(.checklist, WidgetPayload(items: [
+                ChecklistItem(id: "a", text: "лук", done: true),
+                ChecklistItem(id: "b", text: "рис", done: false),
+            ])),
+            .checklist(done: 1, total: 2)
+        )
+        XCTAssertEqual(
+            face(.stepper, WidgetPayload(beats: ["раз", "два", "три"], current: 1)),
+            .stepper(step: 2, total: 3)
+        )
+        // The timer face is frozen at the moment the slot was drawn: banked
+        // seconds only, and nothing in the slot advances them.
+        XCTAssertEqual(
+            face(.timer, WidgetPayload(seconds: 300, elapsed: 60)),
+            .timer(face: "4:00")
+        )
+        XCTAssertEqual(
+            face(.reminder, WidgetPayload(fireAt: try stamp("2026-08-16T19:00:00"))),
+            .reminder(hour: ClockTime(hour: 19, minute: 0))
+        )
+        XCTAssertEqual(face(.counter, WidgetPayload(count: 12)), .counter(count: 12, goal: nil))
+    }
+
+    /// `z` and a day whose widget moved on keep the caption they always had.
+    func testPreparedFutureAndAnOrphanDayHaveNoFace() throws {
+        let now = try stamp("2026-08-16T12:00:00")
+        let next = Instance(
+            id: "z",
+            subjectId: "bike",
+            when: now.addingTimeInterval(2 * 24 * 3600),
+            status: .prepared
+        )
+        let today = Instance(id: "today", subjectId: "bike", when: now, status: .prepared)
+        let widget = Widget(
+            id: "w",
+            type: .counter,
+            title: "t",
+            payload: WidgetPayload(count: 9, target: 10),
+            status: .ready,
+            section: .today,
+            subjectId: "bike",
+            instanceId: "today"
+        )
+
+        XCTAssertEqual(InstanceFaceLaw.face(instance: next, widget: widget, now: now), .blank)
+        XCTAssertEqual(InstanceFaceLaw.face(instance: today, widget: nil, now: now), .blank)
+        XCTAssertEqual(
+            InstanceFaceLaw.face(instance: today, widget: widget, now: now),
+            .counter(count: 9, goal: 10),
+            "the widget bound to this very day is the one that draws"
+        )
+    }
+
+    // MARK: - The talk expands in place, it does not swap sheets
+
+    /// The kebab used to close and hand the mouth over in `sheet(onDismiss:)`.
+    /// Expanding in place needs the thread promoted with the anchor and **no**
+    /// second sheet: `sheetOpen` staying false is the whole point.
+    func testExpandingPromotesTheThreadWithoutOpeningTheMouthSheet() throws {
+        let talk = try makeTalk()
+        talk.appendUser("поясница")
+        let bound = talk.current.id
+        talk.newChat()
+        talk.appendUser("овощи")
+
+        XCTAssertTrue(talk.promote(threadId: bound, anchorMessageId: "m-1"))
+
+        XCTAssertEqual(talk.current.id, bound, "the chat that last bound this widget is current")
+        XCTAssertEqual(talk.anchorMessageId, "m-1", "the expanded talk stands on the same message")
+        XCTAssertFalse(talk.sheetOpen, "no second sheet — the kebab grows where it stands")
+    }
+
     // MARK: - Holding a tile must not also open Use
 
     func testLongPressSwallowsTheTapThatFollowsIt() {
@@ -235,6 +362,16 @@ final class KebabInspectorTests: XCTestCase {
             messages: messages,
             createdAt: messages.first?.at ?? Date(),
             updatedAt: messages.last?.at ?? Date()
+        )
+    }
+
+    private func makeTalk() throws -> TalkStore {
+        let directory = FileManager.default.temporaryDirectory
+            .appending(path: "facio-kebab-talk-\(UUID().uuidString)", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return try TalkStore(
+            repository: TalkRepository(directory: directory),
+            client: .stub { _ in throw TalkClientError.transport }
         )
     }
 

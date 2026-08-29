@@ -5,11 +5,16 @@ import SwiftUI
 /// instead of `z` when nothing is prepared (the bike).
 ///
 /// Slots are **instances in time**, never schema versions: versions of one
-/// object live as snapshots in the chat.
+/// object live as snapshots in the chat. Each slot wears **the face of that
+/// session** — its own counter number, its own mark, its own hour — with the
+/// date and the status as a caption under it, not instead of it.
 struct InstanceCarousel: View {
     let instances: [Instance]
     let now: Date
     @Binding var selectedId: String
+    /// The widget bound to that very instance, or `nil` when the day kept no
+    /// object of its own. Never today's live widget.
+    var widget: (Instance) -> Widget?
     var onAdd: () -> Void
 
     var body: some View {
@@ -35,9 +40,12 @@ struct InstanceCarousel: View {
     }
 
     private static let addSlotId = "carousel-add"
+    private static let selectedWidth: CGFloat = 92
+    private static let restingWidth: CGFloat = 74
+    private static let slotHeight: CGFloat = 108
 
     private var row: some View {
-        HStack(spacing: 10) {
+        HStack(alignment: .bottom, spacing: 10) {
             ForEach(instances) { instance in
                 slot(instance)
                     .id(instance.id)
@@ -53,21 +61,31 @@ struct InstanceCarousel: View {
 
     private func slot(_ instance: Instance) -> some View {
         let selected = instance.id == selectedId
-        let side: CGFloat = selected ? 92 : 72
+        let face = InstanceFaceLaw.face(instance: instance, widget: widget(instance), now: now)
+        let width = selected ? Self.selectedWidth : Self.restingWidth
         return Button {
             selectedId = instance.id
         } label: {
-            VStack(spacing: 4) {
+            VStack(spacing: 2) {
+                Spacer(minLength: 0)
+                InstanceFaceView(
+                    face: face,
+                    selected: selected,
+                    dimmed: instance.status == .completed
+                )
+                Spacer(minLength: 0)
                 Text(DisplayCopy.chipDate(instance.when))
-                    .font(selected ? .subheadline.weight(.semibold) : .caption.weight(.semibold))
+                    .font(selected ? .caption.weight(.semibold) : .caption2.weight(.semibold))
                     .lineLimit(1)
                 Text(DisplayCopy.instanceStatus(instance.status))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
             .padding(.horizontal, 6)
-            .frame(width: side, height: side)
+            .padding(.vertical, 10)
+            .frame(width: width, height: Self.slotHeight)
             .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -76,16 +94,21 @@ struct InstanceCarousel: View {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(Color.primary.opacity(selected ? 0.12 : 0.05))
         )
+        .accessibilityElement(children: .ignore)
         .accessibilityLabel(DisplayCopy.loudDate(instance.when))
-        .accessibilityValue(DisplayCopy.instanceStatus(instance.status))
-        .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityValue(
+            [DisplayCopy.instanceStatus(instance.status), InstanceFaceView.spoken(face)]
+                .compactMap { $0 }
+                .joined(separator: ", ")
+        )
+        .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
     }
 
     private var addSlot: some View {
         Button(action: onAdd) {
             Image(systemName: "plus")
                 .font(.headline)
-                .frame(width: 72, height: 72)
+                .frame(width: Self.restingWidth, height: Self.slotHeight)
                 .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
         .buttonStyle(.plain)

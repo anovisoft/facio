@@ -7,10 +7,6 @@ struct RootView: View {
     @State private var path = NavigationPath()
     @State private var pan = PanSession()
     @State private var kebab: SubjectRef?
-    /// The kebab hands the mouth over in `sheet(onDismiss:)` — one sheet at a
-    /// time, no sleep. The anchor rides along so the talk opens on the same
-    /// message the miniature was showing.
-    @State private var pendingTalk: TalkAnchor?
     /// Built here, not in `FacioApp.init` — the warehouse is a `@State`
     /// factory and this hangs off the same instance.
     @State private var sync: DeskSyncCoordinator?
@@ -49,7 +45,10 @@ struct RootView: View {
             }
         }
         .environment(pan)
-        .sheet(item: $kebab, onDismiss: presentPendingTalk) { target in
+        // One sheet, and the talk grows inside it. The old hand-over through
+        // `onDismiss` is gone: closing the kebab to open the mouth is exactly
+        // the substitution the PO reported.
+        .sheet(item: $kebab) { target in
             KebabInspector(
                 subjectId: target.id,
                 startingInstanceId: store.preferredInstanceId(subjectId: target.id) ?? "",
@@ -57,23 +56,17 @@ struct RootView: View {
                     kebab = nil
                     path.append(DeskRoute.inspect(subjectId: subjectId, instanceId: instanceId))
                 },
-                onTalk: { anchor in
-                    pendingTalk = anchor
+                onOpenSnapshot: { card in
                     kebab = nil
+                    openSnapshot(card)
                 },
                 onClose: { kebab = nil }
             )
-            .presentationDetents([.fraction(0.9)])
-            .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $talk.sheetOpen) {
             TalkSheet { card in
                 talk.sheetOpen = false
-                if store.subject(id: card.subjectId)?.status == .paused {
-                    path.append(DeskRoute.inspect(subjectId: card.subjectId, instanceId: card.instanceId))
-                } else {
-                    path.append(DeskRoute.use(widgetId: card.widgetId))
-                }
+                openSnapshot(card)
             }
         }
         .sheet(isPresented: $settingsOpen) {
@@ -143,9 +136,13 @@ struct RootView: View {
         }
     }
 
-    private func presentPendingTalk() {
-        guard let pendingTalk else { return }
-        self.pendingTalk = nil
-        talk.open(threadId: pendingTalk.threadId, anchorMessageId: pendingTalk.messageId)
+    /// A centered snapshot is a picture; tapping it goes to the live object.
+    /// A paused practice has nothing to do right now, so it opens Inspect.
+    private func openSnapshot(_ card: ChatSnapshot) {
+        if store.subject(id: card.subjectId)?.status == .paused {
+            path.append(DeskRoute.inspect(subjectId: card.subjectId, instanceId: card.instanceId))
+        } else {
+            path.append(DeskRoute.use(widgetId: card.widgetId))
+        }
     }
 }

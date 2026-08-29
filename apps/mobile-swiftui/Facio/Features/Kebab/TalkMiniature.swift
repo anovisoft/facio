@@ -4,71 +4,39 @@ import SwiftUI
 /// standing on the last snapshot of the instance in the carousel.
 ///
 /// Not a second messenger and not a runtime (never-do #6): nothing in here
-/// ticks, sends or scrolls. Tap the field, tap the picture or swipe it up and
-/// the same almost-fullscreen mouth sheet opens on the same message.
+/// ticks, sends or scrolls. It is the collapsed half of `KebabTalkPane` — the
+/// card, the gestures and the growing all belong to the pane, so the same card
+/// stays on screen when the talk opens.
 struct TalkMiniature: View {
     let messages: [ChatMessage]
     let placeholder: String
-    var onExpand: () -> Void
-
-    @State private var tapLock = TapLock()
 
     var body: some View {
-        Button {
-            guard tapLock.shouldRunTap() else { return }
-            onExpand()
-        } label: {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Разговор")
-                    .font(.caption.weight(.medium))
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Разговор")
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+            if messages.isEmpty {
+                Text("ещё не начинался")
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
-                if messages.isEmpty {
-                    Text("ещё не начинался")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Spacer(minLength: 0)
-                } else {
-                    Spacer(minLength: 0)
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(messages) { message in
-                            MiniBubble(message: message)
-                        }
+                Spacer(minLength: 0)
+            } else {
+                Spacer(minLength: 0)
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(messages) { message in
+                        MiniBubble(message: message)
                     }
                 }
-                field
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .contentShape(RoundedRectangle(cornerRadius: FacioPalette.tileRadius, style: .continuous))
-            .facioGlass()
-            // Glass with nothing behind it does not read: the sheet has no
-            // atmosphere, so the card needs its own edge to look like a card.
-            .overlay(
-                RoundedRectangle(cornerRadius: FacioPalette.tileRadius, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.10), lineWidth: 1)
-            )
+            field
         }
-        .buttonStyle(.plain)
-        .aspectRatio(3.0 / 4.0, contentMode: .fit)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        // Swipe the chat region up — the same expansion as the tap. The lock
-        // keeps the button from firing a second time on lift.
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 20)
-                .onEnded { value in
-                    guard value.translation.height < -20 else { return }
-                    tapLock.consume()
-                    onExpand()
-                }
-        )
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Разговор")
-        .accessibilityHint("открывает разговор")
-        .accessibilityAddTraits(.isButton)
+        .padding(16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     /// The input line of the picture. It does not take text — tapping it opens
-    /// the real one in the sheet.
+    /// the real one, in this very card.
     private var field: some View {
         HStack(spacing: 8) {
             Text(placeholder)
