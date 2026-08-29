@@ -7,6 +7,7 @@ import pytest
 from facio_domain.cues import add_cue, default_surface
 from facio_domain.desk import founding_desk
 from facio_domain.models import CueKind, CueOrigin, CueSurface, SubjectStatus, WidgetStatus, WidgetType
+from facio_domain import tools
 from facio_domain.pain import reports_pain
 from facio_domain.tools import (
     CADENCE_REQUIRED,
@@ -230,15 +231,26 @@ def test_thaw_without_pause_is_invalid() -> None:
     assert bike.status == SubjectStatus.active
 
 
-@pytest.mark.parametrize("widget_type", ["checklist", "timer", "stepper"])
-def test_create_widget_empty_type_is_rejected(widget_type: str) -> None:
+def test_create_widget_refuses_a_type_with_no_runtime(monkeypatch) -> None:
+    """The gate lifts **per type**, together with that type's runtime — never
+    as one flag (never-do #14). Every catalog type has a runtime now, so what
+    is held here is the gate itself: narrow the runnable set and the type stops
+    landing, with the desk left exactly as it was.
+    """
+    monkeypatch.setattr(tools, "RUNNABLE_TYPES", frozenset({WidgetType.counter}))
     desk = founding_desk(now=NOW)
     subject_ids = {row.id for row in desk.subjects}
     widget_count = len(desk.widgets)
     outcome = _apply(
         desk,
         "create_widget",
-        {"type": widget_type, "title": "пусто", "subject_id": "empty-type-new"},
+        {
+            "type": "checklist",
+            "title": "пусто",
+            "subject_id": "empty-type-new",
+            "cadence": {"count": 1, "period": "week"},
+            "items": ["раз"],
+        },
     )
     assert outcome.ok is False
     assert outcome.mutated is False
@@ -247,6 +259,14 @@ def test_create_widget_empty_type_is_rejected(widget_type: str) -> None:
     assert len(outcome.desk.widgets) == widget_count
     assert "empty-type-new" not in {row.id for row in outcome.desk.subjects}
     assert {row.id for row in outcome.desk.subjects} == subject_ids
+
+
+def test_every_catalog_type_that_ships_has_a_size_of_its_own() -> None:
+    """Type owns the shape (never-do #8), out of Q18's preferred set. A type
+    with no size falls into the packer's default cell and gaps the row."""
+    preferred = {"4x1", "2x2", "4x2", "4x4"}
+    for widget_type in tools.RUNNABLE_TYPES:
+        assert tools._default_tile(widget_type) in preferred, widget_type
 
 
 def test_create_widget_on_a_new_subject_without_cadence_is_refused() -> None:

@@ -1,5 +1,30 @@
 {
   "$defs": {
+    "ChecklistItem": {
+      "additionalProperties": false,
+      "description": "One line of a checklist.\n\n`done` is finger state on that line, nothing more: no per-item timestamp,\nno score. Progress over the list is arithmetic in `runtime.py`, so the\npayload never carries a \"progress\" number of its own \u2014 a stored count and\na list of ticks are two truths about the same thing, and they drift.",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "done": {
+          "default": false,
+          "title": "Done",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "text"
+      ],
+      "title": "ChecklistItem",
+      "type": "object"
+    },
     "DeltaCard": {
       "additionalProperties": false,
       "description": "The calm half of the morning (Q6): promised by the rhythm minus done.\n\nNo offer and no chips \u2014 a delta without drift is a statement, not an\naccusation (P7). `remaining` is never negative: doing more than promised\nis not a debt.",
@@ -215,7 +240,7 @@
     },
     "WidgetPayload": {
       "additionalProperties": true,
-      "description": "Flexible payload; fields used by tests are typed, the rest may pass through.",
+      "description": "What a runtime needs to run. Extra keys still pass through.\n\nThe typed part is the catalog (Q1): `count`/`target` for the counter,\n`done` for the tick, `fire_at` for the reminder, `items` for the checklist,\n`seconds`/`started_at`/`elapsed` for the timer, `beats`/`current` for the\nstepper. Anything the model invents on top stays in `extra` and no runtime\nreads it (never-do AI #1).",
       "properties": {
         "count": {
           "anyOf": [
@@ -256,7 +281,9 @@
         "items": {
           "anyOf": [
             {
-              "items": {},
+              "items": {
+                "$ref": "#/$defs/ChecklistItem"
+              },
               "type": "array"
             },
             {
@@ -278,6 +305,19 @@
           "default": null,
           "title": "Seconds"
         },
+        "started_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Started At"
+        },
         "elapsed": {
           "anyOf": [
             {
@@ -290,7 +330,7 @@
           "default": null,
           "title": "Elapsed"
         },
-        "steps": {
+        "beats": {
           "anyOf": [
             {
               "items": {
@@ -303,7 +343,7 @@
             }
           ],
           "default": null,
-          "title": "Steps"
+          "title": "Beats"
         },
         "current": {
           "anyOf": [

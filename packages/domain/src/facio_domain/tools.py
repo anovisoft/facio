@@ -18,6 +18,7 @@ from pydantic import TypeAdapter, ValidationError
 from facio_domain.cues import add_cue
 from facio_domain.models import (
     Cadence,
+    ChecklistItem,
     Cue,
     CueKind,
     CueMedia,
@@ -39,6 +40,16 @@ from facio_domain.models import (
     Window,
 )
 from facio_domain.reminder import reminder_fire_at, window_from_closing
+from facio_domain.runtime import (
+    build_beats,
+    build_checklist_items,
+    build_seconds,
+    checklist_progress,
+    pause_timer,
+    set_checklist_done,
+    stepper_beats,
+    stepper_position,
+)
 from facio_domain.subjects import freeze_subject, retire_subject, shrink_subject, thaw_subject
 
 TOOL_NAMES = (
@@ -85,7 +96,33 @@ INVALID_QUOTE = "invalid_quote"
 # At most one media item per cue, and it is `photo` (her own picture) or `link`
 # (04 Cue). A list, or a third kind, is refused — not trimmed down to the first.
 INVALID_MEDIA = "invalid_media"
+# A type with no runtime behind it would land on the lid and vanish (В1.1).
+# The gate lifts **per type**, together with that type's runtime and its
+# projection — never as one flag — because a type without cadence, a do-time
+# cue and drift is a planner line, not a practice (never-do #14).
 UNSUPPORTED_WIDGET_TYPE = "unsupported_widget_type"
+# Types whose runtime exists on both sides (law + lid). Everything else in
+# `WidgetType` is still refused by `create_widget`; the enum in the tool
+# schema is deliberately not narrowed — the model may ask, apply says no.
+RUNNABLE_TYPES = frozenset(
+    {
+        WidgetType.counter,
+        WidgetType.tick,
+        WidgetType.reminder,
+        WidgetType.checklist,
+        WidgetType.timer,
+        WidgetType.stepper,
+    }
+)
+# A checklist with no lines is an empty tile: nothing to tick, nothing to
+# finish. Named like the other field refusals so the turn can fix itself.
+INVALID_ITEMS = "invalid_items"
+# A timer with no length is a stopwatch, and a stopwatch has no do-time to
+# aim at: «медитация» without «10 минут» is a practice, not a timer.
+INVALID_SECONDS = "invalid_seconds"
+# A stepper with no beats is a title on the lid. The type exists because a
+# subject needs takts (Q1); without them it is a tick with extra chrome.
+INVALID_BEATS = "invalid_beats"
 
 _MEDIA = TypeAdapter(CueMedia)
 
@@ -297,6 +334,27 @@ def _snapshot_line(desk: Desk, widget: Widget) -> str:
         return f"{base} · {cue.text}" if cue else base
     if widget.type == WidgetType.tick:
         return "готово" if widget.payload.done or widget.status == WidgetStatus.done else "не сделано"
+    if widget.type == WidgetType.checklist:
+        # A picture of the list, not the list running in the bubble
+        # (never-do #6): how many lines and the do-time line, nothing tickable.
+        done, total = checklist_progress(widget.payload)
+        cue = _do_time_cue(desk, widget.subject_id)
+        base = f"{done} / {total}"
+        return f"{base} · {cue.text}" if cue else base
+    if widget.type == WidgetType.stepper:
+        # A picture of where the sequence stands, not beats to press
+        # (never-do #6): the tile is not a live stepper and neither is this.
+        beats = stepper_beats(widget.payload)
+        cue = _do_time_cue(desk, widget.subject_id)
+        base = f"{stepper_position(widget.payload) + 1} / {len(beats)}" if beats else widget.title
+        return f"{base} · {cue.text}" if cue else base
+    if widget.type == WidgetType.timer:
+        # A picture of the timer, not the timer running in the bubble
+        # (never-do #6): the length, and the do-time line under it.
+        total = widget.payload.seconds or 0
+        cue = _do_time_cue(desk, widget.subject_id)
+        base = _clock_phrase(total)
+        return f"{base} · {cue.text}" if cue else base
     if widget.type == WidgetType.reminder:
         if widget.status == WidgetStatus.skipped:
             return "сегодня нет"
@@ -309,6 +367,12 @@ def _snapshot_line(desk: Desk, widget: Widget) -> str:
         detail = door or (cue.text if cue else "")
         return f"{clock} · {detail}".strip(" ·") if detail else clock
     return widget.title
+
+
+def _clock_phrase(seconds: int) -> str:
+    """`mm:ss`, the way a timer face reads. Language-free on purpose."""
+    minutes, rest = divmod(max(0, seconds), 60)
+    return f"{minutes}:{rest:02d}"
 
 
 def _door_phrase(closes_at: time) -> str:
@@ -459,8 +523,11 @@ def _create_widget(desk: Desk, args: dict[str, Any], *, now: datetime, **_: Any)
         section = WidgetSection(str(args.get("section") or "today"))
     except ValueError as error:
         raise ToolFail(INVALID) from error
-    if widget_type in {WidgetType.checklist, WidgetType.timer, WidgetType.stepper}:
+    if widget_type not in RUNNABLE_TYPES:
         raise ToolFail(UNSUPPORTED_WIDGET_TYPE)
+    items = _checklist_items_for(widget_type, args)
+    seconds = _seconds_for(widget_type, args)
+    beats = _beats_for(widget_type, args)
     subject = _subject(desk, subject_id)
     if subject is None:
         cadence = _cadence_for_new_subject(args)
@@ -482,6 +549,15 @@ def _create_widget(desk: Desk, args: dict[str, Any], *, now: datetime, **_: Any)
         _replace_subject(desk, subject.model_copy(update={"target": Target(current=current, goal=int(target))}))
     if widget_type == WidgetType.tick:
         payload.done = False
+    if items is not None:
+        payload.items = items
+    if seconds is not None:
+        # A fresh timer is standing still: the length, nothing banked, no run.
+        payload.seconds = seconds
+        payload.elapsed = 0
+    if beats is not None:
+        payload.beats = beats
+        payload.current = 0
     widget = Widget(
         id=widget_id,
         type=widget_type,
@@ -504,10 +580,51 @@ def _create_widget(desk: Desk, args: dict[str, Any], *, now: datetime, **_: Any)
     )
 
 
+def _checklist_items_for(
+    widget_type: WidgetType, args: dict[str, Any]
+) -> list[ChecklistItem] | None:
+    """The lines of a new checklist. A checklist without them does not land.
+
+    Other types simply have no items: passing them is not an error, it is
+    ignored, the way an unread key in `extra` is.
+    """
+    if widget_type != WidgetType.checklist:
+        return None
+    items = build_checklist_items(args.get("items"))
+    if not items:
+        raise ToolFail(INVALID_ITEMS)
+    return items
+
+
+def _seconds_for(widget_type: WidgetType, args: dict[str, Any]) -> int | None:
+    """The length of a new timer. A timer without one does not land."""
+    if widget_type != WidgetType.timer:
+        return None
+    seconds = build_seconds(args.get("seconds"))
+    if seconds is None:
+        raise ToolFail(INVALID_SECONDS)
+    return seconds
+
+
+def _beats_for(widget_type: WidgetType, args: dict[str, Any]) -> list[str] | None:
+    """The beats of a new stepper. Without them the type has no reason to be."""
+    if widget_type != WidgetType.stepper:
+        return None
+    beats = build_beats(args.get("beats"))
+    if not beats:
+        raise ToolFail(INVALID_BEATS)
+    return beats
+
+
 def _default_tile(widget_type: WidgetType) -> str:
-    if widget_type == WidgetType.reminder:
+    """Type owns the shape (never-do #8). Sizes from Q18's preferred set.
+
+    A type with no size of its own would fall back to the packer's default
+    cell and sit in the grid as a hole, so every runnable type names one.
+    """
+    if widget_type in {WidgetType.reminder, WidgetType.checklist, WidgetType.stepper}:
         return "4x2"
-    if widget_type in {WidgetType.counter, WidgetType.tick}:
+    if widget_type in {WidgetType.counter, WidgetType.tick, WidgetType.timer}:
         return "2x2"
     return "4x1"
 
@@ -523,6 +640,27 @@ def _update_widget(desk: Desk, args: dict[str, Any], **_: Any) -> ToolOutcome:
         subject = _require_subject(desk, widget.subject_id)
         current = subject.target.current if subject.target else payload.count or 0
         _replace_subject(desk, subject.model_copy(update={"target": Target(current=current, goal=int(args["target"]))}))
+    if "items" in args and args["items"] is not None:
+        # Restructuring the list is a structural edit, same as retitling it.
+        # The lines arrive whole: merging half a list into ticked rows behind
+        # the person's back is the silent rewrite AI #2 forbids.
+        rebuilt = build_checklist_items(args["items"])
+        if widget.type != WidgetType.checklist or not rebuilt:
+            raise ToolFail(INVALID_ITEMS)
+        payload.items = rebuilt
+    if "seconds" in args and args["seconds"] is not None:
+        rebuilt = build_seconds(args["seconds"])
+        if widget.type != WidgetType.timer or rebuilt is None:
+            raise ToolFail(INVALID_SECONDS)
+        payload.seconds = rebuilt
+    if "beats" in args and args["beats"] is not None:
+        rebuilt = build_beats(args["beats"])
+        if widget.type != WidgetType.stepper or not rebuilt:
+            raise ToolFail(INVALID_BEATS)
+        payload.beats = rebuilt
+        # A rewritten sequence keeps the person where they stand, clamped into
+        # the beats that now exist — never silently sent back to the start.
+        payload.current = min(stepper_position(payload), len(rebuilt) - 1)
     if "count" in args and args["count"] is not None:
         payload.count = int(args["count"])
         if widget.type == WidgetType.counter:
@@ -565,6 +703,20 @@ def _complete(desk: Desk, args: dict[str, Any], *, now: datetime, **_: Any) -> T
     payload = widget.payload.model_copy()
     if widget.type == WidgetType.tick:
         payload.done = True
+    if widget.type == WidgetType.checklist:
+        # Finishing the list finishes its lines. The tile stops showing
+        # «2 из 5» next to a done instance — one truth, not two.
+        payload = set_checklist_done(payload, True)
+    if widget.type == WidgetType.timer:
+        # A finished sitting is not a running one: bank the seconds it took and
+        # stop the run, or the tile would keep counting past a closed case.
+        payload = pause_timer(payload, now)
+    if widget.type == WidgetType.stepper:
+        # Finished means standing on the last beat. Not reset to the first:
+        # next time is a new instance, and that one starts at zero.
+        beats = stepper_beats(payload)
+        if beats:
+            payload = payload.model_copy(update={"current": len(beats) - 1})
     next_widget = widget.model_copy(update={"status": WidgetStatus.done, "when": now, "payload": payload})
     _replace_widget(desk, next_widget)
     _complete_instance(desk, widget.instance_id, now)

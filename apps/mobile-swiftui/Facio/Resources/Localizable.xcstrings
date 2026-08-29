@@ -108,6 +108,23 @@
         }
       }
     },
+    "%@, %lld из %lld пунктов": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$lld of %3$lld items"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %lld из %lld пунктов"
+          }
+        }
+      }
+    },
     "%@, %lld из %lld, %@": {
       "comment": "Counter tile accessibility: title, count of target, cue",
       "extractionState": "manual",
@@ -162,6 +179,23 @@
         }
       }
     },
+    "%@, идёт": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, running"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, идёт"
+          }
+        }
+      }
+    },
     "%@, к делу": {
       "comment": "Inspect horizon due day",
       "extractionState": "manual",
@@ -194,6 +228,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@, пусто"
+          }
+        }
+      }
+    },
+    "%@, стоит": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, stopped"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, стоит"
+          }
+        }
+      }
+    },
+    "%@, шаг %lld из %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, step %2$lld of %3$lld"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, шаг %lld из %lld"
           }
         }
       }
@@ -1195,6 +1263,23 @@
         }
       }
     },
+    "дальше": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "next"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "дальше"
+          }
+        }
+      }
+    },
     "две недели": {
       "comment": "Drift silence, two weeks",
       "extractionState": "manual",
@@ -1262,6 +1347,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "зал"
+          }
+        }
+      }
+    },
+    "из %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "of %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "из %@"
           }
         }
       }
@@ -1530,6 +1632,23 @@
         }
       }
     },
+    "пауза": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pause"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "пауза"
+          }
+        }
+      }
+    },
     "плюс": {
       "extractionState": "manual",
       "localizations": {
@@ -1632,6 +1751,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "последний синк %@"
+          }
+        }
+      }
+    },
+    "пункт: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "item: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "пункт: %@"
           }
         }
       }
@@ -1775,6 +1911,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "скоро"
+          }
+        }
+      }
+    },
+    "сначала": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "restart"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "сначала"
+          }
+        }
+      }
+    },
+    "старт": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "start"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "старт"
           }
         }
       }

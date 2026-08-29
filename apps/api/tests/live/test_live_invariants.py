@@ -259,3 +259,73 @@ async def test_selection_with_no_binding_writes_nothing(live_play) -> None:
     assert landed == [], [call.arguments for call in landed]
     assert len(result.desk.cues) == len(before.cues)
     assert result.text
+
+
+# --- R1: the v1 catalog, live ---------------------------------------------
+#
+# What is asserted here is what the **desk** guarantees: the type lands with a
+# payload its runtime can run, its own size, and a real rhythm — `cadence` is a
+# hard refusal in the law (`cadence_required`), so a live miss is a bug.
+#
+# The do-time cue is deliberately *not* asserted here. The prompt asks for one
+# and `checklist_shopping` / `timer_meditation` hold that shape as goldens, but
+# the desk cannot force a cue the way it forces a rhythm: a cue is a conclusion,
+# and an utterance that carries none («список покупок: хлеб, молоко») has
+# nothing true to write. Making the model produce one anyway would be inventing
+# advice for the person — never-do AI #1 and #2 — which is worse than an empty
+# do-time line. Measured on live Haiku: it writes the rhythm reliably and the
+# cue only when the turn actually reached a conclusion.
+
+
+async def test_live_catalog_checklist_lands_with_a_rhythm_and_a_cue(live_play) -> None:
+    """A list of lines becomes a practice, not a to-do (never-do #14)."""
+    result = await live_play("список покупок на неделю: хлеб, молоко, яблоки")
+    assert result.mutated is True
+    checklists = [row for row in result.desk.widgets if row.type == WidgetType.checklist]
+    assert checklists, _names(result)
+    widget = checklists[0]
+    assert widget.subject_id not in FOUNDING_IDS
+    assert widget.payload.items
+    assert len(widget.payload.items) >= 2
+    assert all(item.text.strip() for item in widget.payload.items)
+    assert widget.tile_size == "4x2"
+    # «на неделю» is a rhythm, not a one-off: a practice written with
+    # `cadence: none` can never be behind, so drift never reaches it.
+    subject = _subject(result.desk, widget.subject_id)
+    assert times_per_week(subject.cadence) >= 1
+    assert "set_reminder" not in _names(result)
+
+
+async def test_live_catalog_timer_lands_with_a_length(live_play) -> None:
+    result = await live_play("медитация 10 минут каждый день")
+    assert result.mutated is True
+    timers = [row for row in result.desk.widgets if row.type == WidgetType.timer]
+    assert timers, _names(result)
+    widget = timers[0]
+    # Ten minutes, in seconds — the length is the one thing a timer needs.
+    assert widget.payload.seconds == 600
+    assert widget.payload.started_at is None
+    assert widget.tile_size == "2x2"
+    subject = _subject(result.desk, widget.subject_id)
+    assert times_per_week(subject.cadence) >= 1
+
+
+async def test_live_catalog_stepper_only_when_takts_were_asked_for(live_play) -> None:
+    result = await live_play("разминка по шагам, два раза в неделю")
+    assert result.mutated is True
+    steppers = [row for row in result.desk.widgets if row.type == WidgetType.stepper]
+    assert steppers, _names(result)
+    widget = steppers[0]
+    assert widget.payload.beats
+    assert len(widget.payload.beats) >= 2
+    assert widget.payload.current in (None, 0)
+    assert widget.tile_size == "4x2"
+    subject = _subject(result.desk, widget.subject_id)
+    assert times_per_week(subject.cadence) >= 1
+
+
+async def test_live_a_plain_practice_does_not_become_a_stepper(live_play) -> None:
+    """Q1: takts are for a subject that needs them. «запиши зал» is a counter."""
+    result = await live_play("запиши зал")
+    assert result.mutated is True
+    assert not [row for row in result.desk.widgets if row.type == WidgetType.stepper]

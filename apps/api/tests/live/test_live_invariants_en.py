@@ -276,3 +276,57 @@ async def test_selection_with_no_binding_writes_nothing(live_play_en) -> None:
     assert len(result.desk.cues) == len(before.cues)
     assert result.text
     _assert_english(result)
+
+
+# --- R1: the v1 catalog, live, in English ---------------------------------
+#
+# Same split as the Russian half: the rhythm is a hard desk refusal and is
+# asserted; the do-time cue is held by the goldens, not here (see the note in
+# `test_live_invariants.py`).
+
+
+async def test_live_catalog_checklist_en_lands_with_a_rhythm_and_a_cue(live_play_en) -> None:
+    result = await live_play_en("shopping list for the week: bread, milk, apples")
+    assert result.mutated is True
+    checklists = [row for row in result.desk.widgets if row.type == WidgetType.checklist]
+    assert checklists, _names(result)
+    widget = checklists[0]
+    assert widget.payload.items
+    assert len(widget.payload.items) >= 2
+    assert widget.tile_size == "4x2"
+    subject = _subject(result.desk, widget.subject_id)
+    assert times_per_week(subject.cadence) >= 1
+    # Whatever the turn did write stays in the language the person reads.
+    for row in result.desk.cues:
+        if row.subject_id != subject.id:
+            continue
+        assert not any("\u0400" <= char <= "\u04ff" for char in row.text)
+
+
+async def test_live_catalog_timer_en_lands_with_a_length(live_play_en) -> None:
+    result = await live_play_en("meditate 10 minutes every day")
+    assert result.mutated is True
+    timers = [row for row in result.desk.widgets if row.type == WidgetType.timer]
+    assert timers, _names(result)
+    widget = timers[0]
+    assert widget.payload.seconds == 600
+    assert widget.tile_size == "2x2"
+    subject = _subject(result.desk, widget.subject_id)
+    assert times_per_week(subject.cadence) >= 1
+
+
+async def test_live_catalog_stepper_en_only_when_takts_were_asked_for(live_play_en) -> None:
+    result = await live_play_en("walk me through the warm-up step by step, twice a week")
+    assert result.mutated is True
+    steppers = [row for row in result.desk.widgets if row.type == WidgetType.stepper]
+    assert steppers, _names(result)
+    widget = steppers[0]
+    assert widget.payload.beats
+    assert len(widget.payload.beats) >= 2
+    assert widget.tile_size == "4x2"
+
+
+async def test_live_a_plain_practice_en_does_not_become_a_stepper(live_play_en) -> None:
+    result = await live_play_en("put the gym on the desk")
+    assert result.mutated is True
+    assert not [row for row in result.desk.widgets if row.type == WidgetType.stepper]

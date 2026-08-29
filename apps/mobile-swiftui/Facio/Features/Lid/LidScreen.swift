@@ -25,6 +25,8 @@ struct LidScreen: View {
                     onInspect: { path.append(DeskRoute.inspect(subjectId: $0, instanceId: $1)) },
                     onKebab: onKebab,
                     onToggleTick: store.toggleTick,
+                    onToggleItem: store.toggleChecklistItem,
+                    onToggleTimer: store.toggleTimerRun,
                     onSurfaced: { store.markCueSurfaced(widgetId: $0, place: "tile") },
                     onAnswerDrift: store.answerDrift,
                     onRefuseDrift: store.refuseDrift

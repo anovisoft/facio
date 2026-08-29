@@ -12,6 +12,8 @@ struct LidFeed: View {
     let onInspect: (String, String) -> Void
     let onKebab: (String) -> Void
     let onToggleTick: (String) -> Void
+    let onToggleItem: (String, String) -> Void
+    let onToggleTimer: (String) -> Void
     let onSurfaced: (String) -> Void
     let onAnswerDrift: (String, DriftOffer) -> Void
     let onRefuseDrift: (String) -> Void
@@ -105,12 +107,23 @@ struct LidFeed: View {
                             onInspect(widget.subjectId, widget.instanceId)
                         }
                     },
-                    onToggleTick: opensUse ? { onToggleTick(widget.id) } : nil,
+                    // Two rules meet here. Soon / Postponed stay a glance —
+                    // no live ticks, tap opens Inspect (03 lid feed table).
+                    // And a type whose tile does not run live never gets a
+                    // live handler on any section (04: the stepper tile is not
+                    // a live stepper).
+                    onToggleTick: live(widget, opensUse) ? { onToggleTick(widget.id) } : nil,
+                    onToggleItem: live(widget, opensUse) ? { onToggleItem(widget.id, $0) } : nil,
+                    onToggleTimer: live(widget, opensUse) ? { onToggleTimer(widget.id) } : nil,
                     onKebab: { onKebab(widget.subjectId) },
                     onSurfaced: { onSurfaced(widget.id) }
                 )
             }
         }
+    }
+
+    private func live(_ widget: Widget, _ opensUse: Bool) -> Bool {
+        opensUse && widget.type.tileRunsLive
     }
 
     private func showsWidget(_ widget: Widget, hiding subjectId: String?) -> Bool {

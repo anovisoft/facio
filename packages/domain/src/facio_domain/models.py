@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from datetime import datetime, time
 from enum import StrEnum
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -230,18 +230,47 @@ class Instance(BaseModel):
     status: InstanceStatus
 
 
+class ChecklistItem(BaseModel):
+    """One line of a checklist.
+
+    `done` is finger state on that line, nothing more: no per-item timestamp,
+    no score. Progress over the list is arithmetic in `runtime.py`, so the
+    payload never carries a "progress" number of its own — a stored count and
+    a list of ticks are two truths about the same thing, and they drift.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    text: str
+    done: bool = False
+
+
 class WidgetPayload(BaseModel):
-    """Flexible payload; fields used by tests are typed, the rest may pass through."""
+    """What a runtime needs to run. Extra keys still pass through.
+
+    The typed part is the catalog (Q1): `count`/`target` for the counter,
+    `done` for the tick, `fire_at` for the reminder, `items` for the checklist,
+    `seconds`/`started_at`/`elapsed` for the timer, `beats`/`current` for the
+    stepper. Anything the model invents on top stays in `extra` and no runtime
+    reads it (never-do AI #1).
+    """
 
     model_config = ConfigDict(extra="allow")
 
     count: int | None = None
     target: int | None = None
     done: bool | None = None
-    items: list[Any] | None = None
+    items: list[ChecklistItem] | None = None
+    # The length the person named, and the run itself. `started_at` is the
+    # moment the current run began — «идёт с момента» — and is empty when the
+    # timer is standing still; `elapsed` is what was banked before it.
+    # Elapsed time is derived from those two and `now`, never stored ticking.
     seconds: int | None = None
+    started_at: datetime | None = None
     elapsed: int | None = None
-    steps: list[str] | None = None
+    # Beats of a stepper and the one the person is standing on (0-based).
+    beats: list[str] | None = None
     current: int | None = None
     fire_at: datetime | None = None
 

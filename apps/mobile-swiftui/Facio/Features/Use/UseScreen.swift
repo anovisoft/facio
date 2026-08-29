@@ -68,10 +68,12 @@ struct UseScreen: View {
                 )
             case .reminder:
                 ReminderUseView(widget: widget, cue: cue)
-            case .checklist, .timer, .stepper:
-                ContentUnavailableView {
-                    Text("Этот тип ещё не открывается.")
-                }
+            case .checklist:
+                ChecklistUseView(widget: widget, cue: store.cueFor(subjectId: widget.subjectId))
+            case .timer:
+                TimerUseView(widget: widget, cue: store.cueFor(subjectId: widget.subjectId))
+            case .stepper:
+                StepperUseView(widget: widget, cue: store.cueFor(subjectId: widget.subjectId))
             }
         }
     }

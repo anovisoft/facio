@@ -8,6 +8,18 @@ enum JournalEventType: String, Codable, Sendable, Equatable {
     case instanceCompleted = "instance_completed"
     case counterTicked = "counter_ticked"
     case tickToggled = "tick_toggled"
+    /// One line of a checklist. Step 1 of the plan reads the same journal for
+    /// cue hits and the late sync, so a tick has to be an event, not only a
+    /// field that quietly changed under a full-desk write (Q20).
+    case checklistItemToggled = "checklist_item_toggled"
+    /// A timer run beginning and ending, with the seconds it produced. The
+    /// journal is where elapsed time is *recorded*; the payload only ever
+    /// remembers when the current run began.
+    case timerStarted = "timer_started"
+    case timerPaused = "timer_paused"
+    /// Where a sequence stands after a beat was pressed. Same reason as the
+    /// checklist tick: the late sync has to see the move, not only the field.
+    case stepperMoved = "stepper_moved"
     case subjectShrunk = "subject_shrunk"
     case subjectRetired = "subject_retired"
     case driftAnswered = "drift_answered"

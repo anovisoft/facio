@@ -19,6 +19,41 @@ enum DisplayCopy {
         return String(localized: "\(count) / \(goal)", comment: "Counter face: count and goal")
     }
 
+    /// What VoiceOver reads off a checklist tile: the whole list in one
+    /// phrase, because the marks under it are read one line at a time.
+    static func checklistAccessibility(title: String, done: Int, total: Int) -> String {
+        String(
+            localized: "\(title), \(done) из \(total) пунктов",
+            comment: "Checklist tile accessibility: title, ticked lines of total"
+        )
+    }
+
+    /// One line of a checklist, as the mark button announces it.
+    static func checklistItemAccessibility(_ text: String) -> String {
+        String(localized: "пункт: \(text)", comment: "Checklist item accessibility")
+    }
+
+    /// What VoiceOver reads off a timer tile. The face itself is monospaced
+    /// digits; this says which of the two states it is in.
+    static func timerAccessibility(title: String, running: Bool) -> String {
+        running
+            ? String(localized: "\(title), идёт", comment: "Timer tile accessibility: running")
+            : String(localized: "\(title), стоит", comment: "Timer tile accessibility: stopped")
+    }
+
+    /// The length the person named, under the running face on Use.
+    static func timerOf(_ face: String) -> String {
+        String(localized: "из \(face)", comment: "Timer Use: of the named length")
+    }
+
+    /// What VoiceOver reads off a stepper — the tile and the beat on Use.
+    static func stepperAccessibility(title: String, step: Int, total: Int) -> String {
+        String(
+            localized: "\(title), шаг \(step) из \(total)",
+            comment: "Stepper accessibility: title, beat of total"
+        )
+    }
+
     /// What VoiceOver reads off a counter tile. Without a goal it says the
     /// number and stops, the same way the tile does.
     static func counterAccessibility(title: String, count: Int, goal: Int?, cue: String?) -> String {

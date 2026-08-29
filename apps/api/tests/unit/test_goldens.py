@@ -95,6 +95,7 @@ def _sentences(text: str) -> list[str]:
 
 RUSSIAN_IDS = {
     "cadence_shrink",
+    "checklist_shopping",
     "clarification_orphan",
     "clarification_selection",
     "drift_answer",
@@ -108,7 +109,9 @@ RUSSIAN_IDS = {
     "pain_raise",
     "pain_skip_freeze",
     "remind_at_19",
+    "stepper_warmup",
     "thaw_pause",
+    "timer_meditation",
 }
 
 
@@ -539,3 +542,162 @@ async def test_an_ordinary_cue_still_needs_no_quote() -> None:
     add = next(call for call in result.tool_calls if call.name == "add_cue")
     assert add.ok is True
     assert add.error is None
+
+
+# --- R1: the checklist is a practice, not a to-do list --------------------
+
+
+async def test_checklist_shopping_lands_with_a_rhythm_and_a_do_time_cue() -> None:
+    """Never-do #14 as a golden: the type only ships carrying both."""
+    golden = match_golden("список покупок на неделю: хлеб, молоко, яблоки")
+    assert golden is not None
+    assert golden.id == "checklist_shopping"
+    result = await _play(golden.utterance)
+    names = _names(result)
+    assert result.mutated is True
+    assert names == golden.expect.tools
+    for name in golden.expect.forbidden_tools:
+        assert name not in names
+    create = next(call for call in result.tool_calls if call.name == "create_widget")
+    assert create.ok is True
+    assert create.arguments["type"] == "checklist"
+    widget = next(row for row in result.desk.widgets if row.subject_id == "groceries")
+    assert widget.type == WidgetType.checklist
+    assert [item.text for item in widget.payload.items or []] == ["хлеб", "молоко", "яблоки"]
+    assert all(item.done is False for item in widget.payload.items or [])
+    # Type owns the shape (never-do #8): a checklist is a 4×2, never an
+    # unsized tile that would take the packer's default cell.
+    assert widget.tile_size == "4x2"
+    # The rhythm arrived in the same call — R0 holds for the new types too.
+    assert golden.expect.cadence is not None
+    groceries = _subject(result.desk, "groceries")
+    assert groceries.cadence.period == golden.expect.cadence.period
+    assert groceries.cadence.count == golden.expect.cadence.count
+    # …and so did the do-time line the tile has to show at rep one (P9).
+    expected = golden.expect.cue
+    assert expected is not None
+    cue = next(row for row in result.desk.cues if row.subject_id == "groceries")
+    assert cue.kind == CueKind.correction
+    assert cue.surface == CueSurface.do_time
+    for needle in expected.text_contains:
+        assert needle in cue.text
+    assert cue.id in groceries.cue_ids
+
+
+async def test_the_checklist_snapshot_is_a_picture_not_a_runtime() -> None:
+    """A snapshot in the chat carries no tickable line (never-do #6)."""
+    result = await _play("список покупок на неделю: хлеб, молоко, яблоки")
+    card = next(row for row in result.snapshots if row.subject_id == "groceries")
+    assert card.line.startswith("0 / 3")
+    assert "после работы" in card.line
+    assert not hasattr(card, "items")
+
+
+async def test_a_new_practice_gets_no_hour_it_did_not_ask_for() -> None:
+    """Same lock as the gym: a list is not a reason to hang a clock (В1.2)."""
+    result = await _play("список покупок на неделю: хлеб, молоко, яблоки")
+    assert "set_reminder" not in _names(result)
+    reminders = [
+        row
+        for row in result.desk.widgets
+        if row.subject_id == "groceries" and row.type == WidgetType.reminder
+    ]
+    assert reminders == []
+
+
+# --- R1: the timer is a practice, not a stopwatch -------------------------
+
+
+async def test_timer_meditation_lands_with_a_length_a_rhythm_and_a_cue() -> None:
+    golden = match_golden("медитация 10 минут каждый день")
+    assert golden is not None
+    assert golden.id == "timer_meditation"
+    result = await _play(golden.utterance)
+    names = _names(result)
+    assert result.mutated is True
+    assert names == golden.expect.tools
+    for name in golden.expect.forbidden_tools:
+        assert name not in names
+    widget = next(row for row in result.desk.widgets if row.subject_id == "meditation")
+    assert widget.type == WidgetType.timer
+    assert widget.payload.seconds == 600
+    # A fresh timer stands still: nothing banked, no run going.
+    assert widget.payload.elapsed == 0
+    assert widget.payload.started_at is None
+    assert widget.tile_size == "2x2"
+    assert golden.expect.cadence is not None
+    meditation = _subject(result.desk, "meditation")
+    assert meditation.cadence.period == golden.expect.cadence.period
+    assert meditation.cadence.count == golden.expect.cadence.count
+    expected = golden.expect.cue
+    assert expected is not None
+    cue = next(row for row in result.desk.cues if row.subject_id == "meditation")
+    assert cue.kind == CueKind.correction
+    assert cue.surface == CueSurface.do_time
+    for needle in expected.text_contains:
+        assert needle in cue.text
+
+
+async def test_the_timer_snapshot_is_a_picture_not_a_runtime() -> None:
+    """The chat card shows the length and the cue — nothing that counts down."""
+    result = await _play("медитация 10 минут каждый день")
+    card = next(row for row in result.snapshots if row.subject_id == "meditation")
+    assert card.line.startswith("10:00")
+    assert "дыши носом" in card.line
+
+
+# --- R1: the stepper, only when the person asked for takts ----------------
+
+
+async def test_stepper_warmup_lands_with_beats_a_rhythm_and_a_cue() -> None:
+    golden = match_golden("разминка по шагам, два раза в неделю")
+    assert golden is not None
+    assert golden.id == "stepper_warmup"
+    result = await _play(golden.utterance)
+    names = _names(result)
+    assert result.mutated is True
+    assert names == golden.expect.tools
+    for name in golden.expect.forbidden_tools:
+        assert name not in names
+    widget = next(row for row in result.desk.widgets if row.subject_id == "warmup")
+    assert widget.type == WidgetType.stepper
+    assert widget.payload.beats == [
+        "суставная разминка",
+        "5 минут велотренажёра",
+        "два подхода без веса",
+    ]
+    assert widget.payload.current == 0
+    assert widget.tile_size == "4x2"
+    assert golden.expect.cadence is not None
+    warmup = _subject(result.desk, "warmup")
+    assert warmup.cadence.period == golden.expect.cadence.period
+    assert warmup.cadence.count == golden.expect.cadence.count
+    expected = golden.expect.cue
+    assert expected is not None
+    cue = next(row for row in result.desk.cues if row.subject_id == "warmup")
+    assert cue.kind == CueKind.correction
+    assert cue.surface == CueSurface.do_time
+    for needle in expected.text_contains:
+        assert needle in cue.text
+
+
+async def test_the_stepper_snapshot_is_a_picture_not_a_runtime() -> None:
+    result = await _play("разминка по шагам, два раза в неделю")
+    card = next(row for row in result.snapshots if row.subject_id == "warmup")
+    assert card.line.startswith("1 / 3")
+    assert "на холодную" in card.line
+
+
+def test_a_plain_practice_is_not_written_as_a_stepper() -> None:
+    """Q1: the stepper is for a subject that needs takts. «запиши зал» is a
+    counter, and a golden that quietly upgraded it would teach the live model
+    to reach for beats on anything."""
+    for golden_id in ("gym_no_clock", "gym_no_clock_en", "checklist_shopping", "timer_meditation"):
+        golden = next(row for row in load_goldens() if row.id == golden_id)
+        types = [
+            call.arguments.get("type")
+            for turn in golden.scripted
+            for call in turn.tool_calls
+            if call.name == "create_widget"
+        ]
+        assert "stepper" not in types, golden_id

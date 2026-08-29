@@ -30,6 +30,31 @@
       "title": "Cadence",
       "type": "object"
     },
+    "ChecklistItem": {
+      "additionalProperties": false,
+      "description": "One line of a checklist.\n\n`done` is finger state on that line, nothing more: no per-item timestamp,\nno score. Progress over the list is arithmetic in `runtime.py`, so the\npayload never carries a \"progress\" number of its own \u2014 a stored count and\na list of ticks are two truths about the same thing, and they drift.",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "done": {
+          "default": false,
+          "title": "Done",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "text"
+      ],
+      "title": "ChecklistItem",
+      "type": "object"
+    },
     "Cue": {
       "additionalProperties": false,
       "description": "A fact bound to a subject and to a place it appears.\n\n`surface` is required. A fact with nowhere to show is not a cue.\n`quote` is the selected phrase as text, never an offset into a message.",
@@ -480,7 +505,7 @@
     },
     "WidgetPayload": {
       "additionalProperties": true,
-      "description": "Flexible payload; fields used by tests are typed, the rest may pass through.",
+      "description": "What a runtime needs to run. Extra keys still pass through.\n\nThe typed part is the catalog (Q1): `count`/`target` for the counter,\n`done` for the tick, `fire_at` for the reminder, `items` for the checklist,\n`seconds`/`started_at`/`elapsed` for the timer, `beats`/`current` for the\nstepper. Anything the model invents on top stays in `extra` and no runtime\nreads it (never-do AI #1).",
       "properties": {
         "count": {
           "anyOf": [
@@ -521,7 +546,9 @@
         "items": {
           "anyOf": [
             {
-              "items": {},
+              "items": {
+                "$ref": "#/$defs/ChecklistItem"
+              },
               "type": "array"
             },
             {
@@ -543,6 +570,19 @@
           "default": null,
           "title": "Seconds"
         },
+        "started_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Started At"
+        },
         "elapsed": {
           "anyOf": [
             {
@@ -555,7 +595,7 @@
           "default": null,
           "title": "Elapsed"
         },
-        "steps": {
+        "beats": {
           "anyOf": [
             {
               "items": {
@@ -568,7 +608,7 @@
             }
           ],
           "default": null,
-          "title": "Steps"
+          "title": "Beats"
         },
         "current": {
           "anyOf": [

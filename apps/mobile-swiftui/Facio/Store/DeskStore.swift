@@ -319,6 +319,73 @@ final class DeskStore {
         noteCaseCompleted(subjectId: widget.subjectId)
     }
 
+    /// One line of a checklist, on the tile or on Use. A finger tick is a
+    /// finger tick: it moves the instance into `running`, writes the journal,
+    /// and never appends a chat snapshot (never-do #7).
+    func toggleChecklistItem(widgetId: String, itemId: String) {
+        guard let widget = widget(id: widgetId), widget.type == .checklist else { return }
+        let next = ChecklistLaw.toggle(widget.payload, itemId: itemId)
+        guard next != widget.payload else { return }
+        let wasReady = widget.status == .ready
+        let wasDone = widget.status == .done
+        commit { snapshot in
+            guard let index = snapshot.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            snapshot.widgets[index].payload = next
+            if wasReady || wasDone {
+                snapshot.widgets[index].status = .running
+                if wasDone { snapshot.widgets[index].when = nil }
+            }
+            if let instanceIndex = snapshot.instances.firstIndex(where: { $0.id == widget.instanceId }),
+               wasReady || wasDone
+            {
+                snapshot.instances[instanceIndex].status = .inProgress
+            }
+        }
+        if wasReady {
+            journal(.instanceStarted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
+        }
+        let counted = ChecklistLaw.progress(of: next)
+        journal(
+            .checklistItemToggled,
+            subjectId: widget.subjectId,
+            widgetId: widgetId,
+            instanceId: widget.instanceId,
+            payload: [
+                "item": itemId,
+                "done": String(counted.done),
+                "total": String(counted.total)
+            ]
+        )
+    }
+
+    /// «Готово» on a checklist. Same shape as `completeCounter`: the law ticks
+    /// every remaining line so the tile never shows «2 из 5» beside a closed
+    /// instance, the cue scores its hit, and the case closes.
+    func completeChecklist(widgetId: String) {
+        guard let widget = widget(id: widgetId), widget.type == .checklist, widget.status != .done else { return }
+        let stamp = now()
+        let cue = cueFor(subjectId: widget.subjectId)
+        let finished = ChecklistLaw.setDone(widget.payload, true)
+        commit { next in
+            guard let index = next.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            next.widgets[index].payload = finished
+            next.widgets[index].status = .done
+            next.widgets[index].when = stamp
+            if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
+                next.instances[instanceIndex].status = .completed
+                next.instances[instanceIndex].when = stamp
+            }
+            if let cue, let cueIndex = next.cues.firstIndex(where: { $0.id == cue.id }) {
+                next.cues[cueIndex].hits.applied += 1
+            }
+        }
+        if let cue {
+            journal(.cueApplied, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId, cueId: cue.id)
+        }
+        journal(.instanceCompleted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
+        noteCaseCompleted(subjectId: widget.subjectId)
+    }
+
     func toggleTick(widgetId: String) {
         guard let widget = widget(id: widgetId), widget.type == .tick else { return }
         let stamp = now()
@@ -344,6 +411,173 @@ final class DeskStore {
             journal(.instanceCompleted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
             noteCaseCompleted(subjectId: widget.subjectId)
         }
+    }
+
+    /// Start or stop a timer's run. What is written is the moment the run
+    /// began (or the seconds it banked) — never a ticking number, so a run
+    /// survives a background, a relaunch, and a desk that came from the server.
+    func toggleTimerRun(widgetId: String) {
+        guard let widget = widget(id: widgetId), widget.type == .timer else { return }
+        let stamp = now()
+        let wasRunning = TimerLaw.isRunning(widget.payload)
+        let next = wasRunning
+            ? TimerLaw.pause(widget.payload, now: stamp)
+            : TimerLaw.start(widget.payload, now: stamp)
+        guard next != widget.payload else { return }
+        let wasReady = widget.status == .ready
+        let wasDone = widget.status == .done
+        commit { snapshot in
+            guard let index = snapshot.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            snapshot.widgets[index].payload = next
+            if wasReady || wasDone {
+                snapshot.widgets[index].status = .running
+                if wasDone { snapshot.widgets[index].when = nil }
+            }
+            if let instanceIndex = snapshot.instances.firstIndex(where: { $0.id == widget.instanceId }),
+               wasReady || wasDone
+            {
+                snapshot.instances[instanceIndex].status = .inProgress
+            }
+        }
+        if wasReady {
+            journal(.instanceStarted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
+        }
+        journal(
+            wasRunning ? .timerPaused : .timerStarted,
+            subjectId: widget.subjectId,
+            widgetId: widgetId,
+            instanceId: widget.instanceId,
+            payload: ["elapsed": String(TimerLaw.elapsed(next, now: stamp))]
+        )
+    }
+
+    /// Back to the full length. The length the person named is not touched,
+    /// and a reset is not a finished sitting — the case stays open.
+    func resetTimer(widgetId: String) {
+        guard let widget = widget(id: widgetId), widget.type == .timer else { return }
+        let stamp = now()
+        let wasRunning = TimerLaw.isRunning(widget.payload)
+        let next = TimerLaw.reset(widget.payload)
+        guard next != widget.payload else { return }
+        commit { snapshot in
+            guard let index = snapshot.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            snapshot.widgets[index].payload = next
+        }
+        if wasRunning {
+            journal(
+                .timerPaused,
+                subjectId: widget.subjectId,
+                widgetId: widgetId,
+                instanceId: widget.instanceId,
+                payload: ["elapsed": "0"]
+            )
+        }
+    }
+
+    /// «Готово» on a timer. The run stops and its seconds are banked, so the
+    /// tile cannot keep counting past a closed case; then the case closes the
+    /// same way the counter's does.
+    func completeTimer(widgetId: String) {
+        guard let widget = widget(id: widgetId), widget.type == .timer, widget.status != .done else { return }
+        let stamp = now()
+        let cue = cueFor(subjectId: widget.subjectId)
+        let stopped = TimerLaw.pause(widget.payload, now: stamp)
+        commit { next in
+            guard let index = next.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            next.widgets[index].payload = stopped
+            next.widgets[index].status = .done
+            next.widgets[index].when = stamp
+            if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
+                next.instances[instanceIndex].status = .completed
+                next.instances[instanceIndex].when = stamp
+            }
+            if let cue, let cueIndex = next.cues.firstIndex(where: { $0.id == cue.id }) {
+                next.cues[cueIndex].hits.applied += 1
+            }
+        }
+        if let cue {
+            journal(.cueApplied, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId, cueId: cue.id)
+        }
+        journal(
+            .instanceCompleted,
+            subjectId: widget.subjectId,
+            widgetId: widgetId,
+            instanceId: widget.instanceId,
+            payload: ["elapsed": String(TimerLaw.elapsed(stopped, now: stamp))]
+        )
+        noteCaseCompleted(subjectId: widget.subjectId)
+    }
+
+    /// One beat of a stepper, pressed at the bottom of Use — never on the
+    /// tile (04). A finger move: the journal records it, the chat does not
+    /// (never-do #7).
+    func stepForward(widgetId: String) {
+        moveStepper(widgetId: widgetId, by: StepperLaw.forward)
+    }
+
+    func stepBack(widgetId: String) {
+        moveStepper(widgetId: widgetId, by: StepperLaw.back)
+    }
+
+    private func moveStepper(widgetId: String, by move: (WidgetPayload) -> WidgetPayload) {
+        guard let widget = widget(id: widgetId), widget.type == .stepper else { return }
+        let next = move(widget.payload)
+        guard next != widget.payload else { return }
+        let wasReady = widget.status == .ready
+        let wasDone = widget.status == .done
+        commit { snapshot in
+            guard let index = snapshot.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            snapshot.widgets[index].payload = next
+            if wasReady || wasDone {
+                snapshot.widgets[index].status = .running
+                if wasDone { snapshot.widgets[index].when = nil }
+            }
+            if let instanceIndex = snapshot.instances.firstIndex(where: { $0.id == widget.instanceId }),
+               wasReady || wasDone
+            {
+                snapshot.instances[instanceIndex].status = .inProgress
+            }
+        }
+        if wasReady {
+            journal(.instanceStarted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
+        }
+        journal(
+            .stepperMoved,
+            subjectId: widget.subjectId,
+            widgetId: widgetId,
+            instanceId: widget.instanceId,
+            payload: [
+                "step": String(StepperLaw.position(of: next) + 1),
+                "total": String(StepperLaw.beats(of: next).count)
+            ]
+        )
+    }
+
+    /// «Готово» on a stepper: the sequence ends standing on its last beat, and
+    /// the case closes the way the counter's does.
+    func completeStepper(widgetId: String) {
+        guard let widget = widget(id: widgetId), widget.type == .stepper, widget.status != .done else { return }
+        let stamp = now()
+        let cue = cueFor(subjectId: widget.subjectId)
+        let finished = StepperLaw.finish(widget.payload)
+        commit { next in
+            guard let index = next.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            next.widgets[index].payload = finished
+            next.widgets[index].status = .done
+            next.widgets[index].when = stamp
+            if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
+                next.instances[instanceIndex].status = .completed
+                next.instances[instanceIndex].when = stamp
+            }
+            if let cue, let cueIndex = next.cues.firstIndex(where: { $0.id == cue.id }) {
+                next.cues[cueIndex].hits.applied += 1
+            }
+        }
+        if let cue {
+            journal(.cueApplied, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId, cueId: cue.id)
+        }
+        journal(.instanceCompleted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
+        noteCaseCompleted(subjectId: widget.subjectId)
     }
 
     func editReminderLatestBy(widgetId: String, latestBy: ClockTime) {

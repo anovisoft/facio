@@ -109,7 +109,7 @@
 
 #### Зазор
 
-**Уже есть.** `POST /v1/talk/turn`; 16 имён RFC 05 в `apply_tool`; боль до apply; founding + В1.2 золотые; док на Lid/Use; стол на устройстве; локальный пуш; MCP stdio (`python -m facio_api.mcp`). `create_widget` отказывает `checklist`/`timer`/`stepper` (`unsupported_widget_type`) до append. `set_reminder` создаёт виджет reminder 4×2, если его не было. Крышка декодирует `tool_calls`; `applyTalk` не откатывает running count.
+**Уже есть.** `POST /v1/talk/turn`; 16 имён RFC 05 в `apply_tool`; боль до apply; founding + В1.2 золотые; док на Lid/Use; стол на устройстве; локальный пуш; MCP stdio (`python -m facio_api.mcp`). `create_widget` отказывает типу **без рантайма** (`unsupported_widget_type`) до append — гейт живёт в `RUNNABLE_TYPES`; после R1 в нём все шесть типов каталога. `set_reminder` создаёт виджет reminder 4×2, если его не было. Крышка декодирует `tool_calls`; `applyTalk` не откатывает running count.
 
 **По волнам.** В1: каркас сервиса (не дописывать в `main.py`) + метод 4→30 + чтение стола + зал без часа + час только по пропуску или просьбе. В2: развёртка ритма на 7 дней + заморозка + локальный чек-ин через 2 дня; API готов принять слоты/паузу, база ещё не обязательна. В3: полноценный сервер записи — аккаунт Apple, Postgres, синк стола, воркер пуша, поиск по своим фактам.
 
@@ -206,6 +206,8 @@ facio_api/
 **Зачем.** `create_widget(type=timer)` проходит и исчезает с крышки.
 
 **Статус: готов** (2026-08-20). `create_widget(checklist|timer|stepper)` → `unsupported_widget_type`, стол не меняется. Счётчик/галочка без авто-напоминания; reminder по явному вызову.
+
+**Снят потипно в R1** (ветка `rfc-run`, 2026-08-30): гейт остался, но список разрешённых — `RUNNABLE_TYPES`, и тип входит в него **только вместе со своим рантаймом** (закон + плитка + Use) и золотой в обе локали. Порядок был checklist → timer → stepper. Сама константа `UNSUPPORTED_WIDGET_TYPE` и проверка живы для следующего типа; тест держит её через monkeypatch набора.
 
 **Входит.** Отказ apply на `checklist` / `timer` / `stepper`. `reminder` разрешён, но не создаётся сам при `create_widget` счётчика/галочки. Три старые золотые зелёные.
 

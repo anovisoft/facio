@@ -28,6 +28,8 @@ Rules:
 - A new practice is placed with its rhythm in the same call: create_widget carries cadence {count, period}. Heard «раз в неделю» / «дважды в неделю» / "once a week" / "twice a week" — write exactly that.
 - Rhythm not heard — still write one sensible rhythm (a gym, a run, a class: twice a week), and ask about it in the text after the write. The tile goes down first, the question comes after it, never instead of it.
 - A one-off — «поменять права» / "renew the licence" — is cadence period none, said out loud. A practice with no rhythm at all is refused and never reaches the desk.
+- A practice arrives with its rhythm **and** its one short do-time line in the same turn — the line that says how it is done, not what it is. This holds for every type: a list, a timer and a stepper each get that line as much as a counter does. A tile with neither is a planner entry.
+- A period spoken anywhere in the line is the rhythm: «на неделю» / «каждый день» / «два раза в неделю» / "for the week" / "every day" / "twice a week" → count per period, exactly that. period none is only for something that happens once and is then finished — «поменять права» / "renew the licence". A list, a sitting or a warm-up that comes back is not a one-off, and writing it as one leaves the practice with no rhythm to be behind on.
 - «запиши зал» / "put the gym on the desk" → create_widget counter right away with cadence count 2 period week, no set_reminder, and one short question about the number of times.
 - «сегодня не сходил» / "didn't go today" → skip the due widget (bike-reminder), do not hang a new hour.
 - «давай раз в неделю» / "make it once a week" with no name is push-ups: shrink_subject or set_cadence week count=1. Do not ask "which practice".
@@ -37,7 +39,7 @@ Rules:
 - Saying «заморозил» / «вернул» / "paused it" / "brought it back" without a tool is a bug.
 - «могу N, хочу M» / "I can do N, I want M" → update_widget count/target and add_cue correction on do-time — the progression is how it is done, not a definition. Not clarification, not on-demand. The method in the text is fine.
 - A selected phrase — the turn names it and what it is bound to — is answered twice: one or two sentences to the person, and add_cue with kind clarification, surface on-demand, quote copied exactly, step_id when the turn named one. quote is required here and it is the phrase the person pointed at, character for character out of the turn: «не роняй таз» stays «не роняй таз», "don't let the hips sag" stays "don't let the hips sag" — never a paraphrase, never shortened, never the explanation instead, never empty. Without it nobody can tell later what was being explained, and the call comes back refused as quote_required. Never do-time: rep one stays readable. «не роняй таз» → «таз в одну линию с плечами»; "don't let the hips sag" → "keep the hips in line with the shoulders". Bound to nothing — text only, no add_cue, never hung on a practice standing nearby.
-- Widget type only from the catalog. Do not invent screens.
+- Widget type only from the catalog. Do not invent screens. On the desk today: counter, tick, reminder, checklist, timer. A list of lines to tick — «список покупок» / "shopping list" — is create_widget type checklist with items: the lines exactly as the person said them, in their order. A length of time to sit through — «медитация 10 минут» / "meditate 10 minutes" — is create_widget type timer with seconds. A stepper is only for a practice that genuinely runs in takts and only when the person asked to be walked through them — «разминка по шагам» / "step by step" — create_widget type stepper with beats. You write those beats yourself out of what you know, three or four short ones, and ask afterwards whether to change them. Asking what the steps are instead of placing them is the same bug as saying «записал» without calling a tool. Anything the person can just do is a tick or a counter, not a stepper. A timer needs a length and a stepper needs beats; without them the call is refused. Cadence rides the same call either way.
 """
 
 _EMPTY = {"type": "object", "properties": {}, "additionalProperties": False}
@@ -146,6 +148,44 @@ _TOOLS: tuple[tuple[str, str, dict[str, Any]], ...] = (
                 },
                 "count": _INT,
                 "target": _INT,
+                "seconds": {
+                    "type": "integer",
+                    "description": (
+                        "Length of a timer in seconds (10 minutes = 600). "
+                        "Required for type timer; ignored for the other types."
+                    ),
+                },
+                "beats": {
+                    "type": "array",
+                    "description": (
+                        "Beats of a stepper, in order, in the person's own words. "
+                        "Required for type stepper; ignored for the other types."
+                    ),
+                    "items": {"type": "string"},
+                },
+                "items": {
+                    "type": "array",
+                    "description": (
+                        "Lines of a checklist, in order, in the person's own words. "
+                        "Required for type checklist; ignored for the other types."
+                    ),
+                    "seconds": {
+                    "type": "integer",
+                    "description": (
+                        "Length of a timer in seconds (10 minutes = 600). "
+                        "Required for type timer; ignored for the other types."
+                    ),
+                },
+                "beats": {
+                    "type": "array",
+                    "description": (
+                        "Beats of a stepper, in order, in the person's own words. "
+                        "Required for type stepper; ignored for the other types."
+                    ),
+                    "items": {"type": "string"},
+                },
+                "items": {"type": "string"},
+                },
                 "section": {
                     "type": "string",
                     "enum": ["today", "lifetime", "soon", "postponed"],

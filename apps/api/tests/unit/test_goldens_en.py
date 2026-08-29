@@ -8,7 +8,7 @@ import pytest
 
 from facio_domain.desk import founding_desk
 from facio_domain.models import CueKind, CueSurface, Desk, SubjectStatus, WidgetType
-from facio_domain.tools import apply_tool, times_per_week
+from facio_domain.tools import RUNNABLE_TYPES, apply_tool, times_per_week
 
 from facio_api.providers.scripted import ScriptedProvider
 from facio_api.providers.types import ModelToolCall, ModelTurn
@@ -23,6 +23,7 @@ FOUNDING_IDS = {"bike", "push-ups", "vegetables"}
 UNKNOWN_EN = "quaxnuted probe 174"
 RUSSIAN_IDS = {
     "cadence_shrink",
+    "checklist_shopping",
     "clarification_orphan",
     "clarification_selection",
     "drift_answer",
@@ -36,7 +37,9 @@ RUSSIAN_IDS = {
     "pain_raise",
     "pain_skip_freeze",
     "remind_at_19",
+    "stepper_warmup",
     "thaw_pause",
+    "timer_meditation",
 }
 
 
@@ -606,3 +609,120 @@ class QuotelessProviderEN:
                 ]
             )
         return ModelTurn(text="Keep the hips in one line with the shoulders and heels.")
+
+
+# --- R1: the checklist, in English ---------------------------------------
+
+
+async def test_checklist_shopping_en_lands_with_a_rhythm_and_a_do_time_cue() -> None:
+    golden = match_golden("shopping list for the week: bread, milk, apples")
+    assert golden is not None
+    assert golden.id == "checklist_shopping_en"
+    result = await _play(golden.utterance)
+    names = _names(result)
+    assert result.mutated is True
+    assert names == golden.expect.tools
+    for name in golden.expect.forbidden_tools:
+        assert name not in names
+    widget = next(row for row in result.desk.widgets if row.subject_id == "groceries")
+    assert widget.type == WidgetType.checklist
+    assert [item.text for item in widget.payload.items or []] == ["bread", "milk", "apples"]
+    assert widget.tile_size == "4x2"
+    assert golden.expect.cadence is not None
+    groceries = _subject(result.desk, "groceries")
+    assert groceries.cadence.period == golden.expect.cadence.period
+    assert groceries.cadence.count == golden.expect.cadence.count
+    expected = golden.expect.cue
+    assert expected is not None
+    cue = next(row for row in result.desk.cues if row.subject_id == "groceries")
+    assert cue.kind == CueKind.correction
+    assert cue.surface == CueSurface.do_time
+    for needle in expected.text_contains:
+        assert needle in cue.text
+    # The English turn answers in English — cue text follows the person.
+    assert not any("\u0400" <= char <= "\u04ff" for char in cue.text)
+    assert not any("\u0400" <= char <= "\u04ff" for char in result.text)
+
+
+def test_the_prompt_offers_exactly_the_types_that_have_a_runtime() -> None:
+    """The last bullet is the catalog lock, and it tracks the gate rather than
+    a hand-kept list: a type is advertised as placeable only once `apply_tool`
+    will actually let it land (never-do #14). Advertising one that is still
+    refused would spend a whole turn on a call that cannot work."""
+    rows = [row for row in SYSTEM_PROMPT.splitlines() if row.startswith("- ")]
+    catalog = rows[-1]
+    assert catalog.startswith("- Widget type only from the catalog")
+    for widget_type in WidgetType:
+        named = widget_type.value in catalog
+        assert named is (widget_type in RUNNABLE_TYPES), widget_type.value
+    assert any("rhythm" in row and "do-time" in row for row in rows)
+
+
+# --- R1: the timer, in English -------------------------------------------
+
+
+async def test_timer_meditation_en_lands_with_a_length_a_rhythm_and_a_cue() -> None:
+    golden = match_golden("meditate 10 minutes every day")
+    assert golden is not None
+    assert golden.id == "timer_meditation_en"
+    result = await _play(golden.utterance)
+    names = _names(result)
+    assert result.mutated is True
+    assert names == golden.expect.tools
+    for name in golden.expect.forbidden_tools:
+        assert name not in names
+    widget = next(row for row in result.desk.widgets if row.subject_id == "meditation")
+    assert widget.type == WidgetType.timer
+    assert widget.payload.seconds == 600
+    assert widget.tile_size == "2x2"
+    assert golden.expect.cadence is not None
+    meditation = _subject(result.desk, "meditation")
+    assert meditation.cadence.period == golden.expect.cadence.period
+    assert meditation.cadence.count == golden.expect.cadence.count
+    expected = golden.expect.cue
+    assert expected is not None
+    cue = next(row for row in result.desk.cues if row.subject_id == "meditation")
+    assert cue.surface == CueSurface.do_time
+    for needle in expected.text_contains:
+        assert needle in cue.text
+    assert not any("\u0400" <= char <= "\u04ff" for char in cue.text)
+    assert not any("\u0400" <= char <= "\u04ff" for char in result.text)
+
+
+# --- R1: the stepper, in English -----------------------------------------
+
+
+async def test_stepper_warmup_en_lands_with_beats_a_rhythm_and_a_cue() -> None:
+    golden = match_golden("walk me through the warm-up step by step, twice a week")
+    assert golden is not None
+    assert golden.id == "stepper_warmup_en"
+    result = await _play(golden.utterance)
+    names = _names(result)
+    assert result.mutated is True
+    assert names == golden.expect.tools
+    for name in golden.expect.forbidden_tools:
+        assert name not in names
+    widget = next(row for row in result.desk.widgets if row.subject_id == "warmup")
+    assert widget.type == WidgetType.stepper
+    assert widget.payload.beats == ["joint circles", "5 minutes on the bike", "two sets with no weight"]
+    assert widget.payload.current == 0
+    assert widget.tile_size == "4x2"
+    assert golden.expect.cadence is not None
+    warmup = _subject(result.desk, "warmup")
+    assert warmup.cadence.count == golden.expect.cadence.count
+    cue = next(row for row in result.desk.cues if row.subject_id == "warmup")
+    assert cue.surface == CueSurface.do_time
+    assert not any("\u0400" <= char <= "\u04ff" for char in cue.text)
+    assert not any("\u0400" <= char <= "\u04ff" for char in result.text)
+
+
+def test_every_placed_type_is_one_the_desk_will_accept() -> None:
+    """A golden that places a type `apply_tool` refuses would be a green test
+    over a turn that cannot work on a real desk (never-do #14)."""
+    for golden in load_goldens():
+        for turn in golden.scripted:
+            for call in turn.tool_calls:
+                if call.name != "create_widget":
+                    continue
+                placed = WidgetType(call.arguments["type"])
+                assert placed in RUNNABLE_TYPES, f"{golden.id}: {placed.value}"

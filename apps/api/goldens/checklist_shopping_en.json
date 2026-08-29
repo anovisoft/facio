@@ -1,0 +1,51 @@
+{
+  "id": "checklist_shopping_en",
+  "utterance": "shopping list for the week: bread, milk, apples",
+  "match": ["shopping list"],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "create_widget",
+          "arguments": {
+            "type": "checklist",
+            "title": "groceries",
+            "subject_id": "groceries",
+            "cadence": {
+              "count": 1,
+              "period": "week"
+            },
+            "items": ["bread", "milk", "apples"]
+          }
+        },
+        {
+          "name": "add_cue",
+          "arguments": {
+            "subject_id": "groceries",
+            "kind": "correction",
+            "surface": "do-time",
+            "text": "go after work, not hungry"
+          }
+        }
+      ]
+    },
+    {
+      "text": "The list is on the desk, once a week. Anything else to add?"
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": ["create_widget", "add_cue"],
+    "forbidden_tools": ["set_reminder"],
+    "cadence": {
+      "count": 1,
+      "period": "week"
+    },
+    "cue": {
+      "subject_id": "groceries",
+      "surface": "do-time",
+      "kind": "correction",
+      "text_contains": ["after work"]
+    }
+  }
+}
