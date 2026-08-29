@@ -20,8 +20,12 @@ struct TalkSheet: View {
                                 .padding(.top, 8)
                         }
                         ForEach(talk.current.messages) { message in
-                            TalkBubble(message: message, onOpenSnapshot: onOpenSnapshot)
-                                .id(message.id)
+                            TalkBubble(
+                                message: message,
+                                onOpenSnapshot: onOpenSnapshot,
+                                onAskAboutPhrase: ask(about:)
+                            )
+                            .id(message.id)
                         }
                         if talk.sending {
                             ProgressView()
@@ -89,6 +93,28 @@ struct TalkSheet: View {
         }
     }
 
+    /// A phrase out of the answer goes back with whatever the client honestly
+    /// knows it hangs on — the widget this sheet stands over, and nothing
+    /// invented. With no binding the mouth owes text and no cue; the desk, not
+    /// the client, decides that (05).
+    private func ask(about quote: String) {
+        guard let selection = ClarificationLaw.selection(
+            quote: quote,
+            focusedWidgetId: talk.focusedWidgetId,
+            widgets: store.snapshot.widgets
+        ) else { return }
+        Task {
+            let response = await talk.send(
+                utterance: SelectableAnswerText.askUtterance(quote: selection.quote),
+                desk: store.snapshot,
+                selection: selection
+            )
+            if let response {
+                store.applyTalk(response.desk, toolCalls: response.toolCalls)
+            }
+        }
+    }
+
     private func scroll(_ proxy: ScrollViewProxy) {
         if talk.sending {
             proxy.scrollTo("sending", anchor: .bottom)
@@ -130,6 +156,7 @@ private struct TalkComposerBar: View {
 private struct TalkBubble: View {
     let message: ChatMessage
     var onOpenSnapshot: (ChatSnapshot) -> Void
+    var onAskAboutPhrase: (String) -> Void
 
     var body: some View {
         switch message.kind {
@@ -144,9 +171,7 @@ private struct TalkBubble: View {
             }
         case .assistant:
             HStack {
-                Text(message.text)
-                    .font(.body)
-                    .foregroundStyle(.primary)
+                SelectableAnswerText(text: message.text, onAsk: onAskAboutPhrase)
                     .padding(12)
                     .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 Spacer(minLength: 48)

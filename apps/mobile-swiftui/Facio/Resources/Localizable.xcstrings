@@ -1021,6 +1021,24 @@
         }
       }
     },
+    "объяснение": {
+      "comment": "The `?` on a step: header of the on-demand cue sheet",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "explanation"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "объяснение"
+          }
+        }
+      }
+    },
     "Овощи": {
       "comment": "Subject title for vegetables",
       "extractionState": "manual",
@@ -1245,6 +1263,60 @@
           "stringUnit": {
             "state": "translated",
             "value": "подсказка"
+          }
+        }
+      }
+    },
+    "показать иначе": {
+      "comment": "Q32 answer: show it differently",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "show it differently"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "показать иначе"
+          }
+        }
+      }
+    },
+    "понятно": {
+      "comment": "Q32 answer: the explanation landed",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "that made sense"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "понятно"
+          }
+        }
+      }
+    },
+    "Понятно объяснили или показать иначе?": {
+      "comment": "Q32 check after the first case",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Did that make sense, or should I show it differently?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Понятно объяснили или показать иначе?"
           }
         }
       }
@@ -1774,6 +1846,42 @@
           "stringUnit": {
             "state": "translated",
             "value": "Что сюда на стол?"
+          }
+        }
+      }
+    },
+    "что это значит: %@?": {
+      "comment": "Utterance sent when a phrase was selected",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "what does this mean: %@?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "что это значит: %@?"
+          }
+        }
+      }
+    },
+    "что это значит?": {
+      "comment": "Selection menu item on an assistant answer",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "what does this mean?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "что это значит?"
           }
         }
       }

@@ -11,6 +11,11 @@ enum JournalEventType: String, Codable, Sendable, Equatable {
     case subjectShrunk = "subject_shrunk"
     case subjectRetired = "subject_retired"
     case driftAnswered = "drift_answered"
+    /// Q32's one check, per subject. Kept in the journal for the same reason
+    /// day zero is a latch on disk and not a `DeskSnapshot` field: the desk is
+    /// the wire shape the service also writes, and "he has already been asked"
+    /// is this device's business.
+    case clarificationAsked = "clarification_asked"
 }
 
 struct JournalEvent: Codable, Sendable, Equatable, Identifiable {

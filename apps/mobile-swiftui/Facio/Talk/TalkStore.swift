@@ -127,7 +127,14 @@ final class TalkStore {
     }
 
     func send(desk: DeskSnapshot) async -> TalkTurnResponse? {
-        let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        await send(utterance: draft, desk: desk)
+    }
+
+    /// A line the person picked rather than typed — the «what does this mean?»
+    /// item on a selection, or the answer to the one clarity check. It lands in
+    /// the current thread as an ordinary reply, not as a second kind of message.
+    func send(utterance: String, desk: DeskSnapshot, selection: TalkSelection? = nil) async -> TalkTurnResponse? {
+        let text = utterance.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, !sending else { return nil }
         draft = ""
         errorMessage = nil
@@ -144,6 +151,7 @@ final class TalkStore {
             desk: desk,
             thread: history,
             focusedWidgetId: focusedWidgetId,
+            selection: selection,
             threadId: current.id,
             now: stamp
         )

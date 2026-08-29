@@ -9,10 +9,15 @@ final class DeskStore {
     /// never starts again. Read from disk at launch so relaunching an empty
     /// day does not bring the chips back.
     private(set) var dayZeroClosed: Bool
+    /// The subject whose one clarity check (Q32) is due right now, or nothing.
+    /// Set when a first case closes on a practice the mouth explained; cleared
+    /// the moment the ask is shown, so it is shown once and never again.
+    private(set) var clarificationAsk: String?
     private let repository: DeskRepository
     private let now: () -> Date
     private var surfacedDay = Date.distantPast
     private var surfacedPlaces: Set<String> = []
+    private var clarificationAsked: Set<String> = []
 
     static func live() -> DeskStore {
         do {
@@ -44,6 +49,7 @@ final class DeskStore {
         let day = Calendar.current.startOfDay(for: now())
         surfacedDay = day
         surfacedPlaces = repository.surfacedPlaces(on: day)
+        clarificationAsked = repository.clarificationAskedSubjects()
         closeDayZeroIfNeeded()
     }
 
@@ -87,6 +93,16 @@ final class DeskStore {
 
     func surfaceCue(for widget: Widget) -> Cue? {
         CueLaw.surfaceCue(in: snapshot.cues, subjectId: widget.subjectId, widgetType: widget.type)
+    }
+
+    /// What sits behind the `?` on this step. Never rendered inline: an
+    /// explanation is looked up, a correction must be seen (04).
+    func explanations(for widget: Widget) -> [Cue] {
+        ClarificationLaw.onDemandCues(in: snapshot.cues, subjectId: widget.subjectId)
+    }
+
+    func hasExplanation(for widget: Widget) -> Bool {
+        ClarificationLaw.hasExplanation(in: snapshot.cues, subjectId: widget.subjectId)
     }
 
     func windowFor(subjectId: String) -> TimeWindow? {
@@ -195,12 +211,28 @@ final class DeskStore {
               let cue = surfaceCue(for: widget),
               widget.status != .done
         else { return }
+        countSurfaced(cue: cue, widget: widget, place: place)
+    }
+
+    /// Opening the `?` is the on-demand surface actually happening — the same
+    /// hit a do-time cue scores by appearing at rep one. Once per
+    /// widget + place + day, with the cue in the key so a step carrying two
+    /// explanations counts both. No `done` guard: a tile appearing is passive,
+    /// tapping `?` is the person asking.
+    func markExplanationsSurfaced(widgetId: String) {
+        guard let widget = widget(id: widgetId) else { return }
+        for cue in explanations(for: widget) {
+            countSurfaced(cue: cue, widget: widget, place: "help|\(cue.id)")
+        }
+    }
+
+    private func countSurfaced(cue: Cue, widget: Widget, place: String) {
         let day = Calendar.current.startOfDay(for: now())
         if day != surfacedDay {
             surfacedDay = day
             surfacedPlaces = repository.surfacedPlaces(on: day)
         }
-        let key = "\(widgetId)|\(place)"
+        let key = "\(widget.id)|\(place)"
         guard surfacedPlaces.insert(key).inserted else { return }
         commit { next in
             guard let index = next.cues.firstIndex(where: { $0.id == cue.id }) else { return }
@@ -209,11 +241,32 @@ final class DeskStore {
         journal(
             .cueSurfaced,
             subjectId: widget.subjectId,
-            widgetId: widgetId,
+            widgetId: widget.id,
             instanceId: widget.instanceId,
             cueId: cue.id,
             payload: ["place": place]
         )
+    }
+
+    /// Q32, once per practice: the first case closed on something the mouth
+    /// explained. The ask itself is calm and answerable in one tap; the answer
+    /// goes back into the current thread as an ordinary reply.
+    func markClarificationAsked(subjectId: String) {
+        if clarificationAsk == subjectId { clarificationAsk = nil }
+        guard clarificationAsked.insert(subjectId).inserted else { return }
+        journal(.clarificationAsked, subjectId: subjectId)
+    }
+
+    private func noteCaseCompleted(subjectId: String) {
+        guard clarificationAsk == nil,
+              ClarificationLaw.asksAfterFirstCase(
+                  subjectId: subjectId,
+                  cues: snapshot.cues,
+                  instances: snapshot.instances,
+                  alreadyAsked: clarificationAsked.contains(subjectId)
+              )
+        else { return }
+        clarificationAsk = subjectId
     }
 
     func tickCounter(widgetId: String, delta: Int) {
@@ -266,6 +319,7 @@ final class DeskStore {
             journal(.cueApplied, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId, cueId: cue.id)
         }
         journal(.instanceCompleted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
+        noteCaseCompleted(subjectId: widget.subjectId)
     }
 
     func toggleTick(widgetId: String) {
@@ -291,6 +345,7 @@ final class DeskStore {
         )
         if makingDone {
             journal(.instanceCompleted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
+            noteCaseCompleted(subjectId: widget.subjectId)
         }
     }
 
@@ -337,6 +392,7 @@ final class DeskStore {
             journal(.cueApplied, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId, cueId: cue.id)
         }
         journal(.instanceCompleted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
+        noteCaseCompleted(subjectId: widget.subjectId)
     }
 
     func answerDrift(subjectId: String, offer: DriftOffer) {

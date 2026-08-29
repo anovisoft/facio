@@ -72,11 +72,33 @@ struct TalkWireMessage: Codable, Sendable, Equatable {
     var text: String
 }
 
+/// A phrase the person selected in the assistant's answer, on its way back to
+/// the mouth. `quote` is the text itself — never an offset into a message, which
+/// dangles the moment the method changes (04, Cue). The binding is only what the
+/// client actually knows: the widget the sheet stands over and the subject
+/// behind it. Nothing to bind means the turn owes text and nothing else — the
+/// service refuses to guess a subject, and so does the client (05, «Ask about a
+/// phrase, keep the answer»).
+struct TalkSelection: Encodable, Sendable, Equatable {
+    var quote: String
+    var widgetId: String?
+    var subjectId: String?
+    var stepId: String?
+
+    enum CodingKeys: String, CodingKey {
+        case quote
+        case widgetId = "widget_id"
+        case subjectId = "subject_id"
+        case stepId = "step_id"
+    }
+}
+
 struct TalkTurnRequest: Encodable, Sendable {
     var utterance: String
     var desk: DeskSnapshot
     var thread: [TalkWireMessage]
     var focusedWidgetId: String?
+    var selection: TalkSelection?
     var threadId: String?
     var now: Date?
     var locale: String = TalkLocale.current()
@@ -86,6 +108,7 @@ struct TalkTurnRequest: Encodable, Sendable {
         case desk
         case thread
         case focusedWidgetId = "focused_widget_id"
+        case selection
         case threadId = "thread_id"
         case now
         case locale

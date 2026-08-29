@@ -15,6 +15,11 @@ struct RootView: View {
     /// factory and this hangs off the same instance.
     @State private var sync: DeskSyncCoordinator?
     @State private var settingsOpen = false
+    /// Q32's one check, waiting for the lid. Held until the stack is back at
+    /// root: the check follows a finished case, and a sheet racing the pop off
+    /// Use is not a calm question.
+    @State private var clarityCheck: SubjectRef?
+    @State private var pendingClarity: String?
 
     var body: some View {
         @Bindable var talk = talk
@@ -76,8 +81,28 @@ struct RootView: View {
                 SettingsScreen(sync: sync) { settingsOpen = false }
             }
         }
+        .sheet(item: $clarityCheck) { target in
+            ClarityCheckSheet { answer in
+                clarityCheck = nil
+                answerClarity(answer)
+            }
+            .id(target.id)
+        }
+        // Spending the check is the store's business, showing it is this
+        // view's. Marked the moment it is scheduled, so a dismissed sheet is
+        // still a spent check — asked once means once.
+        .onChange(of: store.clarificationAsk) { _, subjectId in
+            guard let subjectId else { return }
+            pendingClarity = subjectId
+            store.markClarificationAsked(subjectId: subjectId)
+            presentPendingClarity()
+        }
         .onChange(of: path.count) { _, count in
-            if count > 0 { pan.close() }
+            if count > 0 {
+                pan.close()
+            } else {
+                presentPendingClarity()
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .facioOpenLid)) { _ in
             path = NavigationPath()
@@ -96,6 +121,25 @@ struct RootView: View {
             let coordinator = sync ?? DeskSyncCoordinator(deskStore: store)
             sync = coordinator
             await coordinator.sync()
+        }
+    }
+
+    private func presentPendingClarity() {
+        guard path.isEmpty, kebab == nil, !talk.sheetOpen, let subjectId = pendingClarity else { return }
+        pendingClarity = nil
+        clarityCheck = SubjectRef(id: subjectId)
+    }
+
+    /// The answer is an ordinary reply in the current thread — the same wire,
+    /// the same bubble. Opening the thread is the point: an answer the person
+    /// never sees is the founding bug again.
+    private func answerClarity(_ answer: String) {
+        talk.sheetOpen = true
+        Task {
+            let response = await talk.send(utterance: answer, desk: store.snapshot)
+            if let response {
+                store.applyTalk(response.desk, toolCalls: response.toolCalls)
+            }
         }
     }
 

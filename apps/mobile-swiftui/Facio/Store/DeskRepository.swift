@@ -73,6 +73,25 @@ struct DeskRepository: Sendable {
         return places
     }
 
+    /// Subjects whose one clarity check (Q32) has already been spent. Read once
+    /// at launch, like the surfaced places above — asking again after a
+    /// relaunch would make the "one check" a habit.
+    func clarificationAskedSubjects() -> Set<String> {
+        guard FileManager.default.fileExists(atPath: journalURL.path),
+              let data = try? Data(contentsOf: journalURL),
+              let text = String(data: data, encoding: .utf8)
+        else { return [] }
+        var subjects: Set<String> = []
+        for line in text.split(whereSeparator: \.isNewline) {
+            guard let event = try? FacioJSON.decoder.decode(JournalEvent.self, from: Data(line.utf8)),
+                  event.type == .clarificationAsked,
+                  let subjectId = event.subjectId
+            else { continue }
+            subjects.insert(subjectId)
+        }
+        return subjects
+    }
+
     func append(_ event: JournalEvent) throws {
         var data = try FacioJSON.encoder.encode(event)
         data.append(0x0A)
