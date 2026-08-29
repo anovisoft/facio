@@ -146,6 +146,16 @@ def test_system_prompt_is_english_and_bilingual() -> None:
         assert russian in SYSTEM_PROMPT
 
 
+def test_pain_skip_bullet_repeats_the_skip_subject_default() -> None:
+    """E2b: the pain bullet must not leave the subject to guesswork — same default, both languages."""
+    from facio_api.talk.spec import SYSTEM_PROMPT
+
+    bullet = next(row for row in SYSTEM_PROMPT.splitlines() if row.startswith("- Pain plus a skip"))
+    assert "bike / bike-reminder" in bullet
+    assert "never push-ups" in bullet
+    assert "either language" in bullet
+
+
 async def test_locale_line_rides_the_turn_system_prompt() -> None:
     provider = SequenceProvider([ModelTurn(text=None, tool_calls=[_add_cue_call()])])
     await run_turn(_en_request("brace the core"), provider, now=NOW)

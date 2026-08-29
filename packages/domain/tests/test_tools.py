@@ -10,6 +10,8 @@ from facio_domain.models import CueOrigin, CueSurface, SubjectStatus, WidgetStat
 from facio_domain.pain import reports_pain
 from facio_domain.tools import (
     INVALID,
+    INVALID_KIND,
+    INVALID_SURFACE,
     PAIN_FORBIDS_RAISE,
     SURFACE_REQUIRED,
     UNSUPPORTED_WIDGET_TYPE,
@@ -37,6 +39,47 @@ def test_add_cue_without_surface_is_rejected() -> None:
     assert not outcome.ok
     assert outcome.error == SURFACE_REQUIRED
     assert outcome.desk == desk
+
+
+def test_add_cue_with_a_surface_value_in_kind_names_the_kind_field() -> None:
+    """The live hole: kind="timing". Name the field; do not turn it into a correction."""
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "add_cue",
+        {"subject_id": "bike", "kind": "timing", "text": "в 21 сплю", "surface": "timing"},
+    )
+    assert not outcome.ok
+    assert outcome.error == INVALID_KIND
+    assert outcome.desk == desk
+    assert not [row for row in outcome.desk.cues if row.text == "в 21 сплю"]
+
+
+def test_add_cue_with_an_unknown_surface_names_the_surface_field() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "add_cue",
+        {"subject_id": "push-ups", "kind": "correction", "text": "держи корпус", "surface": "rep-one"},
+    )
+    assert not outcome.ok
+    assert outcome.error == INVALID_SURFACE
+    assert outcome.desk == desk
+
+
+def test_add_cue_empty_required_argument_stays_bare_invalid() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "add_cue",
+        {"subject_id": "push-ups", "kind": "correction", "text": "  ", "surface": "do-time"},
+    )
+    assert not outcome.ok
+    assert outcome.error == INVALID
+
+
+def test_add_cue_refusal_codes_are_distinct() -> None:
+    assert len({INVALID, INVALID_KIND, INVALID_SURFACE, SURFACE_REQUIRED}) == 4
 
 
 def test_add_cue_lands_on_push_ups_do_time() -> None:

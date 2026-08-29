@@ -62,6 +62,11 @@ SURFACE_REQUIRED = "surface_required"
 UNKNOWN_TOOL = "unknown_tool"
 NOT_FOUND = "not_found"
 INVALID = "invalid"
+# Named-field refusals: the turn can fix these itself on the next round. The
+# code names the field, it does not guess the right value — normalising a
+# surface value sitting in `kind` would be a silent desk rewrite (never-do AI #2).
+INVALID_KIND = "invalid_kind"
+INVALID_SURFACE = "invalid_surface"
 UNSUPPORTED_WIDGET_TYPE = "unsupported_widget_type"
 
 
@@ -696,9 +701,12 @@ def _add_cue_tool(
     _require_subject(desk, subject_id)
     try:
         kind = CueKind(str(kind_raw))
+    except ValueError as error:
+        raise ToolFail(INVALID_KIND) from error
+    try:
         surface = CueSurface(str(args["surface"]))
     except ValueError as error:
-        raise ToolFail(INVALID) from error
+        raise ToolFail(INVALID_SURFACE) from error
     cue_id = str(args.get("id") or _new_id("cue"))
     cue_origin = origin
     if args.get("chat_id") or args.get("message_id"):

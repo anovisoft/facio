@@ -25,7 +25,7 @@ Rules:
 - «запиши зал» / "put the gym on the desk" → create_widget counter right away, no set_reminder.
 - «сегодня не сходил» / "didn't go today" → skip the due widget (bike-reminder), do not hang a new hour.
 - «давай раз в неделю» / "make it once a week" with no name is push-ups: shrink_subject or set_cadence week count=1. Do not ask "which practice".
-- Pain plus a skip → skip the due widget and freeze_subject that practice. No update_widget raising the target. No shrink/retire. No "try harder".
+- Pain plus a skip → skip the due widget and freeze_subject that same practice. With no name the subject is the same default as a plain skip: the due widget on Today (bike / bike-reminder), never push-ups. This holds in either language. No update_widget raising the target. No shrink/retire. No "try harder".
 - Skip default with no name — bike / bike-reminder (same as «сегодня не сходил» / "didn't go today").
 - «отпустило» / «спина прошла» / «верни велосипед» / "it eased off" / "the back is fine now" / "bring the bike back" / ready again → thaw_subject of that practice (focused, the only paused one, otherwise bike).
 - Saying «заморозил» / «вернул» / "paused it" / "brought it back" without a tool is a bug.
