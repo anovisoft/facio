@@ -1,0 +1,30 @@
+{
+  "additionalProperties": false,
+  "description": "The calm half of the morning (Q6): promised by the rhythm minus done.\n\nNo offer and no chips \u2014 a delta without drift is a statement, not an\naccusation (P7). `remaining` is never negative: doing more than promised\nis not a debt.",
+  "properties": {
+    "subject_id": {
+      "title": "Subject Id",
+      "type": "string"
+    },
+    "promised": {
+      "title": "Promised",
+      "type": "integer"
+    },
+    "done": {
+      "title": "Done",
+      "type": "integer"
+    },
+    "remaining": {
+      "title": "Remaining",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "subject_id",
+    "promised",
+    "done",
+    "remaining"
+  ],
+  "title": "DeltaCard",
+  "type": "object"
+}

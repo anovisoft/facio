@@ -1,9 +1,17 @@
 import SwiftUI
 
+/// One rung of the Q28 ladder, drawn from the law and never from here.
+///
+/// The card offers exactly what `DriftLaw.nextOffer` says — move it to today,
+/// then once a week instead, then retire it — plus the right to say no. Every
+/// rung is less commitment than the one before, and «try harder» is not on the
+/// card in any period (never-do #21). `stop` is never drawn: after two
+/// refusals of the retire offer the law stops producing a card at all.
 struct DriftTile: View {
     let card: DriftCard
     let storedTitle: String
     let onAnswer: (DriftOffer) -> Void
+    let onRefuse: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -12,9 +20,10 @@ struct DriftTile: View {
                 .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
             DriftChipFlow(spacing: DriftChipMetrics.spacing) {
-                ForEach(DriftOffer.downward, id: \.self) { offer in
-                    chip(offer)
+                chip(DisplayCopy.driftChip(card.offer), prominent: true) {
+                    onAnswer(card.offer)
                 }
+                chip(DisplayCopy.driftRefuse, prominent: false, action: onRefuse)
             }
         }
         .padding(16)
@@ -22,22 +31,51 @@ struct DriftTile: View {
         .facioGlass()
     }
 
-    private func chip(_ offer: DriftOffer) -> some View {
-        Button {
-            onAnswer(offer)
-        } label: {
-            Text(DisplayCopy.driftChip(offer))
+    private func chip(
+        _ label: String,
+        prominent: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Text(label)
                 .font(.subheadline.weight(.semibold))
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .frame(maxWidth: DriftChipMetrics.labelMaxWidth)
         }
-        .accessibilityLabel(DisplayCopy.driftChip(offer))
+        .accessibilityLabel(label)
         .controlSize(.small)
         .buttonBorderShape(.capsule)
-        .modifier(DriftChipChrome(prominent: offer == card.offer))
+        .modifier(DriftChipChrome(prominent: prominent))
         .frame(height: DriftChipMetrics.height)
         .fixedSize(horizontal: true, vertical: false)
+    }
+}
+
+/// The quiet half of the morning (Q6): a practice that owes this period
+/// something and has no tile on Today to do it with. A statement, not an
+/// accusation — no chips, nothing to answer, no streak (P7).
+struct DeltaTile: View {
+    let card: DeltaCard
+    let storedTitle: String
+    let period: CadencePeriod
+
+    var body: some View {
+        Text(
+            DisplayCopy.deltaLine(
+                subjectId: card.subjectId,
+                stored: storedTitle,
+                remaining: card.remaining,
+                promised: card.promised,
+                period: period
+            )
+        )
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .facioGlass()
     }
 }
 
@@ -60,7 +98,8 @@ private struct DriftChipChrome: ViewModifier {
     }
 }
 
-/// Hug each chip’s text, wrap when the row is full. Do not stretch to fill.
+/// Hug each chip’s text, wrap when the row is full. Do not stretch to fill:
+/// equal-width chips across the card cut the label and paint half-card buttons.
 private struct DriftChipFlow: Layout {
     var spacing: CGFloat
 

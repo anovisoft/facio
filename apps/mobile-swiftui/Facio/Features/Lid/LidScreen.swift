@@ -18,6 +18,7 @@ struct LidScreen: View {
                     cueFor: store.surfaceCue(for:),
                     windowFor: store.windowFor(subjectId:),
                     subjectTitle: { store.subject(id: $0)?.title ?? $0 },
+                    subjectPeriod: { store.subject(id: $0)?.cadence.period ?? .week },
                     showsSubject: store.showsOnLid(subjectId:),
                     surfacesDrift: store.surfaces,
                     onOpen: { path.append(DeskRoute.use(widgetId: $0)) },
@@ -25,7 +26,8 @@ struct LidScreen: View {
                     onKebab: onKebab,
                     onToggleTick: store.toggleTick,
                     onSurfaced: { store.markCueSurfaced(widgetId: $0, place: "tile") },
-                    onAnswerDrift: store.answerDrift
+                    onAnswerDrift: store.answerDrift,
+                    onRefuseDrift: store.refuseDrift
                 )
             }
             .padding(.horizontal, FacioPalette.pagePadding)

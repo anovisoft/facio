@@ -17,10 +17,15 @@ enum LidProjectionLaw {
         now: Date,
         subjects: [Subject],
         instances: [Instance],
-        widgets: [Widget],
-        histories: [String: DriftAskState] = [:]
+        widgets: [Widget]
     ) -> LidProjection {
-        let card = DriftLaw.driftCard(subjects: subjects, instances: instances, now: now, histories: histories)
+        // One morning card: a drift ask when a period was missed, otherwise
+        // the calm delta line (Q6). Never both — the drift card carries the
+        // same subject louder.
+        let card = DriftLaw.driftCard(subjects: subjects, instances: instances, now: now)
+        let delta = card == nil
+            ? MorningLaw.deltaCard(subjects: subjects, instances: instances, widgets: widgets, now: now)
+            : nil
         let visible = withoutPaused(subjects: subjects, widgets: widgets)
         let todayWidgets = todayWidgets(from: visible, now: now)
         let todayIds = Set(todayWidgets.map(\.id))
@@ -35,6 +40,8 @@ enum LidProjectionLaw {
         }
         if let card {
             today.append(.drift(card: card))
+        } else if let delta {
+            today.append(.delta(card: delta))
         }
         today.sort { lhs, rhs in
             sortKey(lhs, now: now) < sortKey(rhs, now: now)
@@ -45,7 +52,8 @@ enum LidProjectionLaw {
             lifetime: lifetime,
             soon: soon,
             postponed: postponed,
-            driftCard: card
+            driftCard: card,
+            deltaCard: delta
         )
     }
 
@@ -80,6 +88,8 @@ enum LidProjectionLaw {
         switch item {
         case .drift(let card):
             return (RankBand.driftCard.sortIndex, Date.distantPast, card.subjectId)
+        case .delta(let card):
+            return (RankBand.unansweredMorning.sortIndex, Date.distantPast, card.subjectId)
         case .widget(let band, let widget):
             return (band.sortIndex, widget.when ?? now, widget.id)
         }

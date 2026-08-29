@@ -7,6 +7,7 @@ from facio_domain.models import CueKind, CueSurface, Desk, SubjectStatus, Widget
 from facio_domain.tools import apply_tool, times_per_week
 
 from facio_api.providers.scripted import ScriptedProvider
+from facio_api.providers.types import ModelToolCall, ModelTurn
 from facio_api.talk.goldens import load_goldens, match_golden
 from facio_api.talk.loop import run_turn
 from facio_api.talk.schemas import TalkSelection, TalkTurnRequest
@@ -14,6 +15,45 @@ from facio_api.talk.schemas import TalkSelection, TalkTurnRequest
 NOW = datetime(2026, 8, 15, 12, 0, 0)
 SEED_BRACE = "держи корпус и ягодицы"
 FOUNDING_IDS = {"bike", "push-ups", "vegetables"}
+
+
+class QuotelessProvider:
+    """Writes the clarification without its quote, then with it.
+
+    Exactly the live failure R3-B measured: `surface` and `kind` right, the
+    phrase itself dropped.
+    """
+
+    def __init__(self) -> None:
+        self._round = 0
+
+    async def complete(self, messages, tools):
+        del messages, tools
+        self._round += 1
+        base = {
+            "subject_id": "push-ups",
+            "step_id": "rep-1",
+            "kind": "clarification",
+            "surface": "on-demand",
+            "text": "таз в одну линию с плечами и пятками",
+        }
+        if self._round == 1:
+            return ModelTurn(
+                tool_calls=[
+                    ModelToolCall(id="c1", name="add_cue", arguments={"id": "push-ups-quoteless", **base})
+                ]
+            )
+        if self._round == 2:
+            return ModelTurn(
+                tool_calls=[
+                    ModelToolCall(
+                        id="c2",
+                        name="add_cue",
+                        arguments={"id": "push-ups-quoted", **base, "quote": "не роняй таз"},
+                    )
+                ]
+            )
+        return ModelTurn(text="Таз держи в одной линии с плечами и пятками.")
 
 
 def _request(utterance: str, selection: TalkSelection | None = None) -> TalkTurnRequest:
@@ -57,6 +97,7 @@ RUSSIAN_IDS = {
     "cadence_shrink",
     "clarification_orphan",
     "clarification_selection",
+    "drift_answer",
     "explain_only",
     "gym_no_clock",
     "gym_until_22",
@@ -416,3 +457,85 @@ async def test_clarification_orphan_stays_text_only() -> None:
     assert result.snapshots == []
     assert result.desk.cues == before.cues
     assert result.text
+
+
+# --- R4: the answer to drift only ever goes down ---------------------------
+
+
+async def test_drift_answer_offers_less_and_never_more() -> None:
+    """The ladder is the law's; the mouth may word it and write the shrink.
+
+    What this golden holds is the one thing a model must never do with a
+    practice that went quiet: answer it with a bigger number ([06] #21).
+    """
+    golden = match_golden("велосипед три недели стоит, что делать?")
+    assert golden is not None
+    assert golden.id == "drift_answer"
+    before = _subject(founding_desk(now=NOW), "bike")
+    result = await _play(golden.utterance)
+    names = _names(result)
+    assert result.mutated is True
+    assert names == golden.expect.tools
+    for name in golden.expect.forbidden_tools:
+        assert name not in names
+    cadence = next(call for call in result.tool_calls if call.name == "set_cadence")
+    assert cadence.arguments["subject_id"] == "bike"
+    assert cadence.arguments["period"] == "week"
+    assert int(cadence.arguments["count"]) == 1
+    bike = _subject(result.desk, "bike")
+    assert times_per_week(bike.cadence) <= 1
+    assert times_per_week(bike.cadence) < times_per_week(before.cadence)
+    # Nothing was raised anywhere else on the desk to compensate.
+    push = _subject(result.desk, "push-ups")
+    assert push.target is not None
+    assert push.target.goal <= (golden.expect.target_goal_max or 30)
+
+
+async def test_drift_answer_does_not_read_the_ladder_back_to_the_person() -> None:
+    result = await _play("велосипед три недели стоит, что делать?")
+    lowered = result.text.casefold()
+    for needle in ("постарайся", "срыв", "ступень", "drift"):
+        assert needle not in lowered, needle
+
+
+# --- R4 addendum: a clarification without its quote is refused -------------
+
+
+async def test_a_bound_selection_without_a_quote_is_refused_by_field_name() -> None:
+    """`quote` carries the phrase the person pointed at (05). Missing it, the
+    cue is half written — so the call comes back named, the way a missing
+    `surface` does, and the turn can fix itself on the next round."""
+    selection = TalkSelection(quote="не роняй таз", widget_id="push-ups-counter", step_id="rep-1")
+    provider = QuotelessProvider()
+    result = await run_turn(
+        TalkTurnRequest(
+            utterance="что это значит?",
+            desk=founding_desk(now=NOW),
+            thread=[],
+            thread_id="golden",
+            now=NOW,
+            selection=selection,
+        ),
+        provider,
+        now=NOW,
+    )
+    first = result.tool_calls[0]
+    assert first.name == "add_cue"
+    assert first.ok is False
+    assert first.error == "quote_required"
+    # The desk never took the quoteless cue.
+    assert all(row.id != "push-ups-quoteless" for row in result.desk.cues)
+    # Written again with the quote, it lands.
+    landed = next(row for row in result.desk.cues if row.id == "push-ups-quoted")
+    assert landed.quote == selection.quote
+    assert landed.surface == CueSurface.on_demand
+    assert result.mutated is True
+
+
+async def test_an_ordinary_cue_still_needs_no_quote() -> None:
+    """Only a selection has a phrase to carry. A correction from plain talk
+    is not silently held to a field it cannot fill."""
+    result = await _play(match_golden("поясница забирает нагрузку").utterance)
+    add = next(call for call in result.tool_calls if call.name == "add_cue")
+    assert add.ok is True
+    assert add.error is None

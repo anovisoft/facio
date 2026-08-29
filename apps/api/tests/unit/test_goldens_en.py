@@ -11,8 +11,10 @@ from facio_domain.models import CueKind, CueSurface, Desk, SubjectStatus, Widget
 from facio_domain.tools import apply_tool, times_per_week
 
 from facio_api.providers.scripted import ScriptedProvider
+from facio_api.providers.types import ModelToolCall, ModelTurn
 from facio_api.talk.goldens import Golden, load_goldens, match_golden
 from facio_api.talk.loop import run_turn
+from facio_api.talk.spec import SYSTEM_PROMPT
 from facio_api.talk.schemas import TalkSelection, TalkTurnRequest
 
 NOW = datetime(2026, 8, 15, 12, 0, 0)
@@ -23,6 +25,7 @@ RUSSIAN_IDS = {
     "cadence_shrink",
     "clarification_orphan",
     "clarification_selection",
+    "drift_answer",
     "explain_only",
     "gym_no_clock",
     "gym_until_22",
@@ -476,3 +479,130 @@ async def test_clarification_orphan_en_stays_text_only() -> None:
     assert result.snapshots == []
     assert result.desk.cues == before.cues
     assert result.text
+
+
+# --- R4: the answer to drift only ever goes down ---------------------------
+
+
+async def test_drift_answer_en_offers_less_and_never_more() -> None:
+    """Same lock as the Russian half: a quiet practice is never answered with
+    a bigger number ([06] #21). The offer shrinks or nothing happens."""
+    golden = match_golden("the bike has been sitting for three weeks, what now?")
+    assert golden is not None
+    assert golden.id == "drift_answer_en"
+    before = _subject(founding_desk(now=NOW), "bike")
+    result = await _play(golden.utterance)
+    names = _names(result)
+    assert result.mutated is True
+    assert names == golden.expect.tools
+    for name in golden.expect.forbidden_tools:
+        assert name not in names
+    cadence = next(call for call in result.tool_calls if call.name == "set_cadence")
+    assert cadence.arguments["subject_id"] == "bike"
+    assert cadence.arguments["period"] == "week"
+    assert int(cadence.arguments["count"]) == 1
+    bike = _subject(result.desk, "bike")
+    assert times_per_week(bike.cadence) <= 1
+    assert times_per_week(bike.cadence) < times_per_week(before.cadence)
+    push = _subject(result.desk, "push-ups")
+    assert push.target is not None
+    assert push.target.goal <= (golden.expect.target_goal_max or 30)
+
+
+async def test_drift_answer_en_says_nothing_about_trying_harder() -> None:
+    result = await _play("the bike has been sitting for three weeks, what now?")
+    lowered = result.text.casefold()
+    for needle in ("try harder", "catch up", "make up for", "drift"):
+        assert needle not in lowered, needle
+
+
+def test_the_drift_prompt_keeps_the_ladder_with_the_law() -> None:
+    """The model wording one morning line is fine; the model deciding whether
+    there is drift, which rung it is, or that the answer is «more» is not
+    ([06] AI #10, #21). Both halves of the bilingual bullet say so."""
+    rows = [row for row in SYSTEM_PROMPT.splitlines() if row.startswith("- ")]
+    ladder = next(row for row in rows if "Drift belongs to the desk" in row)
+    assert "set_cadence week count 1" in ladder
+    assert "shrink_subject" in ladder
+    assert "retire_subject" in ladder
+    forbidden = next(row for row in rows if "bigger number is the one forbidden move" in row)
+    for needle in ("постарайся", "try harder", "наверстай", "catch up"):
+        assert needle in forbidden, needle
+
+
+# --- R4 addendum: the quote has to reach the cue ---------------------------
+
+
+def test_the_selection_bullet_demands_the_quote_in_both_halves() -> None:
+    """R3-B measured the live failure: surface right, `quote` empty. The bullet
+    now names the requirement and the refusal in both languages."""
+    bullet = next(
+        row for row in SYSTEM_PROMPT.splitlines() if row.startswith("- A selected phrase")
+    )
+    assert "quote is required here" in bullet
+    assert "character for character" in bullet
+    assert "quote_required" in bullet
+    assert "не роняй таз" in bullet
+    assert "don't let the hips sag" in bullet
+    for needle in ("never a paraphrase", "never shortened", "never empty"):
+        assert needle in bullet, needle
+
+
+async def test_english_selection_without_a_quote_is_refused_too() -> None:
+    selection = TalkSelection(
+        quote="don't let the hips sag", widget_id="push-ups-counter", step_id="rep-1"
+    )
+    result = await run_turn(
+        TalkTurnRequest(
+            utterance="what does this mean?",
+            desk=founding_desk(now=NOW),
+            thread=[],
+            thread_id="golden-en",
+            now=NOW,
+            locale="en",
+            selection=selection,
+        ),
+        QuotelessProviderEN(),
+        now=NOW,
+    )
+    first = result.tool_calls[0]
+    assert first.name == "add_cue"
+    assert first.ok is False
+    assert first.error == "quote_required"
+    landed = next(row for row in result.desk.cues if row.id == "push-ups-quoted-en")
+    assert landed.quote == selection.quote
+
+
+class QuotelessProviderEN:
+    """The R3-B failure on the English half: a clarification with no phrase."""
+
+    def __init__(self) -> None:
+        self._round = 0
+
+    async def complete(self, messages, tools):
+        del messages, tools
+        self._round += 1
+        base = {
+            "subject_id": "push-ups",
+            "step_id": "rep-1",
+            "kind": "clarification",
+            "surface": "on-demand",
+            "text": "keep the hips in line with the shoulders and heels",
+        }
+        if self._round == 1:
+            return ModelTurn(
+                tool_calls=[
+                    ModelToolCall(id="c1", name="add_cue", arguments={"id": "push-ups-quoteless-en", **base})
+                ]
+            )
+        if self._round == 2:
+            return ModelTurn(
+                tool_calls=[
+                    ModelToolCall(
+                        id="c2",
+                        name="add_cue",
+                        arguments={"id": "push-ups-quoted-en", **base, "quote": "don't let the hips sag"},
+                    )
+                ]
+            )
+        return ModelTurn(text="Keep the hips in one line with the shoulders and heels.")

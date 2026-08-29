@@ -63,8 +63,10 @@ final class DeskStoreTests: XCTestCase {
         store.answerDrift(subjectId: "bike", offer: .moveToToday)
 
         XCTAssertEqual(store.widget(id: "bike-reminder")?.section, .today)
-        XCTAssertEqual(store.snapshot.driftAsks["bike"]?.asksMade, 1)
-        XCTAssertFalse(store.surfaces(try XCTUnwrap(store.lid.driftCard)))
+        XCTAssertEqual(store.subject(id: "bike")?.driftAsksMade, 1)
+        XCTAssertEqual(store.subject(id: "bike")?.driftAskedAt, now)
+        // Answered: the card is gone for this cadence period.
+        XCTAssertNil(store.lid.driftCard)
         let fireHour = Calendar.current.component(.hour, from: try XCTUnwrap(store.widget(id: "bike-reminder")?.when))
         XCTAssertEqual(fireHour, 19)
     }
@@ -77,7 +79,7 @@ final class DeskStoreTests: XCTestCase {
         XCTAssertEqual(bike.status, .shrunk)
         XCTAssertEqual(bike.cadence.count, 1)
         XCTAssertEqual(bike.cadence.period, .week)
-        XCTAssertFalse(store.surfaces(try XCTUnwrap(store.lid.driftCard)))
+        XCTAssertNil(store.lid.driftCard)
         let reloaded = try XCTUnwrap(repository.loadSnapshot())
         XCTAssertEqual(reloaded.subjects.first { $0.id == "bike" }?.cadence.count, 1)
         XCTAssertEqual(reloaded.subjects.first { $0.id == "bike" }?.status, .shrunk)
@@ -107,8 +109,59 @@ final class DeskStoreTests: XCTestCase {
         {"cues":[],"instances":[],"subjects":[],"widgets":[]}
         """.data(using: .utf8)!
         let snapshot = try FacioJSON.decoder.decode(DeskSnapshot.self, from: json)
-        XCTAssertEqual(snapshot.driftAsks, [:])
-        XCTAssertEqual(snapshot.driftAskedAt, [:])
+        XCTAssertEqual(snapshot.subjects, [])
+    }
+
+    /// A desk written before the ladder moved onto the subject keeps its place
+    /// on the ladder: the old side tables are read once and folded in.
+    func testLegacyDriftSideTablesMoveOntoTheSubject() throws {
+        let json = """
+        {
+          "cues": [], "instances": [], "widgets": [],
+          "subjects": [{"id":"bike","title":"bike","cadence":{"count":2,"period":"week"}}],
+          "drift_asks": {"bike": {"asks_made": 2, "retire_refusals": 1}},
+          "drift_asked_at": {"bike": "2026-08-14T12:00:00Z"}
+        }
+        """.data(using: .utf8)!
+        let snapshot = try FacioJSON.decoder.decode(DeskSnapshot.self, from: json)
+        let bike = try XCTUnwrap(snapshot.subjects.first)
+        XCTAssertEqual(bike.driftAsksMade, 2)
+        XCTAssertEqual(bike.driftRetireRefusals, 1)
+        XCTAssertNotNil(bike.driftAskedAt)
+        XCTAssertEqual(DriftLaw.nextOffer(for: bike), .retire)
+    }
+
+    /// Q28 on the desk: refuse, wait a period, get the next rung down; refuse
+    /// «убрать» twice and the card never comes back, with the practice alive.
+    func testRefusingTheLadderWalksItDownAndThenGoesQuiet() throws {
+        var now = try XCTUnwrap(FacioJSON.date(from: "2026-08-16T12:00:00"))
+        let (store, _) = try makeDesk(now: { now })
+        XCTAssertEqual(store.lid.driftCard?.offer, .moveToToday)
+
+        store.refuseDrift(subjectId: "bike")
+        XCTAssertNil(store.lid.driftCard)
+
+        now = now.addingTimeInterval(8 * 86_400)
+        XCTAssertEqual(store.lid.driftCard?.offer, .onceAWeek)
+        store.refuseDrift(subjectId: "bike")
+
+        now = now.addingTimeInterval(8 * 86_400)
+        XCTAssertEqual(store.lid.driftCard?.offer, .retire)
+        store.refuseDrift(subjectId: "bike")
+
+        now = now.addingTimeInterval(8 * 86_400)
+        XCTAssertEqual(store.lid.driftCard?.offer, .retire)
+        store.refuseDrift(subjectId: "bike")
+
+        // Two refusals of «убрать»: silence, forever.
+        now = now.addingTimeInterval(400 * 86_400)
+        XCTAssertNil(store.lid.driftCard)
+        let bike = try XCTUnwrap(store.subject(id: "bike"))
+        XCTAssertEqual(bike.driftRetireRefusals, 2)
+        XCTAssertTrue(bike.cadence.isNone)
+        // Alive in Deeds: not retired, not hidden, instances and cues intact.
+        XCTAssertEqual(bike.status, .active)
+        XCTAssertTrue(store.showsOnLid(subjectId: "bike"))
     }
 
     func testCompleteReminderDropsAlarm() throws {
@@ -336,6 +389,12 @@ final class DeskStoreTests: XCTestCase {
     }
 
     private func makeDesk(now: Date = Date()) throws -> (DeskStore, DeskRepository) {
+        try makeDesk(now: { now })
+    }
+
+    /// A moving clock, for the walks that need several cadence periods.
+    private func makeDesk(now: @escaping () -> Date) throws -> (DeskStore, DeskRepository) {
+        let stamp = now()
         let directory = FileManager.default.temporaryDirectory
             .appending(path: "facio-desk-\(UUID().uuidString)", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -344,7 +403,7 @@ final class DeskStoreTests: XCTestCase {
         // tests exercise store behavior on top of the founding subjects, so
         // pre-populate the repository the way an already-seeded device would
         // already have on disk, instead of relying on init to seed it.
-        try repository.saveSnapshot(SeedFactory.buildSeed(now: now))
-        return (try DeskStore(repository: repository, now: { now }), repository)
+        try repository.saveSnapshot(SeedFactory.buildSeed(now: stamp))
+        return (try DeskStore(repository: repository, now: now), repository)
     }
 }

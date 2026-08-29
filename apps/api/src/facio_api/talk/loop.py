@@ -41,6 +41,13 @@ SELECTION_ORPHAN = (
     "Nothing on the desk is bound to it — no subject, no widget. "
     "Answer in text only. Do not call add_cue and do not hang it on some other practice."
 )
+# A clarification that lost the phrase it explains is half a cue: the answer is
+# on the desk and nobody can tell what the question was. 05 calls a selection
+# the strongest signal about what needed remembering, and `quote` is what
+# carries it — so a missing one is refused by field name, the same way
+# `surface_required` is, and the turn writes itself right on the next round.
+# Never filled in from the selection behind the model's back (never-do AI #2).
+QUOTE_REQUIRED = "quote_required"
 LOCALE_LINE: dict[Locale, str] = {
     "ru": "The person writes in Russian: answer in Russian.",
     "en": "The person writes in English: answer in English.",
@@ -121,36 +128,37 @@ async def run_turn(
             first_complete = False
             messages.append(_assistant_tools(turn))
             for call in turn.tool_calls:
-                outcome = apply_tool(
-                    desk,
-                    call.name,
-                    call.arguments,
-                    pain=pain,
-                    now=stamp,
-                    origin=origin,
-                )
-                desk = outcome.desk
+                missing_quote = _selection_quote_missing(body, call.name, call.arguments)
+                if missing_quote:
+                    ok, error, data = False, QUOTE_REQUIRED, None
+                else:
+                    outcome = apply_tool(
+                        desk,
+                        call.name,
+                        call.arguments,
+                        pain=pain,
+                        now=stamp,
+                        origin=origin,
+                    )
+                    desk = outcome.desk
+                    ok, error, data = outcome.ok, outcome.error, outcome.data
+                    if outcome.mutated:
+                        mutated = True
+                        snapshot_ids.extend(outcome.snapshot_widget_ids)
                 records.append(
                     ToolCallRecord(
                         name=call.name,
                         arguments=call.arguments,
-                        ok=outcome.ok,
-                        error=outcome.error,
+                        ok=ok,
+                        error=error,
                     )
                 )
-                if outcome.mutated:
-                    mutated = True
-                    snapshot_ids.extend(outcome.snapshot_widget_ids)
                 messages.append(
                     {
                         "role": "tool",
                         "tool_call_id": call.id,
                         "content": json.dumps(
-                            {
-                                "ok": outcome.ok,
-                                "error": outcome.error,
-                                "data": outcome.data,
-                            },
+                            {"ok": ok, "error": error, "data": data},
                             ensure_ascii=False,
                             default=str,
                         ),
@@ -247,6 +255,23 @@ def selection_subject_id(body: TalkTurnRequest) -> str | None:
         if subject_id in subjects:
             return subject_id
     return None
+
+
+def _selection_quote_missing(
+    body: TalkTurnRequest, name: str, arguments: dict[str, Any]
+) -> bool:
+    """A bound selection writing a cue without the phrase it explains.
+
+    Only fires on the turn that carries a selection with a real binding — an
+    ordinary `add_cue` (a correction from talk) has no phrase to quote and is
+    left alone.
+    """
+    if name != "add_cue":
+        return False
+    if body.selection is None or selection_subject_id(body) is None:
+        return False
+    quote = arguments.get("quote")
+    return not (isinstance(quote, str) and quote.strip())
 
 
 def selection_line(body: TalkTurnRequest) -> str:

@@ -1,7 +1,63 @@
 {
   "$defs": {
+    "DeltaCard": {
+      "additionalProperties": false,
+      "description": "The calm half of the morning (Q6): promised by the rhythm minus done.\n\nNo offer and no chips \u2014 a delta without drift is a statement, not an\naccusation (P7). `remaining` is never negative: doing more than promised\nis not a debt.",
+      "properties": {
+        "subject_id": {
+          "title": "Subject Id",
+          "type": "string"
+        },
+        "promised": {
+          "title": "Promised",
+          "type": "integer"
+        },
+        "done": {
+          "title": "Done",
+          "type": "integer"
+        },
+        "remaining": {
+          "title": "Remaining",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "subject_id",
+        "promised",
+        "done",
+        "remaining"
+      ],
+      "title": "DeltaCard",
+      "type": "object"
+    },
+    "DeltaTodayItem": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "delta",
+          "default": "delta",
+          "title": "Kind",
+          "type": "string"
+        },
+        "band": {
+          "const": "unanswered_morning",
+          "default": "unanswered_morning",
+          "title": "Band",
+          "type": "string"
+        },
+        "delta_card": {
+          "$ref": "#/$defs/DeltaCard"
+        }
+      },
+      "required": [
+        "delta_card"
+      ],
+      "title": "DeltaTodayItem",
+      "type": "object"
+    },
     "DriftCard": {
       "additionalProperties": false,
+      "description": "The one drift ask on Today. `offer` is the ladder rung the law chose.",
       "properties": {
         "subject_id": {
           "title": "Subject Id",
@@ -347,6 +403,9 @@
           },
           {
             "$ref": "#/$defs/DriftTodayItem"
+          },
+          {
+            "$ref": "#/$defs/DeltaTodayItem"
           }
         ]
       },
@@ -378,6 +437,17 @@
       "anyOf": [
         {
           "$ref": "#/$defs/DriftCard"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "delta_card": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DeltaCard"
         },
         {
           "type": "null"

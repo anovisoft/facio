@@ -12,6 +12,7 @@
     }
   },
   "additionalProperties": false,
+  "description": "The one drift ask on Today. `offer` is the ladder rung the law chose.",
   "properties": {
     "subject_id": {
       "title": "Subject Id",

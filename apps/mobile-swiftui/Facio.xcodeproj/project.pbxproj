@@ -32,6 +32,7 @@
 		2223C5A14CA51B15305FA20E /* KebabInspectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2933B8EDC13E91A009C7374B /* KebabInspectorTests.swift */; };
 		25BFF7A3B7E47419AFE23BD4 /* InstanceLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FD625BD89099DBE924C2B9D /* InstanceLaw.swift */; };
 		27DD96C4A34E130150B3E1B0 /* KebabLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD8AFE0347C1C01638DAF3E /* KebabLaw.swift */; };
+		2FF772F691756FB48266763A /* DeltaCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DDCECEFE17820B6CB9ADD32 /* DeltaCard.swift */; };
 		312E31F4EAABAB4893B02FE0 /* DayStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = F95B6699402F7C8AB7D08FB8 /* DayStrip.swift */; };
 		345DDEF409CD5C9AB583BCC6 /* DriftLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A290997900023858134E738 /* DriftLaw.swift */; };
 		360AEFAB704D5DC77C113DA5 /* InstanceLawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE49070FF2ADCCEB1E700DDA /* InstanceLawTests.swift */; };
@@ -41,6 +42,7 @@
 		3ABA170A8B876DBF8F1196A7 /* ReminderUseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3996D30C44FA29B14C3CC0 /* ReminderUseView.swift */; };
 		4008641D49A21F72B7CB5BC6 /* ReminderClockTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA765E2AAC9E1E3AB182595F /* ReminderClockTests.swift */; };
 		40D34C7A15AA15890A10E38C /* ReminderClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = A146AEC282C47C9A81593E81 /* ReminderClock.swift */; };
+		447F31BE251764E051843234 /* MorningLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D55531FE6458678905FB1E0 /* MorningLaw.swift */; };
 		4481C68552510F52EAF8B391 /* LidFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7BE39810B4325D66B31ABA8 /* LidFeed.swift */; };
 		44CC1E8EC0C1B68A74E8C884 /* LidWidgetCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BF6FCE7416C57ADDBB62CA4 /* LidWidgetCell.swift */; };
 		451E1BC082DE3D9EFD8E722E /* UseScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 631DFACFA004D22854CA9C24 /* UseScreen.swift */; };
@@ -54,7 +56,6 @@
 		5553B13D63A70531F1DB8422 /* WidgetStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2864C10551B05E0EE8E3BD74 /* WidgetStatus.swift */; };
 		55EFA7802D8BDDF361A21BCA /* DisplayCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16390EEDE51BCA21EF87D58F /* DisplayCopy.swift */; };
 		5C8323A7D1ABC2BCE70993F9 /* TalkRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 603D8D5DEADE5F55E2FC0C09 /* TalkRepository.swift */; };
-		5E543FB7C21F25D80B7A0FF7 /* DriftAskState.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF009F8DA4A75B690FD16F6F /* DriftAskState.swift */; };
 		62C8CA3D2A5B6A5EB91877CD /* TalkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEF4EC197D5E264095B5F72F /* TalkStore.swift */; };
 		658BD23F4ACB706F1C19CEB7 /* DriftTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E4FF3EA95A2EB1F3B58E372 /* DriftTile.swift */; };
 		659918BF655B0B9127307996 /* CueLawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56186C97AB845D23001563F3 /* CueLawTests.swift */; };
@@ -94,6 +95,7 @@
 		A56F6CA113385180C99DB88F /* LidProjectionLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15209F287CF3C54B427B68E7 /* LidProjectionLaw.swift */; };
 		A5E9E9FC7522F070F6A87430 /* KebabInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C82A425B50E627261D99C7E /* KebabInspector.swift */; };
 		A7323E03B9F6C6B6E823AE0B /* TalksList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90B3D5D86107F0A29686ED79 /* TalksList.swift */; };
+		A79E64FD194EDD1325F21828 /* MorningLawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCDB99B68CC5F0AD49351926 /* MorningLawTests.swift */; };
 		AB460B049EDE15E96FF2799C /* FacioApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8B634C40C08056E1D5C3BE3 /* FacioApp.swift */; };
 		AD45ABBB669BE1D6394F2C63 /* TileSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CAE9C5EA7020260E61819B3 /* TileSize.swift */; };
 		AD83233E65F88CD811ACAB35 /* DayZeroLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3FF096CC624C6A7B8EE65EE /* DayZeroLaw.swift */; };
@@ -198,7 +200,9 @@
 		3CE614E685572C878D8CF85C /* DayZeroTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayZeroTests.swift; sourceTree = "<group>"; };
 		3D48A43C077D1D242EBD23B7 /* SlotLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotLaw.swift; sourceTree = "<group>"; };
 		3D4E6FAE6EB30076BA7E2A98 /* TimeWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeWindow.swift; sourceTree = "<group>"; };
+		3D55531FE6458678905FB1E0 /* MorningLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MorningLaw.swift; sourceTree = "<group>"; };
 		3DB45BC7CD8A1FCED3925597 /* PanSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanSessionTests.swift; sourceTree = "<group>"; };
+		3DDCECEFE17820B6CB9ADD32 /* DeltaCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeltaCard.swift; sourceTree = "<group>"; };
 		47F1FCFB1FA72143A6BDC3E1 /* AccountModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountModels.swift; sourceTree = "<group>"; };
 		48CFE8F85A9299CAFAD6DD51 /* DeskSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskSnapshot.swift; sourceTree = "<group>"; };
 		4A1B5F0456FC90DCCEB83E66 /* PanScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanScreen.swift; sourceTree = "<group>"; };
@@ -266,12 +270,12 @@
 		B9372C7A3CDFCCEA042CD1EA /* ComposerDock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerDock.swift; sourceTree = "<group>"; };
 		BD204F8AA9DC6C8FF665395A /* TileCellSizeKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileCellSizeKey.swift; sourceTree = "<group>"; };
 		BEE730939DE8F5EDB6705986 /* PanSlideLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanSlideLawTests.swift; sourceTree = "<group>"; };
-		BF009F8DA4A75B690FD16F6F /* DriftAskState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriftAskState.swift; sourceTree = "<group>"; };
 		C282A09441F2DEC75A5132A5 /* ClarificationLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClarificationLaw.swift; sourceTree = "<group>"; };
 		C3693462B6CCAC151794970E /* InspectHorizonStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspectHorizonStrip.swift; sourceTree = "<group>"; };
 		C8CCBB0988B07C32B0BC9696 /* scenarios.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = scenarios.json; sourceTree = "<group>"; };
 		C91084E7BBC1FDACA5BB06E1 /* TalkStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkStoreTests.swift; sourceTree = "<group>"; };
 		CA765E2AAC9E1E3AB182595F /* ReminderClockTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderClockTests.swift; sourceTree = "<group>"; };
+		CCDB99B68CC5F0AD49351926 /* MorningLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MorningLawTests.swift; sourceTree = "<group>"; };
 		CDB0BDAA3DA77E97E85EA286 /* AtmosphereBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtmosphereBackground.swift; sourceTree = "<group>"; };
 		D0CC62E8195A4EE412761AAC /* SelectableAnswerText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectableAnswerText.swift; sourceTree = "<group>"; };
 		D2AD6F13DFE3734FB09352F3 /* CueSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueSurface.swift; sourceTree = "<group>"; };
@@ -464,6 +468,7 @@
 				88264A6ED9F4B61255BD7DDB /* LidProjectionTests.swift */,
 				0ADACEEA50715309876C8DF6 /* LocalizationCatalogTests.swift */,
 				62CDF841D69D1101DC6F6D8C /* ModelTests.swift */,
+				CCDB99B68CC5F0AD49351926 /* MorningLawTests.swift */,
 				360413F490CB306BB68500A5 /* PackLawTests.swift */,
 				DB6CF10F8A46994C86FE0B08 /* PainLawTests.swift */,
 				3DB45BC7CD8A1FCED3925597 /* PanSessionTests.swift */,
@@ -509,8 +514,8 @@
 				712ADE31FC9A01A67851A26C /* CueOrigin.swift */,
 				D2AD6F13DFE3734FB09352F3 /* CueSurface.swift */,
 				F95B6699402F7C8AB7D08FB8 /* DayStrip.swift */,
+				3DDCECEFE17820B6CB9ADD32 /* DeltaCard.swift */,
 				48CFE8F85A9299CAFAD6DD51 /* DeskSnapshot.swift */,
-				BF009F8DA4A75B690FD16F6F /* DriftAskState.swift */,
 				AA0E1F63013708C0CDD9A796 /* DriftCard.swift */,
 				38B9DFA0CD7F67E0D5AC9DD8 /* DriftOffer.swift */,
 				2A6B4866C56C0FC894B32F56 /* FacioJSON.swift */,
@@ -614,6 +619,7 @@
 				6A290997900023858134E738 /* DriftLaw.swift */,
 				5FD625BD89099DBE924C2B9D /* InstanceLaw.swift */,
 				15209F287CF3C54B427B68E7 /* LidProjectionLaw.swift */,
+				3D55531FE6458678905FB1E0 /* MorningLaw.swift */,
 				5A8BE137FD1137D4F1D4C801 /* PainLaw.swift */,
 				A146AEC282C47C9A81593E81 /* ReminderClock.swift */,
 				A1917B89AB52F3F1B358D6B6 /* SeedFactory.swift */,
@@ -756,6 +762,7 @@
 				9F50A3AF342159EBD6E77599 /* LidProjectionTests.swift in Sources */,
 				71B355AAC28D015ED5DD4520 /* LocalizationCatalogTests.swift in Sources */,
 				CBA06C3A5C7845636196F10A /* ModelTests.swift in Sources */,
+				A79E64FD194EDD1325F21828 /* MorningLawTests.swift in Sources */,
 				885E0C15BF71F5E736ADCF66 /* PackLawTests.swift in Sources */,
 				C02AB68F2948B995641C037F /* PainLawTests.swift in Sources */,
 				1B52ED9C8C00124B71EC174F /* PanSessionTests.swift in Sources */,
@@ -795,6 +802,7 @@
 				CD97347045C6AD3423CBF39D /* DayZeroChips.swift in Sources */,
 				AD83233E65F88CD811ACAB35 /* DayZeroLaw.swift in Sources */,
 				1B02BF0A453F9A1AA97A89A8 /* DeedsList.swift in Sources */,
+				2FF772F691756FB48266763A /* DeltaCard.swift in Sources */,
 				D4AA64C0C4D50D3BC502CA8A /* DeskClient.swift in Sources */,
 				079E769A3CEA5BBE60C3E1AD /* DeskRepository.swift in Sources */,
 				CE236B8604D194F50FA14289 /* DeskRoute.swift in Sources */,
@@ -802,7 +810,6 @@
 				742D095A0E8540FC73B3380D /* DeskStore.swift in Sources */,
 				C6CEB2340C7288F178D90254 /* DeskSyncCoordinator.swift in Sources */,
 				55EFA7802D8BDDF361A21BCA /* DisplayCopy.swift in Sources */,
-				5E543FB7C21F25D80B7A0FF7 /* DriftAskState.swift in Sources */,
 				A302868FB457DDE06975522D /* DriftCard.swift in Sources */,
 				345DDEF409CD5C9AB583BCC6 /* DriftLaw.swift in Sources */,
 				90132831C50A9557D7C00433 /* DriftOffer.swift in Sources */,
@@ -831,6 +838,7 @@
 				B81A079B61F6D259329DA1E2 /* LidScreen.swift in Sources */,
 				C320C96EB2A1BB2C8B925B59 /* LidSectionHeader.swift in Sources */,
 				44CC1E8EC0C1B68A74E8C884 /* LidWidgetCell.swift in Sources */,
+				447F31BE251764E051843234 /* MorningLaw.swift in Sources */,
 				54A148D920190BA2B2583CCD /* PackRowMajorLayout.swift in Sources */,
 				0B5492F1132E9FBFDB1308EA /* PainLaw.swift in Sources */,
 				8F3EAB243B7A1102F85979EA /* PanGutter.swift in Sources */,

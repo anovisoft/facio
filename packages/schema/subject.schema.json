@@ -154,6 +154,31 @@
       ],
       "default": null,
       "title": "Paused At"
+    },
+    "drift_asks_made": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Drift Asks Made",
+      "type": "integer"
+    },
+    "drift_retire_refusals": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Drift Retire Refusals",
+      "type": "integer"
+    },
+    "drift_asked_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Drift Asked At"
     }
   },
   "required": [

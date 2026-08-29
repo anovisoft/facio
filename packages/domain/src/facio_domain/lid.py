@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from datetime import datetime
 from typing import Never
 
 from facio_domain.drift import drift_card
 from facio_domain.models import (
-    DriftAskState,
+    DeltaTodayItem,
     DriftTodayItem,
     Instance,
     LidProjection,
@@ -20,6 +20,7 @@ from facio_domain.models import (
     WidgetStatus,
     WidgetTodayItem,
 )
+from facio_domain.morning import delta_card
 
 _HIDDEN_TODAY = frozenset(
     {
@@ -81,9 +82,17 @@ def widget_rank_band(widget: Widget, now: datetime) -> RankBand:
     return RankBand.today_incomplete
 
 
-def _sort_key(item: WidgetTodayItem | DriftTodayItem, now: datetime) -> tuple:
+def _sort_key(
+    item: WidgetTodayItem | DriftTodayItem | DeltaTodayItem, now: datetime
+) -> tuple:
     if isinstance(item, DriftTodayItem):
         return (_band_index(RankBand.drift_card), datetime.min, item.drift_card.subject_id)
+    if isinstance(item, DeltaTodayItem):
+        return (
+            _band_index(RankBand.unanswered_morning),
+            datetime.min,
+            item.delta_card.subject_id,
+        )
     when = item.widget.when or now
     return (_band_index(item.band), when, item.widget.id)
 
@@ -112,7 +121,6 @@ def lid_projection(
     subjects: Sequence[Subject],
     instances: Sequence[Instance],
     widgets: Sequence[Widget],
-    histories: Mapping[str, DriftAskState] | None = None,
 ) -> LidProjection:
     """Project the lid.
 
@@ -120,10 +128,12 @@ def lid_projection(
     Empty Today while a practice missed its cadence → one drift card in today.
     Done today stays in Today (band today_done), after the live tiles.
     Done on another calendar day is not drawn on Today.
-    Rank v0 inside a non-empty Today. Unanswered morning is reserved; this
-    step does not invent a morning engine.
+    Rank v0 inside a non-empty Today. The morning card is one object: a drift
+    ask when a period was missed, otherwise the calm delta line (Q6), and
+    never both — the drift card carries the same subject louder.
     """
-    card = drift_card(subjects, instances, now, histories)
+    card = drift_card(subjects, instances, now)
+    delta = delta_card(subjects, instances, widgets, now) if card is None else None
     visible = _without_paused(subjects, widgets)
 
     today_widgets = _today_widgets(visible, now)
@@ -140,12 +150,14 @@ def lid_projection(
         widget for widget in visible if widget.section == WidgetSection.postponed
     ]
 
-    today: list[WidgetTodayItem | DriftTodayItem] = [
+    today: list[WidgetTodayItem | DriftTodayItem | DeltaTodayItem] = [
         WidgetTodayItem(band=widget_rank_band(widget, now), widget=widget)
         for widget in today_widgets
     ]
     if card is not None:
         today.append(DriftTodayItem(drift_card=card))
+    elif delta is not None:
+        today.append(DeltaTodayItem(delta_card=delta))
 
     today.sort(key=lambda item: _sort_key(item, now))
 
@@ -155,4 +167,5 @@ def lid_projection(
         soon=sorted(soon, key=lambda widget: widget.id),
         postponed=sorted(postponed, key=lambda widget: widget.id),
         drift_card=card,
+        delta_card=delta,
     )

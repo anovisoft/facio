@@ -184,26 +184,6 @@
       "title": "CueSurface",
       "type": "string"
     },
-    "DriftAskState": {
-      "additionalProperties": false,
-      "description": "How far the shrink ladder has already been walked for one subject.\n\nNot a stored score. Input to `next_drift_offer` / `drift_card`.",
-      "properties": {
-        "asks_made": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Asks Made",
-          "type": "integer"
-        },
-        "retire_refusals": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Retire Refusals",
-          "type": "integer"
-        }
-      },
-      "title": "DriftAskState",
-      "type": "object"
-    },
     "Instance": {
       "additionalProperties": false,
       "properties": {
@@ -348,6 +328,31 @@
           ],
           "default": null,
           "title": "Paused At"
+        },
+        "drift_asks_made": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Drift Asks Made",
+          "type": "integer"
+        },
+        "drift_retire_refusals": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Drift Retire Refusals",
+          "type": "integer"
+        },
+        "drift_asked_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Drift Asked At"
         }
       },
       "required": [
@@ -659,7 +664,7 @@
     }
   },
   "additionalProperties": false,
-  "description": "The whole table the talk service reads and patches.\n\nDrift is still derived, never stored. `drift_asks` / `drift_asked_at`\nare the shrink-ladder memory the lid already persists.",
+  "description": "The whole table the talk service reads and patches.\n\nDrift is still derived, never stored. The shrink-ladder memory rides on\neach `Subject` (next to `paused_at`), not in a side table on the desk.",
   "properties": {
     "subjects": {
       "items": {
@@ -688,21 +693,6 @@
       },
       "title": "Widgets",
       "type": "array"
-    },
-    "drift_asks": {
-      "additionalProperties": {
-        "$ref": "#/$defs/DriftAskState"
-      },
-      "title": "Drift Asks",
-      "type": "object"
-    },
-    "drift_asked_at": {
-      "additionalProperties": {
-        "format": "date-time",
-        "type": "string"
-      },
-      "title": "Drift Asked At",
-      "type": "object"
     }
   },
   "required": [

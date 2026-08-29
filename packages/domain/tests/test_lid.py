@@ -5,6 +5,7 @@ from datetime import datetime
 from facio_domain.fixtures import instances_from_rows
 from facio_domain.lid import lid_projection
 from facio_domain.models import (
+    DeltaTodayItem,
     DriftTodayItem,
     RankBand,
     SubjectStatus,
@@ -23,6 +24,7 @@ def _widget(
     status: WidgetStatus = WidgetStatus.ready,
     when: datetime | None = None,
     section: WidgetSection = WidgetSection.today,
+    subject_id: str = "push-ups",
 ) -> Widget:
     return Widget(
         id=widget_id,
@@ -32,7 +34,7 @@ def _widget(
         status=status,
         when=when,
         section=section,
-        subject_id="push-ups",
+        subject_id=subject_id,
         instance_id=f"{widget_id}-inst",
         version=1,
     )
@@ -47,6 +49,7 @@ def test_empty_today_without_commitments_stays_empty(
     )
     assert projection.today == []
     assert projection.drift_card is None
+    assert projection.delta_card is None
 
 
 def test_empty_today_with_drift_shows_one_card(subjects, scenarios, now) -> None:
@@ -181,6 +184,30 @@ def test_no_invented_morning_card(subjects, now) -> None:
         not (isinstance(item, WidgetTodayItem) and item.band == RankBand.unanswered_morning)
         for item in projection.today
     )
+    assert projection.delta_card is None
+
+
+def test_delta_card_ranks_above_the_drift_slot(subjects, scenarios, now) -> None:
+    """Rank v0: unanswered morning sits between overdue and the drift slot."""
+    case = scenarios["empty_today_with_delta"]
+    # Tiles of another practice: a subject already sitting on Today does not
+    # need the morning to repeat its own tile back at it.
+    overdue = _widget(
+        "overdue", when=datetime(2026, 8, 15, 8, 0, 0), subject_id="vegetables"
+    )
+    later = _widget(
+        "later", when=datetime(2026, 8, 15, 18, 0, 0), subject_id="vegetables"
+    )
+    projection = lid_projection(
+        now,
+        subjects,
+        instances_from_rows(case["instances"]),
+        [later, overdue],
+    )
+    assert [item.kind for item in projection.today] == ["widget", "delta", "widget"]
+    item = projection.today[1]
+    assert isinstance(item, DeltaTodayItem)
+    assert item.band == RankBand.unanswered_morning
 
 
 def test_sections_pass_through(subjects, widgets, now) -> None:

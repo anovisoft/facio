@@ -1,0 +1,37 @@
+{
+  "id": "drift_answer_en",
+  "utterance": "the bike has been sitting for three weeks, what now?",
+  "match": [
+    "sitting for three weeks"
+  ],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "set_cadence",
+          "arguments": {
+            "subject_id": "bike",
+            "count": 1,
+            "period": "week"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Let's make it once a week — easier to come back to. The goal stays."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": [
+      "set_cadence"
+    ],
+    "times_per_week_max": 1,
+    "target_goal_max": 30,
+    "forbidden_tools": [
+      "update_widget",
+      "create_widget",
+      "set_reminder"
+    ]
+  }
+}

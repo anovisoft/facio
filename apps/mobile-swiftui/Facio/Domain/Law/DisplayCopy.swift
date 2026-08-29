@@ -90,6 +90,37 @@ enum DisplayCopy {
         }
     }
 
+    /// Saying no to the rung on offer. Not a dismissal of the practice: the
+    /// card comes back a rung lower after a full cadence period, and after two
+    /// refusals of «убрать» it does not come back at all (Q28).
+    static var driftRefuse: String {
+        String(localized: "не сейчас", comment: "Drift chip: refuse this rung")
+    }
+
+    /// The calm morning line (Q6). A count, not a verdict: no streak, no
+    /// «you are behind», nothing to answer.
+    static func deltaLine(
+        subjectId: String,
+        stored: String,
+        remaining: Int,
+        promised: Int,
+        period: CadencePeriod
+    ) -> String {
+        let name = title(subjectId: subjectId, stored: stored)
+        switch period {
+        case .day:
+            return String(
+                localized: "\(name) — осталось \(remaining) из \(promised) сегодня",
+                comment: "Delta card body for a daily rhythm"
+            )
+        case .week, .none:
+            return String(
+                localized: "\(name) — осталось \(remaining) из \(promised) на этой неделе",
+                comment: "Delta card body for a weekly rhythm"
+            )
+        }
+    }
+
     static func cadence(_ cadence: Cadence) -> String {
         if cadence.isNone {
             return String(localized: "без ритма", comment: "Cadence none")

@@ -64,8 +64,7 @@ final class DeskStore {
             now: now(),
             subjects: snapshot.subjects,
             instances: snapshot.instances,
-            widgets: snapshot.widgets,
-            histories: snapshot.driftAsks
+            widgets: snapshot.widgets
         )
     }
 
@@ -77,14 +76,12 @@ final class DeskStore {
         subject(id: subjectId)?.status != .retired
     }
 
+    /// The right to speak already lives in the law: `LidProjectionLaw` only
+    /// emits a card the ladder is allowed to show. This stays as the one place
+    /// the lid asks, so the projection is never second-guessed on screen.
     func surfaces(_ card: DriftCard) -> Bool {
         guard let subject = subject(id: card.subjectId) else { return false }
-        return DriftLaw.shouldSurface(
-            card,
-            askedAt: snapshot.driftAskedAt[card.subjectId],
-            cadence: subject.cadence,
-            now: now()
-        )
+        return card.offer != .stop && DriftLaw.canAskNow(subject, now: now())
     }
 
     func cueFor(subjectId: String) -> Cue? {
@@ -395,6 +392,8 @@ final class DeskStore {
         noteCaseCompleted(subjectId: widget.subjectId)
     }
 
+    /// Taking the offer. The rung the law chose is the only one on the card,
+    /// so this never has to decide what "down" means.
     func answerDrift(subjectId: String, offer: DriftOffer) {
         guard let card = lid.driftCard, card.subjectId == subjectId, surfaces(card) else { return }
         switch offer {
@@ -413,6 +412,23 @@ final class DeskStore {
         case .stop:
             return
         }
+    }
+
+    /// «Not now». The card goes quiet for one cadence period and comes back a
+    /// rung lower. Two refusals of the offer to retire and it never comes back
+    /// at all — the practice stays in Deeds without a rhythm (Q28).
+    func refuseDrift(subjectId: String) {
+        guard let card = lid.driftCard, card.subjectId == subjectId, surfaces(card) else { return }
+        let stamp = now()
+        commit(reminders: false) { next in
+            guard let index = next.subjects.firstIndex(where: { $0.id == subjectId }) else { return }
+            next.subjects[index] = DriftLaw.refuse(next.subjects[index], offer: card.offer, now: stamp)
+        }
+        journal(
+            .driftAnswered,
+            subjectId: subjectId,
+            payload: ["offer": card.offer.rawValue, "answer": "refused"]
+        )
     }
 
     /// Same shape as `applyTalk`'s merge (a full-desk overwrite must not drop
@@ -495,10 +511,12 @@ final class DeskStore {
         let stamp = now()
         commit(reminders: reminders) { next in
             body(&next)
-            var state = next.driftAsks[subjectId] ?? DriftAskState()
-            state.asksMade += 1
-            next.driftAsks[subjectId] = state
-            next.driftAskedAt[subjectId] = stamp
+            guard let index = next.subjects.firstIndex(where: { $0.id == subjectId }) else { return }
+            // The body already wrote the commitment change (`moveToToday`,
+            // `shrinkToOnceAWeek`, `retireSubject`). This only walks the
+            // ladder: one more ask, stamped, so the next one waits a period.
+            next.subjects[index].driftAsksMade += 1
+            next.subjects[index].driftAskedAt = stamp
         }
         journal(
             .driftAnswered,

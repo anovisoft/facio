@@ -9,8 +9,8 @@ from pathlib import Path
 from facio_domain.models import (
     Cadence,
     Cue,
+    DeltaCard,
     Desk,
-    DriftAskState,
     DriftCard,
     Instance,
     LidProjection,
@@ -29,8 +29,8 @@ _MODELS: dict[str, type] = {
     "desk": Desk,
     "instance": Instance,
     "widget": Widget,
-    "drift_ask_state": DriftAskState,
     "drift_card": DriftCard,
+    "delta_card": DeltaCard,
     "lid_projection": LidProjection,
 }
 

@@ -148,6 +148,16 @@ class Subject(BaseModel):
     instance_ids: list[str] = Field(default_factory=list)
     status: SubjectStatus = SubjectStatus.active
     paused_at: datetime | None = None
+    # The shrink ladder (Q28) remembered on the practice itself, next to the
+    # pause. Not a score and not a streak (P7): three plain counters the law
+    # reads to decide which rung is next and whether it may speak at all.
+    # `drift_asks_made` — how many times this subject was asked, ever.
+    # `drift_retire_refusals` — how many times the offer to retire was refused.
+    # `drift_asked_at` — when the last ask happened, so the next one waits a
+    # full cadence period.
+    drift_asks_made: int = Field(default=0, ge=0)
+    drift_retire_refusals: int = Field(default=0, ge=0)
+    drift_asked_at: datetime | None = None
 
 
 class PhotoMedia(BaseModel):
@@ -253,24 +263,30 @@ class Widget(BaseModel):
     version: int = 1
 
 
-class DriftAskState(BaseModel):
-    """How far the shrink ladder has already been walked for one subject.
-
-    Not a stored score. Input to `next_drift_offer` / `drift_card`.
-    """
-
-    model_config = ConfigDict(extra="forbid")
-
-    asks_made: int = Field(default=0, ge=0)
-    retire_refusals: int = Field(default=0, ge=0)
-
-
 class DriftCard(BaseModel):
+    """The one drift ask on Today. `offer` is the ladder rung the law chose."""
+
     model_config = ConfigDict(extra="forbid")
 
     subject_id: str
     silent_days: int
     offer: DriftOffer
+
+
+class DeltaCard(BaseModel):
+    """The calm half of the morning (Q6): promised by the rhythm minus done.
+
+    No offer and no chips — a delta without drift is a statement, not an
+    accusation (P7). `remaining` is never negative: doing more than promised
+    is not a debt.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    subject_id: str
+    promised: int
+    done: int
+    remaining: int
 
 
 class WidgetTodayItem(BaseModel):
@@ -289,7 +305,15 @@ class DriftTodayItem(BaseModel):
     drift_card: DriftCard
 
 
-TodayItem = WidgetTodayItem | DriftTodayItem
+class DeltaTodayItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    kind: Literal["delta"] = "delta"
+    band: Literal[RankBand.unanswered_morning] = RankBand.unanswered_morning
+    delta_card: DeltaCard
+
+
+TodayItem = WidgetTodayItem | DriftTodayItem | DeltaTodayItem
 
 
 class LidProjection(BaseModel):
@@ -302,13 +326,14 @@ class LidProjection(BaseModel):
     soon: list[Widget]
     postponed: list[Widget]
     drift_card: DriftCard | None = None
+    delta_card: DeltaCard | None = None
 
 
 class Desk(BaseModel):
     """The whole table the talk service reads and patches.
 
-    Drift is still derived, never stored. `drift_asks` / `drift_asked_at`
-    are the shrink-ladder memory the lid already persists.
+    Drift is still derived, never stored. The shrink-ladder memory rides on
+    each `Subject` (next to `paused_at`), not in a side table on the desk.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -317,5 +342,3 @@ class Desk(BaseModel):
     cues: list[Cue]
     instances: list[Instance]
     widgets: list[Widget]
-    drift_asks: dict[str, DriftAskState] = Field(default_factory=dict)
-    drift_asked_at: dict[str, datetime] = Field(default_factory=dict)

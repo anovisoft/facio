@@ -5,6 +5,7 @@ struct LidFeed: View {
     let cueFor: (Widget) -> Cue?
     let windowFor: (String) -> TimeWindow?
     let subjectTitle: (String) -> String
+    let subjectPeriod: (String) -> CadencePeriod
     let showsSubject: (String) -> Bool
     let surfacesDrift: (DriftCard) -> Bool
     let onOpen: (String) -> Void
@@ -13,6 +14,7 @@ struct LidFeed: View {
     let onToggleTick: (String) -> Void
     let onSurfaced: (String) -> Void
     let onAnswerDrift: (String, DriftOffer) -> Void
+    let onRefuseDrift: (String) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -42,6 +44,9 @@ struct LidFeed: View {
             case .drift(let card):
                 if surfacesDrift(card) { return item }
                 return nil
+            case .delta:
+                // The calm line answers nothing, so there is no ask to gate.
+                return item
             }
         }
     }
@@ -63,7 +68,14 @@ struct LidFeed: View {
                     DriftTile(
                         card: card,
                         storedTitle: subjectTitle(card.subjectId),
-                        onAnswer: { onAnswerDrift(card.subjectId, $0) }
+                        onAnswer: { onAnswerDrift(card.subjectId, $0) },
+                        onRefuse: { onRefuseDrift(card.subjectId) }
+                    )
+                case .delta(let card):
+                    DeltaTile(
+                        card: card,
+                        storedTitle: subjectTitle(card.subjectId),
+                        period: subjectPeriod(card.subjectId)
                     )
                 }
             }
@@ -126,6 +138,9 @@ struct LidFeed: View {
             case .drift(let card):
                 flush()
                 blocks.append(.drift(card))
+            case .delta(let card):
+                flush()
+                blocks.append(.delta(card))
             }
         }
         flush()
@@ -136,11 +151,13 @@ struct LidFeed: View {
 private enum TodayBlock: Identifiable {
     case pack(ids: String, widgets: [Widget])
     case drift(DriftCard)
+    case delta(DeltaCard)
 
     var id: String {
         switch self {
         case .pack(let ids, _): "pack:\(ids)"
         case .drift(let card): "drift:\(card.subjectId)"
+        case .delta(let card): "delta:\(card.subjectId)"
         }
     }
 }
