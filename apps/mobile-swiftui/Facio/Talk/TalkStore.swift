@@ -47,6 +47,15 @@ final class TalkStore {
         String(localized: "Что сюда на стол?", comment: "Composer placeholder")
     }
 
+    /// A day-0 chip puts its own words in the field and opens the sheet. It
+    /// must not send: 03-product leaves the first send to the person, and a
+    /// chip that talked for him would be a wizard, not a way in.
+    func startDraft(_ text: String) {
+        draft = text
+        errorMessage = nil
+        sheetOpen = true
+    }
+
     func appendUser(_ text: String) {
         let stamp = now()
         current.messages.append(.user(text, at: stamp))

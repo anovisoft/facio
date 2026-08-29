@@ -21,6 +21,19 @@ struct DeskRepository: Sendable {
 
     private var snapshotURL: URL { directory.appending(path: "desk.json") }
     private var journalURL: URL { directory.appending(path: "journal.jsonl") }
+    private var dayZeroURL: URL { directory.appending(path: "day-zero.closed") }
+
+    /// Day zero happens once. The latch is a marker file next to `desk.json`
+    /// on purpose: `desk.json` is the wire shape the service also writes, and a
+    /// client-only "he has seen the chips" flag has no business travelling on it.
+    func dayZeroClosed() -> Bool {
+        FileManager.default.fileExists(atPath: dayZeroURL.path)
+    }
+
+    func closeDayZero() {
+        guard !dayZeroClosed() else { return }
+        try? Data().write(to: dayZeroURL, options: .atomic)
+    }
 
     func loadSnapshot() throws -> DeskSnapshot? {
         guard FileManager.default.fileExists(atPath: snapshotURL.path) else { return nil }

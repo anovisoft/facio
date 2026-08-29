@@ -94,7 +94,7 @@ private struct InspectBody: View {
             if let widget {
                 switch widget.type {
                 case .counter:
-                    Text("\(widget.counterCount) / \(widget.counterTarget)")
+                    Text(DisplayCopy.counterFace(count: widget.counterCount, goal: widget.counterGoal))
                         .font(.system(size: 44, weight: .bold, design: .rounded))
                         .foregroundStyle(.primary)
                     if let cue {

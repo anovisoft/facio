@@ -10,7 +10,9 @@ struct CounterUseView: View {
     @State private var goalDraft = ""
 
     private var count: Int { widget.counterCount }
-    private var target: Int { widget.counterTarget }
+    /// The goal the person named, or nothing. An empty field reads «no goal
+    /// yet» — «0» would be a target he never set.
+    private var goal: Int? { widget.counterGoal }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -86,7 +88,7 @@ struct CounterUseView: View {
         .padding(.bottom, 8)
         .onAppear {
             cueDraft = cue?.text ?? ""
-            goalDraft = String(target)
+            goalDraft = goal.map(String.init) ?? ""
             store.markCueSurfaced(widgetId: widget.id, place: "use")
         }
         .onChange(of: cue?.text) { _, newValue in
@@ -101,12 +103,13 @@ struct CounterUseView: View {
     }
 
     private func commitGoal() {
-        guard let goal = Int(goalDraft), goal >= 1 else {
-            goalDraft = String(target)
+        let trimmed = goalDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let entered = Int(trimmed), entered >= 1 else {
+            goalDraft = goal.map(String.init) ?? ""
             return
         }
-        if goal != target {
-            store.editTarget(widgetId: widget.id, goal: goal)
+        if entered != goal {
+            store.editTarget(widgetId: widget.id, goal: entered)
         }
     }
 }

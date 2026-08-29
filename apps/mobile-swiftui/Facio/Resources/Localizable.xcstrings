@@ -36,6 +36,24 @@
         }
       }
     },
+    "%@, %lld": {
+      "comment": "Counter tile accessibility without a goal: title, count",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %lld"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %lld"
+          }
+        }
+      }
+    },
     "%@, %lld из %lld": {
       "comment": "Counter tile accessibility: title, count of target",
       "extractionState": "manual",
@@ -68,6 +86,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@, %lld из %lld, %@"
+          }
+        }
+      }
+    },
+    "%@, %lld, %@": {
+      "comment": "Counter tile accessibility without a goal: title, count, cue",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %lld, %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %lld, %@"
           }
         }
       }
@@ -707,6 +743,24 @@
         }
       }
     },
+    "зал": {
+      "comment": "Day-0 chip: gym",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gym"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "зал"
+          }
+        }
+      }
+    },
     "или удерживайте плитку": {
       "extractionState": "manual",
       "localizations": {
@@ -1319,7 +1373,7 @@
       }
     },
     "сегодня": {
-      "comment": "Drift chip: move to today",
+      "comment": "Day-0 chip: today\nDrift chip: move to today",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -1615,6 +1669,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "Убрать с крышки?"
+          }
+        }
+      }
+    },
+    "ужин": {
+      "comment": "Day-0 chip: dinner",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dinner"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ужин"
           }
         }
       }

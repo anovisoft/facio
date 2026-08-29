@@ -92,6 +92,7 @@
 		A7323E03B9F6C6B6E823AE0B /* TalksList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90B3D5D86107F0A29686ED79 /* TalksList.swift */; };
 		AB460B049EDE15E96FF2799C /* FacioApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8B634C40C08056E1D5C3BE3 /* FacioApp.swift */; };
 		AD45ABBB669BE1D6394F2C63 /* TileSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CAE9C5EA7020260E61819B3 /* TileSize.swift */; };
+		AD83233E65F88CD811ACAB35 /* DayZeroLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3FF096CC624C6A7B8EE65EE /* DayZeroLaw.swift */; };
 		AE0EE9B28482E1A88A7E2076 /* SlotKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CC366E1820B8C0187727896 /* SlotKind.swift */; };
 		B2A5600E11C4CD751ECFDB7A /* AccountModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47F1FCFB1FA72143A6BDC3E1 /* AccountModels.swift */; };
 		B4E0003131A6C09ECD1A8DE4 /* TalkAnchorLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9BCAA35FFBFE03B382EB59 /* TalkAnchorLaw.swift */; };
@@ -111,6 +112,7 @@
 		CBA06C3A5C7845636196F10A /* ModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62CDF841D69D1101DC6F6D8C /* ModelTests.swift */; };
 		CBFC8BF518CF11B3D528AECA /* widgets.json in Resources */ = {isa = PBXBuildFile; fileRef = 81BADA927DD64EEBCA8F07F7 /* widgets.json */; };
 		CD79F406A7315A545B225A8A /* FacioNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F1D7859FE372ADE83A1624D /* FacioNotifications.swift */; };
+		CD97347045C6AD3423CBF39D /* DayZeroChips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 762C99105CDBAB0D6DBCC4EB /* DayZeroChips.swift */; };
 		CE236B8604D194F50FA14289 /* DeskRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7655C26A705784207BD2B24E /* DeskRoute.swift */; };
 		CEC4FE2F2DE12A8C5177FBED /* CueKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A65D9FE0EF09D2A8481ED7B /* CueKind.swift */; };
 		CED80102E7BC05B485A6D7B9 /* SeedFactoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F3E244A61989C75715FE3E2 /* SeedFactoryTests.swift */; };
@@ -130,6 +132,7 @@
 		E1E209A2DE8B5A43ACEC19A1 /* PanScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A1B5F0456FC90DCCEB83E66 /* PanScreen.swift */; };
 		E3D7F69606181C16E5DB131C /* WidgetType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9638F827F32F9586B9E461 /* WidgetType.swift */; };
 		E43CD102B93498279D882748 /* DeskStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229688020B5F18B40C1B5B52 /* DeskStoreTests.swift */; };
+		E55487F36C6F6F8BDBC1DEED /* DayZeroTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CE614E685572C878D8CF85C /* DayZeroTests.swift */; };
 		F2FDFF0299168974DE7CFDDE /* WindowMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DB3BDE083C265BE8C20EEDB /* WindowMetrics.swift */; };
 		F5B8067F8E06FD1C1F755A85 /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E8172CAF1A5C6B58854F61 /* SettingsScreen.swift */; };
 		F7896392618DEA3364CFDD57 /* SubjectStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAEA9232D081EAF6EAF8BE2B /* SubjectStatus.swift */; };
@@ -187,6 +190,7 @@
 		3B2748A2C229B2F4EEFF8E66 /* TickUseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TickUseView.swift; sourceTree = "<group>"; };
 		3BFB13BD377ABB3A327F2F6C /* InstanceCarousel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceCarousel.swift; sourceTree = "<group>"; };
 		3CAE9C5EA7020260E61819B3 /* TileSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileSize.swift; sourceTree = "<group>"; };
+		3CE614E685572C878D8CF85C /* DayZeroTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayZeroTests.swift; sourceTree = "<group>"; };
 		3D48A43C077D1D242EBD23B7 /* SlotLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotLaw.swift; sourceTree = "<group>"; };
 		3D4E6FAE6EB30076BA7E2A98 /* TimeWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeWindow.swift; sourceTree = "<group>"; };
 		3DB45BC7CD8A1FCED3925597 /* PanSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanSessionTests.swift; sourceTree = "<group>"; };
@@ -223,6 +227,7 @@
 		6E6443189A8C3DC61F6850C5 /* DeskStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskStore.swift; sourceTree = "<group>"; };
 		6F3E244A61989C75715FE3E2 /* SeedFactoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedFactoryTests.swift; sourceTree = "<group>"; };
 		712ADE31FC9A01A67851A26C /* CueOrigin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueOrigin.swift; sourceTree = "<group>"; };
+		762C99105CDBAB0D6DBCC4EB /* DayZeroChips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayZeroChips.swift; sourceTree = "<group>"; };
 		763D4ABA686C63D908F49AEA /* ReminderScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderScheduler.swift; sourceTree = "<group>"; };
 		7655C26A705784207BD2B24E /* DeskRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskRoute.swift; sourceTree = "<group>"; };
 		786AEABFA4B9FBC87D0A2311 /* Cue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cue.swift; sourceTree = "<group>"; };
@@ -261,6 +266,7 @@
 		CA765E2AAC9E1E3AB182595F /* ReminderClockTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderClockTests.swift; sourceTree = "<group>"; };
 		CDB0BDAA3DA77E97E85EA286 /* AtmosphereBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtmosphereBackground.swift; sourceTree = "<group>"; };
 		D2AD6F13DFE3734FB09352F3 /* CueSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueSurface.swift; sourceTree = "<group>"; };
+		D3FF096CC624C6A7B8EE65EE /* DayZeroLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayZeroLaw.swift; sourceTree = "<group>"; };
 		D4911636F00FC033987EB181 /* ReminderTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderTile.swift; sourceTree = "<group>"; };
 		D8B634C40C08056E1D5C3BE3 /* FacioApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacioApp.swift; sourceTree = "<group>"; };
 		DA2072492E534903ADD78273 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
@@ -409,6 +415,7 @@
 			isa = PBXGroup;
 			children = (
 				DC16928D71A59480CFCA71EF /* CounterTile.swift */,
+				762C99105CDBAB0D6DBCC4EB /* DayZeroChips.swift */,
 				5E4FF3EA95A2EB1F3B58E372 /* DriftTile.swift */,
 				8BDA79F3B47DCF2FB25DE8AA /* KebabStub.swift */,
 				F7BE39810B4325D66B31ABA8 /* LidFeed.swift */,
@@ -435,6 +442,7 @@
 			isa = PBXGroup;
 			children = (
 				56186C97AB845D23001563F3 /* CueLawTests.swift */,
+				3CE614E685572C878D8CF85C /* DayZeroTests.swift */,
 				229688020B5F18B40C1B5B52 /* DeskStoreTests.swift */,
 				65B505EE3978AD4B56D37FB1 /* DeskSyncCoordinatorTests.swift */,
 				1881B07D94D95992419D2480 /* DomainTestSupport.swift */,
@@ -586,6 +594,7 @@
 			children = (
 				8D6307D793711E160A7E95F1 /* CellSize.swift */,
 				EB5247A982C89F51EF171CE1 /* CueLaw.swift */,
+				D3FF096CC624C6A7B8EE65EE /* DayZeroLaw.swift */,
 				16390EEDE51BCA21EF87D58F /* DisplayCopy.swift */,
 				6A290997900023858134E738 /* DriftLaw.swift */,
 				5FD625BD89099DBE924C2B9D /* InstanceLaw.swift */,
@@ -721,6 +730,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				659918BF655B0B9127307996 /* CueLawTests.swift in Sources */,
+				E55487F36C6F6F8BDBC1DEED /* DayZeroTests.swift in Sources */,
 				E43CD102B93498279D882748 /* DeskStoreTests.swift in Sources */,
 				C6C1AA5A5A7C9D8B762CC664 /* DeskSyncCoordinatorTests.swift in Sources */,
 				F8D115041D6077185ED190A6 /* DomainTestSupport.swift in Sources */,
@@ -764,6 +774,8 @@
 				B9C2D312EF6DA76A45BA7728 /* CueOrigin.swift in Sources */,
 				D8FDF08880B717913BD028E8 /* CueSurface.swift in Sources */,
 				312E31F4EAABAB4893B02FE0 /* DayStrip.swift in Sources */,
+				CD97347045C6AD3423CBF39D /* DayZeroChips.swift in Sources */,
+				AD83233E65F88CD811ACAB35 /* DayZeroLaw.swift in Sources */,
 				1B02BF0A453F9A1AA97A89A8 /* DeedsList.swift in Sources */,
 				D4AA64C0C4D50D3BC502CA8A /* DeskClient.swift in Sources */,
 				079E769A3CEA5BBE60C3E1AD /* DeskRepository.swift in Sources */,

@@ -5,6 +5,10 @@ import Observation
 @MainActor
 final class DeskStore {
     private(set) var snapshot: DeskSnapshot
+    /// Day zero is over the moment the desk holds its first subject, and it
+    /// never starts again. Read from disk at launch so relaunching an empty
+    /// day does not bring the chips back.
+    private(set) var dayZeroClosed: Bool
     private let repository: DeskRepository
     private let now: () -> Date
     private var surfacedDay = Date.distantPast
@@ -21,6 +25,7 @@ final class DeskStore {
     init(repository: DeskRepository, now: @escaping () -> Date = Date.init) throws {
         self.repository = repository
         self.now = now
+        self.dayZeroClosed = repository.dayZeroClosed()
         if let loaded = try repository.loadSnapshot() {
             // Bike/drift backfill disabled for dogfood alongside the founding seed below — 2026-08-25.
             // let migrated = try SeedFactory.ensureFounding(in: loaded, now: now())
@@ -39,6 +44,13 @@ final class DeskStore {
         let day = Calendar.current.startOfDay(for: now())
         surfacedDay = day
         surfacedPlaces = repository.surfacedPlaces(on: day)
+        closeDayZeroIfNeeded()
+    }
+
+    /// The day-0 chips above the composer. Only on a desk that has never held a
+    /// subject — an empty Сегодня on a desk full of practices is a rest day.
+    var showsDayZeroChips: Bool {
+        DayZeroLaw.showsChips(subjects: snapshot.subjects, closed: dayZeroClosed)
     }
 
     var lid: LidProjection {
@@ -501,9 +513,16 @@ final class DeskStore {
         guard next != snapshot else { return }
         snapshot = next
         try? repository.saveSnapshot(next)
+        closeDayZeroIfNeeded()
         if reminders {
             ReminderScheduler.enqueue(snapshot: next, now: now())
         }
+    }
+
+    private func closeDayZeroIfNeeded() {
+        guard !dayZeroClosed, DayZeroLaw.closes(subjects: snapshot.subjects) else { return }
+        repository.closeDayZero()
+        dayZeroClosed = true
     }
 
     private func journal(

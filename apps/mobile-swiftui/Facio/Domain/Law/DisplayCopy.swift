@@ -10,6 +10,42 @@ enum DisplayCopy {
         }
     }
 
+    /// Counter face on Inspect, and the shape the lid tile paints in two fonts.
+    /// No goal — no goal drawn: «0 / 0» is a target nobody named.
+    static func counterFace(count: Int, goal: Int?) -> String {
+        guard let goal else {
+            return String(localized: "\(count)", comment: "Counter face without a goal")
+        }
+        return String(localized: "\(count) / \(goal)", comment: "Counter face: count and goal")
+    }
+
+    /// What VoiceOver reads off a counter tile. Without a goal it says the
+    /// number and stops, the same way the tile does.
+    static func counterAccessibility(title: String, count: Int, goal: Int?, cue: String?) -> String {
+        switch (goal, cue) {
+        case (.some(let goal), .some(let cue)):
+            String(
+                localized: "\(title), \(count) из \(goal), \(cue)",
+                comment: "Counter tile accessibility: title, count of target, cue"
+            )
+        case (.some(let goal), .none):
+            String(
+                localized: "\(title), \(count) из \(goal)",
+                comment: "Counter tile accessibility: title, count of target"
+            )
+        case (.none, .some(let cue)):
+            String(
+                localized: "\(title), \(count), \(cue)",
+                comment: "Counter tile accessibility without a goal: title, count, cue"
+            )
+        case (.none, .none):
+            String(
+                localized: "\(title), \(count)",
+                comment: "Counter tile accessibility without a goal: title, count"
+            )
+        }
+    }
+
     static var pauseCheckInBody: String {
         String(localized: "готов тренироваться?", comment: "Pause check-in reminder body")
     }

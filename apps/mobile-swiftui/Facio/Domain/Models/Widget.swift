@@ -59,6 +59,12 @@ struct Widget: Codable, Sendable, Equatable, Identifiable {
 
     var counterCount: Int { payload.count ?? 0 }
     var counterTarget: Int { payload.target ?? 0 }
+    /// The goal the person actually named. Missing or `0` is not a goal — the
+    /// law does not draw «0 / 0» (`_snapshot_line`) and neither does the lid.
+    var counterGoal: Int? {
+        guard let target = payload.target, target > 0 else { return nil }
+        return target
+    }
     var isTickDone: Bool { payload.done == true || status == .done }
     var reminderFireAt: Date? { payload.fireAt ?? when }
 }

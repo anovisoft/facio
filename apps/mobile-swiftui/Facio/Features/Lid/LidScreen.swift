@@ -48,6 +48,12 @@ struct LidScreen: View {
             }
         }
         .facioChrome()
+        // Above the dock, and only here: the chips are the lid's day zero, not
+        // a second composer. Applied before `facioComposerDock()` so the inset
+        // order puts them between the feed and the dock.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            DayZeroChips()
+        }
         .facioComposerDock()
     }
 }
