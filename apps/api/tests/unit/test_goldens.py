@@ -9,7 +9,7 @@ from facio_domain.tools import apply_tool, times_per_week
 from facio_api.providers.scripted import ScriptedProvider
 from facio_api.providers.types import ModelToolCall, ModelTurn
 from facio_api.talk.goldens import load_goldens, match_golden
-from facio_api.talk.loop import run_turn
+from facio_api.talk.loop import MEDIA_NOT_IN_CONVERSATION, run_turn
 from facio_api.talk.schemas import TalkSelection, TalkTurnRequest
 
 NOW = datetime(2026, 8, 15, 12, 0, 0)
@@ -98,6 +98,8 @@ RUSSIAN_IDS = {
     "checklist_shopping",
     "clarification_orphan",
     "clarification_selection",
+    "cue_link_invented",
+    "cue_with_link",
     "drift_answer",
     "explain_only",
     "gym_no_clock",
@@ -542,6 +544,69 @@ async def test_an_ordinary_cue_still_needs_no_quote() -> None:
     add = next(call for call in result.tool_calls if call.name == "add_cue")
     assert add.ok is True
     assert add.error is None
+
+
+# --- R6: one media on a cue, and only the person's own link ---------------
+
+
+async def test_a_link_the_person_sent_rides_the_cue_unchanged() -> None:
+    """Q33: she asked not to have to leave and search. The video she sent is
+    attached to the step she asked about — behind the `?`, character for
+    character, and nothing else is sourced for her."""
+    golden = match_golden("вот видео с этим движением: https://youtu.be/9x1FZrq3kQo")
+    assert golden is not None
+    assert golden.id == "cue_with_link"
+    assert golden.selection is not None
+    result = await _play_golden(golden)
+    assert result.mutated is True
+    assert _names(result) == golden.expect.tools
+    expected = golden.expect.cue
+    assert expected is not None
+    assert expected.media_url is not None
+    cue = next(row for row in result.desk.cues if row.id == "push-ups-negatives-talk")
+    assert cue.kind == CueKind.clarification
+    # Media rides its cue's surface: a clarification sits behind the «?», and
+    # rep one stays readable (04 Cue).
+    assert cue.surface == CueSurface.on_demand
+    assert cue.quote == golden.selection.quote
+    assert cue.media is not None
+    assert cue.media.kind == "link"
+    assert cue.media.url == expected.media_url
+    # The URL on the desk is the one out of her message, not one we tidied up.
+    assert cue.media.url in golden.utterance
+    # At most one item per cue — the field holds a single link, never a list.
+    assert not isinstance(cue.media, list)
+    # The do-time correction is untouched: media did not become a precondition
+    # for doing the thing (04, «a step must be executable without its media»).
+    brace = next(row for row in result.desk.cues if row.id == "push-ups-brace")
+    assert brace.surface == CueSurface.do_time
+    assert brace.media is None
+
+
+async def test_an_invented_link_is_refused_and_the_desk_stays_clean() -> None:
+    """06 #23's trap: a hallucinated URL on a movement is worse than none. The
+    call comes back named, the desk never takes it, and the same turn writes
+    the cue again — this time with no media at all."""
+    golden = match_golden("как понять, что я делаю отжимания правильно?")
+    assert golden is not None
+    assert golden.id == "cue_link_invented"
+    assert golden.expect.cue is not None
+    assert golden.expect.cue.media_url is None
+    result = await _play(golden.utterance)
+    assert _names(result) == golden.expect.tools
+    first, second = result.tool_calls
+    assert first.ok is False
+    assert first.error == MEDIA_NOT_IN_CONVERSATION
+    assert first.arguments["media"]["url"] not in golden.utterance
+    assert second.ok is True
+    # The refused call left nothing behind.
+    assert all(row.id != "push-ups-form-link-talk" for row in result.desk.cues)
+    landed = next(row for row in result.desk.cues if row.id == "push-ups-form-talk")
+    assert landed.media is None
+    assert landed.surface == CueSurface.do_time
+    # No URL reached the desk anywhere on this turn.
+    assert all(row.media is None for row in result.desk.cues)
+    assert result.mutated is True
 
 
 # --- R1: the checklist is a practice, not a to-do list --------------------

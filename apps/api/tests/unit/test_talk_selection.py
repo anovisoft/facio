@@ -232,9 +232,15 @@ def test_selection_bullet_says_text_only_when_nothing_is_bound() -> None:
 def test_selection_bullet_sits_last_so_it_does_not_crowd_the_timing_rules() -> None:
     """Measured on live Haiku: the bullet placed among the cue rules cost the
     timing cue on «напомни в 19, в 21 сплю» (kind="timing" refusals). At the end
-    of the list the reminder locks hold. Position is load-bearing, not taste."""
+    of the list the reminder locks hold. Position is load-bearing, not taste.
+
+    R6 put the media bullet directly after it — the two are one subject, the
+    answer to a selected phrase and what may ride with it — and the catalog
+    bullet stays last. The timing rules keep the whole middle to themselves.
+    """
     rows = [row for row in SYSTEM_PROMPT.splitlines() if row.startswith("- ")]
-    assert rows.index(_selection_bullet()) == len(rows) - 2
+    assert rows.index(_selection_bullet()) == len(rows) - 3
+    assert rows[-2].startswith("- Media on a cue")
     assert rows[-1].startswith("- Widget type only from the catalog")
 
 
@@ -245,6 +251,37 @@ def test_add_cue_schema_advertises_step_id_and_quote() -> None:
     properties = add_cue["parameters"]["properties"]
     assert "step_id" in properties
     assert "quote" in properties
-    # Media is law-level plumbing, not a thing the model invents (06 #23).
-    assert "media" not in properties
     assert set(add_cue["parameters"]["required"]) == {"subject_id", "kind", "text", "surface"}
+
+
+def test_add_cue_schema_offers_media_in_the_law_s_own_two_shapes() -> None:
+    """R6: `media` is advertised so the link the **person** sent can ride her
+    cue. It is optional — a step must be executable without media (04) — and it
+    is `LinkMedia` / `PhotoMedia`, never a second shape invented for the wire.
+    The URL is checked against her words, so the schema is an invitation, not
+    the lock ([06] #23)."""
+    from facio_api.talk.spec import tool_schemas
+
+    add_cue = next(row["function"] for row in tool_schemas() if row["function"]["name"] == "add_cue")
+    media = add_cue["parameters"]["properties"]["media"]
+    assert media["type"] == "object"
+    assert "media" not in add_cue["parameters"]["required"]
+    assert media["properties"]["kind"]["enum"] == ["link", "photo"]
+    assert set(media["properties"]) == {"kind", "url", "ref"}
+    assert media["required"] == ["kind"]
+    assert media["additionalProperties"] is False
+    assert "media_not_in_conversation" in media["description"]
+
+
+def test_add_cue_media_shapes_match_the_law() -> None:
+    """The wire shape is the law's, field for field — a schema that drifted
+    from `facio_domain.models` would only teach the model calls that come back
+    `invalid_media`."""
+    from facio_domain.models import LinkMedia, PhotoMedia
+
+    from facio_api.talk.spec import tool_schemas
+
+    add_cue = next(row["function"] for row in tool_schemas() if row["function"]["name"] == "add_cue")
+    media = add_cue["parameters"]["properties"]["media"]
+    advertised = set(media["properties"])
+    assert advertised == set(LinkMedia.model_fields) | set(PhotoMedia.model_fields)

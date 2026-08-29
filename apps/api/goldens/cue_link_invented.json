@@ -1,0 +1,60 @@
+{
+  "id": "cue_link_invented",
+  "utterance": "как понять, что я делаю отжимания правильно?",
+  "match": [
+    "делаю отжимания правильно"
+  ],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "add_cue",
+          "arguments": {
+            "id": "push-ups-form-link-talk",
+            "subject_id": "push-ups",
+            "kind": "correction",
+            "text": "локти ближе к корпусу, примерно 45 градусов",
+            "surface": "do-time",
+            "media": {
+              "kind": "link",
+              "url": "https://youtube.com/watch?v=perfect-pushup-form"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "add_cue",
+          "arguments": {
+            "id": "push-ups-form-talk",
+            "subject_id": "push-ups",
+            "kind": "correction",
+            "text": "локти ближе к корпусу, примерно 45 градусов, таз в одной линии с плечами",
+            "surface": "do-time"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Локти держи ближе к корпусу, градусов 45, и таз в одной линии с плечами. Пришлёшь своё видео — положу рядом с этим шагом."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": [
+      "add_cue",
+      "add_cue"
+    ],
+    "cue": {
+      "subject_id": "push-ups",
+      "surface": "do-time",
+      "kind": "correction",
+      "text_contains": [
+        "локт",
+        "45"
+      ]
+    }
+  }
+}

@@ -32,6 +32,11 @@ class GoldenExpectCue(BaseModel):
     step_id: str | None = None
     quote: str | None = None
     text_contains: list[str] = Field(default_factory=list)
+    # The link the cue must carry, spelled out so the golden itself says which
+    # URL landed — and it is the person's, character for character ([06] #23).
+    # Left out means the cue carries no media, which is the ordinary case: a
+    # step has to be doable without one ([04] Cue).
+    media_url: str | None = None
 
 
 class GoldenExpectCadence(BaseModel):

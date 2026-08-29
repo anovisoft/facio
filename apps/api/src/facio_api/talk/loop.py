@@ -48,6 +48,18 @@ SELECTION_ORPHAN = (
 # `surface_required` is, and the turn writes itself right on the next round.
 # Never filled in from the selection behind the model's back (never-do AI #2).
 QUOTE_REQUIRED = "quote_required"
+# A link on a cue may only be the one the person themselves put in the
+# conversation. «Model-invented image URLs — hallucinated links, dead hotlinks,
+# and a wrong picture on a movement is worse than none» is a named trap in 06
+# (#23), and a wish in the prompt is not a lock: the URL is **checked**. It has
+# to occur verbatim in what the person wrote — this utterance or their own
+# messages in the thread. It does not, the call comes back named, the way
+# `quote_required` and `surface_required` do, and the turn can write itself
+# right on the next round. Nothing is normalised, completed or looked up on the
+# model's behalf — repairing a URL for it would be the same silent desk edit as
+# filling in a quote (never-do AI #2). A malformed `media` is left to the law,
+# which names it `invalid_media`.
+MEDIA_NOT_IN_CONVERSATION = "media_not_in_conversation"
 LOCALE_LINE: dict[Locale, str] = {
     "ru": "The person writes in Russian: answer in Russian.",
     "en": "The person writes in English: answer in English.",
@@ -128,9 +140,10 @@ async def run_turn(
             first_complete = False
             messages.append(_assistant_tools(turn))
             for call in turn.tool_calls:
-                missing_quote = _selection_quote_missing(body, call.name, call.arguments)
-                if missing_quote:
+                if _selection_quote_missing(body, call.name, call.arguments):
                     ok, error, data = False, QUOTE_REQUIRED, None
+                elif _media_not_in_conversation(body, utterance, call.name, call.arguments):
+                    ok, error, data = False, MEDIA_NOT_IN_CONVERSATION, None
                 else:
                     outcome = apply_tool(
                         desk,
@@ -272,6 +285,42 @@ def _selection_quote_missing(
         return False
     quote = arguments.get("quote")
     return not (isinstance(quote, str) and quote.strip())
+
+
+def _human_words(body: TalkTurnRequest, utterance: str) -> list[str]:
+    """Everything in this turn that the **person** wrote.
+
+    The assistant's half of the thread is deliberately left out: a URL it
+    produced two rounds ago is precisely the invention this check exists to
+    catch, and letting the model quote itself would launder one.
+    """
+    rows = [utterance, body.utterance]
+    rows.extend(row.text for row in body.thread if row.role == "user")
+    return [row for row in rows if row]
+
+
+def _media_not_in_conversation(
+    body: TalkTurnRequest, utterance: str, name: str, arguments: dict[str, Any]
+) -> bool:
+    """A `link` whose URL is nowhere in the person's own words.
+
+    Verbatim means verbatim: the URL string is looked for as it was passed, with
+    no trimming, no case folding and no scheme guessing. A URL that has to be
+    repaired to match was not the one the person sent. `photo` is not checked
+    here — its `ref` is a handle the client hands over with the picture, not
+    something the model can hallucinate into a working image; the day an
+    attachment path exists, that ref is checked against the client, not the text.
+    """
+    if name != "add_cue":
+        return False
+    media = arguments.get("media")
+    if not isinstance(media, dict) or media.get("kind") != "link":
+        return False
+    url = media.get("url")
+    if not isinstance(url, str) or not url.strip():
+        # Shapeless media is the law's to refuse, by its own field name.
+        return False
+    return not any(url in row for row in _human_words(body, utterance))
 
 
 def selection_line(body: TalkTurnRequest) -> str:

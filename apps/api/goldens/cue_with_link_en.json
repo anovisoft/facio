@@ -1,0 +1,55 @@
+{
+  "id": "cue_with_link_en",
+  "utterance": "here is a video of that movement: https://youtu.be/7bK2mZq1Rf4 — what does \"negative reps\" mean?",
+  "match": [
+    "youtu.be/7bK2mZq1Rf4"
+  ],
+  "selection": {
+    "quote": "negative reps",
+    "widget_id": "push-ups-counter",
+    "step_id": "rep-1"
+  },
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "add_cue",
+          "arguments": {
+            "id": "push-ups-negatives-en-talk",
+            "subject_id": "push-ups",
+            "step_id": "rep-1",
+            "kind": "clarification",
+            "text": "lower yourself slowly, three or four seconds down, up however you can",
+            "surface": "on-demand",
+            "quote": "negative reps",
+            "media": {
+              "kind": "link",
+              "url": "https://youtu.be/7bK2mZq1Rf4"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "text": "It is the slow way down: three or four seconds lowering, then up however you can. Your video sits with that step now."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": [
+      "add_cue"
+    ],
+    "cue": {
+      "subject_id": "push-ups",
+      "surface": "on-demand",
+      "kind": "clarification",
+      "step_id": "rep-1",
+      "quote": "negative reps",
+      "text_contains": [
+        "lower",
+        "seconds"
+      ],
+      "media_url": "https://youtu.be/7bK2mZq1Rf4"
+    }
+  }
+}

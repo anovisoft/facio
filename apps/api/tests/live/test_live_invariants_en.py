@@ -10,6 +10,7 @@ from facio_domain.desk import founding_desk
 from facio_domain.models import CueKind, CueSurface, Desk, SubjectStatus, WidgetType
 from facio_domain.tools import times_per_week
 
+from facio_api.talk.loop import MEDIA_NOT_IN_CONVERSATION
 from facio_api.talk.schemas import TalkSelection, TalkTurnResponse
 
 pytestmark = pytest.mark.live
@@ -330,3 +331,66 @@ async def test_live_a_plain_practice_en_does_not_become_a_stepper(live_play_en) 
     result = await live_play_en("put the gym on the desk")
     assert result.mutated is True
     assert not [row for row in result.desk.widgets if row.type == WidgetType.stepper]
+
+
+# --- R6: one media on a cue, live, in English -----------------------------
+#
+# Same two locks as the Russian half: her link rides the cue character for
+# character, and a URL she never wrote never reaches the desk ([06] #23).
+
+HER_LINK_EN = "https://youtu.be/7bK2mZq1Rf4"
+HER_LINK_UTTERANCE_EN = (
+    f"here is a video of that movement: {HER_LINK_EN} — what does \"negative reps\" mean?"
+)
+NO_LINK_UTTERANCE_EN = "how do I know I am doing push-ups right?"
+
+
+def _link_cues(result: TalkTurnResponse) -> list:
+    return [row for row in result.desk.cues if row.media is not None and row.media.kind == "link"]
+
+
+def _invented(result: TalkTurnResponse, words: str) -> list[str]:
+    """Every URL the model tried to write that is not in the person's words."""
+    urls: list[str] = []
+    for call in result.tool_calls:
+        media = call.arguments.get("media")
+        if not isinstance(media, dict) or media.get("kind") != "link":
+            continue
+        url = media.get("url")
+        if isinstance(url, str) and url not in words:
+            urls.append(url)
+    return urls
+
+
+async def test_live_the_link_she_sent_rides_her_cue_unchanged_en(live_play_en) -> None:
+    result = await live_play_en(
+        HER_LINK_UTTERANCE_EN,
+        TalkSelection(quote="negative reps", widget_id="push-ups-counter", step_id="rep-1"),
+    )
+    assert _invented(result, HER_LINK_UTTERANCE_EN) == [], _invented(result, HER_LINK_UTTERANCE_EN)
+    for row in result.desk.cues:
+        if row.media is not None and row.media.kind == "link":
+            assert row.media.url in HER_LINK_UTTERANCE_EN, row.media.url
+    carried = _link_cues(result)
+    assert carried, _names(result)
+    assert all(row.media.url == HER_LINK_EN for row in carried), [row.media.url for row in carried]
+    assert all(row.surface == CueSurface.on_demand for row in carried), [row.surface for row in carried]
+    brace = next(row for row in result.desk.cues if row.id == "push-ups-brace")
+    assert brace.surface == CueSurface.do_time
+    assert brace.media is None
+    assert result.text
+
+
+async def test_live_no_link_in_the_conversation_means_no_link_on_the_desk_en(live_play_en) -> None:
+    """She asked about form and sent nothing. A video we sourced for her is the
+    trap; an empty `media` is the right answer, and the step works without one."""
+    result = await live_play_en(NO_LINK_UTTERANCE_EN)
+    # Printed, not just asserted: a refused invention passes silently otherwise.
+    print(f"[R6 en no-link] invented={_invented(result, NO_LINK_UTTERANCE_EN)}")
+    assert _link_cues(result) == [], [row.media.url for row in _link_cues(result)]
+    for call in result.tool_calls:
+        media = call.arguments.get("media")
+        if isinstance(media, dict) and media.get("kind") == "link":
+            assert call.ok is False
+            assert call.error == MEDIA_NOT_IN_CONVERSATION
+    assert all(row.media is None for row in result.desk.cues)

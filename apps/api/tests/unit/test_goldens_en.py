@@ -13,7 +13,7 @@ from facio_domain.tools import RUNNABLE_TYPES, apply_tool, times_per_week
 from facio_api.providers.scripted import ScriptedProvider
 from facio_api.providers.types import ModelToolCall, ModelTurn
 from facio_api.talk.goldens import Golden, load_goldens, match_golden
-from facio_api.talk.loop import run_turn
+from facio_api.talk.loop import MEDIA_NOT_IN_CONVERSATION, run_turn
 from facio_api.talk.spec import SYSTEM_PROMPT
 from facio_api.talk.schemas import TalkSelection, TalkTurnRequest
 
@@ -26,6 +26,8 @@ RUSSIAN_IDS = {
     "checklist_shopping",
     "clarification_orphan",
     "clarification_selection",
+    "cue_link_invented",
+    "cue_with_link",
     "drift_answer",
     "explain_only",
     "gym_no_clock",
@@ -482,6 +484,75 @@ async def test_clarification_orphan_en_stays_text_only() -> None:
     assert result.snapshots == []
     assert result.desk.cues == before.cues
     assert result.text
+
+
+# --- R6: one media on a cue, and only the person's own link ---------------
+
+
+async def test_a_link_the_person_sent_rides_the_cue_unchanged_en() -> None:
+    """The English half of Q33: her video, her step, character for character."""
+    golden = match_golden("here is a video of that movement: https://youtu.be/7bK2mZq1Rf4")
+    assert golden is not None
+    assert golden.id == "cue_with_link_en"
+    assert golden.selection is not None
+    result = await _play_golden(golden)
+    assert result.mutated is True
+    assert _names(result) == golden.expect.tools
+    expected = golden.expect.cue
+    assert expected is not None
+    assert expected.media_url is not None
+    cue = next(row for row in result.desk.cues if row.id == "push-ups-negatives-en-talk")
+    assert cue.kind == CueKind.clarification
+    # Media rides its cue's surface: behind the «?», never inline at do-time (04).
+    assert cue.surface == CueSurface.on_demand
+    assert cue.quote == golden.selection.quote
+    assert cue.media is not None
+    assert cue.media.kind == "link"
+    assert cue.media.url == expected.media_url
+    assert cue.media.url in golden.utterance
+    brace = next(row for row in result.desk.cues if row.id == "push-ups-brace")
+    assert brace.surface == CueSurface.do_time
+    assert brace.media is None
+
+
+async def test_an_invented_link_is_refused_and_the_desk_stays_clean_en() -> None:
+    """Same lock on the English half: a URL nobody wrote never reaches the desk."""
+    golden = match_golden("how do I know I am doing push-ups right?")
+    assert golden is not None
+    assert golden.id == "cue_link_invented_en"
+    assert golden.expect.cue is not None
+    assert golden.expect.cue.media_url is None
+    result = await _play(golden.utterance)
+    assert _names(result) == golden.expect.tools
+    first, second = result.tool_calls
+    assert first.ok is False
+    assert first.error == MEDIA_NOT_IN_CONVERSATION
+    assert first.arguments["media"]["url"] not in golden.utterance
+    assert second.ok is True
+    assert all(row.id != "push-ups-form-link-en-talk" for row in result.desk.cues)
+    landed = next(row for row in result.desk.cues if row.id == "push-ups-form-en-talk")
+    assert landed.media is None
+    assert landed.surface == CueSurface.do_time
+    assert all(row.media is None for row in result.desk.cues)
+    assert result.mutated is True
+
+
+def test_the_media_bullet_is_bilingual_and_refuses_rather_than_asks() -> None:
+    """A wish is not a lock: the bullet names the refusal, and it says in both
+    halves that nothing is searched for or supplied on the person's behalf
+    ([06] #23 and its trap table)."""
+    bullet = next(
+        row for row in SYSTEM_PROMPT.splitlines() if row.startswith("- Media on a cue")
+    )
+    assert "media_not_in_conversation" in bullet
+    assert "character for character" in bullet
+    assert "At most one item" in bullet
+    assert "вот видео" in bullet
+    assert "here is a video" in bullet
+    for needle in ("Do not search for a video", "do not offer one of yours"):
+        assert needle in bullet, needle
+    # No library, no catalogue: the only photo is the person's own.
+    assert "kind photo, ref" in bullet
 
 
 # --- R4: the answer to drift only ever goes down ---------------------------
