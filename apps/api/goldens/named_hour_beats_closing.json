@@ -1,7 +1,9 @@
 {
   "id": "named_hour_beats_closing",
   "utterance": "к 23 он уже закрывается. Напоминай мне пойти в зал в 19 часов",
-  "match": ["к 23 он уже закрывается"],
+  "match": [
+    "к 23 он уже закрывается"
+  ],
   "scripted": [
     {
       "tool_calls": [
@@ -10,7 +12,11 @@
           "arguments": {
             "type": "reminder",
             "title": "зал",
-            "subject_id": "gym"
+            "subject_id": "gym",
+            "cadence": {
+              "count": 2,
+              "period": "week"
+            }
           }
         }
       ]
@@ -28,11 +34,18 @@
       ]
     },
     {
-      "text": "Напомню в 19:00. До 23 — дверь зала, не 20:00."
+      "text": "Напомню в 19:00, дважды в неделю. Скажи, если ходишь чаще."
     }
   ],
   "expect": {
     "mutated": true,
-    "tools": ["create_widget", "set_reminder"]
+    "tools": [
+      "create_widget",
+      "set_reminder"
+    ],
+    "cadence": {
+      "count": 2,
+      "period": "week"
+    }
   }
 }

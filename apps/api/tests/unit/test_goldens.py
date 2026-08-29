@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, time
 
 from facio_domain.desk import founding_desk
-from facio_domain.models import CueSurface, Desk, SubjectStatus, WidgetType
+from facio_domain.models import CueKind, CueSurface, Desk, SubjectStatus, WidgetType
 from facio_domain.tools import apply_tool, times_per_week
 
 from facio_api.providers.scripted import ScriptedProvider
@@ -135,6 +135,11 @@ async def test_method_4_to_30_writes_current_and_cue() -> None:
     assert times_per_week(push.cadence) <= 3
     cue = next(row for row in result.desk.cues if row.subject_id == "push-ups" and row.id.endswith("talk"))
     assert cue.surface == CueSurface.do_time
+    # The method changes *how* it is done: correction at do-time, not an
+    # explanation filed behind a «?» ([04] Cue defaults).
+    assert golden.expect.cue is not None
+    assert golden.expect.cue.kind == "correction"
+    assert cue.kind == CueKind.correction
     assert cue.text != SEED_BRACE
     for needle in golden.expect.cue.text_contains if golden.expect.cue else []:
         assert needle in cue.text
@@ -160,6 +165,13 @@ async def test_gym_no_clock_creates_counter_without_reminder() -> None:
         row for row in result.desk.widgets if row.subject_id == subject_id and row.type == WidgetType.reminder
     ]
     assert reminders == []
+    # No hour — still a rhythm. A practice without one is a planner line (06 #14).
+    assert golden.expect.cadence is not None
+    assert create.arguments["cadence"]["period"] == golden.expect.cadence.period
+    gym = _subject(result.desk, subject_id)
+    assert gym.cadence.period == golden.expect.cadence.period
+    assert gym.cadence.count == golden.expect.cadence.count
+    assert times_per_week(gym.cadence) >= 1
     bike = _subject(result.desk, "bike")
     assert bike.window is not None
     assert bike.window.latest_by == time(19, 0)

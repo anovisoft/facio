@@ -10,18 +10,26 @@
           "arguments": {
             "type": "counter",
             "title": "зал",
-            "subject_id": "gym"
+            "subject_id": "gym",
+            "cadence": {
+              "count": 2,
+              "period": "week"
+            }
           }
         }
       ]
     },
     {
-      "text": "Записал зал на стол. Час не ставлю — не просил."
+      "text": "Зал на столе, дважды в неделю. Столько ходишь или чаще?"
     }
   ],
   "expect": {
     "mutated": true,
     "tools": ["create_widget"],
-    "forbidden_tools": ["set_reminder"]
+    "forbidden_tools": ["set_reminder"],
+    "cadence": {
+      "count": 2,
+      "period": "week"
+    }
   }
 }

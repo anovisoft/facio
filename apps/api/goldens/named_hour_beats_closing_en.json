@@ -12,7 +12,11 @@
           "arguments": {
             "type": "reminder",
             "title": "gym",
-            "subject_id": "gym"
+            "subject_id": "gym",
+            "cadence": {
+              "count": 2,
+              "period": "week"
+            }
           }
         }
       ]
@@ -30,7 +34,7 @@
       ]
     },
     {
-      "text": "I will nudge you at 19:00. The 23 is the gym door, not 20:00."
+      "text": "I will nudge you at 19:00, twice a week. Say the word if you go more often."
     }
   ],
   "expect": {
@@ -38,6 +42,10 @@
     "tools": [
       "create_widget",
       "set_reminder"
-    ]
+    ],
+    "cadence": {
+      "count": 2,
+      "period": "week"
+    }
   }
 }

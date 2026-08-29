@@ -1,7 +1,9 @@
 {
   "id": "gym_until_22",
   "utterance": "зал до 22",
-  "match": ["зал до 22"],
+  "match": [
+    "зал до 22"
+  ],
   "scripted": [
     {
       "tool_calls": [
@@ -15,11 +17,13 @@
       ]
     },
     {
-      "text": "Зал до 22 — окно само даст 19:00."
+      "text": "Зал закрывается в 22. Напомню в 19:00 — успеешь дойти."
     }
   ],
   "expect": {
     "mutated": true,
-    "tools": ["set_reminder"]
+    "tools": [
+      "set_reminder"
+    ]
   }
 }

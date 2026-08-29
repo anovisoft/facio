@@ -6,7 +6,7 @@ from datetime import time
 
 import pytest
 
-from facio_domain.models import CueSurface, Desk, SubjectStatus, WidgetType
+from facio_domain.models import CueKind, CueSurface, Desk, SubjectStatus, WidgetType
 from facio_domain.tools import times_per_week
 
 from facio_api.talk.schemas import TalkTurnResponse
@@ -68,7 +68,10 @@ async def test_method_4_to_30_lands_current_and_cue(live_play_en) -> None:
         and row.text != SEED_BRACE
         and row.text != FOUNDING_BRACE
     ]
+    # The progression changes how it is done — a correction seen at rep one, not
+    # a clarification filed behind a «?» ([04] Cue defaults).
     assert method_cues
+    assert all(row.kind == CueKind.correction for row in method_cues)
     assert result.snapshots
     assert result.text
     _assert_english(result)
@@ -83,15 +86,23 @@ async def test_gym_no_clock_creates_counter_without_reminder(live_play_en) -> No
         call
         for call in result.tool_calls
         if call.name == "create_widget"
+        and call.ok
         and call.arguments.get("type") == "counter"
         and call.arguments.get("subject_id") not in FOUNDING_IDS
     ]
-    assert created, names
-    subject_id = created[0].arguments["subject_id"]
+    # A refusal leaves the desk untouched, so only a call that landed counts.
+    assert created, [(call.name, call.error) for call in result.tool_calls]
+    subject_id = created[-1].arguments["subject_id"]
     reminders = [
         row for row in result.desk.widgets if row.subject_id == subject_id and row.type == WidgetType.reminder
     ]
     assert reminders == []
+    # A new practice arrives with a rhythm named in the same call ([06] #14).
+    # `none` is legal for a one-off; a gym is not one.
+    assert isinstance(created[-1].arguments.get("cadence"), dict), created[-1].arguments
+    gym = _subject(result.desk, subject_id)
+    assert gym.cadence.period in {"day", "week"}, gym.cadence
+    assert times_per_week(gym.cadence) >= 1
     bike = _subject(result.desk, "bike")
     assert bike.window is not None
     assert bike.window.latest_by == time(19, 0)

@@ -7,7 +7,7 @@ from datetime import datetime, time
 import pytest
 
 from facio_domain.desk import founding_desk
-from facio_domain.models import CueSurface, Desk, SubjectStatus, WidgetType
+from facio_domain.models import CueKind, CueSurface, Desk, SubjectStatus, WidgetType
 from facio_domain.tools import apply_tool, times_per_week
 
 from facio_api.providers.scripted import ScriptedProvider
@@ -99,6 +99,46 @@ def test_needles_never_overlap() -> None:
 
 
 @pytest.mark.parametrize("golden", load_goldens(), ids=lambda row: row.id)
+def test_a_golden_that_creates_a_practice_names_its_rhythm(golden: Golden) -> None:
+    """A new subject arrives with a cadence or it does not arrive ([06] #14)."""
+    for turn in golden.scripted:
+        for call in turn.tool_calls:
+            if call.name != "create_widget":
+                continue
+            if call.arguments.get("subject_id") in FOUNDING_IDS:
+                continue
+            cadence = call.arguments.get("cadence")
+            assert isinstance(cadence, dict), golden.id
+            assert cadence.get("period") in {"day", "week", "none"}, golden.id
+
+
+# Phrases that are never a human answer — they are our own rules and arithmetic
+# read back to the person. The first lock of the prompt forbids exactly this.
+RULE_LEAKS = (
+    "не просил",
+    "did not ask",
+    "не трогаю",
+    "leaving the hour alone",
+    "окно само",
+    "window itself",
+    "не вычита",
+    "not subtracting",
+    "не новая команда",
+    "not a new command",
+    "не 20:00",
+    "not 20:00",
+)
+
+
+@pytest.mark.parametrize("golden", load_goldens(), ids=lambda row: row.id)
+def test_no_golden_reads_our_rules_back_to_the_person(golden: Golden) -> None:
+    for turn in golden.scripted:
+        text = (turn.text or "").casefold()
+        leaked = [needle for needle in RULE_LEAKS if needle in text]
+        assert leaked == [], f"{golden.id}: {leaked}"
+
+
+@pytest.mark.parametrize("golden", load_goldens(), ids=lambda row: row.id)
 def test_each_utterance_and_needle_routes_home(golden: Golden) -> None:
     assert match_golden(golden.utterance) is not None
     assert match_golden(golden.utterance).id == golden.id
@@ -184,6 +224,11 @@ async def test_method_4_to_30_en_writes_current_and_cue() -> None:
     assert times_per_week(push.cadence) <= 3
     cue = next(row for row in result.desk.cues if row.subject_id == "push-ups" and row.id.endswith("en-talk"))
     assert cue.surface == CueSurface.do_time
+    # The method changes *how* it is done: correction at do-time, not an
+    # explanation filed behind a «?» ([04] Cue defaults).
+    assert golden.expect.cue is not None
+    assert golden.expect.cue.kind == "correction"
+    assert cue.kind == CueKind.correction
     assert cue.text != FOUNDING_BRACE
     for needle in golden.expect.cue.text_contains if golden.expect.cue else []:
         assert needle in cue.text
@@ -208,6 +253,12 @@ async def test_gym_no_clock_en_creates_counter_without_reminder() -> None:
         row for row in result.desk.widgets if row.subject_id == subject_id and row.type == WidgetType.reminder
     ]
     assert reminders == []
+    assert golden.expect.cadence is not None
+    assert create.arguments["cadence"]["period"] == golden.expect.cadence.period
+    gym = _subject(result.desk, subject_id)
+    assert gym.cadence.period == golden.expect.cadence.period
+    assert gym.cadence.count == golden.expect.cadence.count
+    assert times_per_week(gym.cadence) >= 1
     bike = _subject(result.desk, "bike")
     assert bike.window is not None
     assert bike.window.latest_by == time(19, 0)

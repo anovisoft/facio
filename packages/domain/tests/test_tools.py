@@ -9,6 +9,7 @@ from facio_domain.desk import founding_desk
 from facio_domain.models import CueOrigin, CueSurface, SubjectStatus, WidgetStatus, WidgetType
 from facio_domain.pain import reports_pain
 from facio_domain.tools import (
+    CADENCE_REQUIRED,
     INVALID,
     INVALID_KIND,
     INVALID_SURFACE,
@@ -243,12 +244,132 @@ def test_create_widget_empty_type_is_rejected(widget_type: str) -> None:
     assert {row.id for row in outcome.desk.subjects} == subject_ids
 
 
+def test_create_widget_on_a_new_subject_without_cadence_is_refused() -> None:
+    """A practice with no rhythm is a planner line (06 #14). Refuse, do not guess."""
+    desk = founding_desk(now=NOW)
+    subject_ids = {row.id for row in desk.subjects}
+    widget_count = len(desk.widgets)
+    instance_count = len(desk.instances)
+    outcome = _apply(
+        desk,
+        "create_widget",
+        {"type": "counter", "title": "зал", "subject_id": "gym-no-cadence"},
+    )
+    assert outcome.ok is False
+    assert outcome.mutated is False
+    assert outcome.error == CADENCE_REQUIRED
+    assert outcome.desk is desk
+    assert {row.id for row in outcome.desk.subjects} == subject_ids
+    assert len(outcome.desk.widgets) == widget_count
+    assert len(outcome.desk.instances) == instance_count
+
+
+@pytest.mark.parametrize(
+    "cadence",
+    [
+        pytest.param({}, id="empty-object"),
+        pytest.param({"count": 2}, id="count-without-period"),
+        pytest.param("2 раза в неделю", id="prose-instead-of-a-rhythm"),
+        pytest.param(None, id="explicit-null"),
+    ],
+)
+def test_create_widget_half_named_cadence_is_still_refused(cadence: object) -> None:
+    """Half a rhythm is not a rhythm. The law never fills in the missing half."""
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "create_widget",
+        {"type": "counter", "title": "зал", "subject_id": "gym-half", "cadence": cadence},
+    )
+    assert outcome.ok is False
+    assert outcome.mutated is False
+    assert outcome.error == CADENCE_REQUIRED
+    assert "gym-half" not in {row.id for row in outcome.desk.subjects}
+
+
+def test_create_widget_writes_the_named_cadence() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "create_widget",
+        {
+            "type": "counter",
+            "title": "зал",
+            "subject_id": "gym-twice",
+            "cadence": {"count": 2, "period": "week"},
+        },
+    )
+    assert outcome.ok
+    assert outcome.mutated is True
+    subject = next(row for row in outcome.desk.subjects if row.id == "gym-twice")
+    assert subject.cadence.count == 2
+    assert subject.cadence.period == "week"
+    assert times_per_week(subject.cadence) == 2
+
+
+def test_create_widget_accepts_an_explicit_none_cadence() -> None:
+    """A one-off is legal — `none` said out loud is not the same as `none` inherited."""
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "create_widget",
+        {
+            "type": "tick",
+            "title": "поменять права",
+            "subject_id": "licence-once",
+            "cadence": {"period": "none"},
+        },
+    )
+    assert outcome.ok
+    subject = next(row for row in outcome.desk.subjects if row.id == "licence-once")
+    assert subject.cadence.period == "none"
+    assert subject.cadence.count is None
+
+
+def test_create_widget_on_an_existing_subject_needs_no_cadence() -> None:
+    """The rhythm already stands; a second widget does not ask for it again."""
+    desk = founding_desk(now=NOW)
+    before = next(row.cadence for row in desk.subjects if row.id == "push-ups")
+    outcome = _apply(
+        desk,
+        "create_widget",
+        {"type": "tick", "title": "отжимания", "subject_id": "push-ups"},
+    )
+    assert outcome.ok
+    assert outcome.mutated is True
+    after = next(row.cadence for row in outcome.desk.subjects if row.id == "push-ups")
+    assert after == before
+
+
+def test_create_widget_bad_cadence_period_is_invalid_not_a_guess() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "create_widget",
+        {
+            "type": "counter",
+            "title": "зал",
+            "subject_id": "gym-bad-period",
+            "cadence": {"count": 2, "period": "month"},
+        },
+    )
+    assert outcome.ok is False
+    assert outcome.error == INVALID
+    assert "gym-bad-period" not in {row.id for row in outcome.desk.subjects}
+
+
 def test_create_widget_counter_on_new_subject_does_not_spawn_reminder() -> None:
     desk = founding_desk(now=NOW)
     outcome = _apply(
         desk,
         "create_widget",
-        {"type": "counter", "title": "зал", "subject_id": "gym-counter-new", "target": 30},
+        {
+            "type": "counter",
+            "title": "зал",
+            "subject_id": "gym-counter-new",
+            "target": 30,
+            "cadence": {"count": 2, "period": "week"},
+        },
     )
     assert outcome.ok
     widgets = [row for row in outcome.desk.widgets if row.subject_id == "gym-counter-new"]
@@ -262,7 +383,12 @@ def test_create_widget_tick_on_new_subject_does_not_spawn_reminder() -> None:
     outcome = _apply(
         desk,
         "create_widget",
-        {"type": "tick", "title": "овощи", "subject_id": "veg-tick-new"},
+        {
+            "type": "tick",
+            "title": "овощи",
+            "subject_id": "veg-tick-new",
+            "cadence": {"count": 1, "period": "day"},
+        },
     )
     assert outcome.ok
     widgets = [row for row in outcome.desk.widgets if row.subject_id == "veg-tick-new"]
@@ -306,7 +432,12 @@ def test_create_widget_reminder_is_allowed() -> None:
     outcome = _apply(
         desk,
         "create_widget",
-        {"type": "reminder", "title": "час", "subject_id": "nap-reminder-new"},
+        {
+            "type": "reminder",
+            "title": "час",
+            "subject_id": "nap-reminder-new",
+            "cadence": {"count": 1, "period": "day"},
+        },
     )
     assert outcome.ok
     widgets = [row for row in outcome.desk.widgets if row.subject_id == "nap-reminder-new"]
@@ -353,7 +484,12 @@ def test_set_reminder_closing_only_without_hour_uses_formula() -> None:
     created = _apply(
         desk,
         "create_widget",
-        {"type": "counter", "title": "зал", "subject_id": "gym"},
+        {
+            "type": "counter",
+            "title": "зал",
+            "subject_id": "gym",
+            "cadence": {"count": 2, "period": "week"},
+        },
     )
     outcome = _apply(created.desk, "set_reminder", {"subject_id": "gym", "closes_at": "22:00"})
     assert outcome.ok
@@ -361,6 +497,31 @@ def test_set_reminder_closing_only_without_hour_uses_formula() -> None:
     assert window is not None
     assert window.latest_by == time(19, 0)
     assert window.closes_at == time(22, 0)
+
+
+def test_counter_without_a_goal_draws_no_goal() -> None:
+    """«0 / 0» is a target nobody named. No goal — just the number."""
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "create_widget",
+        {
+            "type": "counter",
+            "title": "зал",
+            "subject_id": "gym-line",
+            "cadence": {"count": 2, "period": "week"},
+        },
+    )
+    assert outcome.ok
+    cards = snapshot_cards(outcome.desk, outcome.snapshot_widget_ids)
+    assert cards[0]["line"] == "0"
+    assert "/" not in cards[0]["line"]
+
+
+def test_counter_with_a_goal_still_draws_the_pair() -> None:
+    desk = founding_desk(now=NOW)
+    cards = snapshot_cards(desk, ["push-ups-counter"])
+    assert cards[0]["line"].startswith("28 / 30")
 
 
 def test_freeze_snapshot_says_paused() -> None:

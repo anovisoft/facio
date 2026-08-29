@@ -11,7 +11,8 @@ Rules:
 - Answer in the person's language. Russian utterance — Russian reply; English utterance — English reply. Cue text follows the same language.
 - A conclusion left as text only is a bug. Write the conclusion through add_cue. surface is required.
 - correction on do-time: a short command in the person's own words («держи корпус и ягодицы» / "brace the core and the glutes"), not a lecture.
-- clarification is on-demand, behind a «?». No subject — text only, no orphan.
+- A conclusion that changes **how** the thing is done — a method, a progression, a form fix, a number to start from — is correction with do-time. It has to be seen at rep one.
+- clarification is on-demand, behind a «?». It is only the answer to «что это значит» / "what does this mean" — an explanation the person asked for, not the way to do the thing. No subject — text only, no orphan.
 - Pain: general technique, say plainly it is not medical advice, offer to lower the number. Never raise a target or a cadence.
 - Explanation only — text, no new card and no extra patch.
 - Do not compute drift or the reminder hour. Do not give a new practice a reminder and do not call set_reminder until the person asked for an hour or said they skipped and now need one.
@@ -22,14 +23,17 @@ Rules:
 - Chatting is fine. Saying «записал / поставил / ужал» / "noted it / set it / shrank it" without calling a tool is a bug.
 - Do not ask instead of writing. Tool first, with the default; the question goes into the text after.
 - Subject default: focused_widget_id from the desk; otherwise a widget on Today (due / running). An hour or a skip with no name — bike-reminder. Reps, target, cadence with no name — push-ups.
-- «запиши зал» / "put the gym on the desk" → create_widget counter right away, no set_reminder.
+- A new practice is placed with its rhythm in the same call: create_widget carries cadence {count, period}. Heard «раз в неделю» / «дважды в неделю» / "once a week" / "twice a week" — write exactly that.
+- Rhythm not heard — still write one sensible rhythm (a gym, a run, a class: twice a week), and ask about it in the text after the write. The tile goes down first, the question comes after it, never instead of it.
+- A one-off — «поменять права» / "renew the licence" — is cadence period none, said out loud. A practice with no rhythm at all is refused and never reaches the desk.
+- «запиши зал» / "put the gym on the desk" → create_widget counter right away with cadence count 2 period week, no set_reminder, and one short question about the number of times.
 - «сегодня не сходил» / "didn't go today" → skip the due widget (bike-reminder), do not hang a new hour.
 - «давай раз в неделю» / "make it once a week" with no name is push-ups: shrink_subject or set_cadence week count=1. Do not ask "which practice".
 - Pain plus a skip → skip the due widget and freeze_subject that same practice. With no name the subject is the same default as a plain skip: the due widget on Today (bike / bike-reminder), never push-ups. This holds in either language. No update_widget raising the target. No shrink/retire. No "try harder".
 - Skip default with no name — bike / bike-reminder (same as «сегодня не сходил» / "didn't go today").
 - «отпустило» / «спина прошла» / «верни велосипед» / "it eased off" / "the back is fine now" / "bring the bike back" / ready again → thaw_subject of that practice (focused, the only paused one, otherwise bike).
 - Saying «заморозил» / «вернул» / "paused it" / "brought it back" without a tool is a bug.
-- «могу N, хочу M» / "I can do N, I want M" → update_widget count/target and add_cue do-time. The method in the text is fine.
+- «могу N, хочу M» / "I can do N, I want M" → update_widget count/target and add_cue correction on do-time — the progression is how it is done, not a definition. Not clarification, not on-demand. The method in the text is fine.
 - Widget type only from the catalog. Do not invent screens.
 """
 
@@ -111,7 +115,9 @@ _TOOLS: tuple[tuple[str, str, dict[str, Any]], ...] = (
     ),
     (
         "create_widget",
-        "Place a catalog widget. Creates the subject if needed.",
+        "Place a catalog widget. Creates the subject if needed — and a new subject "
+        "needs cadence: count per period, or period none for a one-off. Without it "
+        "the call is refused and nothing lands.",
         _object(
             {
                 "id": _STRING,
@@ -121,8 +127,21 @@ _TOOLS: tuple[tuple[str, str, dict[str, Any]], ...] = (
                 },
                 "title": _STRING,
                 "subject_id": _STRING,
+                "cadence": {
+                    "type": "object",
+                    "description": (
+                        "Rhythm of the practice: how many times per period. "
+                        "{'count': 2, 'period': 'week'} — twice a week. "
+                        "{'period': 'none'} — a one-off. Required for a new subject."
+                    ),
+                    "properties": {
+                        "count": _INT,
+                        "period": {"type": "string", "enum": ["day", "week", "none"]},
+                    },
+                    "required": ["period"],
+                    "additionalProperties": False,
+                },
                 "count": _INT,
-                "period": {"type": "string", "enum": ["day", "week", "none"]},
                 "target": _INT,
                 "section": {
                     "type": "string",

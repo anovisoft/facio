@@ -22,7 +22,7 @@
       ]
     },
     {
-      "text": "The bike is on pause. I am not raising the goal. Tell me when it eases off."
+      "text": "The bike is on pause. Tell me when it eases off."
     }
   ],
   "expect": {

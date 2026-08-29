@@ -12,13 +12,17 @@
           "arguments": {
             "type": "counter",
             "title": "gym",
-            "subject_id": "gym"
+            "subject_id": "gym",
+            "cadence": {
+              "count": 2,
+              "period": "week"
+            }
           }
         }
       ]
     },
     {
-      "text": "The gym is on the desk. No hour: you did not ask for one."
+      "text": "The gym is on the desk, twice a week. Is that how often you go, or more?"
     }
   ],
   "expect": {
@@ -28,6 +32,10 @@
     ],
     "forbidden_tools": [
       "set_reminder"
-    ]
+    ],
+    "cadence": {
+      "count": 2,
+      "period": "week"
+    }
   }
 }

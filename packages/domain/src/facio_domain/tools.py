@@ -59,6 +59,12 @@ TOOL_NAMES = (
 
 PAIN_FORBIDS_RAISE = "pain_forbids_raise"
 SURFACE_REQUIRED = "surface_required"
+# The same thought as `surface_required`: a cue with nowhere to appear is not a
+# cue, and a practice with no rhythm is not a practice — it is a daily planner
+# entry (06 never-do #14). `none` is a legal cadence for a one-off, but it must
+# be said, not inherited from a default (05: an intent becomes a subject *with a
+# cadence*). Guessing a rhythm for the person would be a silent desk rewrite.
+CADENCE_REQUIRED = "cadence_required"
 UNKNOWN_TOOL = "unknown_tool"
 NOT_FOUND = "not_found"
 INVALID = "invalid"
@@ -176,6 +182,18 @@ def _cadence_from_args(args: dict[str, Any], *, fallback: Cadence) -> Cadence:
         raise ToolFail(INVALID) from error
 
 
+def _cadence_for_new_subject(args: dict[str, Any]) -> Cadence:
+    """A new subject needs a rhythm named out loud. No default is substituted.
+
+    `{"period": "none"}` is accepted — a one-off is a legal practice ([04] «a
+    finished thing»). What is refused is the *absence* of the argument.
+    """
+    raw = args.get("cadence")
+    if not isinstance(raw, dict) or raw.get("period") is None:
+        raise ToolFail(CADENCE_REQUIRED)
+    return _cadence_from_args(raw, fallback=Cadence.none())
+
+
 def _goal_for(desk: Desk, widget: Widget) -> int:
     subject = _subject(desk, widget.subject_id)
     if subject is not None and subject.target is not None:
@@ -258,9 +276,10 @@ def _snapshot_line(desk: Desk, widget: Widget) -> str:
         return "на паузе"
     if widget.type == WidgetType.counter:
         count = widget.payload.count or 0
-        target = widget.payload.target or 0
+        target = widget.payload.target
         cue = _do_time_cue(desk, widget.subject_id)
-        base = f"{count} / {target}"
+        # No goal — no goal drawn. «0 / 0» is a target the person never named.
+        base = f"{count} / {target}" if target else f"{count}"
         return f"{base} · {cue.text}" if cue else base
     if widget.type == WidgetType.tick:
         return "готово" if widget.payload.done or widget.status == WidgetStatus.done else "не сделано"
@@ -430,7 +449,7 @@ def _create_widget(desk: Desk, args: dict[str, Any], *, now: datetime, **_: Any)
         raise ToolFail(UNSUPPORTED_WIDGET_TYPE)
     subject = _subject(desk, subject_id)
     if subject is None:
-        cadence = _cadence_from_args(args, fallback=Cadence.none())
+        cadence = _cadence_for_new_subject(args)
         subject = Subject(id=subject_id, title=title, cadence=cadence)
         desk.subjects.append(subject)
     instance_id = _new_id(f"{subject_id}-open")

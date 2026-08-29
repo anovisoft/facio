@@ -59,6 +59,7 @@
     "times_per_week_max": 3,
     "cue": {
       "subject_id": "push-ups",
+      "kind": "correction",
       "surface": "do-time",
       "text_contains": [
         "clean",

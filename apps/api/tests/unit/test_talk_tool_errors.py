@@ -13,7 +13,7 @@ from typing import Any
 
 from facio_domain.desk import founding_desk
 from facio_domain.models import CueKind, CueSurface
-from facio_domain.tools import INVALID_KIND, INVALID_SURFACE
+from facio_domain.tools import CADENCE_REQUIRED, INVALID_KIND, INVALID_SURFACE
 
 from facio_api.providers.types import ModelToolCall, ModelTurn
 from facio_api.talk.loop import run_turn
@@ -102,6 +102,52 @@ async def test_the_refusal_reason_reaches_the_model_verbatim() -> None:
 
     payloads = _tool_payloads(provider.messages_at[1])
     assert payloads == [{"ok": False, "error": INVALID_KIND, "data": {}}]
+
+
+def _gym_call(call_id: str, cadence: dict[str, Any] | None) -> ModelToolCall:
+    arguments: dict[str, Any] = {"type": "counter", "title": "зал", "subject_id": "gym"}
+    if cadence is not None:
+        arguments["cadence"] = cadence
+    return ModelToolCall(id=call_id, name="create_widget", arguments=arguments)
+
+
+async def test_a_practice_with_no_rhythm_is_refused_then_the_retry_lands() -> None:
+    """The live hole: «зал» landed with `cadence: none` nobody asked for.
+
+    The law refuses instead of substituting a rhythm, names the missing field,
+    and the same turn gets a round to say one out loud.
+    """
+    provider = SequenceProvider(
+        [
+            ModelTurn(text=None, tool_calls=[_gym_call("call_1", None)]),
+            ModelTurn(text=None, tool_calls=[_gym_call("call_2", {"count": 2, "period": "week"})]),
+        ]
+    )
+    result = await run_turn(_request("запиши зал"), provider, now=NOW)
+
+    first, second = result.tool_calls
+    assert first.ok is False
+    assert first.error == CADENCE_REQUIRED
+    assert second.ok is True
+    assert result.mutated is True
+
+    payloads = _tool_payloads(provider.messages_at[1])
+    assert payloads == [{"ok": False, "error": CADENCE_REQUIRED, "data": {}}]
+
+    gym = next(row for row in result.desk.subjects if row.id == "gym")
+    assert gym.cadence.count == 2
+    assert gym.cadence.period == "week"
+
+
+async def test_a_refused_practice_leaves_no_half_written_subject() -> None:
+    provider = SequenceProvider([ModelTurn(text=None, tool_calls=[_gym_call("call_1", None)])])
+    result = await run_turn(_request("запиши зал"), provider, now=NOW)
+
+    assert result.mutated is False
+    assert result.tool_calls[0].error == CADENCE_REQUIRED
+    assert "gym" not in {row.id for row in result.desk.subjects}
+    assert not [row for row in result.desk.widgets if row.subject_id == "gym"]
+    assert result.snapshots == []
 
 
 async def test_a_bad_surface_names_the_surface_field_for_the_model() -> None:

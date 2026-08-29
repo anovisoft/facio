@@ -17,7 +17,7 @@
       ]
     },
     {
-      "text": "The gym shuts at 22, so the window itself gives 19:00."
+      "text": "The gym shuts at 22. I will nudge you at 19:00, that leaves you time to get there."
     }
   ],
   "expect": {

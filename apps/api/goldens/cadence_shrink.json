@@ -1,7 +1,9 @@
 {
   "id": "cadence_shrink",
   "utterance": "давай раз в неделю",
-  "match": ["давай раз в неделю"],
+  "match": [
+    "давай раз в неделю"
+  ],
   "scripted": [
     {
       "tool_calls": [
@@ -14,12 +16,14 @@
       ]
     },
     {
-      "text": "Ок, отжимания — раз в неделю. Цель не поднимаю."
+      "text": "Ок, отжимания — раз в неделю. Цель остаётся прежней."
     }
   ],
   "expect": {
     "mutated": true,
-    "tools": ["shrink_subject"],
+    "tools": [
+      "shrink_subject"
+    ],
     "target_goal_max": 30,
     "times_per_week_max": 1
   }

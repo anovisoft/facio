@@ -21,14 +21,32 @@ class ScriptedTurn(BaseModel):
 
 
 class GoldenExpectCue(BaseModel):
+    """`kind` is not decoration: a conclusion about *how* to do the thing is a
+    correction seen at do-time, an explanation is a clarification behind a `?`
+    ([04] Cue). The live model reached for `clarification` on a method."""
+
     subject_id: str
     surface: str
+    kind: str | None = None
     text_contains: list[str] = Field(default_factory=list)
+
+
+class GoldenExpectCadence(BaseModel):
+    """The rhythm the turn must put on the subject it creates.
+
+    A practice with no rhythm is a planner line, not a practice ([06] #14), so a
+    golden that places one says what the rhythm is — including `none` for a
+    one-off, which is legal but has to be named.
+    """
+
+    period: str
+    count: int | None = None
 
 
 class GoldenExpect(BaseModel):
     mutated: bool
     tools: list[str] = Field(default_factory=list)
+    cadence: GoldenExpectCadence | None = None
     snapshots_empty: bool | None = None
     target_goal_max: int | None = None
     target_current: int | None = None
