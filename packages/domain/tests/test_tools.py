@@ -1,12 +1,21 @@
 from __future__ import annotations
 
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 
 import pytest
 
 from facio_domain.cues import add_cue, default_surface
 from facio_domain.desk import founding_desk
-from facio_domain.models import CueKind, CueOrigin, CueSurface, SubjectStatus, WidgetStatus, WidgetType
+from facio_domain.drift import drift_card
+from facio_domain.models import (
+    CueKind,
+    CueOrigin,
+    CueSurface,
+    DriftOffer,
+    SubjectStatus,
+    WidgetStatus,
+    WidgetType,
+)
 from facio_domain import tools
 from facio_domain.pain import reports_pain
 from facio_domain.tools import (
@@ -734,3 +743,90 @@ def test_add_cue_never_lands_on_a_subject_that_is_not_there() -> None:
     assert outcome.error == NOT_FOUND
     assert outcome.desk == desk
     assert outcome.desk.cues == founding_desk(now=NOW).cues
+
+
+# --- Q28: a shrink said out loud is this period's answer --------------------
+
+
+def _bike(desk):
+    return next(row for row in desk.subjects if row.id == "bike")
+
+
+def _drift_card(desk, at=NOW):
+    return drift_card(desk.subjects, desk.instances, at)
+
+
+def test_founding_bike_is_the_drift_card_before_anyone_speaks() -> None:
+    desk = founding_desk(now=NOW)
+    card = _drift_card(desk)
+    assert card is not None and card.subject_id == "bike"
+
+
+def test_shrinking_the_rhythm_in_talk_silences_the_card_this_period() -> None:
+    """«давай велосипед раз в неделю» and no first-rung card the same morning."""
+    desk = founding_desk(now=NOW)
+    outcome = _apply(desk, "set_cadence", {"subject_id": "bike", "count": 1, "period": "week"})
+    assert outcome.ok
+    bike = _bike(outcome.desk)
+    assert bike.drift_asked_at == NOW
+    assert _drift_card(outcome.desk) is None
+
+
+def test_a_talk_answer_leaves_the_rung_where_it_was() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(desk, "set_cadence", {"subject_id": "bike", "count": 1, "period": "week"})
+    bike = _bike(outcome.desk)
+    assert bike.drift_asks_made == 0
+    assert bike.drift_retire_refusals == 0
+    later = _drift_card(outcome.desk, NOW + timedelta(days=8))
+    assert later is not None
+    assert later.offer == DriftOffer.move_to_today
+
+
+def test_raising_the_rhythm_in_talk_does_not_buy_quiet() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(desk, "set_cadence", {"subject_id": "bike", "count": 5, "period": "week"})
+    assert outcome.ok
+    assert _bike(outcome.desk).drift_asked_at is None
+    assert _drift_card(outcome.desk) is not None
+
+
+def test_shrink_retire_and_freeze_all_spend_the_ask() -> None:
+    for name, args in (
+        ("shrink_subject", {"subject_id": "bike"}),
+        ("retire_subject", {"subject_id": "bike"}),
+        ("freeze_subject", {"subject_id": "bike"}),
+    ):
+        outcome = _apply(founding_desk(now=NOW), name, args)
+        assert outcome.ok, name
+        assert _bike(outcome.desk).drift_asked_at == NOW, name
+
+
+def test_thaw_keeps_the_stamp_the_freeze_left() -> None:
+    """After «верни велосипед» the period counts from the talk, not last year."""
+    frozen = _apply(founding_desk(now=NOW), "freeze_subject", {"subject_id": "bike"}).desk
+    thawed = _apply(frozen, "thaw_subject", {"subject_id": "bike"}).desk
+    bike = _bike(thawed)
+    assert bike.status == SubjectStatus.active
+    assert bike.drift_asked_at == NOW
+    assert _drift_card(thawed, NOW + timedelta(days=1)) is None
+    assert _drift_card(thawed, NOW + timedelta(days=8)) is not None
+
+
+def test_moving_one_instance_is_not_an_answer() -> None:
+    """`move_to_date` moves a card, not the promise: the question still stands."""
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk, "move_to_date", {"widget_id": "bike-reminder", "when": "2026-08-15T19:00:00"}
+    )
+    assert outcome.ok
+    assert _bike(outcome.desk).drift_asked_at is None
+    assert _drift_card(outcome.desk) is not None
+
+
+def test_a_talk_answer_touches_only_the_subject_it_was_about() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(desk, "shrink_subject", {"subject_id": "bike"})
+    others = [row for row in outcome.desk.subjects if row.id != "bike"]
+    assert all(row.drift_asked_at is None for row in others)
+    assert all(row.drift_asks_made == 0 for row in others)

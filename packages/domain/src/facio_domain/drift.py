@@ -31,6 +31,29 @@ RETIRE_REFUSALS_TO_SILENCE = 2
 
 _ACTIVITY = frozenset({InstanceStatus.completed, InstanceStatus.in_progress})
 
+# How much of a promise each status is. The order is the ladder's own order:
+# running as agreed, running smaller, not running for now, not running at all.
+# Only the direction matters — a move to a bigger number is never an answer.
+_COMMITMENT = {
+    SubjectStatus.active: 0,
+    SubjectStatus.shrunk: 1,
+    SubjectStatus.paused: 2,
+    SubjectStatus.retired: 3,
+}
+
+
+def times_per_week(cadence: Cadence) -> float:
+    """One comparable number for the size of a rhythm. `none` is zero.
+
+    Lives here because «down the ladder, never up» (never-do #21) is this
+    module's rule; the pain lock imports it rather than keeping a second copy.
+    """
+    if cadence.period == "none" or cadence.count is None:
+        return 0.0
+    if cadence.period == "day":
+        return float(cadence.count) * 7.0
+    return float(cadence.count)
+
 
 def silence_threshold(cadence: Cadence) -> int | None:
     """Days of silence that count as one missed period. None = cannot drift."""
@@ -193,6 +216,65 @@ def refuse_drift(subject: Subject, offer: DriftOffer, now: datetime) -> Subject:
     if refusals >= RETIRE_REFUSALS_TO_SILENCE:
         updates["cadence"] = Cadence.none()
     return subject.model_copy(update=updates)
+
+
+def answers_the_ladder(before: Subject, after: Subject) -> bool:
+    """Did this change to the practice already answer what the card would ask?
+
+    The card only ever asks one thing: *this practice is bigger than your life
+    right now — shall we make it smaller?* So the test is not which tool ran,
+    it is which way the commitment moved. **A step down the ladder is the
+    answer; anything else is not.** Reading the shape of the change instead of
+    the tool name is why this rule is one function and not four copies pasted
+    into `set_cadence` / `shrink_subject` / `retire_subject` / `freeze_subject`.
+
+    Counts as an answer:
+
+    * the rhythm got smaller — `set_cadence` 3×/week → 1×/week, or → `none`;
+    * the practice moved to a smaller status — shrunk, paused, retired. That
+      covers `shrink_subject`, `retire_subject`, `freeze_subject`, and the
+      kebab's «убрать», with no list of tool names to keep in sync.
+
+    Does **not** count:
+
+    * a rhythm or a target going **up**. The silence is still there and the
+      escalation lock still points down only (never-do #21), so growth buys no
+      quiet — the card comes anyway.
+    * `thaw_subject`. Coming back is not shrinking; the period was already
+      stamped by the freeze that started the pause.
+    * `move_to_date`, `postpone`, `complete`, `skip`. These move one instance,
+      not the promise: after «перенеси велосипед на пятницу» the practice is
+      exactly as big as it was, and the question is still unanswered. Moving a
+      card, not a commitment, is what rung 1 itself does (see `answer_drift`).
+    """
+    if times_per_week(after.cadence) < times_per_week(before.cadence):
+        return True
+    return _COMMITMENT[after.status] > _COMMITMENT[before.status]
+
+
+def settle_talk_answer(before: Subject, after: Subject, now: datetime) -> Subject:
+    """Spend this period's ask when the person shrank the practice in talk.
+
+    Q28 allows one ask per cadence period about one object. Without this, the
+    mouth would shrink the bike at 09:00 and the first rung — «перенести на
+    сегодня?» — would land on the same bike the same morning, a second question
+    about a thing already settled, and settled by a *bigger* step than the rung
+    offered.
+
+    Only `drift_asked_at` moves. `drift_asks_made` stays put on purpose: the
+    ladder is climbed by **refusals**, and nobody refused here — the person
+    acted, and acted downward. Incrementing would mean «we asked», and we did
+    not ask; the next period would then open on a louder rung than the one the
+    person never heard. `drift_retire_refusals` is likewise untouched — only an
+    explicit «нет» to the offer to retire moves it (`refuse_drift`).
+
+    So the next period asks the **same** rung, about a practice that is now
+    smaller — and if the smaller rhythm holds, there is no drift left to ask
+    about at all.
+    """
+    if not answers_the_ladder(before, after):
+        return after
+    return after.model_copy(update={"drift_asked_at": now})
 
 
 def drift_card(

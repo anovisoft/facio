@@ -6,6 +6,7 @@ from facio_domain.pain import reports_pain
 from facio_domain.tools import apply_tool, snapshot_cards, times_per_week
 from facio_domain.drift import (
     answer_drift,
+    answers_the_ladder,
     ask_period_days,
     can_ask_now,
     drift_card,
@@ -13,6 +14,7 @@ from facio_domain.drift import (
     next_drift_offer,
     next_offer,
     refuse_drift,
+    settle_talk_answer,
     silence_days,
     silence_threshold,
 )
@@ -108,6 +110,7 @@ __all__ = [
     "Window",
     "add_cue",
     "answer_drift",
+    "answers_the_ladder",
     "apply_tool",
     "ask_period_days",
     "build_beats",
@@ -137,6 +140,7 @@ __all__ = [
     "promised",
     "refuse_drift",
     "reminder_fire_at",
+    "settle_talk_answer",
     "reset_timer",
     "retire_subject",
     "set_checklist_done",

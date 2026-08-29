@@ -13,6 +13,24 @@ enum DriftLaw {
 
     private static let activity: Set<InstanceStatus> = [.completed, .inProgress]
 
+    /// How much of a promise each status is. The order is the ladder's own:
+    /// running as agreed, running smaller, not running for now, not running at
+    /// all. Only the direction matters — a move up is never an answer.
+    private static func commitment(_ status: SubjectStatus) -> Int {
+        switch status {
+        case .active: return 0
+        case .shrunk: return 1
+        case .paused: return 2
+        case .retired: return 3
+        }
+    }
+
+    /// One comparable number for the size of a rhythm. `none` is zero.
+    static func timesPerWeek(_ cadence: Cadence) -> Double {
+        guard let count = cadence.count, cadence.period != .none else { return 0 }
+        return cadence.period == .day ? Double(count) * 7 : Double(count)
+    }
+
     static func silenceThreshold(for cadence: Cadence) -> Int? {
         if cadence.isNone { return nil }
         switch cadence.period {
@@ -107,6 +125,52 @@ enum DriftLaw {
         if next.driftRetireRefusals >= retireRefusalsToSilence {
             next.cadence = Cadence.noRhythm
         }
+        return next
+    }
+
+    /// Did this change to the practice already answer what the card would ask?
+    ///
+    /// The card only ever asks one thing: *this practice is bigger than your
+    /// life right now — shall we make it smaller?* So the test is not which
+    /// tool ran, it is which way the commitment moved. **A step down the
+    /// ladder is the answer; anything else is not.** Reading the shape of the
+    /// change instead of the tool name is why this rule is one function and
+    /// not four copies pasted into `set_cadence` / `shrink_subject` /
+    /// `retire_subject` / `freeze_subject`.
+    ///
+    /// Counts as an answer: the rhythm got smaller (3×/week → 1×/week, or
+    /// → `none`), or the practice moved to a smaller status — shrunk, paused,
+    /// retired, which covers shrink / retire / freeze and the kebab's «убрать»
+    /// with no list of tool names to keep in sync.
+    ///
+    /// Does **not** count: a rhythm or a target going **up** (the silence is
+    /// still there and escalation still points down only, never-do #21); a
+    /// thaw (coming back is not shrinking, and the freeze already stamped the
+    /// period); moving, postponing or completing one instance — those move a
+    /// card, not the promise, which is exactly what rung 1 itself does.
+    static func answersTheLadder(before: Subject, after: Subject) -> Bool {
+        if timesPerWeek(after.cadence) < timesPerWeek(before.cadence) { return true }
+        return commitment(after.status) > commitment(before.status)
+    }
+
+    /// Spend this period's ask when the person shrank the practice in talk.
+    ///
+    /// Q28 allows one ask per cadence period about one object. Without this the
+    /// mouth would shrink the bike at 09:00 and the first rung — «перенести на
+    /// сегодня?» — would land on the same bike the same morning: a second
+    /// question about a thing already settled, and settled by a *bigger* step
+    /// than the rung offered.
+    ///
+    /// Only `driftAskedAt` moves. `driftAsksMade` stays put on purpose: the
+    /// ladder is climbed by **refusals**, and nobody refused here — the person
+    /// acted, and acted downward. Incrementing would mean “we asked”, and we
+    /// did not ask; the next period would open on a louder rung than the one
+    /// the person never heard. `driftRetireRefusals` is likewise untouched —
+    /// only an explicit no to the offer to retire moves it (`refuse`).
+    static func settleTalkAnswer(before: Subject, after: Subject, now: Date) -> Subject {
+        guard answersTheLadder(before: before, after: after) else { return after }
+        var next = after
+        next.driftAskedAt = now
         return next
     }
 

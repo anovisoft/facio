@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, time
 
 from facio_domain.desk import founding_desk
+from facio_domain.drift import drift_card
 from facio_domain.models import CueKind, CueSurface, Desk, SubjectStatus, WidgetType
 from facio_domain.tools import apply_tool, times_per_week
 
@@ -501,6 +502,26 @@ async def test_drift_answer_does_not_read_the_ladder_back_to_the_person() -> Non
     lowered = result.text.casefold()
     for needle in ("постарайся", "срыв", "ступень", "drift"):
         assert needle not in lowered, needle
+
+
+async def test_answering_in_talk_leaves_no_card_the_same_morning() -> None:
+    """R13: the shrink went through the mouth, so the first rung stays quiet.
+
+    Before this the person said «раз в неделю», the mouth shrank the bike, and
+    the lid still handed him «перенести на сегодня?» about the same bike the
+    same day — a second question about a thing he had already settled, with a
+    bigger step than the rung was offering (Q28: once per period, same object).
+    """
+    desk = founding_desk(now=NOW)
+    assert drift_card(desk.subjects, desk.instances, NOW) is not None
+
+    result = await _play("велосипед три недели стоит, что делать?")
+    bike = _subject(result.desk, "bike")
+    assert bike.drift_asked_at == NOW
+    assert drift_card(result.desk.subjects, result.desk.instances, NOW) is None
+    # The rung did not move: nobody asked, and nobody refused.
+    assert bike.drift_asks_made == 0
+    assert bike.drift_retire_refusals == 0
 
 
 # --- R4 addendum: a clarification without its quote is refused -------------

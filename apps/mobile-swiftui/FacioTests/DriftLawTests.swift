@@ -244,6 +244,119 @@ final class DriftLawTests: XCTestCase {
         XCTAssertNil(DriftLaw.driftCard(subjects: [subject], instances: instances, now: try DomainFixtures.now()))
     }
 
+    // MARK: - Q28, the mouth can answer the ladder too
+
+    private func weeklyOnce(_ subject: Subject) -> Subject {
+        var smaller = subject
+        smaller.cadence = Cadence.weekly(1)
+        return smaller
+    }
+
+    /// Said it out loud, so the card does not ask it again the same morning.
+    func testShrinkingInTalkSpendsThisPeriodsAsk() throws {
+        let (subject, instances) = try silentBike()
+        let now = try DomainFixtures.now()
+        XCTAssertNotNil(DriftLaw.driftCard(subjects: [subject], instances: instances, now: now))
+
+        let settled = DriftLaw.settleTalkAnswer(before: subject, after: weeklyOnce(subject), now: now)
+        XCTAssertEqual(settled.driftAskedAt, now)
+        XCTAssertNil(DriftLaw.driftCard(subjects: [settled], instances: instances, now: now))
+    }
+
+    /// A rung is bought with a refusal, not with doing the thing (never-do #21).
+    func testTalkAnswerDoesNotClimbTheLadder() throws {
+        let (subject, _) = try silentBike()
+        let now = try DomainFixtures.now()
+        let settled = DriftLaw.settleTalkAnswer(before: subject, after: weeklyOnce(subject), now: now)
+        XCTAssertEqual(settled.driftAsksMade, subject.driftAsksMade)
+        XCTAssertEqual(settled.driftRetireRefusals, subject.driftRetireRefusals)
+        XCTAssertEqual(DriftLaw.nextOffer(for: settled), .moveToToday)
+    }
+
+    func testNextPeriodAsksTheSameRungAfterATalkAnswer() throws {
+        let (subject, instances) = try silentBike()
+        let now = try DomainFixtures.now()
+        let settled = DriftLaw.settleTalkAnswer(before: subject, after: weeklyOnce(subject), now: now)
+        XCTAssertNil(DriftLaw.driftCard(subjects: [settled], instances: instances, now: days(7, after: now)))
+        let later = try XCTUnwrap(
+            DriftLaw.driftCard(subjects: [settled], instances: instances, now: days(8, after: now))
+        )
+        // Same rung, not the louder one an increment would have handed out.
+        XCTAssertEqual(later.offer, .moveToToday)
+    }
+
+    /// The silence did not go away because the promise got bigger.
+    func testGrowingTheRhythmInTalkIsNotAnAnswer() throws {
+        let (subject, instances) = try silentBike()
+        let now = try DomainFixtures.now()
+        var louder = subject
+        louder.cadence = try Cadence.of(count: 5, period: .week)
+        let settled = DriftLaw.settleTalkAnswer(before: subject, after: louder, now: now)
+        XCTAssertNil(settled.driftAskedAt)
+        XCTAssertNotNil(DriftLaw.driftCard(subjects: [settled], instances: instances, now: now))
+    }
+
+    func testRetiringShrinkingAndFreezingInTalkAreAnswers() throws {
+        let bike = try DomainFixtures.subject("bike")
+        let now = try DomainFixtures.now()
+        for status in [SubjectStatus.shrunk, .paused, .retired] {
+            var after = bike
+            after.status = status
+            if status == .paused { after.pausedAt = now }
+            XCTAssertTrue(DriftLaw.answersTheLadder(before: bike, after: after), status.rawValue)
+            XCTAssertEqual(
+                DriftLaw.settleTalkAnswer(before: bike, after: after, now: now).driftAskedAt,
+                now,
+                status.rawValue
+            )
+        }
+    }
+
+    /// Paused cannot drift, but after a thaw the clock starts at the talk.
+    func testFreezeStampsThePeriodSoThawCountsFromTheTalk() throws {
+        let (subject, instances) = try silentBike()
+        let now = try DomainFixtures.now()
+        var frozen = subject
+        frozen.status = .paused
+        frozen.pausedAt = now
+        let paused = DriftLaw.settleTalkAnswer(before: subject, after: frozen, now: now)
+        XCTAssertEqual(paused.driftAskedAt, now)
+
+        var back = paused
+        back.status = .active
+        back.pausedAt = nil
+        XCTAssertEqual(DriftLaw.settleTalkAnswer(before: paused, after: back, now: now).driftAskedAt, now)
+        XCTAssertNil(DriftLaw.driftCard(subjects: [back], instances: instances, now: days(1, after: now)))
+        XCTAssertNotNil(DriftLaw.driftCard(subjects: [back], instances: instances, now: days(8, after: now)))
+    }
+
+    func testComingBackIsNotAStepDown() throws {
+        let bike = try DomainFixtures.subject("bike")
+        let now = try DomainFixtures.now()
+        var paused = bike
+        paused.status = .paused
+        paused.pausedAt = now
+        var thawed = paused
+        thawed.status = .active
+        thawed.pausedAt = nil
+        XCTAssertFalse(DriftLaw.answersTheLadder(before: paused, after: thawed))
+    }
+
+    /// `move_to_date` moves a card; the promise stays exactly as big.
+    func testMovingOneInstanceIsNotAnAnswer() throws {
+        let bike = try DomainFixtures.subject("bike")
+        let now = try DomainFixtures.now()
+        XCTAssertFalse(DriftLaw.answersTheLadder(before: bike, after: bike))
+        XCTAssertNil(DriftLaw.settleTalkAnswer(before: bike, after: bike, now: now).driftAskedAt)
+    }
+
+    func testRefusalFromTheCardStillMovesTheRung() throws {
+        let (subject, _) = try silentBike()
+        let refused = DriftLaw.refuse(subject, offer: .moveToToday, now: try DomainFixtures.now())
+        XCTAssertEqual(refused.driftAsksMade, 1)
+        XCTAssertEqual(DriftLaw.nextOffer(for: refused), .onceAWeek)
+    }
+
     func testPreparedInstanceDoesNotBreakSilence() throws {
         let bike = try DomainFixtures.subject("bike")
         let instances = [

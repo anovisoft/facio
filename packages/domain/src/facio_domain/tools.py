@@ -16,6 +16,7 @@ from typing import Any
 from pydantic import TypeAdapter, ValidationError
 
 from facio_domain.cues import add_cue
+from facio_domain.drift import settle_talk_answer, times_per_week
 from facio_domain.models import (
     Cadence,
     ChecklistItem,
@@ -155,23 +156,35 @@ def apply_tool(
         return ToolOutcome(desk=desk, name=name, ok=False, data={}, error=PAIN_FORBIDS_RAISE)
     next_desk = desk.model_copy(deep=True)
     try:
-        return _DISPATCH[name](next_desk, args, now=now, origin=origin)
+        outcome = _DISPATCH[name](next_desk, args, now=now, origin=origin)
     except ToolFail as error:
         return ToolOutcome(desk=desk, name=name, ok=False, data={}, error=error.code)
+    if outcome.ok and outcome.mutated:
+        _settle_drift_answers(desk, outcome.desk, now)
+    return outcome
+
+
+def _settle_drift_answers(before: Desk, after: Desk, now: datetime) -> None:
+    """The one seam where talk meets the drift ladder (`drift.settle_talk_answer`).
+
+    Every mutating tool passes through here, so the rule needs no list of tool
+    names and no copy inside `_set_cadence` / `_shrink` / `_retire` / `_freeze`:
+    the law is handed the subject before and after and decides for itself
+    whether the commitment went down. A future tool that shrinks a practice is
+    covered the day it is written, and one that does not, is not.
+    """
+    was = {subject.id: subject for subject in before.subjects}
+    for subject in list(after.subjects):
+        earlier = was.get(subject.id)
+        if earlier is None:
+            continue
+        _replace_subject(after, settle_talk_answer(earlier, subject, now))
 
 
 class ToolFail(Exception):
     def __init__(self, code: str) -> None:
         self.code = code
         super().__init__(code)
-
-
-def times_per_week(cadence: Cadence) -> float:
-    if cadence.period == "none" or cadence.count is None:
-        return 0.0
-    if cadence.period == "day":
-        return float(cadence.count) * 7.0
-    return float(cadence.count)
 
 
 def snapshot_cards(desk: Desk, widget_ids: list[str]) -> list[dict[str, Any]]:
