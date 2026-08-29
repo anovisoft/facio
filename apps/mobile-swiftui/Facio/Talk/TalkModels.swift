@@ -6,6 +6,11 @@ enum ChatMessageKind: String, Codable, Sendable, Equatable {
     case snapshot
 }
 
+/// The centered card: a picture of a widget at the moment it was bound or
+/// structurally changed. `face` and `detail` are what it was; `line` is the
+/// finished sentence the service used to be the only author of. A card that
+/// arrives without a `face` came from an older service and keeps its `line` —
+/// see `SnapshotFaceLaw`.
 struct ChatSnapshot: Codable, Sendable, Equatable {
     var widgetId: String
     var subjectId: String
@@ -13,6 +18,9 @@ struct ChatSnapshot: Codable, Sendable, Equatable {
     var version: Int
     var title: String
     var line: String
+    var face: SnapshotFace?
+    /// The cue that rode under the number, in the words the person said it in.
+    var detail: String?
 
     enum CodingKeys: String, CodingKey {
         case widgetId = "widget_id"
@@ -21,6 +29,8 @@ struct ChatSnapshot: Codable, Sendable, Equatable {
         case version
         case title
         case line
+        case face
+        case detail
     }
 }
 

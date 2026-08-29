@@ -1192,6 +1192,23 @@
         }
       }
     },
+    "видео": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "video"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "видео"
+          }
+        }
+      }
+    },
     "галочка": {
       "extractionState": "manual",
       "localizations": {
@@ -1369,6 +1386,23 @@
         }
       }
     },
+    "зал до %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gym until %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "зал до %@"
+          }
+        }
+      }
+    },
     "из %@": {
       "extractionState": "manual",
       "localizations": {
@@ -1417,6 +1451,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "каждый день"
+          }
+        }
+      }
+    },
+    "медиа не открылось": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "media did not open"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "медиа не открылось"
           }
         }
       }
@@ -1844,6 +1895,23 @@
         }
       }
     },
+    "сегодня нет": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not today"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "сегодня нет"
+          }
+        }
+      }
+    },
     "сейчас": {
       "extractionState": "manual",
       "localizations": {
@@ -2088,6 +2156,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "успеть к %@"
+          }
+        }
+      }
+    },
+    "фото": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "photo"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "фото"
           }
         }
       }

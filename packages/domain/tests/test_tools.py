@@ -123,6 +123,50 @@ def test_add_cue_lands_on_push_ups_do_time() -> None:
     cards = snapshot_cards(outcome.desk, outcome.snapshot_widget_ids)
     assert cards[0]["widget_id"] == "push-ups-counter"
     assert "держи корпус" in cards[0]["line"]
+    # The same card, as state: the number the client repaints in its own
+    # language, and the cue in the person's own words.
+    assert cards[0]["face"] == {"kind": "counter", "count": 28, "goal": 30}
+    assert cards[0]["detail"] == "держи корпус и ягодицы"
+
+
+def test_snapshot_face_carries_state_not_sentences() -> None:
+    """Every phrase `line` spells out in Russian has a structural twin.
+
+    `line` stays — a client written before this reads nothing else — but a
+    client that understands `face` never sees a word the service chose.
+    """
+    desk = founding_desk(now=NOW)
+    veg = next(row for row in desk.widgets if row.type == WidgetType.tick)
+    card = snapshot_cards(desk, [veg.id])[0]
+    assert card["line"] == "не сделано"
+    assert card["face"] == {"kind": "tick", "done": False}
+
+    reminder = next(row for row in desk.widgets if row.type == WidgetType.reminder)
+    card = snapshot_cards(desk, [reminder.id])[0]
+    face = card["face"]
+    assert face["kind"] == "reminder"
+    assert face["skipped"] is False
+    # The door is ours to say, so it travels as a clock, not as «зал до 22».
+    assert face["closes_at"] == "22:00:00"
+    assert face["clock"] is not None
+    assert "зал до 22" in card["line"]
+
+    reminder.status = WidgetStatus.skipped
+    card = snapshot_cards(desk, [reminder.id])[0]
+    assert card["line"] == "сегодня нет"
+    assert card["face"]["skipped"] is True
+
+
+def test_snapshot_face_says_paused_without_saying_it() -> None:
+    """The one phrase that proved the hole: «на паузе» lived in two places
+    and the untranslated copy won."""
+    desk = founding_desk(now=NOW)
+    outcome = _apply(desk, "freeze_subject", {"subject_id": "push-ups"})
+    assert outcome.ok
+    widget = next(row for row in outcome.desk.widgets if row.subject_id == "push-ups")
+    card = snapshot_cards(outcome.desk, [widget.id])[0]
+    assert card["line"] == "на паузе"
+    assert card["face"] == {"kind": "paused"}
 
 
 def test_pain_blocks_target_raise_and_keeps_goal() -> None:

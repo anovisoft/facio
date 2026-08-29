@@ -146,3 +146,28 @@ async def test_selection_is_optional_on_the_wire(client) -> None:
     response = await client.post("/v1/talk/turn", json=body)
     assert response.status_code == 200
     assert response.json()["mutated"] is True
+
+
+async def test_snapshot_card_carries_state_and_keeps_the_old_line(client) -> None:
+    """R14 part A: the card ships numbers, and `line` survives for old clients.
+
+    The service used to be the only place a chat card's sentence existed, and
+    it wrote that sentence in Russian whatever `locale` said. Now the sentence
+    is the client's to write; `line` stays put so a client built before this
+    change reads exactly what it always read.
+    """
+    body = TalkTurnRequest(
+        utterance="my lower back takes the load",
+        desk=founding_desk(),
+        thread_id="t-snapshot-face",
+        locale="en",
+    )
+    response = await client.post("/v1/talk/turn", json=body.model_dump(mode="json"))
+    assert response.status_code == 200
+    card = response.json()["snapshots"][0]
+    # Still the old sentence, still Russian, still ignoring `locale` — which is
+    # exactly why nothing on a current client may be drawn from it.
+    assert card["line"].startswith("28 / 30")
+    assert card["face"] == {"kind": "counter", "count": 28, "goal": 30}
+    # The cue is the person's own words, so it rides as data and stays as said.
+    assert card["detail"] == "brace the core and the glutes, not the lower back"

@@ -206,7 +206,19 @@ def snapshot_cards(desk: Desk, widget_ids: list[str]) -> list[dict[str, Any]]:
                 "instance_id": widget.instance_id,
                 "version": widget.version,
                 "title": widget.title,
+                # `line` is the old wire: one finished Russian sentence. It
+                # stays, verbatim, because a client built before this change
+                # draws it and nothing else — but it is a fallback now, not the
+                # source of truth.
                 "line": _snapshot_line(desk, widget),
+                # What the widget *was* at the moment the card was written:
+                # numbers, not words. The person's language is the client's
+                # business (it owns the catalog), and copy that lived on the
+                # server could only ever be a second copy of it.
+                "face": _snapshot_face(desk, widget),
+                # The one part of the line that is genuinely data: the person's
+                # own cue, in the words they said it in. Never product copy.
+                "detail": _snapshot_detail(desk, widget),
             }
         )
     return cards
@@ -332,6 +344,61 @@ def _do_time_cue(desk: Desk, subject_id: str) -> Cue | None:
 def _timing_cue(desk: Desk, subject_id: str) -> Cue | None:
     matches = [cue for cue in desk.cues if cue.subject_id == subject_id and cue.surface == CueSurface.timing]
     return matches[-1] if matches else None
+
+
+def _snapshot_face(desk: Desk, widget: Widget) -> dict[str, Any]:
+    """The state of one widget at write time, as numbers.
+
+    A snapshot is a picture of the moment it was written ([04] «Snapshot and
+    chapter»), so this reads the desk that is being sent back — the desk the
+    turn just produced — and is never recomputed later against a newer one.
+    The client repaints it from these fields with its own catalog; the same
+    discipline `InstanceFaceLaw` keeps in the carousel, one wire further out.
+    """
+    subject = _subject(desk, widget.subject_id)
+    if subject is not None and subject.status == SubjectStatus.paused:
+        return {"kind": "paused"}
+    if widget.type == WidgetType.counter:
+        # No goal — no goal drawn. «0 / 0» is a target the person never named.
+        return {"kind": "counter", "count": widget.payload.count or 0, "goal": widget.payload.target}
+    if widget.type == WidgetType.tick:
+        return {"kind": "tick", "done": bool(widget.payload.done or widget.status == WidgetStatus.done)}
+    if widget.type == WidgetType.checklist:
+        done, total = checklist_progress(widget.payload)
+        return {"kind": "checklist", "done": done, "total": total}
+    if widget.type == WidgetType.stepper:
+        beats = stepper_beats(widget.payload)
+        if not beats:
+            return {"kind": "none"}
+        return {"kind": "stepper", "step": stepper_position(widget.payload) + 1, "total": len(beats)}
+    if widget.type == WidgetType.timer:
+        return {"kind": "timer", "seconds": widget.payload.seconds or 0}
+    if widget.type == WidgetType.reminder:
+        fire = widget.payload.fire_at or widget.when
+        closes_at = None
+        if subject is not None and subject.window is not None and subject.window.closes_at is not None:
+            closes_at = subject.window.closes_at.isoformat()
+        return {
+            "kind": "reminder",
+            "clock": fire.strftime("%H:%M:%S") if fire else None,
+            "closes_at": closes_at,
+            "skipped": widget.status == WidgetStatus.skipped,
+        }
+    return {"kind": "none"}
+
+
+def _snapshot_detail(desk: Desk, widget: Widget) -> str | None:
+    """The cue that rode under the number, in the person's own words.
+
+    Data, not copy: it is quoted from the conversation, so it travels. The door
+    («the gym shuts at 22») is *not* here — that sentence is ours, and it is
+    rebuilt on the client from `closes_at`.
+    """
+    if widget.type == WidgetType.reminder:
+        cue = _timing_cue(desk, widget.subject_id)
+    else:
+        cue = _do_time_cue(desk, widget.subject_id)
+    return cue.text if cue else None
 
 
 def _snapshot_line(desk: Desk, widget: Widget) -> str:

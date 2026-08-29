@@ -147,9 +147,15 @@ struct TalkBubble: View {
     }
 }
 
+/// A picture of a widget at write time — drawn from the card, never from the
+/// desk as it stands now (04). The sentence under the title is built here, out
+/// of this client's catalog: the service sends state, not copy
+/// (`SnapshotFaceLaw`).
 private struct SnapshotCard: View {
     let snapshot: ChatSnapshot
     var onOpen: () -> Void
+
+    private var line: String { SnapshotFaceLaw.line(snapshot) }
 
     var body: some View {
         HStack {
@@ -159,10 +165,12 @@ private struct SnapshotCard: View {
                     Text(DisplayCopy.title(subjectId: snapshot.subjectId, stored: snapshot.title))
                         .font(.headline)
                         .foregroundStyle(.primary)
-                    Text(snapshot.line)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    if !line.isEmpty {
+                        Text(line)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
                 .padding(16)
                 .frame(maxWidth: 280, alignment: .leading)
@@ -170,7 +178,11 @@ private struct SnapshotCard: View {
                 .facioGlass()
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(DisplayCopy.title(subjectId: snapshot.subjectId, stored: snapshot.title))
+            .accessibilityLabel(
+                [DisplayCopy.title(subjectId: snapshot.subjectId, stored: snapshot.title), line]
+                    .filter { !$0.isEmpty }
+                    .joined(separator: ", ")
+            )
             Spacer(minLength: 24)
         }
     }

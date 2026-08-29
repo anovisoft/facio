@@ -89,6 +89,20 @@ enum DisplayCopy {
         String(localized: "на паузе", comment: "Paused practice is not due today")
     }
 
+    /// A reminder that was struck off for the day, on the chat card that
+    /// recorded it. The service still spells this out in `line`; nothing on a
+    /// current client reads that line.
+    static var reminderSkipped: String {
+        String(localized: "сегодня нет", comment: "Reminder skipped for the day")
+    }
+
+    /// The door the window came from — «the gym shuts at 22». Ours to say, so
+    /// it is built from the clock rather than shipped as a finished phrase.
+    static func doorPhrase(_ closesAt: ClockTime) -> String {
+        let clock = closesAt.minute == 0 ? "\(closesAt.hour)" : closesAt.shortLabel
+        return String(localized: "зал до \(clock)", comment: "Reminder detail: the gym closes at")
+    }
+
     static func succeedBy(_ window: TimeWindow) -> String {
         String(localized: "успеть к \(window.latestBy.shortLabel)", comment: "Reminder window deadline")
     }

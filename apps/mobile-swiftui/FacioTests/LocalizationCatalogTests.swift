@@ -27,6 +27,11 @@ final class LocalizationCatalogTests: XCTestCase {
             "Отложили": "Postponed",
             "Что сюда на стол?": "What belongs on the table?",
             "ничего на сегодня — и это нормально": "nothing for today — and that's fine",
+            // R14: the chat card draws these itself now. They used to arrive
+            // from the service already spelled out in Russian.
+            "на паузе": "paused",
+            "сегодня нет": "not today",
+            "зал до %@": "gym until %@",
         ]
         for (key, english) in expected {
             XCTAssertEqual(catalog.value(of: key, in: "en"), english, "key \(key)")

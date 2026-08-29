@@ -1,5 +1,5 @@
-from datetime import datetime
-from typing import Literal
+from datetime import datetime, time
+from typing import Annotated, Literal
 
 from facio_domain.models import Desk
 from pydantic import BaseModel, Field
@@ -46,13 +46,81 @@ class ToolCallRecord(BaseModel):
     error: str | None = None
 
 
+class CounterFace(BaseModel):
+    kind: Literal["counter"] = "counter"
+    count: int
+    goal: int | None = None
+
+
+class TickFace(BaseModel):
+    kind: Literal["tick"] = "tick"
+    done: bool
+
+
+class ChecklistFace(BaseModel):
+    kind: Literal["checklist"] = "checklist"
+    done: int
+    total: int
+
+
+class TimerFace(BaseModel):
+    kind: Literal["timer"] = "timer"
+    seconds: int
+
+
+class StepperFace(BaseModel):
+    kind: Literal["stepper"] = "stepper"
+    step: int
+    total: int
+
+
+class ReminderFace(BaseModel):
+    kind: Literal["reminder"] = "reminder"
+    clock: time | None = None
+    closes_at: time | None = None
+    skipped: bool = False
+
+
+class PausedFace(BaseModel):
+    """The practice was frozen when the card was written.
+
+    A whole-card state, not a number: the same phrase the client already owns
+    (`DisplayCopy.pausedNow`). It used to be spelled out here in Russian and
+    win over the translated one.
+    """
+
+    kind: Literal["paused"] = "paused"
+
+
+class BlankFace(BaseModel):
+    """Nothing to draw — a stepper with no beats, or a type with no face."""
+
+    kind: Literal["none"] = "none"
+
+
+SnapshotFace = Annotated[
+    CounterFace | TickFace | ChecklistFace | TimerFace | StepperFace | ReminderFace | PausedFace | BlankFace,
+    Field(discriminator="kind"),
+]
+
+
 class SnapshotCard(BaseModel):
+    """The centered chat card: a picture of a widget at write time.
+
+    The service sends **state**; the client draws the sentence. `line` is the
+    finished Russian sentence the first clients read, kept so one of them still
+    works — a client that understands `face` must prefer it, because `line`
+    ignores `locale` by construction and always will.
+    """
+
     widget_id: str
     subject_id: str
     instance_id: str
     version: int
     title: str
     line: str
+    face: SnapshotFace | None = None
+    detail: str | None = None
 
 
 class TalkTurnResponse(BaseModel):
