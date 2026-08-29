@@ -2,9 +2,11 @@ import SwiftUI
 
 struct TickTile: View {
     let widget: Widget
+    let cue: Cue?
     let onOpen: (() -> Void)?
     let onToggle: (() -> Void)?
     let onKebab: () -> Void
+    let onSurfaced: () -> Void
 
     private var done: Bool { widget.isTickDone }
 
@@ -20,6 +22,13 @@ struct TickTile: View {
                     KebabStub()
                 }
                 Spacer(minLength: 0)
+                if !done, let cue {
+                    Text(cue.text)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 HStack(spacing: 10) {
                     Color.clear
                         .frame(width: 36, height: 36)
@@ -29,12 +38,21 @@ struct TickTile: View {
                 }
             }
         }
+        .onAppear {
+            if cue != nil, !done { onSurfaced() }
+        }
         .overlay(alignment: .bottomLeading) {
             mark
                 .padding(.leading, 16)
                 .padding(.bottom, 16)
         }
-        .accessibilityLabel(DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title))
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private var accessibilityLabel: String {
+        let title = DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title)
+        guard !done, let cue else { return title }
+        return String(localized: "\(title), \(cue.text)", comment: "Tick tile accessibility: title and its do-time cue")
     }
 
     @ViewBuilder

@@ -2,12 +2,19 @@ import SwiftUI
 
 struct TickUseView: View {
     let widget: Widget
+    let cue: Cue?
     let onToggle: () -> Void
 
     private var done: Bool { widget.isTickDone }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
+            if !done, let cue {
+                Text(cue.text)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             HStack(spacing: 12) {
                 Button(action: onToggle) {
                     Image(systemName: done ? "checkmark.circle.fill" : "circle")

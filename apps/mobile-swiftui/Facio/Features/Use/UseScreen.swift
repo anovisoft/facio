@@ -64,6 +64,7 @@ struct UseScreen: View {
             case .tick:
                 TickUseView(
                     widget: widget,
+                    cue: cue,
                     onToggle: { store.toggleTick(widgetId: widget.id) }
                 )
             case .reminder:

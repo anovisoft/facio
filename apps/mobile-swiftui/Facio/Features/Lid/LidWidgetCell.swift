@@ -20,7 +20,7 @@ struct LidWidgetCell: View {
             )
         case .tick:
             sized(
-                TickTile(widget: widget, onOpen: onOpen, onToggle: onToggleTick, onKebab: onKebab)
+                TickTile(widget: widget, cue: cue, onOpen: onOpen, onToggle: onToggleTick, onKebab: onKebab, onSurfaced: onSurfaced)
                     .facioKebab(onKebab)
             )
         case .reminder:
