@@ -131,6 +131,53 @@ final class DeskStore {
         return instanceId
     }
 
+    /// Widgets the kebab header can still quiet down: the ones this subject is
+    /// asking with right now. A done tile stays dim on Today until midnight.
+    func postponeTargets(subjectId: String) -> [Widget] {
+        snapshot.widgets.filter { widget in
+            widget.subjectId == subjectId
+                && (widget.status == .ready || widget.status == .running)
+                && (widget.section == .today || widget.section == .lifetime || widget.section == .soon)
+        }
+    }
+
+    /// `postpone` from the shared law: the tile leaves Today for Отложили and
+    /// the alarm goes quiet. `when` is kept — postpone is "not now", not a
+    /// deletion and not a skip.
+    @discardableResult
+    func postpone(subjectId: String) -> Bool {
+        let ids = Set(postponeTargets(subjectId: subjectId).map(\.id))
+        guard !ids.isEmpty else { return false }
+        commit(reminders: true) { next in
+            for index in next.widgets.indices where ids.contains(next.widgets[index].id) {
+                next.widgets[index].section = .postponed
+                next.widgets[index].status = .snoozed
+            }
+        }
+        return true
+    }
+
+    /// `archive_widget` + `retire_subject` by the law: the object leaves the
+    /// lid and the practice stops asking. 04-domain-model — "nothing is deleted
+    /// as punishment": instances and cues stay exactly where they are, so the
+    /// reason survives and Deeds can still open this practice.
+    @discardableResult
+    func removeFromLid(subjectId: String) -> Bool {
+        guard let subject = subject(id: subjectId), subject.status != .retired else { return false }
+        commit(reminders: true) { next in
+            for index in next.widgets.indices where next.widgets[index].subjectId == subjectId {
+                guard next.widgets[index].status != .archived else { continue }
+                next.widgets[index].status = .archived
+                next.widgets[index].version += 1
+            }
+            if let index = next.subjects.firstIndex(where: { $0.id == subjectId }) {
+                next.subjects[index] = SubjectLaw.retire(next.subjects[index])
+            }
+        }
+        journal(.subjectRetired, subjectId: subjectId)
+        return true
+    }
+
     func markCueSurfaced(widgetId: String, place: String) {
         guard let widget = widget(id: widgetId),
               let cue = surfaceCue(for: widget),

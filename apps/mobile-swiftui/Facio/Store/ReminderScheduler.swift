@@ -21,10 +21,15 @@ enum ReminderScheduler {
         idPrefix + "check-in:" + subjectId
     }
 
+    private static let silentStatuses: Set<WidgetStatus> = [.done, .snoozed, .archived]
+
     static func alarms(from snapshot: DeskSnapshot, now: Date) -> [ReminderAlarm] {
         let bySubject = Dictionary(uniqueKeysWithValues: snapshot.subjects.map { ($0.id, $0) })
         var alarms: [ReminderAlarm] = snapshot.widgets.compactMap { widget in
-            guard widget.type == .reminder, widget.status != .done else { return nil }
+            // Postponed (`snoozed`) and taken off the lid (`archived`) are both
+            // "do not ask right now" — a widget that is not on the lid must not
+            // ring from the pocket either.
+            guard widget.type == .reminder, !silentStatuses.contains(widget.status) else { return nil }
             let subject = bySubject[widget.subjectId]
             if subject?.status == .retired || subject?.status == .paused {
                 return nil

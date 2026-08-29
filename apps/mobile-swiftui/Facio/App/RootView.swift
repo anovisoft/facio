@@ -7,7 +7,10 @@ struct RootView: View {
     @State private var path = NavigationPath()
     @State private var pan = PanSession()
     @State private var kebab: SubjectRef?
-    @State private var pendingTalk: PendingTalk?
+    /// The kebab hands the mouth over in `sheet(onDismiss:)` — one sheet at a
+    /// time, no sleep. The anchor rides along so the talk opens on the same
+    /// message the miniature was showing.
+    @State private var pendingTalk: TalkAnchor?
     /// Built here, not in `FacioApp.init` — the warehouse is a `@State`
     /// factory and this hangs off the same instance.
     @State private var sync: DeskSyncCoordinator?
@@ -49,12 +52,13 @@ struct RootView: View {
                     kebab = nil
                     path.append(DeskRoute.inspect(subjectId: subjectId, instanceId: instanceId))
                 },
-                onTalk: { threadId in
-                    pendingTalk = threadId.map { .existing($0) } ?? .fresh
+                onTalk: { anchor in
+                    pendingTalk = anchor
                     kebab = nil
-                }
+                },
+                onClose: { kebab = nil }
             )
-            .presentationDetents([.height(440)])
+            .presentationDetents([.fraction(0.9)])
             .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $talk.sheetOpen) {
@@ -98,16 +102,6 @@ struct RootView: View {
     private func presentPendingTalk() {
         guard let pendingTalk else { return }
         self.pendingTalk = nil
-        switch pendingTalk {
-        case .existing(let threadId):
-            talk.open(threadId: threadId)
-        case .fresh:
-            talk.sheetOpen = true
-        }
+        talk.open(threadId: pendingTalk.threadId, anchorMessageId: pendingTalk.messageId)
     }
-}
-
-private enum PendingTalk: Equatable {
-    case existing(String)
-    case fresh
 }

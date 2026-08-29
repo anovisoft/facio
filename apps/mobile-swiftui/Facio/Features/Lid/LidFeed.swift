@@ -102,6 +102,9 @@ struct LidFeed: View {
     }
 
     private func showsWidget(_ widget: Widget, hiding subjectId: String?) -> Bool {
+        // Archived is off the lid in every section, not only on Today: the law
+        // keeps the widget's `section` when it archives it.
+        guard widget.status != .archived else { return false }
         guard widget.type.showsOnLid, showsSubject(widget.subjectId) else { return false }
         if let subjectId, widget.subjectId == subjectId { return false }
         return true

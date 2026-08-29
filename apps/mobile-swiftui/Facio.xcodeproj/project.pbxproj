@@ -27,7 +27,9 @@
 		1D265B66C39C1DAB0EFF827F /* Widget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26A5270986AC8D7DF3C69962 /* Widget.swift */; };
 		1D6C0D73D2B773C10F6FB200 /* InstanceStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09B49E7140B92D3E9AA464AE /* InstanceStatus.swift */; };
 		21AC83ABBF8649906CCC1EDD /* InspectHorizonStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3693462B6CCAC151794970E /* InspectHorizonStrip.swift */; };
+		2223C5A14CA51B15305FA20E /* KebabInspectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2933B8EDC13E91A009C7374B /* KebabInspectorTests.swift */; };
 		25BFF7A3B7E47419AFE23BD4 /* InstanceLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FD625BD89099DBE924C2B9D /* InstanceLaw.swift */; };
+		27DD96C4A34E130150B3E1B0 /* KebabLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AD8AFE0347C1C01638DAF3E /* KebabLaw.swift */; };
 		312E31F4EAABAB4893B02FE0 /* DayStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = F95B6699402F7C8AB7D08FB8 /* DayStrip.swift */; };
 		345DDEF409CD5C9AB583BCC6 /* DriftLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A290997900023858134E738 /* DriftLaw.swift */; };
 		360AEFAB704D5DC77C113DA5 /* InstanceLawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE49070FF2ADCCEB1E700DDA /* InstanceLawTests.swift */; };
@@ -56,6 +58,7 @@
 		659918BF655B0B9127307996 /* CueLawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56186C97AB845D23001563F3 /* CueLawTests.swift */; };
 		676457C255DA1A8B2A7671CD /* GlassSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50A2B65D8C84C5EF71B4C74 /* GlassSurface.swift */; };
 		691AFB13E79A53D01848D7E3 /* WidgetPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575EABA05F53B43F23160681 /* WidgetPayload.swift */; };
+		69B5A87BA8F80946F666E803 /* TalkMiniature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A34A102E7F3F3EEAB4EE908 /* TalkMiniature.swift */; };
 		6CE04DDD1A110CFD00FD61DA /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DA2072492E534903ADD78273 /* Localizable.xcstrings */; };
 		717FA4011EEEDBEABFEE35B6 /* Cue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786AEABFA4B9FBC87D0A2311 /* Cue.swift */; };
 		71B355AAC28D015ED5DD4520 /* LocalizationCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADACEEA50715309876C8DF6 /* LocalizationCatalogTests.swift */; };
@@ -64,6 +67,7 @@
 		7657870663FD68EE5B3D29E8 /* TileCellSizeKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD204F8AA9DC6C8FF665395A /* TileCellSizeKey.swift */; };
 		76EDCEE213AACB058BF33BC3 /* TodayItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D6E063A34D0400BF603AF21 /* TodayItem.swift */; };
 		78B9B82F38E4083395203179 /* TalkStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C91084E7BBC1FDACA5BB06E1 /* TalkStoreTests.swift */; };
+		790E0C65B92F469BA01895EA /* InstanceCarousel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BFB13BD377ABB3A327F2F6C /* InstanceCarousel.swift */; };
 		7C7643ECDF57F8C0CFE6722E /* FacioPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B5456958AB3FFDEAA962F4 /* FacioPalette.swift */; };
 		7D298E763BA501C914191CD6 /* DriftLawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EDFCFCEE2A01319BF949300 /* DriftLawTests.swift */; };
 		8592FA76C4C48628433F9921 /* SubjectLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B95D459B6FACFCD837AE400 /* SubjectLaw.swift */; };
@@ -90,6 +94,7 @@
 		AD45ABBB669BE1D6394F2C63 /* TileSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CAE9C5EA7020260E61819B3 /* TileSize.swift */; };
 		AE0EE9B28482E1A88A7E2076 /* SlotKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CC366E1820B8C0187727896 /* SlotKind.swift */; };
 		B2A5600E11C4CD751ECFDB7A /* AccountModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47F1FCFB1FA72143A6BDC3E1 /* AccountModels.swift */; };
+		B4E0003131A6C09ECD1A8DE4 /* TalkAnchorLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9BCAA35FFBFE03B382EB59 /* TalkAnchorLaw.swift */; };
 		B81A079B61F6D259329DA1E2 /* LidScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3200A392C3CE6994B512A167 /* LidScreen.swift */; };
 		B9764CA95936E34CD57E55B8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 131D42EFFB9F1F2770F97660 /* Assets.xcassets */; };
 		B9C2D312EF6DA76A45BA7728 /* CueOrigin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 712ADE31FC9A01A67851A26C /* CueOrigin.swift */; };
@@ -98,6 +103,7 @@
 		BEFF770731B445B54C21CE78 /* SeedFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1917B89AB52F3F1B358D6B6 /* SeedFactory.swift */; };
 		BF0251F53D0946A92068A6B9 /* CounterTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC16928D71A59480CFCA71EF /* CounterTile.swift */; };
 		C02AB68F2948B995641C037F /* PainLawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB6CF10F8A46994C86FE0B08 /* PainLawTests.swift */; };
+		C0E17F20CF06C235DE1F6CC0 /* TapLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138A43F7FBB68B1202DB4FAE /* TapLock.swift */; };
 		C12EB9425AB5A713AAC50974 /* AtmosphereBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDB0BDAA3DA77E97E85EA286 /* AtmosphereBackground.swift */; };
 		C320C96EB2A1BB2C8B925B59 /* LidSectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3918C83AA817DE136D7B372 /* LidSectionHeader.swift */; };
 		C6C1AA5A5A7C9D8B762CC664 /* DeskSyncCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65B505EE3978AD4B56D37FB1 /* DeskSyncCoordinatorTests.swift */; };
@@ -152,6 +158,7 @@
 		12BCA9438FAD0EB8554108A5 /* Instance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instance.swift; sourceTree = "<group>"; };
 		131D42EFFB9F1F2770F97660 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1377E6F8F845B6FD7C2B8337 /* TalkURL.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = TalkURL.xcconfig; sourceTree = "<group>"; };
+		138A43F7FBB68B1202DB4FAE /* TapLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapLock.swift; sourceTree = "<group>"; };
 		14F80C2FE128D42C6903550B /* Facio.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Facio.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		15209F287CF3C54B427B68E7 /* LidProjectionLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidProjectionLaw.swift; sourceTree = "<group>"; };
 		16390EEDE51BCA21EF87D58F /* DisplayCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayCopy.swift; sourceTree = "<group>"; };
@@ -165,6 +172,7 @@
 		26A5270986AC8D7DF3C69962 /* Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Widget.swift; sourceTree = "<group>"; };
 		2819363B82CC457A07AD429C /* TalkModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkModels.swift; sourceTree = "<group>"; };
 		2864C10551B05E0EE8E3BD74 /* WidgetStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStatus.swift; sourceTree = "<group>"; };
+		2933B8EDC13E91A009C7374B /* KebabInspectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KebabInspectorTests.swift; sourceTree = "<group>"; };
 		2A6B4866C56C0FC894B32F56 /* FacioJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacioJSON.swift; sourceTree = "<group>"; };
 		2C82A425B50E627261D99C7E /* KebabInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KebabInspector.swift; sourceTree = "<group>"; };
 		2C9638F827F32F9586B9E461 /* WidgetType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetType.swift; sourceTree = "<group>"; };
@@ -177,6 +185,7 @@
 		360413F490CB306BB68500A5 /* PackLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackLawTests.swift; sourceTree = "<group>"; };
 		38B9DFA0CD7F67E0D5AC9DD8 /* DriftOffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriftOffer.swift; sourceTree = "<group>"; };
 		3B2748A2C229B2F4EEFF8E66 /* TickUseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TickUseView.swift; sourceTree = "<group>"; };
+		3BFB13BD377ABB3A327F2F6C /* InstanceCarousel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceCarousel.swift; sourceTree = "<group>"; };
 		3CAE9C5EA7020260E61819B3 /* TileSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileSize.swift; sourceTree = "<group>"; };
 		3D48A43C077D1D242EBD23B7 /* SlotLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotLaw.swift; sourceTree = "<group>"; };
 		3D4E6FAE6EB30076BA7E2A98 /* TimeWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeWindow.swift; sourceTree = "<group>"; };
@@ -195,6 +204,7 @@
 		575EABA05F53B43F23160681 /* WidgetPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPayload.swift; sourceTree = "<group>"; };
 		5A65D9FE0EF09D2A8481ED7B /* CueKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueKind.swift; sourceTree = "<group>"; };
 		5A8BE137FD1137D4F1D4C801 /* PainLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PainLaw.swift; sourceTree = "<group>"; };
+		5D9BCAA35FFBFE03B382EB59 /* TalkAnchorLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkAnchorLaw.swift; sourceTree = "<group>"; };
 		5E4FF3EA95A2EB1F3B58E372 /* DriftTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriftTile.swift; sourceTree = "<group>"; };
 		5EDFCFCEE2A01319BF949300 /* DriftLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriftLawTests.swift; sourceTree = "<group>"; };
 		5FD625BD89099DBE924C2B9D /* InstanceLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceLaw.swift; sourceTree = "<group>"; };
@@ -223,6 +233,8 @@
 		85B5456958AB3FFDEAA962F4 /* FacioPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacioPalette.swift; sourceTree = "<group>"; };
 		8723C8CD42D8C6088A075648 /* DeskSyncCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskSyncCoordinator.swift; sourceTree = "<group>"; };
 		88264A6ED9F4B61255BD7DDB /* LidProjectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidProjectionTests.swift; sourceTree = "<group>"; };
+		8A34A102E7F3F3EEAB4EE908 /* TalkMiniature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkMiniature.swift; sourceTree = "<group>"; };
+		8AD8AFE0347C1C01638DAF3E /* KebabLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KebabLaw.swift; sourceTree = "<group>"; };
 		8BDA79F3B47DCF2FB25DE8AA /* KebabStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KebabStub.swift; sourceTree = "<group>"; };
 		8BDAF9C77FC3601E2540B734 /* CounterUseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterUseView.swift; sourceTree = "<group>"; };
 		8CC366E1820B8C0187727896 /* SlotKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotKind.swift; sourceTree = "<group>"; };
@@ -377,7 +389,10 @@
 		8502426CE63C0DCDE5AB22F4 /* Kebab */ = {
 			isa = PBXGroup;
 			children = (
+				3BFB13BD377ABB3A327F2F6C /* InstanceCarousel.swift */,
 				2C82A425B50E627261D99C7E /* KebabInspector.swift */,
+				8AD8AFE0347C1C01638DAF3E /* KebabLaw.swift */,
+				8A34A102E7F3F3EEAB4EE908 /* TalkMiniature.swift */,
 			);
 			path = Kebab;
 			sourceTree = "<group>";
@@ -425,6 +440,7 @@
 				1881B07D94D95992419D2480 /* DomainTestSupport.swift */,
 				5EDFCFCEE2A01319BF949300 /* DriftLawTests.swift */,
 				DE49070FF2ADCCEB1E700DDA /* InstanceLawTests.swift */,
+				2933B8EDC13E91A009C7374B /* KebabInspectorTests.swift */,
 				88264A6ED9F4B61255BD7DDB /* LidProjectionTests.swift */,
 				0ADACEEA50715309876C8DF6 /* LocalizationCatalogTests.swift */,
 				62CDF841D69D1101DC6F6D8C /* ModelTests.swift */,
@@ -579,6 +595,7 @@
 				A1917B89AB52F3F1B358D6B6 /* SeedFactory.swift */,
 				3D48A43C077D1D242EBD23B7 /* SlotLaw.swift */,
 				1B95D459B6FACFCD837AE400 /* SubjectLaw.swift */,
+				5D9BCAA35FFBFE03B382EB59 /* TalkAnchorLaw.swift */,
 			);
 			path = Law;
 			sourceTree = "<group>";
@@ -590,6 +607,7 @@
 				85B5456958AB3FFDEAA962F4 /* FacioPalette.swift */,
 				2DE3C9083825C5AA83F71546 /* FacioTheme.swift */,
 				F50A2B65D8C84C5EF71B4C74 /* GlassSurface.swift */,
+				138A43F7FBB68B1202DB4FAE /* TapLock.swift */,
 				4DB3BDE083C265BE8C20EEDB /* WindowMetrics.swift */,
 			);
 			path = Theme;
@@ -708,6 +726,7 @@
 				F8D115041D6077185ED190A6 /* DomainTestSupport.swift in Sources */,
 				7D298E763BA501C914191CD6 /* DriftLawTests.swift in Sources */,
 				360AEFAB704D5DC77C113DA5 /* InstanceLawTests.swift in Sources */,
+				2223C5A14CA51B15305FA20E /* KebabInspectorTests.swift in Sources */,
 				9F50A3AF342159EBD6E77599 /* LidProjectionTests.swift in Sources */,
 				71B355AAC28D015ED5DD4520 /* LocalizationCatalogTests.swift in Sources */,
 				CBA06C3A5C7845636196F10A /* ModelTests.swift in Sources */,
@@ -768,11 +787,13 @@
 				21AC83ABBF8649906CCC1EDD /* InspectHorizonStrip.swift in Sources */,
 				49B0E555AA8835B332F36B73 /* InspectScreen.swift in Sources */,
 				D4C5D4A6EC46647EEE6702E6 /* Instance.swift in Sources */,
+				790E0C65B92F469BA01895EA /* InstanceCarousel.swift in Sources */,
 				25BFF7A3B7E47419AFE23BD4 /* InstanceLaw.swift in Sources */,
 				1D6C0D73D2B773C10F6FB200 /* InstanceStatus.swift in Sources */,
 				9CB65A46F5A5D0DD2781AB35 /* InstanceStrip.swift in Sources */,
 				9B4EF208E5A36E31B21A1F84 /* JournalEvent.swift in Sources */,
 				A5E9E9FC7522F070F6A87430 /* KebabInspector.swift in Sources */,
+				27DD96C4A34E130150B3E1B0 /* KebabLaw.swift in Sources */,
 				940938E42ECF73115CA5847C /* KebabStub.swift in Sources */,
 				4481C68552510F52EAF8B391 /* LidFeed.swift in Sources */,
 				9A3E047F8552F4735FF74D8D /* LidProjection.swift in Sources */,
@@ -803,12 +824,15 @@
 				75C05EB773E2E4EE0249AACB /* Subject.swift in Sources */,
 				8592FA76C4C48628433F9921 /* SubjectLaw.swift in Sources */,
 				F7896392618DEA3364CFDD57 /* SubjectStatus.swift in Sources */,
+				B4E0003131A6C09ECD1A8DE4 /* TalkAnchorLaw.swift in Sources */,
 				4AB9E51C1163D4566F7BA212 /* TalkClient.swift in Sources */,
+				69B5A87BA8F80946F666E803 /* TalkMiniature.swift in Sources */,
 				52838AEC313E09A097F11E0F /* TalkModels.swift in Sources */,
 				5C8323A7D1ABC2BCE70993F9 /* TalkRepository.swift in Sources */,
 				95DF32AAF2EB962DA93A3EEA /* TalkSheet.swift in Sources */,
 				62C8CA3D2A5B6A5EB91877CD /* TalkStore.swift in Sources */,
 				A7323E03B9F6C6B6E823AE0B /* TalksList.swift in Sources */,
+				C0E17F20CF06C235DE1F6CC0 /* TapLock.swift in Sources */,
 				134293B3F4B983D145ABEE9F /* Target.swift in Sources */,
 				BA090ABB20B0D16D1CC7954D /* TickTile.swift in Sources */,
 				0DCB06101BDB12C43AEF0870 /* TickUseView.swift in Sources */,

@@ -1020,6 +1020,24 @@
         }
       }
     },
+    "открывает разговор": {
+      "comment": "Chat miniature accessibility hint",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "opens the talk"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "открывает разговор"
+          }
+        }
+      }
+    },
     "Открыть": {
       "extractionState": "manual",
       "localizations": {
@@ -1068,6 +1086,42 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отложили"
+          }
+        }
+      }
+    },
+    "Отложить": {
+      "comment": "Kebab inspector header: postpone the object",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Postpone"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отложить"
+          }
+        }
+      }
+    },
+    "Отмена": {
+      "comment": "Kebab removal confirmation: cancel",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отмена"
           }
         }
       }
@@ -1422,6 +1476,24 @@
         }
       }
     },
+    "Случаи и подсказки останутся.": {
+      "comment": "Kebab removal confirmation: nothing is deleted as punishment",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instances and cues stay."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Случаи и подсказки останутся."
+          }
+        }
+      }
+    },
     "Сохранить": {
       "extractionState": "manual",
       "localizations": {
@@ -1507,6 +1579,42 @@
           "stringUnit": {
             "state": "translated",
             "value": "убрать"
+          }
+        }
+      }
+    },
+    "Убрать": {
+      "comment": "Kebab inspector header: take the widget off the lid",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Убрать"
+          }
+        }
+      }
+    },
+    "Убрать с крышки?": {
+      "comment": "Kebab removal confirmation title",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take it off the lid?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Убрать с крышки?"
           }
         }
       }

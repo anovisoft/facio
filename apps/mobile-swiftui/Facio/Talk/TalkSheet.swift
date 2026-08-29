@@ -45,6 +45,14 @@ struct TalkSheet: View {
                 .onChange(of: talk.sending) { _, _ in
                     scroll(proxy)
                 }
+                // The kebab miniature expands into this sheet standing on the
+                // same message — the derived scroll target, not a chapter the
+                // user is told about. No anchor: the sheet opens as it always
+                // did, at the bottom.
+                .onAppear {
+                    guard let anchor = talk.anchorMessageId else { return }
+                    proxy.scrollTo(anchor, anchor: .center)
+                }
             }
             .navigationTitle("Facio")
             .toolbarTitleDisplayMode(.inline)
@@ -68,7 +76,10 @@ struct TalkSheet: View {
         .presentationDetents([.fraction(0.94)])
         .presentationDragIndicator(.visible)
         .onAppear {
-            composerFocused = true
+            // Arriving on an anchor means the person came to look at that part
+            // of the talk; the keyboard would cover it. Everywhere else the
+            // sheet still opens ready to type.
+            composerFocused = talk.anchorMessageId == nil
         }
     }
 
