@@ -54,3 +54,42 @@ async def test_live_haiku_without_anthropic_key_is_503() -> None:
         app.dependency_overrides.clear()
     assert response.status_code == 503
     assert "anthropic" in response.json()["detail"]
+
+
+async def test_locale_defaults_to_ru_for_old_clients(client) -> None:
+    """`locale` is optional on the wire; the response schema does not grow."""
+    payload = {
+        "utterance": "поясница забирает нагрузку",
+        "desk": founding_desk().model_dump(mode="json"),
+        "thread_id": "t-locale-default",
+    }
+    assert "locale" not in payload
+    response = await client.post("/v1/talk/turn", json=payload)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["mutated"] is True
+    assert "locale" not in body
+
+
+async def test_locale_en_turn_matches_the_english_golden(client) -> None:
+    body = TalkTurnRequest(
+        utterance="my lower back takes the load",
+        desk=founding_desk(),
+        thread_id="t-locale-en",
+        locale="en",
+    )
+    response = await client.post("/v1/talk/turn", json=body.model_dump(mode="json"))
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["mutated"] is True
+    assert any(cue["id"] == "push-ups-brace-en-talk" for cue in payload["desk"]["cues"])
+
+
+async def test_unknown_locale_rejected(client) -> None:
+    body = {
+        "utterance": "поясница забирает нагрузку",
+        "desk": founding_desk().model_dump(mode="json"),
+        "locale": "de",
+    }
+    response = await client.post("/v1/talk/turn", json=body)
+    assert response.status_code == 422

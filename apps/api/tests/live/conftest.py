@@ -13,7 +13,7 @@ from facio_domain.desk import founding_desk
 from facio_api.config import Settings
 from facio_api.providers.factory import provider_for
 from facio_api.talk.loop import run_turn
-from facio_api.talk.schemas import TalkTurnRequest, TalkTurnResponse
+from facio_api.talk.schemas import Locale, TalkTurnRequest, TalkTurnResponse
 from support.live import (
     LIVE_OPT_IN_REASON,
     force_live,
@@ -43,17 +43,27 @@ def live_settings() -> Settings:
     return skip_without_vendor_key(force_live(loaded))
 
 
-@pytest.fixture
-def live_play(live_settings: Settings) -> LivePlay:
+def _play_for(live_settings: Settings, locale: Locale) -> LivePlay:
     async def play(utterance: str) -> TalkTurnResponse:
         provider = provider_for(live_settings, utterance)
         request = TalkTurnRequest(
             utterance=utterance,
             desk=founding_desk(now=NOW),
             thread=[],
-            thread_id="live",
+            thread_id=f"live-{locale}",
             now=NOW,
+            locale=locale,
         )
         return await run_turn(request, provider, now=NOW)
 
     return play
+
+
+@pytest.fixture
+def live_play(live_settings: Settings) -> LivePlay:
+    return _play_for(live_settings, "ru")
+
+
+@pytest.fixture
+def live_play_en(live_settings: Settings) -> LivePlay:
+    return _play_for(live_settings, "en")

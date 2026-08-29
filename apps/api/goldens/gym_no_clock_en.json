@@ -1,0 +1,33 @@
+{
+  "id": "gym_no_clock_en",
+  "utterance": "put the gym on the desk",
+  "match": [
+    "put the gym on the desk"
+  ],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "create_widget",
+          "arguments": {
+            "type": "counter",
+            "title": "gym",
+            "subject_id": "gym"
+          }
+        }
+      ]
+    },
+    {
+      "text": "The gym is on the desk. No hour: you did not ask for one."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": [
+      "create_widget"
+    ],
+    "forbidden_tools": [
+      "set_reminder"
+    ]
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "id": "remind_at_19_en",
+  "utterance": "remind me at 19, I am asleep by 21",
+  "match": [
+    "remind me at 19"
+  ],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "set_reminder",
+          "arguments": {
+            "subject_id": "bike",
+            "latest_by": "19:00"
+          }
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "add_cue",
+          "arguments": {
+            "id": "bike-sleep-en-talk",
+            "subject_id": "bike",
+            "kind": "correction",
+            "text": "asleep by 21",
+            "surface": "timing"
+          }
+        }
+      ]
+    },
+    {
+      "text": "I will nudge you at 19:00. You are asleep by 21, that sits on the tile; I am not subtracting three hours from 21."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": [
+      "set_reminder",
+      "add_cue"
+    ],
+    "cue": {
+      "subject_id": "bike",
+      "surface": "timing",
+      "text_contains": [
+        "asleep"
+      ]
+    }
+  }
+}

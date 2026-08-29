@@ -1,0 +1,43 @@
+{
+  "id": "named_hour_beats_closing_en",
+  "utterance": "by 23 it already closes. Remind me to go to the gym at 19",
+  "match": [
+    "by 23 it already closes"
+  ],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "create_widget",
+          "arguments": {
+            "type": "reminder",
+            "title": "gym",
+            "subject_id": "gym"
+          }
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "set_reminder",
+          "arguments": {
+            "subject_id": "gym",
+            "latest_by": "19:00",
+            "closes_at": "23:00"
+          }
+        }
+      ]
+    },
+    {
+      "text": "I will nudge you at 19:00. The 23 is the gym door, not 20:00."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": [
+      "create_widget",
+      "set_reminder"
+    ]
+  }
+}

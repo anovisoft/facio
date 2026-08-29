@@ -1,0 +1,69 @@
+{
+  "id": "method_4_to_30_en",
+  "utterance": "I can do 4, I want 30 in a row, how?",
+  "match": [
+    "i can do 4",
+    "want 30 in a row"
+  ],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "list_desk",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "update_widget",
+          "arguments": {
+            "widget_id": "push-ups-counter",
+            "target": 30,
+            "count": 4
+          }
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "add_cue",
+          "arguments": {
+            "id": "push-ups-method-en-talk",
+            "subject_id": "push-ups",
+            "kind": "correction",
+            "text": "four clean reps, body like a plank",
+            "surface": "do-time"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Four clean push-ups, body like a plank, do not chase the number. The goal of 30 stays on the desk: quality first, volume after."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": [
+      "list_desk",
+      "update_widget",
+      "add_cue"
+    ],
+    "forbidden_tools": [
+      "set_reminder"
+    ],
+    "target_current": 4,
+    "target_goal_max": 30,
+    "times_per_week_max": 3,
+    "cue": {
+      "subject_id": "push-ups",
+      "surface": "do-time",
+      "text_contains": [
+        "clean",
+        "plank"
+      ]
+    }
+  }
+}

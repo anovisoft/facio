@@ -1,0 +1,17 @@
+{
+  "id": "explain_only_en",
+  "utterance": "what does keeping the core tight mean?",
+  "match": [
+    "keeping the core tight"
+  ],
+  "scripted": [
+    {
+      "text": "The core is the belly and the lower back working as one cylinder. On the effort, gather them and the glutes a little. I am not changing the card: this is an explanation, not a new command."
+    }
+  ],
+  "expect": {
+    "mutated": false,
+    "tools": [],
+    "snapshots_empty": true
+  }
+}

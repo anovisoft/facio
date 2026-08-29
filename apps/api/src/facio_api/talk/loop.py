@@ -11,7 +11,13 @@ from facio_domain.pain import reports_pain
 from facio_domain.tools import apply_tool, snapshot_cards
 
 from facio_api.providers.types import ModelProvider, ModelTurn
-from facio_api.talk.schemas import SnapshotCard, TalkTurnRequest, TalkTurnResponse, ToolCallRecord
+from facio_api.talk.schemas import (
+    Locale,
+    SnapshotCard,
+    TalkTurnRequest,
+    TalkTurnResponse,
+    ToolCallRecord,
+)
 from facio_api.talk.spec import SYSTEM_PROMPT, tool_schemas
 
 MAX_ROUNDS = 8
@@ -20,6 +26,14 @@ EMPTY_TOOLS_NUDGE = (
     "Запись на стол — вызови инструмент сейчас. Не пересказывай правила. "
     "Человеку потом только короткая фраза."
 )
+EMPTY_TOOLS_NUDGE_EN = (
+    "A desk write — call the tool now. Do not retell the rules. "
+    "Afterwards the person gets one short sentence."
+)
+LOCALE_LINE: dict[Locale, str] = {
+    "ru": "The person writes in Russian: answer in Russian.",
+    "en": "The person writes in English: answer in English.",
+}
 _LEAK_NEEDLES = (
     "инструмент",
     "focused_widget",
@@ -29,16 +43,34 @@ _LEAK_NEEDLES = (
     "freeze_subject",
     "умолчани",
     "tool_call",
+    "tool",
 )
+_FALLBACK: dict[Locale, tuple[str, str, str]] = {
+    "ru": (
+        "Готово.",
+        "Могу объяснить или записать на стол — напиши ещё раз.",
+        "Записал бы на стол — напиши ещё раз короче.",
+    ),
+    "en": (
+        "Done.",
+        "I can explain it or put it on the desk — say it once more.",
+        "I would put that on the desk — say it once more, shorter.",
+    ),
+}
 
 
-def _human_text(text: str, *, mutated: bool) -> str:
+def _nudge(locale: Locale) -> str:
+    return EMPTY_TOOLS_NUDGE_EN if locale == "en" else EMPTY_TOOLS_NUDGE
+
+
+def _human_text(text: str, *, mutated: bool, locale: Locale = "ru") -> str:
+    done, empty, leaked = _FALLBACK.get(locale, _FALLBACK["ru"])
     compact = text.strip()
     if not compact:
-        return "Готово." if mutated else "Могу объяснить или записать на стол — напиши ещё раз."
+        return done if mutated else empty
     lower = compact.casefold()
     if any(needle in lower for needle in _LEAK_NEEDLES):
-        return "Готово." if mutated else "Записал бы на стол — напиши ещё раз короче."
+        return done if mutated else leaked
     return compact
 
 
@@ -118,11 +150,11 @@ async def run_turn(
         if first_complete:
             first_complete = False
             messages.append({"role": "assistant", "content": turn.text or ""})
-            messages.append({"role": "user", "content": EMPTY_TOOLS_NUDGE})
+            messages.append({"role": "user", "content": _nudge(body.locale)})
             continue
         break
 
-    text = _human_text(text, mutated=mutated)
+    text = _human_text(text, mutated=mutated, locale=body.locale)
     cards = [SnapshotCard.model_validate(row) for row in snapshot_cards(desk, snapshot_ids)] if mutated else []
     return TalkTurnResponse(
         text=text,
@@ -165,6 +197,7 @@ def _messages(body: TalkTurnRequest, utterance: str, pain: bool) -> list[dict[st
     )
     messages: list[dict[str, Any]] = [
         {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": LOCALE_LINE[body.locale]},
         {"role": "system", "content": f"Стол сейчас:\n{desk_brief}"},
     ]
     for row in body.thread[-20:]:

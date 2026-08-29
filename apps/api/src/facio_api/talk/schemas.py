@@ -1,7 +1,10 @@
 from datetime import datetime
+from typing import Literal
 
 from facio_domain.models import Desk
 from pydantic import BaseModel, Field
+
+Locale = Literal["ru", "en"]
 
 
 class ThreadMessage(BaseModel):
@@ -16,6 +19,7 @@ class TalkTurnRequest(BaseModel):
     focused_widget_id: str | None = None
     thread_id: str | None = None
     now: datetime | None = None
+    locale: Locale = "ru"
 
 
 class ToolCallRecord(BaseModel):
