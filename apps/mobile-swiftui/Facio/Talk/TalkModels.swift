@@ -79,6 +79,7 @@ struct TalkTurnRequest: Encodable, Sendable {
     var focusedWidgetId: String?
     var threadId: String?
     var now: Date?
+    var locale: String = TalkLocale.current()
 
     enum CodingKeys: String, CodingKey {
         case utterance
@@ -87,6 +88,18 @@ struct TalkTurnRequest: Encodable, Sendable {
         case focusedWidgetId = "focused_widget_id"
         case threadId = "thread_id"
         case now
+        case locale
+    }
+}
+
+/// The mouth answers in the language the lid is showing, not in the one the
+/// phone is set to. The bundle ships `ru` and `en`, so what iOS resolved for
+/// the app is already one of the two the service accepts — anything else
+/// would be a 422 on the wire.
+enum TalkLocale {
+    static func current(_ preferred: [String] = Bundle.main.preferredLocalizations) -> String {
+        let head = preferred.first?.lowercased() ?? "ru"
+        return head.hasPrefix("ru") ? "ru" : "en"
     }
 }
 

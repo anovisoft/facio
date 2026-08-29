@@ -148,4 +148,72 @@ final class TalkStoreTests: XCTestCase {
             }
         )
     }
+
+    // MARK: - Language on the wire
+
+    func testLocaleFollowsTheLanguageTheLidIsShowing() {
+        XCTAssertEqual(TalkLocale.current(["ru"]), "ru")
+        XCTAssertEqual(TalkLocale.current(["ru-RU"]), "ru")
+        XCTAssertEqual(TalkLocale.current(["en"]), "en")
+        XCTAssertEqual(TalkLocale.current(["en-US"]), "en")
+        // The bundle only ships ru and en, so anything else already fell back
+        // in the UI; the service takes those two and 422s on the rest.
+        XCTAssertEqual(TalkLocale.current(["fr-FR"]), "en")
+        XCTAssertEqual(TalkLocale.current([]), "ru")
+    }
+
+    func testSentTurnCarriesTheLocale() async throws {
+        let now = try XCTUnwrap(FacioJSON.date(from: "2026-08-16T12:00:00"))
+        let directory = FileManager.default.temporaryDirectory
+            .appending(path: "facio-talk-\(UUID().uuidString)", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let desk = try SeedFactory.buildSeed(now: now)
+        let seen = LockedBox<String?>(nil)
+        let client = TalkClient.stub { request in
+            seen.value = request.locale
+            return TalkTurnResponse(
+                text: "ok",
+                desk: desk,
+                mutated: false,
+                snapshots: [],
+                threadId: request.threadId
+            )
+        }
+        let talk = try TalkStore(repository: TalkRepository(directory: directory), client: client, now: { now })
+        talk.draft = "hello"
+
+        _ = await talk.send(desk: desk)
+
+        XCTAssertEqual(seen.value, TalkLocale.current())
+    }
+
+    func testTurnRequestEncodesLocaleForTheService() throws {
+        let now = try XCTUnwrap(FacioJSON.date(from: "2026-08-16T12:00:00"))
+        let request = TalkTurnRequest(
+            utterance: "hello",
+            desk: try SeedFactory.buildSeed(now: now),
+            thread: [],
+            focusedWidgetId: nil,
+            threadId: "t1",
+            now: now,
+            locale: "en"
+        )
+        let json = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: try FacioJSON.encoder.encode(request)) as? [String: Any]
+        )
+        XCTAssertEqual(json["locale"] as? String, "en")
+    }
+}
+
+/// Small box so a `@Sendable` stub can report back what it saw.
+private final class LockedBox<Value>: @unchecked Sendable {
+    private let lock = NSLock()
+    private var stored: Value
+
+    init(_ value: Value) { stored = value }
+
+    var value: Value {
+        get { lock.withLock { stored } }
+        set { lock.withLock { stored = newValue } }
+    }
 }
