@@ -1,306 +1,1420 @@
 {
-  "sourceLanguage" : "ru",
-  "strings" : {
-    " / %lld" : {
-
-    },
-    ":" : {
-
-    },
-    "/" : {
-
-    },
-    "%@ — не было %@. Сделать меньше?" : {
-      "comment" : "Drift card body"
-    },
-    "%@, готово" : {
-      "comment" : "Inspect horizon done day"
-    },
-    "%@, к делу" : {
-      "comment" : "Inspect horizon due day"
-    },
-    "%@, пусто" : {
-      "comment" : "Inspect horizon empty day"
-    },
-    "%lld" : {
-
-    },
-    "%lld / %lld" : {
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld / %2$lld"
-          }
-        }
-      }
-    },
-    "%lld дней" : {
-      "comment" : "Drift silence in days"
-    },
-    "%lld× в день" : {
-      "comment" : "Cadence n/day"
-    },
-    "%lld× в неделю" : {
-      "comment" : "Cadence n/week"
-    },
-    "Facio" : {
-
-    },
-    "Lifetime" : {
-
-    },
-    "архив пуст" : {
-
-    },
-    "без ритма" : {
-      "comment" : "Cadence none"
-    },
-    "В ближайшее время" : {
-
-    },
-    "в работе" : {
-      "comment" : "Instance in progress"
-    },
-    "Велосипед" : {
-      "comment" : "Subject title for the exercise bike"
-    },
-    "галочка" : {
-
-    },
-    "готов тренироваться?" : {
-      "comment" : "Pause check-in reminder body"
-    },
-    "готовится" : {
-      "comment" : "Instance prepared"
-    },
-    "готово" : {
-      "comment" : "Instance completed"
-    },
-    "Готово" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Done"
+  "sourceLanguage": "ru",
+  "strings": {
+    " / %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " / %lld"
           }
         },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Готово"
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " / %lld"
           }
         }
       }
     },
-    "готово сегодня" : {
-      "comment" : "Deed holding: done today"
-    },
-    "две недели" : {
-      "comment" : "Drift silence, two weeks"
-    },
-    "Ещё" : {
-
-    },
-    "ещё не начинали" : {
-      "comment" : "Deed holding: never"
-    },
-    "ещё не начинался" : {
-
-    },
-    "Закрыть сковородку" : {
-
-    },
-    "или удерживайте плитку" : {
-
-    },
-    "каждый день" : {
-      "comment" : "Cadence 1/day"
-    },
-    "минус" : {
-
-    },
-    "минуты" : {
-
-    },
-    "можно править текст и цель" : {
-
-    },
-    "на паузе" : {
-      "comment" : "Deed holding: paused\nPaused practice is not due today"
-    },
-    "на Сегодня" : {
-      "comment" : "Deed holding: on today"
-    },
-    "Назад" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Back"
+    "%@ — не было %@. Сделать меньше?": {
+      "comment": "Drift card body",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — nothing for %@. Do less?"
           }
         },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Назад"
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — не было %@. Сделать меньше?"
           }
         }
       }
     },
-    "Настройки" : {
-
-    },
-    "Настройки, позже" : {
-
-    },
-    "не было %@" : {
-      "comment" : "Deed holding: drift"
-    },
-    "неделю" : {
-      "comment" : "Drift silence, one week"
-    },
-    "Неделя" : {
-
-    },
-    "ничего на сегодня — и это нормально" : {
-
-    },
-    "Новый случай" : {
-
-    },
-    "Новый чат" : {
-
-    },
-    "Овощи" : {
-      "comment" : "Subject title for vegetables"
-    },
-    "Отжимания" : {
-      "comment" : "Subject title for push-ups"
-    },
-    "открывает выбор времени" : {
-
-    },
-    "Открыть" : {
-
-    },
-    "отложили" : {
-      "comment" : "Deed holding: postponed"
-    },
-    "Отложили" : {
-
-    },
-    "Отправить" : {
-
-    },
-    "плюс" : {
-
-    },
-    "под рукой" : {
-      "comment" : "Deed holding: lifetime"
-    },
-    "подсказка" : {
-
-    },
-    "Практики" : {
-
-    },
-    "раз в неделю" : {
-      "comment" : "Cadence 1/week\nDrift chip: once a week"
-    },
-    "разговор" : {
-      "comment" : "Talks row fallback"
-    },
-    "Разговор" : {
-
-    },
-    "Разговор сейчас без трубы. Крышка работает." : {
-      "comment" : "Talk transport error"
-    },
-    "Разговоры" : {
-
-    },
-    "сегодня" : {
-      "comment" : "Drift chip: move to today"
-    },
-    "Сегодня" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Today"
+    "%@, %lld из %lld": {
+      "comment": "Counter tile accessibility: title, count of target",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %lld of %lld"
           }
         },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сегодня"
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %lld из %lld"
           }
         }
       }
     },
-    "Сегодня этого нет." : {
-
-    },
-    "сейчас" : {
-
-    },
-    "Сковородка" : {
-
-    },
-    "скоро" : {
-      "comment" : "Deed holding: soon"
-    },
-    "Сохранить" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Save"
+    "%@, %lld из %lld, %@": {
+      "comment": "Counter tile accessibility: title, count of target, cue",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %lld of %lld, %@"
           }
         },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сохранить"
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, %lld из %lld, %@"
           }
         }
       }
     },
-    "три недели" : {
-      "comment" : "Drift silence, three weeks"
+    "%@, готово": {
+      "comment": "Inspect horizon done day\nTile accessibility: done",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, done"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, готово"
+          }
+        }
+      }
     },
-    "убрана" : {
-      "comment" : "Deed holding: retired"
+    "%@, к делу": {
+      "comment": "Inspect horizon due day",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, due"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, к делу"
+          }
+        }
+      }
     },
-    "убрать" : {
-      "comment" : "Drift chip unused stop\nDrift chip: retire"
+    "%@, пусто": {
+      "comment": "Inspect horizon empty day",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, empty"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, пусто"
+          }
+        }
+      }
     },
-    "успеть к" : {
-
+    "%lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld"
+          }
+        }
+      }
     },
-    "успеть к %@" : {
-      "comment" : "Reminder window deadline"
+    "%lld / %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld / %2$lld"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld / %2$lld"
+          }
+        }
+      },
+      "extractionState": "manual"
     },
-    "цель" : {
-
+    "%lld дней": {
+      "comment": "Drift silence in days",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld дней"
+          }
+        }
+      }
     },
-    "час" : {
-
+    "%lld× в день": {
+      "comment": "Cadence n/day",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld× a day"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld× в день"
+          }
+        }
+      }
     },
-    "Что сюда на стол?" : {
-      "comment" : "Composer placeholder"
+    "%lld× в неделю": {
+      "comment": "Cadence n/week",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld× a week"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld× в неделю"
+          }
+        }
+      }
     },
-    "Этого виджета уже нет на крышке." : {
-
+    "/": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/"
+          }
+        }
+      }
     },
-    "Этот тип ещё не открывается." : {
-
+    ":": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ":"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ":"
+          }
+        }
+      }
+    },
+    "Facio": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Facio"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Facio"
+          }
+        }
+      }
+    },
+    "Lifetime": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lifetime"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lifetime"
+          }
+        }
+      }
+    },
+    "архив пуст": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "archive is empty"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "архив пуст"
+          }
+        }
+      }
+    },
+    "без ритма": {
+      "comment": "Cadence none",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no cadence"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "без ритма"
+          }
+        }
+      }
+    },
+    "В ближайшее время": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soon"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В ближайшее время"
+          }
+        }
+      }
+    },
+    "в работе": {
+      "comment": "Instance in progress",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in progress"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "в работе"
+          }
+        }
+      }
+    },
+    "Велосипед": {
+      "comment": "Subject title for the exercise bike",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bike"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Велосипед"
+          }
+        }
+      }
+    },
+    "галочка": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tick"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "галочка"
+          }
+        }
+      }
+    },
+    "готов тренироваться?": {
+      "comment": "Pause check-in reminder body",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ready to train?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "готов тренироваться?"
+          }
+        }
+      }
+    },
+    "готовится": {
+      "comment": "Instance prepared",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "prepared"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "готовится"
+          }
+        }
+      }
+    },
+    "готово": {
+      "comment": "Instance completed",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "done"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "готово"
+          }
+        }
+      }
+    },
+    "Готово": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Готово"
+          }
+        }
+      }
+    },
+    "готово сегодня": {
+      "comment": "Deed holding: done today",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "done today"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "готово сегодня"
+          }
+        }
+      }
+    },
+    "две недели": {
+      "comment": "Drift silence, two weeks",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "two weeks"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "две недели"
+          }
+        }
+      }
+    },
+    "Ещё": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ещё"
+          }
+        }
+      }
+    },
+    "ещё не начинали": {
+      "comment": "Deed holding: never",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not started yet"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ещё не начинали"
+          }
+        }
+      }
+    },
+    "ещё не начинался": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hasn't started yet"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ещё не начинался"
+          }
+        }
+      }
+    },
+    "Закрыть сковородку": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close the pan"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закрыть сковородку"
+          }
+        }
+      }
+    },
+    "или удерживайте плитку": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "or hold the tile"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "или удерживайте плитку"
+          }
+        }
+      }
+    },
+    "каждый день": {
+      "comment": "Cadence 1/day",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "every day"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "каждый день"
+          }
+        }
+      }
+    },
+    "минус": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "minus"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "минус"
+          }
+        }
+      }
+    },
+    "минуты": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "minutes"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "минуты"
+          }
+        }
+      }
+    },
+    "можно править текст и цель": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "text and goal can be edited"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "можно править текст и цель"
+          }
+        }
+      }
+    },
+    "на паузе": {
+      "comment": "Deed holding: paused\nPaused practice is not due today",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "paused"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "на паузе"
+          }
+        }
+      }
+    },
+    "на Сегодня": {
+      "comment": "Deed holding: on today",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "on Today"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "на Сегодня"
+          }
+        }
+      }
+    },
+    "Назад": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Назад"
+          }
+        }
+      }
+    },
+    "Настройки": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки"
+          }
+        }
+      }
+    },
+    "Настройки, позже": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings, later"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки, позже"
+          }
+        }
+      }
+    },
+    "не было %@": {
+      "comment": "Deed holding: drift",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nothing for %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "не было %@"
+          }
+        }
+      }
+    },
+    "неделю": {
+      "comment": "Drift silence, one week",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a week"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "неделю"
+          }
+        }
+      }
+    },
+    "Неделя": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Week"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Неделя"
+          }
+        }
+      }
+    },
+    "ничего на сегодня — и это нормально": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nothing for today — and that's fine"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ничего на сегодня — и это нормально"
+          }
+        }
+      }
+    },
+    "Новый случай": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New instance"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Новый случай"
+          }
+        }
+      }
+    },
+    "Новый чат": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New chat"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Новый чат"
+          }
+        }
+      }
+    },
+    "Овощи": {
+      "comment": "Subject title for vegetables",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vegetables"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Овощи"
+          }
+        }
+      }
+    },
+    "Отжимания": {
+      "comment": "Subject title for push-ups",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Push-ups"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отжимания"
+          }
+        }
+      }
+    },
+    "открывает выбор времени": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "opens the time picker"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "открывает выбор времени"
+          }
+        }
+      }
+    },
+    "Открыть": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть"
+          }
+        }
+      }
+    },
+    "отложили": {
+      "comment": "Deed holding: postponed",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "postponed"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "отложили"
+          }
+        }
+      }
+    },
+    "Отложили": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Postponed"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отложили"
+          }
+        }
+      }
+    },
+    "Отправить": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправить"
+          }
+        }
+      }
+    },
+    "плюс": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "plus"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "плюс"
+          }
+        }
+      }
+    },
+    "под рукой": {
+      "comment": "Deed holding: lifetime",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "at hand"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "под рукой"
+          }
+        }
+      }
+    },
+    "подсказка": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cue"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "подсказка"
+          }
+        }
+      }
+    },
+    "Практики": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deeds"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Практики"
+          }
+        }
+      }
+    },
+    "раз в неделю": {
+      "comment": "Cadence 1/week\nDrift chip: once a week",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "once a week"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "раз в неделю"
+          }
+        }
+      }
+    },
+    "разговор": {
+      "comment": "Talks row fallback",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "talk"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "разговор"
+          }
+        }
+      }
+    },
+    "Разговор": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Talk"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разговор"
+          }
+        }
+      }
+    },
+    "Разговор сейчас без трубы. Крышка работает.": {
+      "comment": "Talk transport error",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Talk has no pipe right now. The lid still works."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разговор сейчас без трубы. Крышка работает."
+          }
+        }
+      }
+    },
+    "Разговоры": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Talks"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разговоры"
+          }
+        }
+      }
+    },
+    "сегодня": {
+      "comment": "Drift chip: move to today",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "today"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "сегодня"
+          }
+        }
+      }
+    },
+    "Сегодня": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сегодня"
+          }
+        }
+      }
+    },
+    "Сегодня этого нет.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is not on Today."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сегодня этого нет."
+          }
+        }
+      }
+    },
+    "сейчас": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "now"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "сейчас"
+          }
+        }
+      }
+    },
+    "Сковородка": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pan"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сковородка"
+          }
+        }
+      }
+    },
+    "скоро": {
+      "comment": "Deed holding: soon",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "soon"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "скоро"
+          }
+        }
+      }
+    },
+    "Сохранить": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранить"
+          }
+        }
+      }
+    },
+    "три недели": {
+      "comment": "Drift silence, three weeks",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "three weeks"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "три недели"
+          }
+        }
+      }
+    },
+    "убрана": {
+      "comment": "Deed holding: retired",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dropped"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "убрана"
+          }
+        }
+      }
+    },
+    "убрать": {
+      "comment": "Drift chip unused stop\nDrift chip: retire",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "drop it"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "убрать"
+          }
+        }
+      }
+    },
+    "успеть к": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "be done by"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "успеть к"
+          }
+        }
+      }
+    },
+    "успеть к %@": {
+      "comment": "Reminder window deadline",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "be done by %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "успеть к %@"
+          }
+        }
+      }
+    },
+    "цель": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "goal"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "цель"
+          }
+        }
+      }
+    },
+    "час": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hour"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "час"
+          }
+        }
+      }
+    },
+    "Что сюда на стол?": {
+      "comment": "Composer placeholder",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What belongs on the table?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Что сюда на стол?"
+          }
+        }
+      }
+    },
+    "Этого виджета уже нет на крышке.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This widget is no longer on the lid."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Этого виджета уже нет на крышке."
+          }
+        }
+      }
+    },
+    "Этот тип ещё не открывается.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This type does not open yet."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Этот тип ещё не открывается."
+          }
+        }
+      }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

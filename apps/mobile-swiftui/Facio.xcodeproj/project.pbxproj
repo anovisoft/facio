@@ -17,6 +17,7 @@
 		0FC842D51F4D409BE6BCAF6E /* PanHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADF2CBCE21AC8ED3A81CE62 /* PanHost.swift */; };
 		134293B3F4B983D145ABEE9F /* Target.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3D3253DFAFD9354F4669F20 /* Target.swift */; };
 		14FB19DF959B7C5392244DAD /* ReminderTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4911636F00FC033987EB181 /* ReminderTile.swift */; };
+		1757ACAF32B2CEF1ED23A601 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 2EC1E4506E66869D437DB625 /* InfoPlist.xcstrings */; };
 		18BC5721A6C1050650784A51 /* ReminderSchedulerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 828B398A50029A7EAAB3EEA0 /* ReminderSchedulerTests.swift */; };
 		1AC764C1628B3D93CF80EA14 /* PanSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03D73A5FEA5CBC3F73850E86 /* PanSession.swift */; };
 		1B02BF0A453F9A1AA97A89A8 /* DeedsList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 351992D19882EFE33B85CA88 /* DeedsList.swift */; };
@@ -57,6 +58,7 @@
 		691AFB13E79A53D01848D7E3 /* WidgetPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575EABA05F53B43F23160681 /* WidgetPayload.swift */; };
 		6CE04DDD1A110CFD00FD61DA /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DA2072492E534903ADD78273 /* Localizable.xcstrings */; };
 		717FA4011EEEDBEABFEE35B6 /* Cue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786AEABFA4B9FBC87D0A2311 /* Cue.swift */; };
+		71B355AAC28D015ED5DD4520 /* LocalizationCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ADACEEA50715309876C8DF6 /* LocalizationCatalogTests.swift */; };
 		742D095A0E8540FC73B3380D /* DeskStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6443189A8C3DC61F6850C5 /* DeskStore.swift */; };
 		75C05EB773E2E4EE0249AACB /* Subject.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAEC30DEA8B4857E27A4A7F /* Subject.swift */; };
 		7657870663FD68EE5B3D29E8 /* TileCellSizeKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD204F8AA9DC6C8FF665395A /* TileCellSizeKey.swift */; };
@@ -141,6 +143,7 @@
 		033D03E3F2EF49F7A0B455A4 /* TalkSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkSheet.swift; sourceTree = "<group>"; };
 		03D73A5FEA5CBC3F73850E86 /* PanSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanSession.swift; sourceTree = "<group>"; };
 		09B49E7140B92D3E9AA464AE /* InstanceStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceStatus.swift; sourceTree = "<group>"; };
+		0ADACEEA50715309876C8DF6 /* LocalizationCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationCatalogTests.swift; sourceTree = "<group>"; };
 		0B0300C0F9F50A132140E7C4 /* SlotLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotLawTests.swift; sourceTree = "<group>"; };
 		0D3996D30C44FA29B14C3CC0 /* ReminderUseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderUseView.swift; sourceTree = "<group>"; };
 		0F1D7859FE372ADE83A1624D /* FacioNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacioNotifications.swift; sourceTree = "<group>"; };
@@ -165,6 +168,7 @@
 		2C82A425B50E627261D99C7E /* KebabInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KebabInspector.swift; sourceTree = "<group>"; };
 		2C9638F827F32F9586B9E461 /* WidgetType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetType.swift; sourceTree = "<group>"; };
 		2DE3C9083825C5AA83F71546 /* FacioTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacioTheme.swift; sourceTree = "<group>"; };
+		2EC1E4506E66869D437DB625 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		3200A392C3CE6994B512A167 /* LidScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidScreen.swift; sourceTree = "<group>"; };
 		3256792637DD71353427374C /* Facio.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Facio.entitlements; sourceTree = "<group>"; };
 		32DDBE6FC3377D23FE0967AD /* WidgetSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSection.swift; sourceTree = "<group>"; };
@@ -412,6 +416,7 @@
 				5EDFCFCEE2A01319BF949300 /* DriftLawTests.swift */,
 				DE49070FF2ADCCEB1E700DDA /* InstanceLawTests.swift */,
 				88264A6ED9F4B61255BD7DDB /* LidProjectionTests.swift */,
+				0ADACEEA50715309876C8DF6 /* LocalizationCatalogTests.swift */,
 				62CDF841D69D1101DC6F6D8C /* ModelTests.swift */,
 				360413F490CB306BB68500A5 /* PackLawTests.swift */,
 				DB6CF10F8A46994C86FE0B08 /* PainLawTests.swift */,
@@ -520,6 +525,7 @@
 			isa = PBXGroup;
 			children = (
 				131D42EFFB9F1F2770F97660 /* Assets.xcassets */,
+				2EC1E4506E66869D437DB625 /* InfoPlist.xcstrings */,
 				DA2072492E534903ADD78273 /* Localizable.xcstrings */,
 			);
 			path = Resources;
@@ -636,7 +642,7 @@
 				};
 			};
 			buildConfigurationList = 750AA4BD3A54995CFA7E50D6 /* Build configuration list for PBXProject "Facio" */;
-			developmentRegion = en;
+			developmentRegion = ru;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				Base,
@@ -662,6 +668,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B9764CA95936E34CD57E55B8 /* Assets.xcassets in Resources */,
+				1757ACAF32B2CEF1ED23A601 /* InfoPlist.xcstrings in Resources */,
 				6CE04DDD1A110CFD00FD61DA /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -691,6 +698,7 @@
 				7D298E763BA501C914191CD6 /* DriftLawTests.swift in Sources */,
 				360AEFAB704D5DC77C113DA5 /* InstanceLawTests.swift in Sources */,
 				9F50A3AF342159EBD6E77599 /* LidProjectionTests.swift in Sources */,
+				71B355AAC28D015ED5DD4520 /* LocalizationCatalogTests.swift in Sources */,
 				CBA06C3A5C7845636196F10A /* ModelTests.swift in Sources */,
 				885E0C15BF71F5E736ADCF66 /* PackLawTests.swift in Sources */,
 				C02AB68F2948B995641C037F /* PainLawTests.swift in Sources */,

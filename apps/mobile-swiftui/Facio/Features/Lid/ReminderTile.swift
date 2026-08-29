@@ -46,7 +46,9 @@ struct ReminderTile: View {
 
     private var accessibilityLabel: String {
         let title = DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title)
-        if done { return "\(title), готово" }
+        if done {
+            return String(localized: "\(title), готово", comment: "Tile accessibility: done")
+        }
         let deadline = window.map(DisplayCopy.succeedBy)
         return [title, deadline, cue?.text].compactMap { $0 }.joined(separator: ", ")
     }

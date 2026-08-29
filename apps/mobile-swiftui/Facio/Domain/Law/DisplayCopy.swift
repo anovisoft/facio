@@ -112,11 +112,19 @@ enum DisplayCopy {
     }
 
     static func loudDate(_ date: Date) -> String {
-        date.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "ru_RU")))
+        date.formatted(.dateTime.weekday(.wide).day().month(.wide))
     }
 
     static func chipDate(_ date: Date) -> String {
-        date.formatted(.dateTime.day().month(.abbreviated).locale(Locale(identifier: "ru_RU")))
+        date.formatted(.dateTime.day().month(.abbreviated))
+    }
+
+    /// Tick face on the lid, on Use and on Inspect. One catalog trip, not a
+    /// ternary of two literals that only accidentally resolves to a key.
+    static func tickState(done: Bool) -> String {
+        done
+            ? String(localized: "готово", comment: "Instance completed")
+            : String(localized: "на Сегодня", comment: "Deed holding: on today")
     }
 
     static func instanceStatus(_ status: InstanceStatus) -> String {

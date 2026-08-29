@@ -108,7 +108,7 @@ private struct InspectBody: View {
                             .font(.system(size: 44))
                             .foregroundStyle(widget.isTickDone ? .primary : .secondary)
                             .accessibilityHidden(true)
-                        Text(widget.isTickDone ? "готово" : "на Сегодня")
+                        Text(DisplayCopy.tickState(done: widget.isTickDone))
                             .font(.title3)
                             .foregroundStyle(.secondary)
                     }

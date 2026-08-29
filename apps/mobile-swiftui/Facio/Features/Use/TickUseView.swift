@@ -18,7 +18,7 @@ struct TickUseView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("галочка")
-                Text(done ? "готово" : "на Сегодня")
+                Text(DisplayCopy.tickState(done: done))
                     .font(.title3)
                     .foregroundStyle(.secondary)
             }

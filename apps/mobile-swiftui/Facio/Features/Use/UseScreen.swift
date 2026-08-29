@@ -62,7 +62,7 @@ struct UseScreen: View {
     }
 
     private func quietDate(_ date: Date?) -> String {
-        (date ?? Date.now).formatted(.dateTime.day().month(.wide).locale(Locale(identifier: "ru_RU")))
+        (date ?? Date.now).formatted(.dateTime.day().month(.wide))
     }
 }
 

@@ -50,8 +50,18 @@ struct CounterTile: View {
 
     private var accessibilityLabel: String {
         let title = DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title)
-        if done { return "\(title), готово" }
-        if let cue { return "\(title), \(count) из \(target), \(cue.text)" }
-        return "\(title), \(count) из \(target)"
+        if done {
+            return String(localized: "\(title), готово", comment: "Tile accessibility: done")
+        }
+        if let cue {
+            return String(
+                localized: "\(title), \(count) из \(target), \(cue.text)",
+                comment: "Counter tile accessibility: title, count of target, cue"
+            )
+        }
+        return String(
+            localized: "\(title), \(count) из \(target)",
+            comment: "Counter tile accessibility: title, count of target"
+        )
     }
 }

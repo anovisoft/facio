@@ -35,7 +35,9 @@ struct ReminderUseView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("успеть к \(deadline.shortLabel)")
+                .accessibilityLabel(
+                    String(localized: "успеть к \(deadline.shortLabel)", comment: "Reminder window deadline")
+                )
                 .accessibilityHint("открывает выбор времени")
             }
 

@@ -23,7 +23,7 @@ struct TickTile: View {
                 HStack(spacing: 10) {
                     Color.clear
                         .frame(width: 36, height: 36)
-                    Text(done ? "готово" : "на Сегодня")
+                    Text(DisplayCopy.tickState(done: done))
                         .font(.caption.weight(.medium))
                         .foregroundStyle(.secondary)
                 }
