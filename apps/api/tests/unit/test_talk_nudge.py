@@ -159,14 +159,17 @@ def test_pain_skip_bullet_repeats_the_skip_subject_default() -> None:
 async def test_locale_line_rides_the_turn_system_prompt() -> None:
     provider = SequenceProvider([ModelTurn(text=None, tool_calls=[_add_cue_call()])])
     await run_turn(_en_request("brace the core"), provider, now=NOW)
+    # The language line rides the first system message, not one of its own:
+    # that block is the cached prefix, and the language is part of what makes
+    # a prefix reusable. Two locales mean two cache entries, which is intended.
     system = [row["content"] for row in provider.messages_at[0] if row.get("role") == "system"]
-    assert LOCALE_LINE["en"] in system
-    assert LOCALE_LINE["ru"] not in system
+    assert LOCALE_LINE["en"] in system[0]
+    assert LOCALE_LINE["ru"] not in "\n".join(system)
 
     ru_provider = SequenceProvider([ModelTurn(text=None, tool_calls=[_add_cue_call()])])
     await run_turn(_request("держи корпус"), ru_provider, now=NOW)
     ru_system = [row["content"] for row in ru_provider.messages_at[0] if row.get("role") == "system"]
-    assert LOCALE_LINE["ru"] in ru_system
+    assert LOCALE_LINE["ru"] in ru_system[0]
 
 
 async def test_english_turn_gets_the_english_nudge() -> None:

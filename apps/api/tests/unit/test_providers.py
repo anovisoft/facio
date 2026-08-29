@@ -138,7 +138,7 @@ def test_openai_messages_split_system_and_merge_tool_results() -> None:
             {"role": "tool", "tool_call_id": "call_2", "content": '{"ok": false}'},
         ]
     )
-    assert system == "You are Facio.\n\nDesk now."
+    assert [block["text"] for block in system] == ["You are Facio.", "Desk now."]
     assert chat[0] == {"role": "user", "content": "hi"}
     assert chat[1]["role"] == "assistant"
     assert chat[1]["content"][0]["type"] == "tool_use"
@@ -213,7 +213,11 @@ async def test_anthropic_complete_posts_messages_api(monkeypatch: pytest.MonkeyP
     body = captured["json"]
     assert isinstance(body, dict)
     assert body["model"] == HAIKU_MODEL
-    assert body["system"] == "rules"
+    # One block, and it carries the breakpoint: tools render before system,
+    # so the marker here caches the schemas and the prompt together.
+    assert body["system"] == [
+        {"type": "text", "text": "rules", "cache_control": {"type": "ephemeral"}}
+    ]
 
 
 async def test_openai_complete_uses_openai_key(monkeypatch: pytest.MonkeyPatch) -> None:

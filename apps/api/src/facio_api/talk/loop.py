@@ -206,9 +206,13 @@ def _messages(body: TalkTurnRequest, utterance: str, pain: bool) -> list[dict[st
         ensure_ascii=False,
         default=str,
     )
+    # The first system message is the whole stable prefix — prompt plus the
+    # language line — and nothing per-request may join it. Everything that
+    # changes per turn (the desk, the selection) goes after it, because a
+    # prompt cache is a prefix match: one byte earlier in the prefix and the
+    # rest of the request stops being reusable. Providers cache on this block.
     messages: list[dict[str, Any]] = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "system", "content": LOCALE_LINE[body.locale]},
+        {"role": "system", "content": f"{SYSTEM_PROMPT}\n\n{LOCALE_LINE[body.locale]}"},
         {"role": "system", "content": f"Стол сейчас:\n{desk_brief}"},
     ]
     if body.selection is not None:

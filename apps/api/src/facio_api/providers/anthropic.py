@@ -62,8 +62,16 @@ def openai_tools_to_anthropic(tools: list[dict[str, Any]]) -> list[dict[str, Any
     return converted
 
 
-def openai_messages_to_anthropic(messages: list[dict[str, Any]]) -> tuple[str, list[dict[str, Any]]]:
-    """Map the turn loop's OpenAI-shaped messages onto Anthropic Messages."""
+def openai_messages_to_anthropic(
+    messages: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Map the turn loop's OpenAI-shaped messages onto Anthropic Messages.
+
+    System comes back as separate blocks rather than one joined string: the
+    first block is the stable prefix the loop builds (prompt + language), and
+    the cache breakpoint goes on it. Joining them would key the cache to this
+    turn's desk, and nothing would ever be read back.
+    """
     system_parts: list[str] = []
     chat: list[dict[str, Any]] = []
     pending_results: list[dict[str, Any]] = []
@@ -100,7 +108,22 @@ def openai_messages_to_anthropic(messages: list[dict[str, Any]]) -> tuple[str, l
     flush_results()
     if chat and chat[0]["role"] != "user":
         chat.insert(0, {"role": "user", "content": "."})
-    return "\n\n".join(system_parts), chat
+    return system_blocks(system_parts), chat
+
+
+def system_blocks(parts: list[str]) -> list[dict[str, Any]]:
+    """One text block per system message, breakpoint on the stable first one.
+
+    Tools render before system, so a marker here caches the tool schemas and
+    the prompt together — which is the whole fixed cost of a turn. Five-minute
+    TTL on purpose: the rounds of one turn are seconds apart and every read
+    refreshes the timer, while the one-hour TTL doubles the write price for a
+    window this loop does not need.
+    """
+    blocks: list[dict[str, Any]] = [{"type": "text", "text": part} for part in parts]
+    if blocks:
+        blocks[0]["cache_control"] = {"type": "ephemeral"}
+    return blocks
 
 
 def anthropic_body_to_turn(body: dict[str, Any]) -> ModelTurn:
@@ -124,7 +147,8 @@ def anthropic_body_to_turn(body: dict[str, Any]) -> ModelTurn:
                 )
             )
     text = "\n".join(text_parts) or None
-    return ModelTurn(text=text, tool_calls=calls)
+    usage = body.get("usage")
+    return ModelTurn(text=text, tool_calls=calls, usage=usage if isinstance(usage, dict) else {})
 
 
 def _assistant_content(message: dict[str, Any]) -> str | list[dict[str, Any]]:
