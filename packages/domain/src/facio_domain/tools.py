@@ -13,16 +13,21 @@ from dataclasses import dataclass, field
 from datetime import datetime, time
 from typing import Any
 
+from pydantic import TypeAdapter, ValidationError
+
 from facio_domain.cues import add_cue
 from facio_domain.models import (
     Cadence,
     Cue,
     CueKind,
+    CueMedia,
     CueOrigin,
     CueSurface,
     Desk,
     Instance,
     InstanceStatus,
+    LinkMedia,
+    PhotoMedia,
     Subject,
     SubjectStatus,
     Target,
@@ -73,7 +78,16 @@ INVALID = "invalid"
 # surface value sitting in `kind` would be a silent desk rewrite (never-do AI #2).
 INVALID_KIND = "invalid_kind"
 INVALID_SURFACE = "invalid_surface"
+# `quote` is the phrase the person selected, stored **as text** (04 Cue). An
+# offset into a message — a dict, a pair of numbers — dangles the moment the
+# method changes, so it is refused instead of being coerced into something.
+INVALID_QUOTE = "invalid_quote"
+# At most one media item per cue, and it is `photo` (her own picture) or `link`
+# (04 Cue). A list, or a third kind, is refused — not trimmed down to the first.
+INVALID_MEDIA = "invalid_media"
 UNSUPPORTED_WIDGET_TYPE = "unsupported_widget_type"
+
+_MEDIA = TypeAdapter(CueMedia)
 
 
 @dataclass
@@ -703,6 +717,37 @@ def _list_cues(desk: Desk, args: dict[str, Any], **_: Any) -> ToolOutcome:
     )
 
 
+def _optional_text(raw: Any) -> str | None:
+    if raw is None:
+        return None
+    if not isinstance(raw, str):
+        raise ToolFail(INVALID)
+    return raw.strip() or None
+
+
+def _quote_from_args(args: dict[str, Any]) -> str | None:
+    raw = args.get("quote")
+    if raw is None:
+        return None
+    if not isinstance(raw, str):
+        raise ToolFail(INVALID_QUOTE)
+    return raw.strip() or None
+
+
+def _media_from_args(args: dict[str, Any]) -> CueMedia | None:
+    raw = args.get("media")
+    if raw is None:
+        return None
+    if isinstance(raw, (PhotoMedia, LinkMedia)):
+        return raw
+    if not isinstance(raw, dict):
+        raise ToolFail(INVALID_MEDIA)
+    try:
+        return _MEDIA.validate_python(raw)
+    except ValidationError as error:
+        raise ToolFail(INVALID_MEDIA) from error
+
+
 def _add_cue_tool(
     desk: Desk,
     args: dict[str, Any],
@@ -736,10 +781,14 @@ def _add_cue_tool(
     cue = add_cue(
         id=cue_id,
         subject_id=subject_id,
+        # The step the phrase belongs to. Dropping it put the answer on the
+        # practice as a whole; the `?` lives on a step (05 «Ask about a phrase»).
+        step_id=_optional_text(args.get("step_id")),
         kind=kind,
         text=text,
         surface=surface,
-        quote=args.get("quote"),
+        quote=_quote_from_args(args),
+        media=_media_from_args(args),
         origin=cue_origin,
     )
     existing = next((index for index, row in enumerate(desk.cues) if row.id == cue.id), None)

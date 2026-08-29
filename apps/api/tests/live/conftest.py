@@ -13,7 +13,7 @@ from facio_domain.desk import founding_desk
 from facio_api.config import Settings
 from facio_api.providers.factory import provider_for
 from facio_api.talk.loop import run_turn
-from facio_api.talk.schemas import Locale, TalkTurnRequest, TalkTurnResponse
+from facio_api.talk.schemas import Locale, TalkSelection, TalkTurnRequest, TalkTurnResponse
 from support.live import (
     LIVE_OPT_IN_REASON,
     force_live,
@@ -24,7 +24,7 @@ from support.live import (
 
 NOW = datetime(2026, 8, 15, 12, 0, 0)
 
-LivePlay = Callable[[str], Coroutine[Any, Any, TalkTurnResponse]]
+LivePlay = Callable[..., Coroutine[Any, Any, TalkTurnResponse]]
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
@@ -44,7 +44,12 @@ def live_settings() -> Settings:
 
 
 def _play_for(live_settings: Settings, locale: Locale) -> LivePlay:
-    async def play(utterance: str) -> TalkTurnResponse:
+    async def play(
+        utterance: str,
+        selection: TalkSelection | None = None,
+        *,
+        focused_widget_id: str | None = None,
+    ) -> TalkTurnResponse:
         provider = provider_for(live_settings, utterance)
         request = TalkTurnRequest(
             utterance=utterance,
@@ -53,6 +58,8 @@ def _play_for(live_settings: Settings, locale: Locale) -> LivePlay:
             thread_id=f"live-{locale}",
             now=NOW,
             locale=locale,
+            selection=selection,
+            focused_widget_id=focused_widget_id,
         )
         return await run_turn(request, provider, now=NOW)
 

@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 from typing import Any
 
-from facio_domain.models import CueOrigin, Desk
+from facio_domain.models import CueOrigin
 from facio_domain.pain import reports_pain
 from facio_domain.tools import apply_tool, snapshot_cards
 
@@ -29,6 +29,17 @@ EMPTY_TOOLS_NUDGE = (
 EMPTY_TOOLS_NUDGE_EN = (
     "A desk write — call the tool now. Do not retell the rules. "
     "Afterwards the person gets one short sentence."
+)
+SELECTION_BOUND = (
+    "The person selected this phrase in your answer and asked what it means: «{quote}». "
+    "It belongs to subject {subject_id}{step}. "
+    "Answer them, and write that answer down with add_cue: kind clarification, "
+    "surface on-demand, quote exactly «{quote}»{step_arg}."
+)
+SELECTION_ORPHAN = (
+    "The person selected this phrase in your answer and asked what it means: «{quote}». "
+    "Nothing on the desk is bound to it — no subject, no widget. "
+    "Answer in text only. Do not call add_cue and do not hang it on some other practice."
 )
 LOCALE_LINE: dict[Locale, str] = {
     "ru": "The person writes in Russian: answer in Russian.",
@@ -200,11 +211,53 @@ def _messages(body: TalkTurnRequest, utterance: str, pain: bool) -> list[dict[st
         {"role": "system", "content": LOCALE_LINE[body.locale]},
         {"role": "system", "content": f"Стол сейчас:\n{desk_brief}"},
     ]
+    if body.selection is not None:
+        messages.append({"role": "system", "content": selection_line(body)})
     for row in body.thread[-20:]:
         role = row.role if row.role in {"user", "assistant"} else "user"
         messages.append({"role": role, "content": row.text})
     messages.append({"role": "user", "content": utterance})
     return messages
+
+
+def selection_subject_id(body: TalkTurnRequest) -> str | None:
+    """The subject a selection hangs on, or None — the desk decides, not the model.
+
+    Only a binding the client actually named counts: the subject, the widget the
+    selection came from, or the widget the sheet was opened over. The
+    default-subject guesswork of an ordinary turn (reps → push-ups, an hour →
+    bike) is deliberately not reused here: guessing would manufacture the orphan
+    the RFC forbids, just filed under a practice that was standing nearby.
+    """
+    selection = body.selection
+    if selection is None:
+        return None
+    subjects = {row.id for row in body.desk.subjects}
+    if selection.subject_id and selection.subject_id in subjects:
+        return selection.subject_id
+    by_widget = {row.id: row.subject_id for row in body.desk.widgets}
+    for widget_id in (selection.widget_id, body.focused_widget_id):
+        if not widget_id:
+            continue
+        subject_id = by_widget.get(widget_id)
+        if subject_id in subjects:
+            return subject_id
+    return None
+
+
+def selection_line(body: TalkTurnRequest) -> str:
+    selection = body.selection
+    assert selection is not None
+    subject_id = selection_subject_id(body)
+    if subject_id is None:
+        return SELECTION_ORPHAN.format(quote=selection.quote)
+    step_id = (selection.step_id or "").strip() or None
+    return SELECTION_BOUND.format(
+        quote=selection.quote,
+        subject_id=subject_id,
+        step=f", step {step_id}" if step_id else "",
+        step_arg=f", step_id {step_id}" if step_id else "",
+    )
 
 
 def _assistant_tools(turn: ModelTurn) -> dict[str, Any]:

@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import time
+from datetime import datetime, time
 
 import pytest
 
+from facio_domain.desk import founding_desk
 from facio_domain.models import CueKind, CueSurface, Desk, SubjectStatus, WidgetType
 from facio_domain.tools import times_per_week
 
-from facio_api.talk.schemas import TalkTurnResponse
+from facio_api.talk.schemas import TalkSelection, TalkTurnResponse
 
 pytestmark = pytest.mark.live
 
@@ -18,6 +19,7 @@ FOUNDING_BRACE = "brace the core and the glutes"
 FOUNDING_IDS = {"bike", "push-ups", "vegetables"}
 FOUNDING_PUSH_WEEKLY = 3.0
 FOUNDING_PUSH_GOAL = 30
+NOW = datetime(2026, 8, 15, 12, 0, 0)
 
 
 def _names(result: TalkTurnResponse) -> list[str]:
@@ -220,3 +222,40 @@ async def test_pain_skip_freezes_bike_without_raising_goal(live_play) -> None:
 async def test_unknown_utterance_does_not_mutate(live_play) -> None:
     result = await live_play("квэкснутый зонд 174")
     assert result.mutated is False
+
+
+SELECTION_QUOTE = "не роняй таз"
+ORPHAN_QUOTE = "беговая экономичность"
+
+
+async def test_selection_lands_a_clarification_behind_a_question_mark(live_play) -> None:
+    """R3: the answer to a selected phrase does not stay in the transcript (#24)."""
+    result = await live_play(
+        "что это значит?",
+        TalkSelection(quote=SELECTION_QUOTE, widget_id="push-ups-counter", step_id="rep-1"),
+    )
+    assert result.mutated is True
+    fresh = [
+        row
+        for row in result.desk.cues
+        if row.subject_id == "push-ups" and row.id not in {"push-ups-brace"}
+    ]
+    assert fresh, _names(result)
+    assert all(row.kind == CueKind.clarification for row in fresh), [row.kind for row in fresh]
+    # Never inline at do-time: rep one stays readable (04, P9).
+    assert all(row.surface == CueSurface.on_demand for row in fresh), [row.surface for row in fresh]
+    assert any(row.quote == SELECTION_QUOTE for row in fresh), [row.quote for row in fresh]
+    # The founding correction keeps its place on the tile.
+    brace = next(row for row in result.desk.cues if row.id == "push-ups-brace")
+    assert brace.surface == CueSurface.do_time
+    assert result.text
+
+
+async def test_selection_with_no_binding_writes_nothing(live_play) -> None:
+    """A selection with no bound subject produces no cue — text only (04, 05)."""
+    before = founding_desk(now=NOW)
+    result = await live_play("что это значит?", TalkSelection(quote=ORPHAN_QUOTE))
+    landed = [call for call in result.tool_calls if call.name == "add_cue" and call.ok]
+    assert landed == [], [call.arguments for call in landed]
+    assert len(result.desk.cues) == len(before.cues)
+    assert result.text

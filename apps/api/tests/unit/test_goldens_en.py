@@ -13,7 +13,7 @@ from facio_domain.tools import apply_tool, times_per_week
 from facio_api.providers.scripted import ScriptedProvider
 from facio_api.talk.goldens import Golden, load_goldens, match_golden
 from facio_api.talk.loop import run_turn
-from facio_api.talk.schemas import TalkTurnRequest
+from facio_api.talk.schemas import TalkSelection, TalkTurnRequest
 
 NOW = datetime(2026, 8, 15, 12, 0, 0)
 FOUNDING_BRACE = "brace the core and the glutes"
@@ -21,6 +21,8 @@ FOUNDING_IDS = {"bike", "push-ups", "vegetables"}
 UNKNOWN_EN = "quaxnuted probe 174"
 RUSSIAN_IDS = {
     "cadence_shrink",
+    "clarification_orphan",
+    "clarification_selection",
     "explain_only",
     "gym_no_clock",
     "gym_until_22",
@@ -35,7 +37,7 @@ RUSSIAN_IDS = {
 }
 
 
-def _request(utterance: str) -> TalkTurnRequest:
+def _request(utterance: str, selection: TalkSelection | None = None) -> TalkTurnRequest:
     return TalkTurnRequest(
         utterance=utterance,
         desk=founding_desk(now=NOW),
@@ -43,11 +45,21 @@ def _request(utterance: str) -> TalkTurnRequest:
         thread_id="golden-en",
         now=NOW,
         locale="en",
+        selection=selection,
     )
 
 
-async def _play(utterance: str):
-    return await run_turn(_request(utterance), ScriptedProvider.for_utterance(utterance), now=NOW)
+async def _play(utterance: str, selection: TalkSelection | None = None):
+    return await run_turn(
+        _request(utterance, selection),
+        ScriptedProvider.for_utterance(utterance),
+        now=NOW,
+    )
+
+
+async def _play_golden(golden: Golden):
+    """Replay a golden the way the client sends it — selection included."""
+    return await _play(golden.utterance, golden.selection)
 
 
 def _names(result) -> list[str]:
@@ -418,3 +430,49 @@ async def test_thaw_pause_en_restores_bike() -> None:
     bike = _subject(result.desk, "bike")
     assert bike.status == SubjectStatus.active
     assert bike.paused_at is None
+
+
+# --- R3 selection → clarification ----------------------------------------
+
+
+async def test_clarification_selection_en_lands_on_demand_with_the_quote() -> None:
+    golden = match_golden("what does this mean: don't let the hips sag?")
+    assert golden is not None
+    assert golden.id == "clarification_selection_en"
+    assert golden.selection is not None
+    result = await _play_golden(golden)
+    assert result.mutated is True
+    assert _names(result) == golden.expect.tools
+    expected = golden.expect.cue
+    assert expected is not None
+    cue = next(row for row in result.desk.cues if row.id == "push-ups-hips-en-talk")
+    assert cue.subject_id == expected.subject_id
+    assert cue.kind == CueKind.clarification
+    # Never inline at do-time: rep one has to stay readable (04, P9).
+    assert cue.surface == CueSurface.on_demand
+    assert cue.step_id == expected.step_id
+    assert cue.quote == expected.quote
+    assert cue.quote == golden.selection.quote
+    for needle in expected.text_contains:
+        assert needle in cue.text
+    push = _subject(result.desk, "push-ups")
+    assert cue.id in push.cue_ids
+    brace = next(row for row in result.desk.cues if row.id == "push-ups-brace")
+    assert brace.surface == CueSurface.do_time
+
+
+async def test_clarification_orphan_en_stays_text_only() -> None:
+    golden = match_golden("what does this mean: running economy?")
+    assert golden is not None
+    assert golden.id == "clarification_orphan_en"
+    assert golden.selection is not None
+    assert golden.selection.subject_id is None
+    assert golden.selection.widget_id is None
+    before = founding_desk(now=NOW)
+    result = await _play_golden(golden)
+    assert result.mutated is False
+    assert result.tool_calls == []
+    assert "add_cue" not in _names(result)
+    assert result.snapshots == []
+    assert result.desk.cues == before.cues
+    assert result.text

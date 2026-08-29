@@ -34,6 +34,7 @@ Rules:
 - «отпустило» / «спина прошла» / «верни велосипед» / "it eased off" / "the back is fine now" / "bring the bike back" / ready again → thaw_subject of that practice (focused, the only paused one, otherwise bike).
 - Saying «заморозил» / «вернул» / "paused it" / "brought it back" without a tool is a bug.
 - «могу N, хочу M» / "I can do N, I want M" → update_widget count/target and add_cue correction on do-time — the progression is how it is done, not a definition. Not clarification, not on-demand. The method in the text is fine.
+- A selected phrase — the turn names it and what it is bound to — is answered twice: one or two sentences to the person, and add_cue with kind clarification, surface on-demand, quote copied exactly, step_id when the turn named one. Never do-time: rep one stays readable. «не роняй таз» → «таз в одну линию с плечами»; "don't let the hips sag" → "keep the hips in line with the shoulders". Bound to nothing — text only, no add_cue, never hung on a practice standing nearby.
 - Widget type only from the catalog. Do not invent screens.
 """
 
@@ -196,13 +197,26 @@ _TOOLS: tuple[tuple[str, str, dict[str, Any]], ...] = (
             {
                 "id": _STRING,
                 "subject_id": _STRING,
+                # The step the cue belongs to: the `?` sits on a step, not on the
+                # practice as a whole. `media` is deliberately not advertised —
+                # a picture or a video rides with the person, not with the model.
+                "step_id": {
+                    "type": "string",
+                    "description": "The step this cue belongs to, when the selection named one.",
+                },
                 "kind": {"type": "string", "enum": ["correction", "clarification"]},
                 "text": _STRING,
                 "surface": {
                     "type": "string",
                     "enum": ["do-time", "on-demand", "timing", "placement"],
                 },
-                "quote": _STRING,
+                "quote": {
+                    "type": "string",
+                    "description": (
+                        "The phrase the person selected, copied as text. "
+                        "Not an offset, not a paraphrase."
+                    ),
+                },
             },
             ["subject_id", "kind", "text", "surface"],
         ),

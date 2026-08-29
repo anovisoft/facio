@@ -9,25 +9,35 @@ from facio_domain.tools import apply_tool, times_per_week
 from facio_api.providers.scripted import ScriptedProvider
 from facio_api.talk.goldens import load_goldens, match_golden
 from facio_api.talk.loop import run_turn
-from facio_api.talk.schemas import TalkTurnRequest
+from facio_api.talk.schemas import TalkSelection, TalkTurnRequest
 
 NOW = datetime(2026, 8, 15, 12, 0, 0)
 SEED_BRACE = "держи корпус и ягодицы"
 FOUNDING_IDS = {"bike", "push-ups", "vegetables"}
 
 
-def _request(utterance: str) -> TalkTurnRequest:
+def _request(utterance: str, selection: TalkSelection | None = None) -> TalkTurnRequest:
     return TalkTurnRequest(
         utterance=utterance,
         desk=founding_desk(now=NOW),
         thread=[],
         thread_id="golden",
         now=NOW,
+        selection=selection,
     )
 
 
-async def _play(utterance: str):
-    return await run_turn(_request(utterance), ScriptedProvider.for_utterance(utterance), now=NOW)
+async def _play(utterance: str, selection: TalkSelection | None = None):
+    return await run_turn(
+        _request(utterance, selection),
+        ScriptedProvider.for_utterance(utterance),
+        now=NOW,
+    )
+
+
+async def _play_golden(golden):
+    """Replay a golden the way the client sends it — selection included."""
+    return await _play(golden.utterance, golden.selection)
 
 
 def _names(result) -> list[str]:
@@ -45,6 +55,8 @@ def _sentences(text: str) -> list[str]:
 
 RUSSIAN_IDS = {
     "cadence_shrink",
+    "clarification_orphan",
+    "clarification_selection",
     "explain_only",
     "gym_no_clock",
     "gym_until_22",
@@ -347,3 +359,60 @@ async def test_thaw_pause_restores_bike() -> None:
     bike = _subject(result.desk, "bike")
     assert bike.status == SubjectStatus.active
     assert bike.paused_at is None
+
+
+# --- R3 selection → clarification ----------------------------------------
+
+
+async def test_clarification_selection_lands_on_demand_with_the_quote() -> None:
+    """The answer to a selected phrase comes back behind a `?`, carrying the phrase."""
+    golden = match_golden("что это значит: не роняй таз?")
+    assert golden is not None
+    assert golden.id == "clarification_selection"
+    assert golden.selection is not None
+    result = await _play_golden(golden)
+    assert result.mutated is True
+    assert _names(result) == golden.expect.tools
+    expected = golden.expect.cue
+    assert expected is not None
+    cue = next(row for row in result.desk.cues if row.id == "push-ups-hips-talk")
+    assert cue.subject_id == expected.subject_id
+    assert cue.kind == CueKind.clarification
+    # Never inline at do-time: rep one has to stay readable (04, P9).
+    assert cue.surface == CueSurface.on_demand
+    assert cue.step_id == expected.step_id
+    assert cue.quote == expected.quote
+    assert cue.quote == golden.selection.quote
+    for needle in expected.text_contains:
+        assert needle in cue.text
+    push = _subject(result.desk, "push-ups")
+    assert cue.id in push.cue_ids
+    # The founding do-time correction is untouched — the `?` did not take its place.
+    brace = next(row for row in result.desk.cues if row.id == "push-ups-brace")
+    assert brace.surface == CueSurface.do_time
+
+
+async def test_clarification_selection_does_not_move_the_do_time_line() -> None:
+    """A clarification is looked up; the tile still shows the correction (04)."""
+    result = await _play_golden(match_golden("что это значит: не роняй таз?"))
+    card = next(row for row in result.snapshots if row.widget_id == "push-ups-counter")
+    assert "таз" not in card.line
+    assert card.line.endswith("brace the core and the glutes")
+
+
+async def test_clarification_orphan_stays_text_only() -> None:
+    """A selection with no bound subject produces no cue (04, 05)."""
+    golden = match_golden("что это значит: беговая экономичность?")
+    assert golden is not None
+    assert golden.id == "clarification_orphan"
+    assert golden.selection is not None
+    assert golden.selection.subject_id is None
+    assert golden.selection.widget_id is None
+    before = founding_desk(now=NOW)
+    result = await _play_golden(golden)
+    assert result.mutated is False
+    assert result.tool_calls == []
+    assert "add_cue" not in _names(result)
+    assert result.snapshots == []
+    assert result.desk.cues == before.cues
+    assert result.text

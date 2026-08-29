@@ -4,15 +4,18 @@ from datetime import datetime, time
 
 import pytest
 
-from facio_domain.cues import add_cue
+from facio_domain.cues import add_cue, default_surface
 from facio_domain.desk import founding_desk
-from facio_domain.models import CueOrigin, CueSurface, SubjectStatus, WidgetStatus, WidgetType
+from facio_domain.models import CueKind, CueOrigin, CueSurface, SubjectStatus, WidgetStatus, WidgetType
 from facio_domain.pain import reports_pain
 from facio_domain.tools import (
     CADENCE_REQUIRED,
     INVALID,
     INVALID_KIND,
+    INVALID_MEDIA,
+    INVALID_QUOTE,
     INVALID_SURFACE,
+    NOT_FOUND,
     PAIN_FORBIDS_RAISE,
     SURFACE_REQUIRED,
     UNSUPPORTED_WIDGET_TYPE,
@@ -80,7 +83,9 @@ def test_add_cue_empty_required_argument_stays_bare_invalid() -> None:
 
 
 def test_add_cue_refusal_codes_are_distinct() -> None:
-    assert len({INVALID, INVALID_KIND, INVALID_SURFACE, SURFACE_REQUIRED}) == 4
+    """Each refusal names its own field, so the next round can fix that field."""
+    codes = {INVALID, INVALID_KIND, INVALID_SURFACE, INVALID_QUOTE, INVALID_MEDIA, SURFACE_REQUIRED}
+    assert len(codes) == 6
 
 
 def test_add_cue_lands_on_push_ups_do_time() -> None:
@@ -568,3 +573,144 @@ def test_orphan_cue_is_rejected() -> None:
 def test_domain_add_cue_still_defaults_surface() -> None:
     cue = add_cue(id="x", subject_id="push-ups", kind="correction", text="brace")
     assert cue.surface == CueSurface.do_time
+
+
+def test_add_cue_carries_step_and_media_onto_the_desk() -> None:
+    """The `?` sits on a step, and a cue may carry one media item (04)."""
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "add_cue",
+        {
+            "id": "push-ups-hips",
+            "subject_id": "push-ups",
+            "step_id": "rep-1",
+            "kind": "clarification",
+            "text": "таз в одну линию с плечами и пятками",
+            "surface": "on-demand",
+            "quote": "не роняй таз",
+            "media": {"kind": "link", "url": "https://example.com/hips"},
+        },
+    )
+    assert outcome.ok
+    cue = next(row for row in outcome.desk.cues if row.id == "push-ups-hips")
+    assert cue.step_id == "rep-1"
+    assert cue.quote == "не роняй таз"
+    assert cue.media is not None
+    assert cue.media.kind == "link"
+    assert cue.media.url == "https://example.com/hips"
+    assert cue.surface == CueSurface.on_demand
+    push = next(row for row in outcome.desk.subjects if row.id == "push-ups")
+    assert "push-ups-hips" in push.cue_ids
+
+
+def test_add_cue_photo_media_is_the_persons_own_picture() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "add_cue",
+        {
+            "id": "bike-machine",
+            "subject_id": "bike",
+            "kind": "clarification",
+            "text": "этот тренажёр у окна",
+            "surface": "on-demand",
+            "media": {"kind": "photo", "ref": "local://photo/1"},
+        },
+    )
+    assert outcome.ok
+    cue = next(row for row in outcome.desk.cues if row.id == "bike-machine")
+    assert cue.media is not None
+    assert cue.media.kind == "photo"
+    assert cue.media.ref == "local://photo/1"
+
+
+def test_add_cue_refuses_more_than_one_media_item() -> None:
+    """At most one: `photo` or `link`. A list is refused, not trimmed (04)."""
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "add_cue",
+        {
+            "subject_id": "push-ups",
+            "kind": "clarification",
+            "text": "две картинки",
+            "surface": "on-demand",
+            "media": [
+                {"kind": "link", "url": "https://example.com/a"},
+                {"kind": "photo", "ref": "local://photo/2"},
+            ],
+        },
+    )
+    assert not outcome.ok
+    assert outcome.error == INVALID_MEDIA
+    assert outcome.desk == desk
+
+
+def test_add_cue_refuses_an_unknown_media_kind() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "add_cue",
+        {
+            "subject_id": "push-ups",
+            "kind": "clarification",
+            "text": "видео из библиотеки",
+            "surface": "on-demand",
+            "media": {"kind": "video", "url": "https://example.com/v"},
+        },
+    )
+    assert not outcome.ok
+    assert outcome.error == INVALID_MEDIA
+
+
+def test_add_cue_refuses_a_quote_that_is_an_offset() -> None:
+    """`quote` is text. An anchor into a message dangles later (04)."""
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "add_cue",
+        {
+            "subject_id": "push-ups",
+            "kind": "clarification",
+            "text": "объяснение",
+            "surface": "on-demand",
+            "quote": {"message_id": "m1", "start": 12, "end": 24},
+        },
+    )
+    assert not outcome.ok
+    assert outcome.error == INVALID_QUOTE
+    assert outcome.desk == desk
+
+
+def test_add_cue_clarification_still_needs_a_surface_from_the_model() -> None:
+    """The kind default lives in `add_cue`; the tool never fills it in silently."""
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "add_cue",
+        {"subject_id": "push-ups", "kind": "clarification", "text": "что такое таз"},
+    )
+    assert not outcome.ok
+    assert outcome.error == SURFACE_REQUIRED
+    assert default_surface(CueKind.clarification) == CueSurface.on_demand
+
+
+def test_add_cue_never_lands_on_a_subject_that_is_not_there() -> None:
+    """A selection with no bound subject produces no cue — no orphans (04, 05)."""
+    desk = founding_desk(now=NOW)
+    outcome = _apply(
+        desk,
+        "add_cue",
+        {
+            "subject_id": "running",
+            "kind": "clarification",
+            "text": "беговая экономичность — сколько сил на километр",
+            "surface": "on-demand",
+            "quote": "беговая экономичность",
+        },
+    )
+    assert not outcome.ok
+    assert outcome.error == NOT_FOUND
+    assert outcome.desk == desk
+    assert outcome.desk.cues == founding_desk(now=NOW).cues

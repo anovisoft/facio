@@ -8,6 +8,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 import facio_api
+from facio_api.talk.schemas import TalkSelection
 
 
 class ScriptedToolCall(BaseModel):
@@ -28,6 +29,8 @@ class GoldenExpectCue(BaseModel):
     subject_id: str
     surface: str
     kind: str | None = None
+    step_id: str | None = None
+    quote: str | None = None
     text_contains: list[str] = Field(default_factory=list)
 
 
@@ -56,9 +59,17 @@ class GoldenExpect(BaseModel):
 
 
 class Golden(BaseModel):
+    """One utterance and the desk it must leave behind.
+
+    `selection` is the phrase the person picked out of the assistant's previous
+    answer. It rides the turn, not the utterance, because the binding — widget,
+    subject, step — is something the client knows and the words do not say.
+    """
+
     id: str
     utterance: str
     match: list[str] = Field(default_factory=list)
+    selection: TalkSelection | None = None
     scripted: list[ScriptedTurn]
     expect: GoldenExpect
 

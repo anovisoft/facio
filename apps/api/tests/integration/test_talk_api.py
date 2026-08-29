@@ -4,7 +4,7 @@ from facio_domain.desk import founding_desk
 
 from facio_api.config import Settings, get_settings
 from facio_api.main import app
-from facio_api.talk.schemas import TalkTurnRequest
+from facio_api.talk.schemas import TalkSelection, TalkTurnRequest
 
 
 async def test_health(client) -> None:
@@ -93,3 +93,56 @@ async def test_unknown_locale_rejected(client) -> None:
     }
     response = await client.post("/v1/talk/turn", json=body)
     assert response.status_code == 422
+
+
+async def test_selection_turn_lands_a_clarification_behind_a_question_mark(client) -> None:
+    """R3: the phrase the person picked comes back as an on-demand cue with its quote."""
+    body = TalkTurnRequest(
+        utterance="что это значит: не роняй таз?",
+        desk=founding_desk(),
+        thread_id="t-selection",
+        selection=TalkSelection(
+            quote="не роняй таз",
+            widget_id="push-ups-counter",
+            step_id="rep-1",
+        ),
+    )
+    response = await client.post("/v1/talk/turn", json=body.model_dump(mode="json"))
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["mutated"] is True
+    cue = next(row for row in payload["desk"]["cues"] if row["id"] == "push-ups-hips-talk")
+    assert cue["kind"] == "clarification"
+    assert cue["surface"] == "on-demand"
+    assert cue["step_id"] == "rep-1"
+    assert cue["quote"] == "не роняй таз"
+
+
+async def test_selection_with_no_binding_leaves_the_desk_alone(client) -> None:
+    """A selection with no bound subject produces no cue ([05])."""
+    body = TalkTurnRequest(
+        utterance="что это значит: беговая экономичность?",
+        desk=founding_desk(),
+        thread_id="t-orphan",
+        selection=TalkSelection(quote="беговая экономичность"),
+    )
+    response = await client.post("/v1/talk/turn", json=body.model_dump(mode="json"))
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["mutated"] is False
+    assert payload["tool_calls"] == []
+    assert payload["snapshots"] == []
+    assert len(payload["desk"]["cues"]) == len(founding_desk().cues)
+    assert payload["text"]
+
+
+async def test_selection_is_optional_on_the_wire(client) -> None:
+    """Old clients send no `selection`; the turn is unchanged."""
+    body = {
+        "utterance": "поясница забирает нагрузку",
+        "desk": founding_desk().model_dump(mode="json"),
+        "thread_id": "t-old",
+    }
+    response = await client.post("/v1/talk/turn", json=body)
+    assert response.status_code == 200
+    assert response.json()["mutated"] is True
