@@ -42,7 +42,7 @@ Invariants:
 | status | ready / running / done / skipped / snoozed / archived |
 | when | date/time / day slot |
 | section | today / lifetime / soon / postponed |
-| group_id | same intent burst; not a screen |
+| group_id | same intent burst; not a screen. Also the occurrences of one subject inside one period — the lid draws them as one tile ([07](./07-open-questions.md) Q34) |
 | subject_id | kebab / Deeds / thread |
 | instance_id | carousel slot |
 | tile_size | from type |
@@ -75,7 +75,7 @@ Invariants:
 - **Cues surface on the widget at do-time**, never only in a subject settings screen (P9).
 - **Drift is derived, never stored as a score:** promised cadence vs instances completed over a trailing period. No streak number, ever (P7).
 - Cadence is a count per period, so missing Tuesday is not a failure — missing the *count* is.
-- **A count above one inside a single period means that many occurrences that day**, each with its own instance and its own tile, completed separately ([07](./07-open-questions.md) Q34). Seven checks a day is seven ticks, not one tick pressed seven times — a widget already done cannot record the next check.
+- **A count above one inside a single period means that many occurrences that day**, each with its own instance and its own tile, completed separately ([07](./07-open-questions.md) Q34). Seven checks a day is seven ticks, not one tick pressed seven times — a widget already done cannot record the next check. **They share one tile**: the occurrences of one subject inside one period carry the same `group_id` and the lid draws the group once, with the next hour large and one mark per occurrence. Marks are independent — a later check does not close an earlier miss.
 - `cadence: none` with no instances is not drift; it is a finished thing.
 - Retiring or shrinking a subject keeps its instances and cues. Nothing is deleted as punishment.
 - **Pause is not shrink and not retire.** Pain + a miss freezes the practice: cadence and target stay; usual reminders are silent; a one-shot local check-in asks «готов тренироваться?» after two days. Thaw only when the person says it let go. Pause does not raise volume.
