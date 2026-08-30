@@ -85,15 +85,44 @@ enum SlotLaw {
         guard promised > 0 else { return 0 }
         let calendar = dayCalendar
         let target = startOfDay(for: day, calendar: calendar)
-        let hours = Set(
-            widgets.filter { $0.subjectId == subject.id && $0.type == .reminder }.map(\.instanceId)
-        )
+        let hours = hourInstanceIds(subjectId: subject.id, widgets: widgets)
         let standing = instances.filter {
             $0.subjectId == subject.id
                 && startOfDay(for: $0.when, calendar: calendar) == target
                 && !hours.contains($0.id)
         }.count
         return max(0, promised - standing)
+    }
+
+    /// The cases a reminder tile stands on — hours, not occurrences.
+    ///
+    /// The hours of a practice live in its window (Q34), so the case under a
+    /// reminder is the alarm itself. It is not one of the checks: counting it
+    /// would silently eat one, and showing it would put an alarm in a queue of
+    /// days.
+    static func hourInstanceIds(subjectId: String, widgets: [Widget]) -> Set<String> {
+        Set(
+            widgets
+                .filter { $0.subjectId == subjectId && $0.type == .reminder }
+                .map(\.instanceId)
+        )
+    }
+
+    /// The cases of a practice as the carousel should list them.
+    ///
+    /// The same rule `occurrencesMissing` counts by, read out loud: an hour is
+    /// not an occurrence. A practice whose **only** case is its reminder keeps
+    /// it — the bike's alarm is the ride, and an empty carousel is worse than
+    /// an honest one.
+    static func occurrenceInstances(
+        subjectId: String,
+        instances: [Instance],
+        widgets: [Widget]
+    ) -> [Instance] {
+        let own = InstanceLaw.sorted(instances, subjectId: subjectId)
+        let hours = hourInstanceIds(subjectId: subjectId, widgets: widgets)
+        let withoutHours = own.filter { !hours.contains($0.id) }
+        return withoutHours.isEmpty ? own : withoutHours
     }
 
     static func startOfDay(for date: Date) -> Date {

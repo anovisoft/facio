@@ -74,7 +74,7 @@ struct InstanceCarousel: View {
                     dimmed: instance.status == .completed
                 )
                 Spacer(minLength: 0)
-                Text(DisplayCopy.chipDate(instance.when))
+                Text(InstanceFaceLaw.slotCaption(instance, among: instances))
                     .font(selected ? .caption.weight(.semibold) : .caption2.weight(.semibold))
                     .lineLimit(1)
                 Text(DisplayCopy.instanceStatus(instance.status))
@@ -95,7 +95,7 @@ struct InstanceCarousel: View {
                 .fill(Color.primary.opacity(selected ? 0.12 : 0.05))
         )
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(DisplayCopy.loudDate(instance.when))
+        .accessibilityLabel(InstanceFaceLaw.slotSpokenDate(instance, among: instances))
         .accessibilityValue(
             [DisplayCopy.instanceStatus(instance.status), InstanceFaceView.spoken(face)]
                 .compactMap { $0 }

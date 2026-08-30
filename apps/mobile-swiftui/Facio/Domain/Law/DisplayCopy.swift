@@ -33,6 +33,24 @@ enum DisplayCopy {
         String(localized: "пункт: \(text)", comment: "Checklist item accessibility")
     }
 
+    /// What VoiceOver reads off a group tile: the whole day in one phrase,
+    /// because the marks under it are read one hour at a time.
+    static func groupAccessibility(title: String, done: Int, total: Int) -> String {
+        String(
+            localized: "\(title), \(done) из \(total) отмечено",
+            comment: "Group tile accessibility: title, closed occurrences of total"
+        )
+    }
+
+    /// One mark of a group, as its button announces itself. The hour is the
+    /// name of the check — without it seven marks are seven guesses.
+    static func groupMarkAccessibility(_ hour: ClockTime?) -> String {
+        guard let hour else {
+            return String(localized: "отметка", comment: "Group mark with no hour")
+        }
+        return String(localized: "отметка \(hour.shortLabel)", comment: "Group mark at an hour")
+    }
+
     /// What VoiceOver reads off a timer tile. The face itself is monospaced
     /// digits; this says which of the two states it is in.
     static func timerAccessibility(title: String, running: Bool) -> String {

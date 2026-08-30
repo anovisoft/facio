@@ -126,11 +126,7 @@ def occurrences_missing(
     promised = occurrences_promised(subject, on_day)
     if promised == 0:
         return 0
-    hours = {
-        widget.instance_id
-        for widget in widgets
-        if widget.subject_id == subject.id and widget.type == WidgetType.reminder
-    }
+    hours = hour_instance_ids(subject.id, widgets)
     standing = sum(
         1
         for instance in instances
@@ -139,6 +135,37 @@ def occurrences_missing(
         and instance.id not in hours
     )
     return max(0, promised - standing)
+
+
+def hour_instance_ids(subject_id: str, widgets: Sequence[Widget]) -> set[str]:
+    """The cases a reminder tile stands on — hours, not occurrences.
+
+    The hours of a practice live in its window (Q34), so the case under a
+    reminder is the alarm itself. It is not one of the checks: counting it would
+    silently eat one, and showing it would put an alarm in a queue of days.
+    """
+    return {
+        widget.instance_id
+        for widget in widgets
+        if widget.subject_id == subject_id and widget.type == WidgetType.reminder
+    }
+
+
+def occurrence_instances(
+    subject_id: str,
+    instances: Sequence[Instance],
+    widgets: Sequence[Widget],
+) -> list[Instance]:
+    """The cases of a practice as the carousel should list them.
+
+    The same rule `occurrences_missing` counts by, read out loud: an hour is not
+    an occurrence. A practice whose **only** case is its reminder keeps it — the
+    bike's alarm is the ride, and an empty carousel is worse than an honest one.
+    """
+    own = [instance for instance in instances if instance.subject_id == subject_id]
+    hours = hour_instance_ids(subject_id, widgets)
+    without_hours = [instance for instance in own if instance.id not in hours]
+    return without_hours or own
 
 
 def _real_slot(instance: Instance, day: date) -> Slot:

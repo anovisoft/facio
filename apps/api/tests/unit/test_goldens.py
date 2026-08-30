@@ -103,6 +103,7 @@ RUSSIAN_IDS = {
     "cue_with_link",
     "drift_answer",
     "explain_only",
+    "group_one_widget",
     "gym_no_clock",
     "gym_until_22",
     "lower_back",
@@ -788,6 +789,28 @@ def test_a_plain_practice_is_not_written_as_a_stepper() -> None:
             if call.name == "create_widget"
         ]
         assert "stepper" not in types, golden_id
+
+
+async def test_one_widget_is_answered_not_silently_agreed() -> None:
+    """Q34 Part C: asked to merge what is already one tile, the mouth says so.
+
+    The live failure this locks: «а можешь их поместить в один виджет?» came
+    back as «Напомню в эти семь часов» and nothing happened — an answer about a
+    different question, which reads as «ок» and leaves the person waiting. A
+    request the desk already satisfies is answered by saying it already does.
+    """
+    golden = match_golden("а можешь их поместить в один виджет?")
+    assert golden is not None
+    assert golden.id == "group_one_widget"
+    result = await _play(golden.utterance)
+    assert result.mutated is False
+    assert result.tool_calls == []
+    assert result.snapshots == []
+    # Not silence, and not a promise about the hours instead.
+    assert result.text
+    lowered = result.text.casefold()
+    assert "уже" in lowered
+    assert "плитк" in lowered
 
 
 async def test_upwork_seven_hours_land_as_one_window_and_seven_checks() -> None:

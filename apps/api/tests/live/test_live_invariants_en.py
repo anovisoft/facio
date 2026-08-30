@@ -11,7 +11,7 @@ from facio_domain.models import CueKind, CueSurface, Desk, SubjectStatus, Widget
 from facio_domain.tools import times_per_week
 
 from facio_api.talk.loop import MEDIA_NOT_IN_CONVERSATION
-from facio_api.talk.schemas import TalkSelection, TalkTurnResponse
+from facio_api.talk.schemas import TalkSelection, TalkTurnResponse, ThreadMessage
 
 pytestmark = pytest.mark.live
 
@@ -394,3 +394,49 @@ async def test_live_no_link_in_the_conversation_means_no_link_on_the_desk_en(liv
             assert call.ok is False
             assert call.error == MEDIA_NOT_IN_CONVERSATION
     assert all(row.media is None for row in result.desk.cues)
+
+
+# --- Q34 refined: seven checks, one tile, and the request to merge them ----
+
+UPWORK_UTTERANCE_EN = (
+    "remind me every day at 10, 12, 15, 16:30, 18, 21, 22 to check Upwork,"
+    " and a checkbox for each check"
+)
+ONE_WIDGET_UTTERANCE_EN = "can you put them in one widget?"
+UPWORK_HOURS_EN = [(10, 0), (12, 0), (15, 0), (16, 30), (18, 0), (21, 0), (22, 0)]
+
+
+def _upwork_en(desk: Desk):
+    return next(
+        row
+        for row in desk.subjects
+        if row.id not in FOUNDING_IDS and row.cadence.period == "day"
+    )
+
+
+async def test_live_en_seven_hours_land_as_one_practice(live_play_en) -> None:
+    result = await live_play_en(UPWORK_UTTERANCE_EN)
+    assert result.mutated is True
+    subject = _upwork_en(result.desk)
+    assert subject.cadence.count == 7
+    assert subject.window is not None
+    assert [(hour.hour, hour.minute) for hour in subject.window.hours] == UPWORK_HOURS_EN
+    lists = [row for row in result.desk.widgets if row.type == WidgetType.checklist]
+    assert lists == [], [row.title for row in lists]
+
+
+async def test_live_en_asked_to_merge_them_the_mouth_says_they_already_are(live_play_en) -> None:
+    first = await live_play_en(UPWORK_UTTERANCE_EN)
+    result = await live_play_en(
+        ONE_WIDGET_UTTERANCE_EN,
+        desk=first.desk,
+        thread=[
+            ThreadMessage(role="user", text=UPWORK_UTTERANCE_EN),
+            ThreadMessage(role="assistant", text=first.text),
+        ],
+    )
+    print(f"[R16 en one-widget] tools={_names(result)} text={result.text!r}")
+    assert result.mutated is False
+    assert result.tool_calls == []
+    assert result.text
+    assert "already" in result.text.casefold(), result.text

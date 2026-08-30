@@ -88,21 +88,84 @@ enum SeedFactory {
                 widgets: next.widgets,
                 on: now
             )
-            guard missing > 0, let template = occurrenceTemplate(in: next, subjectId: subject.id, now: now) else {
-                continue
-            }
-            for _ in 0..<missing {
-                let instanceId = "\(subject.id)-\(UUID().uuidString)"
-                let payload = InstanceLaw.resetPayload(of: template, now: now, window: subject.window)
-                next.instances.append(
-                    Instance(id: instanceId, subjectId: subject.id, when: now, status: .prepared)
-                )
-                if let index = next.subjects.firstIndex(where: { $0.id == subject.id }) {
-                    next.subjects[index].instanceIds.append(instanceId)
+            if missing > 0, let template = occurrenceTemplate(in: next, subjectId: subject.id, now: now) {
+                for _ in 0..<missing {
+                    let instanceId = "\(subject.id)-\(UUID().uuidString)"
+                    let payload = InstanceLaw.resetPayload(of: template, now: now, window: subject.window)
+                    next.instances.append(
+                        Instance(id: instanceId, subjectId: subject.id, when: now, status: .prepared)
+                    )
+                    if let index = next.subjects.firstIndex(where: { $0.id == subject.id }) {
+                        next.subjects[index].instanceIds.append(instanceId)
+                    }
+                    next.widgets.append(
+                        InstanceLaw.newWidget(from: template, instanceId: instanceId, payload: payload, now: now)
+                    )
                 }
-                next.widgets.append(
-                    InstanceLaw.newWidget(from: template, instanceId: instanceId, payload: payload, now: now)
-                )
+            }
+            next = groupToday(subject: subject, in: next, now: now)
+        }
+        return next
+    }
+
+    /// Q34 after the first day on a phone: the occurrences of one subject
+    /// inside one period share a **`group_id`** and the lid draws them once.
+    ///
+    /// Two writes, both derived, both idempotent. The `group_id` is the subject
+    /// and the day, so running this twice re-stamps instead of splitting. And
+    /// the hours the person named are laid onto the cases in order, so a check
+    /// carries the hour it is for — without that, seven cases are seven
+    /// identical squares and «отметить именно проверку в 15:00» is a guess.
+    ///
+    /// The hours are distributed **only** when there are exactly as many of
+    /// them as there are occurrences. Fewer hours than checks would mean us
+    /// deciding which check happens when, and nothing here invents an hour the
+    /// person did not say (Q34).
+    ///
+    /// A practice that promises one a day is not touched at all: no `group_id`,
+    /// one tile, exactly as before — which is also why an old desk opens.
+    private static func groupToday(subject: Subject, in snapshot: DeskSnapshot, now: Date) -> DeskSnapshot {
+        guard SlotLaw.occurrencesPromised(subject) > 1 else { return snapshot }
+        var next = snapshot
+        let hourCases = SlotLaw.hourInstanceIds(subjectId: subject.id, widgets: next.widgets)
+        let today = Set(
+            next.instances
+                .filter {
+                    $0.subjectId == subject.id
+                        && SlotLaw.isSameDay($0.when, now)
+                        && !hourCases.contains($0.id)
+                }
+                .map(\.id)
+        )
+        guard today.count > 1 else { return snapshot }
+
+        var whenOf: [String: Date] = [:]
+        for instance in next.instances { whenOf[instance.id] = instance.when }
+        let ordered = next.widgets
+            .filter { today.contains($0.instanceId) && $0.type.showsOnLid && $0.status != .archived }
+            .sorted { lhs, rhs in
+                let left = whenOf[lhs.instanceId] ?? now
+                let right = whenOf[rhs.instanceId] ?? now
+                if left != right { return left < right }
+                return lhs.id < rhs.id
+            }
+        guard ordered.count > 1 else { return snapshot }
+
+        let groupId = GroupLaw.key(subjectId: subject.id, day: now)
+        let hours = subject.window?.hours ?? []
+        let laysHours = hours.count == ordered.count
+        for (position, widget) in ordered.enumerated() {
+            guard let index = next.widgets.firstIndex(where: { $0.id == widget.id }) else { continue }
+            next.widgets[index].groupId = groupId
+            guard laysHours else { continue }
+            let at = ReminderClock.date(on: now, clock: hours[position])
+            // A closed check keeps the moment it was closed on its widget —
+            // that stamp is what holds a done tile on Today until midnight.
+            if next.widgets[index].status != .done {
+                next.widgets[index].when = at
+            }
+            if let caseIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
+                next.instances[caseIndex].when = at
             }
         }
         return next

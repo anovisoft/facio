@@ -133,11 +133,45 @@ final class DeskStore {
         InstanceLaw.sorted(snapshot.instances, subjectId: subjectId)
     }
 
+    /// The cases the carousel lists: occurrences, never the hour a reminder
+    /// stands on (Q34). The queue of a day is what happened, not what rang.
+    func occurrenceInstances(for subjectId: String) -> [Instance] {
+        SlotLaw.occurrenceInstances(
+            subjectId: subjectId,
+            instances: snapshot.instances,
+            widgets: snapshot.widgets
+        )
+    }
+
+    /// Close **this** occurrence, whatever type it wears.
+    ///
+    /// One mark on a group tile closes its own case and nothing else: there is
+    /// no pointer to advance, and a later check never closes an earlier miss.
+    /// A tick toggles, because a tick has always toggled; the other runtimes
+    /// have one way to be finished and this is it.
+    func closeOccurrence(widgetId: String) {
+        guard let widget = widget(id: widgetId) else { return }
+        switch widget.type {
+        case .tick: toggleTick(widgetId: widgetId)
+        case .counter: completeCounter(widgetId: widgetId)
+        case .checklist: completeChecklist(widgetId: widgetId)
+        case .timer: completeTimer(widgetId: widgetId)
+        case .stepper: completeStepper(widgetId: widgetId)
+        case .reminder: completeReminder(widgetId: widgetId)
+        }
+    }
+
+    /// Where the kebab carousel opens. It must be a slot the carousel actually
+    /// lists, so a live reminder does not park the selection on an hour that is
+    /// no longer in the queue (Q34).
     func preferredInstanceId(subjectId: String) -> String? {
-        if let live = templateWidget(subjectId: subjectId) {
+        let listed = occurrenceInstances(for: subjectId)
+        if let live = templateWidget(subjectId: subjectId),
+           listed.contains(where: { $0.id == live.instanceId })
+        {
             return live.instanceId
         }
-        return instances(for: subjectId).last?.id
+        return listed.last?.id
     }
 
     @discardableResult
@@ -321,7 +355,11 @@ final class DeskStore {
             next.widgets[index].when = stamp
             if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
                 next.instances[instanceIndex].status = .completed
-                next.instances[instanceIndex].when = stamp
+                next.instances[instanceIndex].when = GroupLaw.closingStamp(
+                    widget,
+                    standing: next.instances[instanceIndex].when,
+                    now: stamp
+                )
             }
             if let cue, let cueIndex = next.cues.firstIndex(where: { $0.id == cue.id }) {
                 next.cues[cueIndex].hits.applied += 1
@@ -388,7 +426,11 @@ final class DeskStore {
             next.widgets[index].when = stamp
             if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
                 next.instances[instanceIndex].status = .completed
-                next.instances[instanceIndex].when = stamp
+                next.instances[instanceIndex].when = GroupLaw.closingStamp(
+                    widget,
+                    standing: next.instances[instanceIndex].when,
+                    now: stamp
+                )
             }
             if let cue, let cueIndex = next.cues.firstIndex(where: { $0.id == cue.id }) {
                 next.cues[cueIndex].hits.applied += 1
@@ -412,7 +454,11 @@ final class DeskStore {
             next.widgets[index].when = makingDone ? stamp : nil
             if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
                 next.instances[instanceIndex].status = makingDone ? .completed : .prepared
-                next.instances[instanceIndex].when = stamp
+                next.instances[instanceIndex].when = GroupLaw.closingStamp(
+                    widget,
+                    standing: next.instances[instanceIndex].when,
+                    now: stamp
+                )
             }
         }
         journal(
@@ -504,7 +550,11 @@ final class DeskStore {
             next.widgets[index].when = stamp
             if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
                 next.instances[instanceIndex].status = .completed
-                next.instances[instanceIndex].when = stamp
+                next.instances[instanceIndex].when = GroupLaw.closingStamp(
+                    widget,
+                    standing: next.instances[instanceIndex].when,
+                    now: stamp
+                )
             }
             if let cue, let cueIndex = next.cues.firstIndex(where: { $0.id == cue.id }) {
                 next.cues[cueIndex].hits.applied += 1
@@ -582,7 +632,11 @@ final class DeskStore {
             next.widgets[index].when = stamp
             if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
                 next.instances[instanceIndex].status = .completed
-                next.instances[instanceIndex].when = stamp
+                next.instances[instanceIndex].when = GroupLaw.closingStamp(
+                    widget,
+                    standing: next.instances[instanceIndex].when,
+                    now: stamp
+                )
             }
             if let cue, let cueIndex = next.cues.firstIndex(where: { $0.id == cue.id }) {
                 next.cues[cueIndex].hits.applied += 1
@@ -638,7 +692,11 @@ final class DeskStore {
             next.widgets[index].when = stamp
             if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
                 next.instances[instanceIndex].status = .completed
-                next.instances[instanceIndex].when = stamp
+                next.instances[instanceIndex].when = GroupLaw.closingStamp(
+                    widget,
+                    standing: next.instances[instanceIndex].when,
+                    now: stamp
+                )
             }
             if let cue, let cueIndex = next.cues.firstIndex(where: { $0.id == cue.id }) {
                 next.cues[cueIndex].hits.applied += 1

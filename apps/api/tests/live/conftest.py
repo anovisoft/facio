@@ -9,11 +9,18 @@ from typing import Any
 import pytest
 
 from facio_domain.desk import founding_desk
+from facio_domain.models import Desk
 
 from facio_api.config import Settings
 from facio_api.providers.factory import provider_for
 from facio_api.talk.loop import run_turn
-from facio_api.talk.schemas import Locale, TalkSelection, TalkTurnRequest, TalkTurnResponse
+from facio_api.talk.schemas import (
+    Locale,
+    TalkSelection,
+    TalkTurnRequest,
+    TalkTurnResponse,
+    ThreadMessage,
+)
 from support.live import (
     LIVE_OPT_IN_REASON,
     force_live,
@@ -49,12 +56,18 @@ def _play_for(live_settings: Settings, locale: Locale) -> LivePlay:
         selection: TalkSelection | None = None,
         *,
         focused_widget_id: str | None = None,
+        desk: Desk | None = None,
+        thread: list[ThreadMessage] | None = None,
     ) -> TalkTurnResponse:
+        """`desk` and `thread` carry a previous turn in, for a second utterance
+        that only makes sense on what the first one wrote and said. «Их» has an
+        antecedent on a real phone; a turn sent without one is a different
+        question."""
         provider = provider_for(live_settings, utterance)
         request = TalkTurnRequest(
             utterance=utterance,
-            desk=founding_desk(now=NOW),
-            thread=[],
+            desk=desk if desk is not None else founding_desk(now=NOW),
+            thread=thread or [],
             thread_id=f"live-{locale}",
             now=NOW,
             locale=locale,

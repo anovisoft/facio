@@ -1,0 +1,20 @@
+{
+  "id": "group_one_widget_en",
+  "utterance": "can you put them in one widget?",
+  "match": [
+    "in one widget"
+  ],
+  "scripted": [
+    {
+      "text": "They already are. One tile for all seven checks: the next hour large, the count beside it, and a mark for each one — you tick the one you did."
+    },
+    {
+      "text": "They already are. One tile for all seven checks: the next hour large, the count beside it, and a mark for each one — you tick the one you did."
+    }
+  ],
+  "expect": {
+    "mutated": false,
+    "tools": [],
+    "snapshots_empty": true
+  }
+}

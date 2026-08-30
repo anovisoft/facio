@@ -11,7 +11,7 @@ from facio_domain.models import CueKind, CueSurface, Desk, SubjectStatus, Widget
 from facio_domain.tools import times_per_week
 
 from facio_api.talk.loop import MEDIA_NOT_IN_CONVERSATION
-from facio_api.talk.schemas import TalkSelection, TalkTurnResponse
+from facio_api.talk.schemas import TalkSelection, TalkTurnResponse, ThreadMessage
 
 pytestmark = pytest.mark.live
 
@@ -404,3 +404,65 @@ async def test_live_no_link_in_the_conversation_means_no_link_on_the_desk(live_p
             assert call.ok is False
             assert call.error == MEDIA_NOT_IN_CONVERSATION
     assert all(row.media is None for row in result.desk.cues)
+
+
+# --- Q34 refined: seven checks, one tile, and the request to merge them ----
+
+UPWORK_UTTERANCE = (
+    "напоминай мне каждый день в 10 12 15 16:30 18 21 22 что нужно проверить upwork"
+    " и галочку на каждую проверку"
+)
+ONE_WIDGET_UTTERANCE = "а можешь их поместить в один виджет?"
+UPWORK_HOURS = [(10, 0), (12, 0), (15, 0), (16, 30), (18, 0), (21, 0), (22, 0)]
+
+
+def _upwork(desk: Desk):
+    return next(
+        row
+        for row in desk.subjects
+        if row.id not in FOUNDING_IDS and row.cadence.period == "day"
+    )
+
+
+async def test_live_seven_hours_land_as_one_practice(live_play) -> None:
+    """PO's own line. Seven hours on one window, seven checks in one rhythm."""
+    result = await live_play(UPWORK_UTTERANCE)
+    assert result.mutated is True
+    subject = _upwork(result.desk)
+    assert subject.cadence.count == 7
+    assert subject.window is not None
+    assert [(hour.hour, hour.minute) for hour in subject.window.hours] == UPWORK_HOURS
+    # Seven checks, not one case pretending to be seven: a checklist whose
+    # lines are the clock times is the shape this decision forbids.
+    lists = [row for row in result.desk.widgets if row.type == WidgetType.checklist]
+    assert lists == [], [row.title for row in lists]
+    assert any(
+        row.type in {WidgetType.tick, WidgetType.counter} and row.subject_id == subject.id
+        for row in result.desk.widgets
+    ), _names(result)
+
+
+async def test_live_asked_to_merge_them_the_mouth_says_they_already_are(live_play) -> None:
+    """The lock: «сказать, не сделав» is a bug — and so is answering a
+    different question. Asked to put the seven into one widget, the desk
+    already does, and the answer has to say so rather than promise the hours
+    again and do nothing."""
+    first = await live_play(UPWORK_UTTERANCE)
+    result = await live_play(
+        ONE_WIDGET_UTTERANCE,
+        desk=first.desk,
+        thread=[
+            ThreadMessage(role="user", text=UPWORK_UTTERANCE),
+            ThreadMessage(role="assistant", text=first.text),
+        ],
+    )
+    print(f"[R16 ru one-widget] tools={_names(result)} text={result.text!r}")
+    # Nothing to build, so nothing is written — and nothing is undone either.
+    assert result.mutated is False
+    assert result.tool_calls == []
+    assert result.text
+    lowered = result.text.casefold()
+    # It already is one tile, and the answer has to say so.
+    assert "уже" in lowered, result.text
+    # Not the old failure: a promise about the hours instead of an answer.
+    assert "напомню в эти семь" not in lowered

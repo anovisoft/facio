@@ -15,6 +15,7 @@ struct LidScreen: View {
                     .accessibilityAddTraits(.isHeader)
                 LidFeed(
                     projection: store.lid,
+                    instances: store.snapshot.instances,
                     cueFor: store.surfaceCue(for:),
                     windowFor: store.windowFor(subjectId:),
                     subjectTitle: { store.subject(id: $0)?.title ?? $0 },
@@ -27,6 +28,7 @@ struct LidScreen: View {
                     onToggleTick: store.toggleTick,
                     onToggleItem: store.toggleChecklistItem,
                     onToggleTimer: store.toggleTimerRun,
+                    onCloseOccurrence: store.closeOccurrence,
                     onSurfaced: { store.markCueSurfaced(widgetId: $0, place: "tile") },
                     onAnswerDrift: store.answerDrift,
                     onRefuseDrift: store.refuseDrift

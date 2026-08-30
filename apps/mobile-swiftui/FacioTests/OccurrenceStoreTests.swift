@@ -63,6 +63,108 @@ final class OccurrenceStoreTests: XCTestCase {
         XCTAssertEqual(ticks.count, 7)
     }
 
+    // MARK: - one tile for the group (Q34, refined after the first day)
+
+    func testTheSevenChecksShareOneGroupIdAndWearTheStatedHours() throws {
+        let (store, _) = try makeUpworkDesk()
+        let ticks = store.snapshot.widgets.filter { $0.subjectId == "upwork" && $0.type == .tick }
+        XCTAssertEqual(Set(ticks.compactMap(\.groupId)).count, 1)
+        XCTAssertEqual(ticks.filter { $0.groupId != nil }.count, 7)
+        let cases = store.snapshot.instances
+            .filter { $0.subjectId == "upwork" }
+            .map { ReminderClock.clock(from: $0.when) }
+            .sorted()
+        XCTAssertEqual(cases, try XCTUnwrap(store.windowFor(subjectId: "upwork")).hours)
+    }
+
+    func testTheLidDrawsTheGroupOnceAndTheOtherPracticesStay() throws {
+        let (store, _) = try makeUpworkDesk()
+        let widgets = todayWidgets(store)
+        let cells = GroupLaw.cells(widgets, instances: store.snapshot.instances, now: stamp)
+        let groups = cells.filter { if case .group = $0 { return true } else { return false } }
+        XCTAssertEqual(groups.count, 1)
+        // Seven squares no longer push everything else off Сегодня.
+        XCTAssertTrue(cells.contains { $0.subjectId == "push-ups" })
+        XCTAssertTrue(cells.contains { $0.subjectId == "vegetables" })
+        XCTAssertEqual(cells.count, widgets.count - 6)
+    }
+
+    func testTheFaceNamesTheNearestHourStillAhead() throws {
+        let (store, _) = try makeUpworkDesk()
+        let group = GroupLaw.key(subjectId: "upwork", day: stamp)
+        let face = GroupLaw.face(
+            of: group,
+            widgets: store.snapshot.widgets,
+            instances: store.snapshot.instances,
+            now: stamp
+        )
+        XCTAssertEqual(face?.total, 7)
+        XCTAssertEqual(face?.nextHour, ClockTime(hour: 10, minute: 0))
+    }
+
+    /// The requirement the whole slice hangs on: closing the third check closes
+    /// the third, the missed ones stay missed and stay visible, and no pointer
+    /// moves.
+    func testClosingTheThirdLeavesTheMissedSecondVisible() throws {
+        let (store, _) = try makeUpworkDesk()
+        let group = GroupLaw.key(subjectId: "upwork", day: stamp)
+        let before = try XCTUnwrap(
+            GroupLaw.face(of: group, widgets: store.snapshot.widgets, instances: store.snapshot.instances, now: stamp)
+        )
+        let third = before.marks[2]
+        XCTAssertEqual(third.hour, ClockTime(hour: 15, minute: 0))
+        store.closeOccurrence(widgetId: third.widgetId)
+        let after = try XCTUnwrap(
+            GroupLaw.face(
+                of: group,
+                widgets: store.snapshot.widgets,
+                instances: store.snapshot.instances,
+                now: ReminderClock.date(on: stamp, clock: ClockTime(hour: 15, minute: 42))
+            )
+        )
+        XCTAssertEqual(after.done, 1)
+        XCTAssertEqual(after.total, 7)
+        XCTAssertEqual(after.marks.map(\.hour), before.marks.map(\.hour))
+        XCTAssertEqual(after.marks.filter(\.done).map(\.widgetId), [third.widgetId])
+        // 12:00 went by unticked and is still an open mark, not a swallowed one.
+        let missed = try XCTUnwrap(after.marks.first { $0.hour == ClockTime(hour: 12, minute: 0) })
+        XCTAssertFalse(missed.done)
+        XCTAssertEqual(after.nextHour, ClockTime(hour: 16, minute: 30))
+    }
+
+    func testAClosedCheckKeepsItsHourSoTheTopUpDoesNotReshuffle() throws {
+        let (store, _) = try makeUpworkDesk()
+        let group = GroupLaw.key(subjectId: "upwork", day: stamp)
+        let before = try XCTUnwrap(
+            GroupLaw.face(of: group, widgets: store.snapshot.widgets, instances: store.snapshot.instances, now: stamp)
+        )
+        store.closeOccurrence(widgetId: before.marks[2].widgetId)
+        store.ensureOccurrences()
+        let after = try XCTUnwrap(
+            GroupLaw.face(of: group, widgets: store.snapshot.widgets, instances: store.snapshot.instances, now: stamp)
+        )
+        XCTAssertEqual(after.marks.map(\.widgetId), before.marks.map(\.widgetId))
+        XCTAssertEqual(after.marks.map(\.hour), before.marks.map(\.hour))
+    }
+
+    func testTheCarouselListsTheChecksAndNotTheAlarm() throws {
+        let (store, _) = try makeUpworkDesk(withReminder: true)
+        let listed = store.occurrenceInstances(for: "upwork")
+        XCTAssertEqual(listed.count, 7)
+        XCTAssertFalse(listed.contains { $0.id == "upwork-hour" })
+        XCTAssertTrue(listed.contains { $0.id == store.preferredInstanceId(subjectId: "upwork") })
+        // Every slot of the day is now tellable from its neighbour.
+        let captions = listed.map { InstanceFaceLaw.slotCaption($0, among: listed) }
+        XCTAssertEqual(Set(captions).count, 7)
+    }
+
+    func testAPracticeThatPromisesOnceADayIsNotGrouped() throws {
+        let (store, _) = try makeUpworkDesk()
+        let veg = store.snapshot.widgets.filter { $0.subjectId == "vegetables" }
+        XCTAssertEqual(veg.count, 1)
+        XCTAssertNil(veg.first?.groupId)
+    }
+
     func testAWeeklyPracticeIsLeftAlone() throws {
         let (store, _) = try makeUpworkDesk()
         XCTAssertEqual(store.snapshot.widgets.filter { $0.subjectId == "bike" }.count, 1)

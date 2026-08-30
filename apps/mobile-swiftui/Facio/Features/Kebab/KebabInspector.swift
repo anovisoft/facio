@@ -94,7 +94,10 @@ struct KebabInspector: View {
 
     // MARK: - The inspector at rest
 
-    private var instances: [Instance] { store.instances(for: subjectId) }
+    /// Occurrences, never the hour a reminder stands on (Q34). A reminder is
+    /// not a case of this day, and a queue of days with an alarm wedged in
+    /// front of it is the queue reading wrong.
+    private var instances: [Instance] { store.occurrenceInstances(for: subjectId) }
 
     private var resting: some View {
         let now = Date()

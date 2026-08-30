@@ -30,6 +30,7 @@ RUSSIAN_IDS = {
     "cue_with_link",
     "drift_answer",
     "explain_only",
+    "group_one_widget",
     "gym_no_clock",
     "gym_until_22",
     "lower_back",
@@ -798,6 +799,21 @@ def test_every_placed_type_is_one_the_desk_will_accept() -> None:
                     continue
                 placed = WidgetType(call.arguments["type"])
                 assert placed in RUNNABLE_TYPES, f"{golden.id}: {placed.value}"
+
+
+async def test_one_widget_en_is_answered_not_silently_agreed() -> None:
+    """The English half of the same lock: already one tile, said out loud."""
+    golden = match_golden("can you put them in one widget?")
+    assert golden is not None
+    assert golden.id == "group_one_widget_en"
+    result = await _play(golden.utterance)
+    assert result.mutated is False
+    assert result.tool_calls == []
+    assert result.snapshots == []
+    assert result.text
+    lowered = result.text.casefold()
+    assert "already" in lowered
+    assert "tile" in lowered
 
 
 async def test_upwork_en_seven_hours_land_as_one_window_and_seven_checks() -> None:

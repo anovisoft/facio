@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
-from facio_domain.models import CueOrigin
+from facio_domain.models import CueOrigin, Subject
 from facio_domain.pain import reports_pain
+from facio_domain.slots import occurrences_promised
 from facio_domain.tools import apply_tool, snapshot_cards
 
 from facio_api.providers.types import ModelProvider, ModelTurn
@@ -22,12 +23,18 @@ from facio_api.talk.spec import SYSTEM_PROMPT, tool_schemas
 
 MAX_ROUNDS = 8
 MAX_UTTERANCE = 4000
+# One nudge after a first turn that wrote nothing: saying «записал» without a
+# write is the bug it exists for. The carve-out is narrow on purpose — only a
+# request the desk already satisfies exactly, which is the «одним виджетом»
+# turn (Q34). Widening it to «записывать нечего» costs real writes.
 EMPTY_TOOLS_NUDGE = (
     "Запись на стол — вызови инструмент сейчас. Не пересказывай правила. "
+    "Если человек просит то, что на столе уже ровно так, ничего не вызывай. "
     "Человеку потом только короткая фраза."
 )
 EMPTY_TOOLS_NUDGE_EN = (
     "A desk write — call the tool now. Do not retell the rules. "
+    "If they asked for what the desk already holds exactly, call nothing. "
     "Afterwards the person gets one short sentence."
 )
 SELECTION_BOUND = (
@@ -131,6 +138,11 @@ async def run_turn(
     mutated = False
     snapshot_ids: list[str] = []
     text = ""
+    # What the person was told before the nudge went in. The nudge is a message
+    # from us, not from them, so a reply written to it is a reply to the wrong
+    # question — «Понял, буду писать сразу» instead of the answer. Kept, and
+    # used when the nudge produced no write after all.
+    text_before_nudge = ""
     tools = tool_schemas()
     first_complete = True
 
@@ -181,11 +193,18 @@ async def run_turn(
         text = (turn.text or "").strip()
         if first_complete:
             first_complete = False
+            text_before_nudge = text
             messages.append({"role": "assistant", "content": turn.text or ""})
             messages.append({"role": "user", "content": _nudge(body.locale)})
             continue
         break
 
+    # The nudge asked for a write and got none, so there was nothing to write:
+    # the answer the person is owed is the one written to *them*, before we
+    # interrupted. With a write it is the other way round — the later sentence
+    # is the one that knows what landed.
+    if not records and text_before_nudge:
+        text = text_before_nudge
     text = _human_text(text, mutated=mutated, locale=body.locale)
     cards = [SnapshotCard.model_validate(row) for row in snapshot_cards(desk, snapshot_ids)] if mutated else []
     return TalkTurnResponse(
@@ -198,19 +217,41 @@ async def run_turn(
     )
 
 
+def _subject_brief(subject: Subject, day: date) -> dict[str, Any]:
+    """One subject as the mouth sees it.
+
+    A practice that promises several occurrences in one period carries two more
+    facts: that the lid draws them as **one tile**, and the hours they stand on
+    (Q34). Both are here because «помести их в один виджет» is a question about
+    what is already true — without them the mouth guesses, and its guess is
+    set_reminder over the same seven hours, which is «записал» about nothing.
+
+    They are added **only** for such a practice. Handed the hours of every
+    subject, the mouth starts reading the founding turns as already written —
+    «зал до 22 уже записан», «в 19 уже стоит» — and the desk stops learning
+    what the person just said. Measured, not guessed: with the hours on every
+    subject the 4 → 30 progression stopped landing on 3 of 6 live runs.
+    """
+    brief: dict[str, Any] = {
+        "id": subject.id,
+        "title": subject.title,
+        "cadence": subject.cadence.model_dump(mode="json"),
+        "target": subject.target.model_dump() if subject.target else None,
+        "status": subject.status,
+    }
+    if occurrences_promised(subject, day) > 1:
+        brief["one_tile"] = True
+        brief["hours"] = [
+            hour.isoformat(timespec="minutes") for hour in (subject.window.hours if subject.window else [])
+        ]
+    return brief
+
+
 def _messages(body: TalkTurnRequest, utterance: str, pain: bool) -> list[dict[str, Any]]:
+    day = (body.now or datetime.now()).date()
     desk_brief = json.dumps(
         {
-            "subjects": [
-                {
-                    "id": subject.id,
-                    "title": subject.title,
-                    "cadence": subject.cadence.model_dump(mode="json"),
-                    "target": subject.target.model_dump() if subject.target else None,
-                    "status": subject.status,
-                }
-                for subject in body.desk.subjects
-            ],
+            "subjects": [_subject_brief(subject, day) for subject in body.desk.subjects],
             "widgets": [
                 {
                     "id": widget.id,
