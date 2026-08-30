@@ -117,16 +117,49 @@ class Cadence(BaseModel):
 class Window(BaseModel):
     """When the practice can still happen.
 
-    `latest_by` is the clock hour the reminder fires.
-    `closes_at` is the optional source fact (gym door). If the hour was not
-    stated, latest_by = closes_at minus 3 hours (22:00 → 19:00). A stated
-    latest_by wins; do not replace 19:00 with 23:00 − 3h = 20:00.
+    `hours` are the stated hours, ordered and without repeats — one window may
+    hold several ([07](../../../docs/rfc/07-open-questions.md) Q34): «в 10, 12,
+    15, 16:30, 18, 21, 22» is one practice firing seven times, not seven events
+    with lives of their own. Nothing invents an hour nobody said.
+
+    `latest_by` is the first of them, kept as a real field so a desk and a wire
+    written before Q34 still open and still read: one hour is a legal window and
+    always was.
+
+    `closes_at` is the optional source fact (gym door). If no hour was stated,
+    latest_by = closes_at minus 3 hours (22:00 → 19:00). A stated hour wins; do
+    not replace 19:00 with 23:00 − 3h = 20:00.
     """
 
     model_config = ConfigDict(extra="forbid")
 
-    latest_by: time
+    hours: list[time] = Field(default_factory=list)
+    latest_by: time | None = None
     closes_at: time | None = None
+
+    @model_validator(mode="after")
+    def _shape(self) -> Window:
+        stated = list(self.hours)
+        if self.latest_by is not None and self.latest_by not in stated:
+            stated.append(self.latest_by)
+        if not stated:
+            raise ValueError("a window needs at least one stated hour")
+        ordered = sorted(set(stated))
+        self.hours = ordered
+        self.latest_by = ordered[0]
+        return self
+
+    @classmethod
+    def at(cls, *hours: time, closes_at: time | None = None) -> Window:
+        return cls(hours=list(hours), closes_at=closes_at)
+
+    def next_hour(self, after: time) -> time:
+        """The nearest hour still ahead, or the first one when the day is spent.
+
+        Used for the one hour a face can show; the alarms still stand on all of
+        them.
+        """
+        return next((hour for hour in self.hours if hour >= after), self.hours[0])
 
 
 class Target(BaseModel):

@@ -34,7 +34,10 @@ final class DeskStore {
         if let loaded = try repository.loadSnapshot() {
             // Bike/drift backfill disabled for dogfood alongside the founding seed below — 2026-08-25.
             // let migrated = try SeedFactory.ensureFounding(in: loaded, now: now())
-            let migrated = loaded
+            // Q34 top-up stays on: a practice that promised seven checks today
+            // needs its seven cases before the lid is drawn, and a new day is
+            // the only thing that ever makes one missing.
+            let migrated = SeedFactory.ensureOccurrences(in: loaded, now: now())
             snapshot = migrated
             if migrated != loaded {
                 try repository.saveSnapshot(migrated)
@@ -51,6 +54,18 @@ final class DeskStore {
         surfacedPlaces = repository.surfacedPlaces(on: day)
         clarificationAsked = repository.clarificationAskedSubjects()
         closeDayZeroIfNeeded()
+    }
+
+    /// Q34: top up today's cases for a practice that promised several.
+    ///
+    /// Called where the desk arrives or changes shape — at load, after a talk
+    /// turn, and when the lid comes back to the front on a new day. It is
+    /// arithmetic and idempotent: with nothing missing it writes nothing, so
+    /// calling it twice costs a comparison.
+    func ensureOccurrences() {
+        commit(reminders: true) { next in
+            next = SeedFactory.ensureOccurrences(in: next, now: now())
+        }
     }
 
     /// The day-0 chips above the composer. Only on a desk that has never held a
@@ -581,18 +596,28 @@ final class DeskStore {
     }
 
     func editReminderLatestBy(widgetId: String, latestBy: ClockTime) {
+        guard let widget = widget(id: widgetId),
+              let window = windowFor(subjectId: widget.subjectId)
+        else { return }
+        editReminderHour(widgetId: widgetId, from: window.latestBy, to: latestBy)
+    }
+
+    /// The picker on Use moves **one** hour of the window — the one the chip was
+    /// showing. A practice that named seven keeps the other six (Q34).
+    func editReminderHour(widgetId: String, from old: ClockTime, to latestBy: ClockTime) {
         guard let widget = widget(id: widgetId), widget.type == .reminder else { return }
         guard let window = windowFor(subjectId: widget.subjectId) else { return }
         let clock = ReminderClock.clamp(latestBy, to: window)
         let day = Calendar.current.startOfDay(for: widget.reminderFireAt ?? now())
-        let fireAt = ReminderClock.date(on: day, clock: clock)
         commit(reminders: true) { next in
             guard let widgetIndex = next.widgets.firstIndex(where: { $0.id == widgetId }),
                   let subjectIndex = next.subjects.firstIndex(where: { $0.id == widget.subjectId }),
                   var nextWindow = next.subjects[subjectIndex].window
             else { return }
-            nextWindow.latestBy = clock
+            nextWindow.replaceHour(old, with: clock)
             next.subjects[subjectIndex].window = nextWindow
+            // The widget's own hour is the first of them, as it always was.
+            let fireAt = ReminderClock.date(on: day, clock: nextWindow.latestBy)
             next.widgets[widgetIndex].payload.fireAt = fireAt
             next.widgets[widgetIndex].when = fireAt
             if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }),
@@ -698,6 +723,10 @@ final class DeskStore {
             }
             next = incoming
         }
+        // A turn that promised seven checks a day has to leave seven of them on
+        // the desk, and it does not do that itself: the mouth wrote the rhythm,
+        // the law counts the cases (Q34).
+        ensureOccurrences()
         for cue in written {
             journal(.cueWritten, subjectId: cue.subjectId, cueId: cue.id, payload: ["text": cue.text])
         }

@@ -1,0 +1,56 @@
+{
+  "id": "upwork_hours_en",
+  "utterance": "remind me every day at 10, 12, 15, 16:30, 18, 21, 22 to check Upwork, and a checkbox for each check",
+  "match": ["to check upwork"],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "create_widget",
+          "arguments": {
+            "type": "tick",
+            "title": "check Upwork",
+            "subject_id": "upwork",
+            "cadence": {
+              "count": 7,
+              "period": "day"
+            }
+          }
+        },
+        {
+          "name": "set_reminder",
+          "arguments": {
+            "subject_id": "upwork",
+            "hours": ["10:00", "12:00", "15:00", "16:30", "18:00", "21:00", "22:00"]
+          }
+        },
+        {
+          "name": "add_cue",
+          "arguments": {
+            "subject_id": "upwork",
+            "kind": "correction",
+            "surface": "do-time",
+            "text": "look at new jobs and replies, not just the notifications"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Seven checks a day, on those hours. Each one ticks on its own."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": ["create_widget", "set_reminder", "add_cue"],
+    "cadence": {
+      "count": 7,
+      "period": "day"
+    },
+    "cue": {
+      "subject_id": "upwork",
+      "surface": "do-time",
+      "kind": "correction",
+      "text_contains": ["new jobs"]
+    }
+  }
+}

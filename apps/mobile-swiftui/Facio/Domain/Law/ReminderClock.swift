@@ -18,6 +18,18 @@ enum ReminderClock {
         Self.date(on: day, clock: window.latestBy)
     }
 
+    /// Every hour of the window laid on one date, in order. One hour gives one
+    /// time — the shape this always had; several give several, and each of them
+    /// is an alarm of its own (Q34).
+    static func reminderFireTimes(window: TimeWindow, on day: Date) -> [Date] {
+        window.hours.map { Self.date(on: day, clock: $0) }
+    }
+
+    /// The hour a face should show right now: the nearest one still ahead.
+    static func nextHour(window: TimeWindow, now: Date) -> ClockTime {
+        window.nextHour(after: clock(from: now))
+    }
+
     static func date(on day: Date, clock: ClockTime) -> Date {
         var parts = Calendar.current.dateComponents([.year, .month, .day], from: day)
         parts.hour = clock.hour

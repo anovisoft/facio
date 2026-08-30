@@ -106,10 +106,14 @@ struct RootView: View {
             sync?.syncSoon()
         }
         .onChange(of: scenePhase) { _, phase in
+            // Coming back on a new day is the only thing that makes a case
+            // missing (Q34), so the top-up rides the same wake-up as the sync.
+            if phase == .active { store.ensureOccurrences() }
             guard let sync, phase == .active || phase == .background else { return }
             Task { await sync.sync() }
         }
         .task {
+            store.ensureOccurrences()
             ReminderScheduler.enqueue(snapshot: store.snapshot, now: Date())
             let coordinator = sync ?? DeskSyncCoordinator(deskStore: store)
             sync = coordinator

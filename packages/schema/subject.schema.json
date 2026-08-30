@@ -61,12 +61,28 @@
     },
     "Window": {
       "additionalProperties": false,
-      "description": "When the practice can still happen.\n\n`latest_by` is the clock hour the reminder fires.\n`closes_at` is the optional source fact (gym door). If the hour was not\nstated, latest_by = closes_at minus 3 hours (22:00 \u2192 19:00). A stated\nlatest_by wins; do not replace 19:00 with 23:00 \u2212 3h = 20:00.",
+      "description": "When the practice can still happen.\n\n`hours` are the stated hours, ordered and without repeats \u2014 one window may\nhold several ([07](../../../docs/rfc/07-open-questions.md) Q34): \u00ab\u0432 10, 12,\n15, 16:30, 18, 21, 22\u00bb is one practice firing seven times, not seven events\nwith lives of their own. Nothing invents an hour nobody said.\n\n`latest_by` is the first of them, kept as a real field so a desk and a wire\nwritten before Q34 still open and still read: one hour is a legal window and\nalways was.\n\n`closes_at` is the optional source fact (gym door). If no hour was stated,\nlatest_by = closes_at minus 3 hours (22:00 \u2192 19:00). A stated hour wins; do\nnot replace 19:00 with 23:00 \u2212 3h = 20:00.",
       "properties": {
+        "hours": {
+          "items": {
+            "format": "time",
+            "type": "string"
+          },
+          "title": "Hours",
+          "type": "array"
+        },
         "latest_by": {
-          "format": "time",
-          "title": "Latest By",
-          "type": "string"
+          "anyOf": [
+            {
+              "format": "time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Latest By"
         },
         "closes_at": {
           "anyOf": [
@@ -82,9 +98,6 @@
           "title": "Closes At"
         }
       },
-      "required": [
-        "latest_by"
-      ],
       "title": "Window",
       "type": "object"
     }

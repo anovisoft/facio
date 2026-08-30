@@ -1,0 +1,56 @@
+{
+  "id": "upwork_hours",
+  "utterance": "напоминай мне каждый день в 10 12 15 16:30 18 21 22 что нужно проверить upwork и галочку на каждую проверку",
+  "match": ["проверить upwork"],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "create_widget",
+          "arguments": {
+            "type": "tick",
+            "title": "проверить upwork",
+            "subject_id": "upwork",
+            "cadence": {
+              "count": 7,
+              "period": "day"
+            }
+          }
+        },
+        {
+          "name": "set_reminder",
+          "arguments": {
+            "subject_id": "upwork",
+            "hours": ["10:00", "12:00", "15:00", "16:30", "18:00", "21:00", "22:00"]
+          }
+        },
+        {
+          "name": "add_cue",
+          "arguments": {
+            "subject_id": "upwork",
+            "kind": "correction",
+            "surface": "do-time",
+            "text": "смотри новые заказы и ответы, не только уведомления"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Семь проверок в день, по часам. Каждая тикается отдельно."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": ["create_widget", "set_reminder", "add_cue"],
+    "cadence": {
+      "count": 7,
+      "period": "day"
+    },
+    "cue": {
+      "subject_id": "upwork",
+      "surface": "do-time",
+      "kind": "correction",
+      "text_contains": ["заказы"]
+    }
+  }
+}

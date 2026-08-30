@@ -26,7 +26,15 @@ from facio_domain.morning import (
     promised,
 )
 from facio_domain.lid import lid_projection, widget_rank_band
-from facio_domain.slots import DayStrip, Horizon, Slot, SlotKind, slot_horizon
+from facio_domain.slots import (
+    DayStrip,
+    Horizon,
+    Slot,
+    SlotKind,
+    occurrences_missing,
+    occurrences_promised,
+    slot_horizon,
+)
 from facio_domain.models import (
     Cadence,
     ChecklistItem,
@@ -50,7 +58,7 @@ from facio_domain.models import (
     WidgetType,
     Window,
 )
-from facio_domain.reminder import reminder_fire_at, window_from_closing
+from facio_domain.reminder import reminder_fire_at, reminder_fire_times, window_from_closing
 from facio_domain.runtime import (
     build_beats,
     build_checklist_items,
@@ -135,11 +143,14 @@ __all__ = [
     "morning_delta",
     "next_drift_offer",
     "next_offer",
+    "occurrences_missing",
+    "occurrences_promised",
     "pause_timer",
     "period_days",
     "promised",
     "refuse_drift",
     "reminder_fire_at",
+    "reminder_fire_times",
     "settle_talk_answer",
     "reset_timer",
     "retire_subject",

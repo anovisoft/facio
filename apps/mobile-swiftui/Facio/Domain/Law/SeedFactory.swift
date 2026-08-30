@@ -67,6 +67,64 @@ enum SeedFactory {
         try ensureDrift(in: try ensureBike(in: snapshot, now: now), now: now)
     }
 
+    /// Q34: a practice that promised N times today gets N cases today.
+    ///
+    /// The law says how many are missing (`SlotLaw.occurrencesMissing`); this
+    /// is the hand that writes them, at the one seam that already tops up a
+    /// desk when the lid opens. No second mechanism and no scheduler: a case
+    /// is only ever missing because a day started.
+    ///
+    /// Two things it deliberately does not do. It never touches a reminder
+    /// widget — the hours live in that subject's window, and multiplying the
+    /// tile would turn a window into a calendar. And it counts cases already
+    /// closed, so ticking the first check does not write an eighth: the
+    /// seventh check is the seventh case (04).
+    static func ensureOccurrences(in snapshot: DeskSnapshot, now: Date) -> DeskSnapshot {
+        var next = snapshot
+        for subject in snapshot.subjects {
+            let missing = SlotLaw.occurrencesMissing(
+                subject,
+                instances: next.instances,
+                widgets: next.widgets,
+                on: now
+            )
+            guard missing > 0, let template = occurrenceTemplate(in: next, subjectId: subject.id, now: now) else {
+                continue
+            }
+            for _ in 0..<missing {
+                let instanceId = "\(subject.id)-\(UUID().uuidString)"
+                let payload = InstanceLaw.resetPayload(of: template, now: now, window: subject.window)
+                next.instances.append(
+                    Instance(id: instanceId, subjectId: subject.id, when: now, status: .prepared)
+                )
+                if let index = next.subjects.firstIndex(where: { $0.id == subject.id }) {
+                    next.subjects[index].instanceIds.append(instanceId)
+                }
+                next.widgets.append(
+                    InstanceLaw.newWidget(from: template, instanceId: instanceId, payload: payload, now: now)
+                )
+            }
+        }
+        return next
+    }
+
+    /// The thing the person ticks, on today's case. A reminder is the hour, not
+    /// the check, so it is never the template.
+    private static func occurrenceTemplate(in snapshot: DeskSnapshot, subjectId: String, now: Date) -> Widget? {
+        let today = Set(
+            snapshot.instances
+                .filter { $0.subjectId == subjectId && SlotLaw.isSameDay($0.when, now) }
+                .map(\.id)
+        )
+        return snapshot.widgets.first { widget in
+            widget.subjectId == subjectId
+                && widget.type != .reminder
+                && widget.type.showsOnLid
+                && widget.status != .archived
+                && today.contains(widget.instanceId)
+        }
+    }
+
     static func ensureBike(in snapshot: DeskSnapshot, now: Date) throws -> DeskSnapshot {
         var next = snapshot
         let window = ReminderClock.windowFromClosing(ClockTime(hour: 22, minute: 0))

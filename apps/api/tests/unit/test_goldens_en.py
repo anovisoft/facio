@@ -42,6 +42,7 @@ RUSSIAN_IDS = {
     "stepper_warmup",
     "thaw_pause",
     "timer_meditation",
+    "upwork_hours",
 }
 
 
@@ -797,3 +798,26 @@ def test_every_placed_type_is_one_the_desk_will_accept() -> None:
                     continue
                 placed = WidgetType(call.arguments["type"])
                 assert placed in RUNNABLE_TYPES, f"{golden.id}: {placed.value}"
+
+
+async def test_upwork_en_seven_hours_land_as_one_window_and_seven_checks() -> None:
+    """The same Q34 lock on the English reply."""
+    golden = match_golden(
+        "remind me every day at 10, 12, 15, 16:30, 18, 21, 22 to check Upwork,"
+        " and a checkbox for each check"
+    )
+    assert golden is not None
+    assert golden.id == "upwork_hours_en"
+    result = await _play(golden.utterance)
+    assert result.mutated is True
+    assert _names(result) == golden.expect.tools
+    upwork = _subject(result.desk, "upwork")
+    assert (upwork.cadence.count, upwork.cadence.period) == (7, "day")
+    assert upwork.window is not None
+    assert len(upwork.window.hours) == 7
+    assert upwork.window.hours[0] == time(10, 0)
+    assert upwork.window.latest_by == time(10, 0)
+    cue = next(row for row in result.desk.cues if row.subject_id == "upwork")
+    assert cue.surface == CueSurface.do_time
+    assert not any("Ѐ" <= char <= "ӿ" for char in cue.text)
+    assert not any("Ѐ" <= char <= "ӿ" for char in result.text)

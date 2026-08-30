@@ -115,6 +115,7 @@ RUSSIAN_IDS = {
     "stepper_warmup",
     "thaw_pause",
     "timer_meditation",
+    "upwork_hours",
 }
 
 
@@ -787,3 +788,36 @@ def test_a_plain_practice_is_not_written_as_a_stepper() -> None:
             if call.name == "create_widget"
         ]
         assert "stepper" not in types, golden_id
+
+
+async def test_upwork_seven_hours_land_as_one_window_and_seven_checks() -> None:
+    """Q34, the reply the desk could not hold: seven hours, seven checks."""
+    golden = match_golden(
+        "напоминай мне каждый день в 10 12 15 16:30 18 21 22 что нужно проверить upwork"
+        " и галочку на каждую проверку"
+    )
+    assert golden is not None
+    assert golden.id == "upwork_hours"
+    result = await _play(golden.utterance)
+    names = _names(result)
+    assert result.mutated is True
+    assert names == golden.expect.tools
+    upwork = _subject(result.desk, "upwork")
+    # The rhythm is a count per period and the period is a day (Q26 untouched).
+    assert (upwork.cadence.count, upwork.cadence.period) == (7, "day")
+    assert upwork.window is not None
+    assert [hour.strftime("%H:%M") for hour in upwork.window.hours] == [
+        "10:00",
+        "12:00",
+        "15:00",
+        "16:30",
+        "18:00",
+        "21:00",
+        "22:00",
+    ]
+    # Not a calendar: the hours live on the one subject, not on seven objects.
+    assert len([row for row in result.desk.subjects if row.id.startswith("upwork")]) == 1
+    tick = next(row for row in result.desk.widgets if row.type == WidgetType.tick and row.subject_id == "upwork")
+    assert tick.title == "проверить upwork"
+    cue = next(row for row in result.desk.cues if row.subject_id == "upwork")
+    assert cue.surface == CueSurface.do_time

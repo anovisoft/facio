@@ -169,3 +169,19 @@ def test_biggest_shortfall_wins_when_two_practices_are_behind(
     assert card is not None
     assert card.subject_id == "push-ups"
     assert card.remaining == 2
+
+
+def test_seven_checks_a_day_are_short_of_seven_not_of_one() -> None:
+    """Q34: the delta counts against the count, whatever the count is."""
+    subject = Subject(
+        id="upwork",
+        title="проверить upwork",
+        cadence=Cadence.of(7, "day"),
+    )
+    now = datetime.fromisoformat("2026-08-15T23:00:00")
+    done = [_instance("upwork", f"2026-08-15T1{hour}:00:00") for hour in range(3)]
+    assert promised(subject.cadence) == 7
+    assert done_in_period(subject, done, now) == 3
+    card = delta_card([subject], done, [], now)
+    assert card is not None
+    assert (card.promised, card.done, card.remaining) == (7, 3, 4)

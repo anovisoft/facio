@@ -103,8 +103,15 @@ enum DisplayCopy {
         return String(localized: "зал до \(clock)", comment: "Reminder detail: the gym closes at")
     }
 
-    static func succeedBy(_ window: TimeWindow) -> String {
-        String(localized: "успеть к \(window.latestBy.shortLabel)", comment: "Reminder window deadline")
+    /// The deadline line. With several hours in the window it names the nearest
+    /// one still ahead, not the first of the day — at 15:40 the person is being
+    /// asked about 16:30, and 10:00 already happened (Q34).
+    static func succeedBy(_ window: TimeWindow, now: Date = Date()) -> String {
+        succeedBy(clock: ReminderClock.nextHour(window: window, now: now))
+    }
+
+    static func succeedBy(clock: ClockTime) -> String {
+        String(localized: "успеть к \(clock.shortLabel)", comment: "Reminder window deadline")
     }
 
     static func silencePhrase(_ days: Int) -> String {

@@ -124,6 +124,12 @@ INVALID_SECONDS = "invalid_seconds"
 # A stepper with no beats is a title on the lid. The type exists because a
 # subject needs takts (Q1); without them it is a tick with extra chrome.
 INVALID_BEATS = "invalid_beats"
+# Hours of a window arrive as clock strings — «10:00», «16:30» — one or a list
+# (Q34). Anything else is refused by name so the turn can fix itself.
+INVALID_HOURS = "invalid_hours"
+# `remove_hours` that would empty the window. A window with no hour cannot fire
+# and cannot be drawn; going quiet is `postpone` or `archive_widget`.
+HOURS_REQUIRED = "hours_required"
 
 _MEDIA = TypeAdapter(CueMedia)
 
@@ -861,26 +867,59 @@ def _move_to_date(desk: Desk, args: dict[str, Any], **_: Any) -> ToolOutcome:
     )
 
 
+def _clock_list(raw: Any) -> list[time]:
+    """Hours off the wire. One string is a list of one — the old shape."""
+    if raw is None:
+        return []
+    if isinstance(raw, (str, time)):
+        raw = [raw]
+    if not isinstance(raw, (list, tuple)):
+        raise ToolFail(INVALID_HOURS)
+    hours: list[time] = []
+    for item in raw:
+        if isinstance(item, time):
+            hours.append(item)
+        elif isinstance(item, str):
+            hours.append(_parse_clock(item))
+        else:
+            raise ToolFail(INVALID_HOURS)
+    return hours
+
+
+def _next_window(subject: Subject, args: dict[str, Any]) -> Window:
+    """The window after this call. Hours are added, never quietly replaced.
+
+    An hour the person named stays until they say to drop it (`remove_hours`):
+    «в 10, 12 и 15» said over three turns is three hours, not the last one. The
+    same hour twice is the same hour. The door keeps its own arithmetic — it
+    still gives 19:00 out of 22:00, and it still never moves an hour that was
+    spoken out loud.
+    """
+    added = _clock_list(args.get("hours")) + _clock_list(args.get("latest_by"))
+    removed = set(_clock_list(args.get("remove_hours")))
+    closes_raw = args.get("closes_at")
+    if not added and not removed and not closes_raw:
+        raise ToolFail(INVALID)
+    stated = list(subject.window.hours) if subject.window is not None else []
+    closes = subject.window.closes_at if subject.window is not None else None
+    if closes_raw:
+        closes = _parse_clock(str(closes_raw))
+    hours = sorted({*stated, *added} - removed)
+    if hours:
+        return Window(hours=hours, closes_at=closes)
+    if removed and stated:
+        # Dropping the last hour is not "no reminder": a window with nothing in
+        # it cannot fire and cannot be drawn. Quieting a practice is `postpone`
+        # or `archive_widget`, and both of them are said, not inferred.
+        raise ToolFail(HOURS_REQUIRED)
+    if closes is None:
+        raise ToolFail(INVALID)
+    return window_from_closing(closes)
+
+
 def _set_reminder(desk: Desk, args: dict[str, Any], *, now: datetime, **_: Any) -> ToolOutcome:
     subject = _require_subject(desk, str(args.get("subject_id", "")))
-    closes_raw = args.get("closes_at")
-    latest_raw = args.get("latest_by")
-    if latest_raw:
-        latest = _parse_clock(str(latest_raw))
-        if closes_raw:
-            window = Window(latest_by=latest, closes_at=_parse_clock(str(closes_raw)))
-        elif subject.window is not None:
-            window = subject.window.model_copy(update={"latest_by": latest})
-        else:
-            window = Window(latest_by=latest)
-    elif closes_raw:
-        closes = _parse_clock(str(closes_raw))
-        if subject.window is not None:
-            window = subject.window.model_copy(update={"closes_at": closes})
-        else:
-            window = window_from_closing(closes)
-    else:
-        raise ToolFail(INVALID)
+    window = _next_window(subject, args)
     _replace_subject(desk, subject.model_copy(update={"window": window}))
     fire_at = reminder_fire_at(subject, window, now.date())
     touched: list[str] = []
@@ -902,7 +941,10 @@ def _set_reminder(desk: Desk, args: dict[str, Any], *, now: datetime, **_: Any) 
         ok=True,
         data={
             "subject_id": subject.id,
-            "latest_by": window.latest_by.isoformat(timespec="seconds"),
+            # `latest_by` stays on the wire, first of the hours, so a turn and a
+            # client written before Q34 read what they always read.
+            "latest_by": window.hours[0].isoformat(timespec="seconds"),
+            "hours": [hour.isoformat(timespec="seconds") for hour in window.hours],
             "closes_at": window.closes_at.isoformat(timespec="seconds") if window.closes_at else None,
         },
         mutated=True,

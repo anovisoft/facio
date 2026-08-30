@@ -20,7 +20,9 @@ from facio_domain import tools
 from facio_domain.pain import reports_pain
 from facio_domain.tools import (
     CADENCE_REQUIRED,
+    HOURS_REQUIRED,
     INVALID,
+    INVALID_HOURS,
     INVALID_KIND,
     INVALID_MEDIA,
     INVALID_QUOTE,
@@ -874,3 +876,129 @@ def test_a_talk_answer_touches_only_the_subject_it_was_about() -> None:
     others = [row for row in outcome.desk.subjects if row.id != "bike"]
     assert all(row.drift_asked_at is None for row in others)
     assert all(row.drift_asks_made == 0 for row in others)
+
+
+def test_set_reminder_takes_all_the_hours_that_were_named() -> None:
+    """The Upwork reply: seven hours, one window, nothing invented (Q34)."""
+    desk = founding_desk(now=NOW)
+    created = _apply(
+        desk,
+        "create_widget",
+        {
+            "type": "tick",
+            "title": "проверить upwork",
+            "subject_id": "upwork",
+            "cadence": {"count": 7, "period": "day"},
+        },
+    )
+    outcome = _apply(
+        created.desk,
+        "set_reminder",
+        {
+            "subject_id": "upwork",
+            "hours": ["10:00", "12:00", "15:00", "16:30", "18:00", "21:00", "22:00"],
+        },
+    )
+    assert outcome.ok
+    window = next(row.window for row in outcome.desk.subjects if row.id == "upwork")
+    assert window is not None
+    assert [hour.strftime("%H:%M") for hour in window.hours] == [
+        "10:00",
+        "12:00",
+        "15:00",
+        "16:30",
+        "18:00",
+        "21:00",
+        "22:00",
+    ]
+    assert outcome.data["hours"] == [hour.isoformat() for hour in window.hours]
+    # The old wire still reads: the first hour, where one hour used to sit.
+    assert outcome.data["latest_by"] == "10:00:00"
+    fire = next(
+        row.payload.fire_at
+        for row in outcome.desk.widgets
+        if row.subject_id == "upwork" and row.type == WidgetType.reminder
+    )
+    assert fire is not None
+    assert fire.strftime("%H:%M") == "10:00"
+
+
+def test_set_reminder_hour_by_hour_ends_up_in_the_same_window() -> None:
+    """Seven calls of one hour, or one call of seven — the desk is the same."""
+    desk = founding_desk(now=NOW)
+    created = _apply(
+        desk,
+        "create_widget",
+        {
+            "type": "tick",
+            "title": "проверить upwork",
+            "subject_id": "upwork",
+            "cadence": {"count": 7, "period": "day"},
+        },
+    )
+    running = created.desk
+    for clock in ["10:00", "12:00", "15:00", "16:30", "18:00", "21:00", "22:00"]:
+        outcome = _apply(running, "set_reminder", {"subject_id": "upwork", "latest_by": clock})
+        assert outcome.ok
+        running = outcome.desk
+    window = next(row.window for row in running.subjects if row.id == "upwork")
+    assert window is not None
+    assert len(window.hours) == 7
+    assert window.latest_by == time(10, 0)
+
+
+def test_set_reminder_does_not_overwrite_the_hour_that_stands() -> None:
+    desk = founding_desk(now=NOW)
+    first = _apply(desk, "set_reminder", {"subject_id": "bike", "latest_by": "21:00"})
+    window = next(row.window for row in first.desk.subjects if row.id == "bike")
+    # 19:00 was already on the practice; 21:00 joins it, it does not replace it.
+    assert window is not None
+    assert window.hours == [time(19, 0), time(21, 0)]
+
+
+def test_set_reminder_is_idempotent_on_the_same_hour() -> None:
+    desk = founding_desk(now=NOW)
+    once = _apply(desk, "set_reminder", {"subject_id": "bike", "latest_by": "19:00"})
+    twice = _apply(once.desk, "set_reminder", {"subject_id": "bike", "latest_by": "19:00"})
+    window = next(row.window for row in twice.desk.subjects if row.id == "bike")
+    assert window is not None
+    assert window.hours == [time(19, 0)]
+
+
+def test_removing_an_hour_is_said_out_loud() -> None:
+    desk = founding_desk(now=NOW)
+    added = _apply(desk, "set_reminder", {"subject_id": "bike", "hours": ["07:00", "21:00"]})
+    dropped = _apply(added.desk, "set_reminder", {"subject_id": "bike", "remove_hours": ["07:00"]})
+    assert dropped.ok
+    window = next(row.window for row in dropped.desk.subjects if row.id == "bike")
+    assert window is not None
+    assert window.hours == [time(19, 0), time(21, 0)]
+
+
+def test_removing_the_last_hour_is_refused_by_name() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(desk, "set_reminder", {"subject_id": "bike", "remove_hours": ["19:00"]})
+    assert not outcome.ok
+    assert outcome.error == HOURS_REQUIRED
+    window = next(row.window for row in outcome.desk.subjects if row.id == "bike")
+    assert window is not None
+    assert window.hours == [time(19, 0)]
+
+
+def test_hours_that_are_not_clocks_are_refused_by_name() -> None:
+    desk = founding_desk(now=NOW)
+    outcome = _apply(desk, "set_reminder", {"subject_id": "bike", "hours": [10, 12]})
+    assert not outcome.ok
+    assert outcome.error == INVALID_HOURS
+
+
+def test_the_door_still_leaves_every_stated_hour_alone() -> None:
+    """Q34 does not touch the door: 22:00 → 19:00, and a named hour wins."""
+    desk = founding_desk(now=NOW)
+    named = _apply(desk, "set_reminder", {"subject_id": "bike", "hours": ["10:00", "18:00"]})
+    outcome = _apply(named.desk, "set_reminder", {"subject_id": "bike", "closes_at": "23:00"})
+    assert outcome.ok
+    window = next(row.window for row in outcome.desk.subjects if row.id == "bike")
+    assert window is not None
+    assert window.hours == [time(10, 0), time(18, 0), time(19, 0)]
+    assert window.closes_at == time(23, 0)

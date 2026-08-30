@@ -15,6 +15,8 @@ from facio_domain.models import (
     InstanceStatus,
     Subject,
     SubjectStatus,
+    Widget,
+    WidgetType,
 )
 
 HORIZON_LEN = 7
@@ -86,6 +88,57 @@ def slot_horizon(desk: Desk, origin: date) -> Horizon:
         days=[DayStrip(date=day, slots=slots_by_day[day]) for day in day_dates],
         later=later,
     )
+
+
+def occurrences_promised(subject: Subject, on_day: date) -> int:
+    """How many occurrences this practice owes on one calendar day (Q34).
+
+    Only a rhythm counted **per day** can owe more than one on a given date: a
+    weekly count spreads over the week's dates and the projection decides which
+    ones. Retired, paused and `none` owe nothing — that is not silence, it is a
+    practice that is not asking today.
+    """
+    del on_day
+    if subject.status in {SubjectStatus.retired, SubjectStatus.paused}:
+        return 0
+    if subject.cadence.period != "day" or subject.cadence.count is None:
+        return 0
+    return subject.cadence.count
+
+
+def occurrences_missing(
+    subject: Subject,
+    instances: Sequence[Instance],
+    widgets: Sequence[Widget],
+    on_day: date,
+) -> int:
+    """How many occurrences are still missing from `on_day`.
+
+    Counts every case already standing on that date, **completed ones
+    included**: the seventh check is the seventh case, so ticking the first must
+    not make an eighth appear (04, Q34). And nothing is carried in from
+    yesterday — the rest of a period is not the next period's debt.
+
+    A reminder's own case does not count. The hours live in the subject's
+    window, not one event per hour (Q34), so the case a reminder tile stands on
+    is the hour itself — counting it would silently eat one of the checks.
+    """
+    promised = occurrences_promised(subject, on_day)
+    if promised == 0:
+        return 0
+    hours = {
+        widget.instance_id
+        for widget in widgets
+        if widget.subject_id == subject.id and widget.type == WidgetType.reminder
+    }
+    standing = sum(
+        1
+        for instance in instances
+        if instance.subject_id == subject.id
+        and instance.when.date() == on_day
+        and instance.id not in hours
+    )
+    return max(0, promised - standing)
 
 
 def _real_slot(instance: Instance, day: date) -> Slot:
@@ -164,6 +217,22 @@ def _period_projections(
     )
     open_n = sum(1 for instance in in_period if instance.status in _OPEN)
     to_project = max(0, count - completed_n - open_n)
+    if period_start == period_end:
+        # The period is one calendar day, so every occurrence it still owes
+        # lands on that same day (Q34). Seven checks promised for today are
+        # seven slots on today — not one, and not one a day for a week: the
+        # count belongs to the period, and this period is over at midnight.
+        if not (origin <= period_start <= last):
+            return []
+        return [
+            Slot(
+                subject_id=subject_id,
+                date=period_start,
+                kind=SlotKind.due,
+                instance_id=None,
+            )
+            for _ in range(to_project)
+        ]
     occupied = {instance.when.date() for instance in in_period}
     candidates: list[date] = []
     day = period_start

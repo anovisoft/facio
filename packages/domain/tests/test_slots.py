@@ -10,9 +10,20 @@ from facio_domain.models import (
     InstanceStatus,
     Subject,
     SubjectStatus,
+    Widget,
+    WidgetSection,
+    WidgetStatus,
+    WidgetType,
     Window,
 )
-from facio_domain.slots import Horizon, Slot, SlotKind, slot_horizon
+from facio_domain.slots import (
+    Horizon,
+    Slot,
+    SlotKind,
+    occurrences_missing,
+    occurrences_promised,
+    slot_horizon,
+)
 
 NOW = datetime(2026, 8, 15, 12, 0, 0)
 ORIGIN = NOW.date()  # Saturday
@@ -232,3 +243,117 @@ def test_two_instances_same_subject_same_day_both_emitted() -> None:
     real = [slot for slot in today if slot.instance_id is not None]
     assert {slot.instance_id for slot in real} == {"a", "b"}
     assert {slot.kind for slot in real} == {SlotKind.done, SlotKind.due}
+
+
+def _daily(count: int) -> Cadence:
+    return Cadence.of(count, "day")
+
+
+def test_seven_a_day_puts_seven_slots_on_the_same_date() -> None:
+    """Q34: the count belongs to the period, and this period is one day."""
+    desk = _desk([_subject("upwork", _daily(7))])
+    horizon = slot_horizon(desk, ORIGIN)
+    today = horizon.days[0]
+    assert today.date == ORIGIN
+    assert len(today.slots) == 7
+    assert all(slot.kind == SlotKind.due and slot.instance_id is None for slot in today.slots)
+    # And tomorrow owes its own seven — not the leftovers of today.
+    assert len(horizon.days[1].slots) == 7
+
+
+def test_cases_already_standing_today_are_not_projected_twice() -> None:
+    standing = [
+        Instance(
+            id=f"upwork-{index}",
+            subject_id="upwork",
+            when=datetime.combine(ORIGIN, datetime.min.time()) + timedelta(hours=10 + index),
+            status=status,
+        )
+        for index, status in enumerate([InstanceStatus.completed, InstanceStatus.prepared])
+    ]
+    desk = _desk([_subject("upwork", _daily(7))], standing)
+    today = slot_horizon(desk, ORIGIN).days[0]
+    real = [slot for slot in today.slots if slot.instance_id is not None]
+    projected = [slot for slot in today.slots if slot.instance_id is None]
+    assert len(real) == 2
+    assert len(projected) == 5
+    assert len(today.slots) == 7
+
+
+def test_the_rest_of_a_day_is_not_tomorrows_debt() -> None:
+    """Six checks missed today do not make thirteen tomorrow."""
+    done = [
+        Instance(
+            id="upwork-done",
+            subject_id="upwork",
+            when=datetime.combine(ORIGIN, datetime.min.time()) + timedelta(hours=10),
+            status=InstanceStatus.completed,
+        )
+    ]
+    horizon = slot_horizon(_desk([_subject("upwork", _daily(7))], done), ORIGIN)
+    assert len(horizon.days[1].slots) == 7
+
+
+def test_one_a_day_is_exactly_what_it_always_was() -> None:
+    horizon = slot_horizon(_desk([_subject("vitamins", _daily(1))]), ORIGIN)
+    assert all(len(day.slots) == 1 for day in horizon.days)
+
+
+def test_a_weekly_count_still_spreads_over_different_dates() -> None:
+    """Q34 changes what happens inside a period, not how a week is laid out."""
+    horizon = slot_horizon(_desk([_subject("gym", Cadence.of(3, "week"))]), ORIGIN)
+    placed = [day.date for day in horizon.days for _ in day.slots]
+    assert len(placed) == len(set(placed))
+
+
+def test_occurrences_promised_reads_the_count_of_a_daily_rhythm() -> None:
+    assert occurrences_promised(_subject("upwork", _daily(7)), ORIGIN) == 7
+    assert occurrences_promised(_subject("gym", Cadence.of(3, "week")), ORIGIN) == 0
+    assert occurrences_promised(_subject("licence", Cadence.none()), ORIGIN) == 0
+    paused = _subject("upwork", _daily(7), status=SubjectStatus.paused)
+    assert occurrences_promised(paused, ORIGIN) == 0
+    retired = _subject("upwork", _daily(7), status=SubjectStatus.retired)
+    assert occurrences_promised(retired, ORIGIN) == 0
+
+
+def test_a_finished_check_does_not_write_the_next_one() -> None:
+    """The seventh check is the seventh case, not the first pressed again (04)."""
+    subject = _subject("upwork", _daily(7))
+    standing = [
+        Instance(
+            id=f"upwork-{index}",
+            subject_id="upwork",
+            when=datetime.combine(ORIGIN, datetime.min.time()) + timedelta(hours=10 + index),
+            status=InstanceStatus.completed,
+        )
+        for index in range(7)
+    ]
+    assert occurrences_missing(subject, standing, [], ORIGIN) == 0
+    assert occurrences_missing(subject, standing[:1], [], ORIGIN) == 6
+    assert occurrences_missing(subject, [], [], ORIGIN) == 7
+    # Yesterday's cases are yesterday's.
+    assert occurrences_missing(subject, standing, [], ORIGIN + timedelta(days=1)) == 7
+
+
+def test_a_reminders_own_case_is_not_one_of_the_checks() -> None:
+    """The hours live in the window, so the hour tile is not an occurrence."""
+    subject = _subject("upwork", _daily(7))
+    stamp = datetime.combine(ORIGIN, datetime.min.time()) + timedelta(hours=10)
+    instances = [
+        Instance(id="upwork-check", subject_id="upwork", when=stamp, status=InstanceStatus.prepared),
+        Instance(id="upwork-hour", subject_id="upwork", when=stamp, status=InstanceStatus.prepared),
+    ]
+    widgets = [
+        Widget(
+            id="upwork-reminder",
+            type=WidgetType.reminder,
+            title="upwork",
+            status=WidgetStatus.ready,
+            section=WidgetSection.today,
+            subject_id="upwork",
+            instance_id="upwork-hour",
+        )
+    ]
+    assert occurrences_missing(subject, instances, widgets, ORIGIN) == 6
+    # Without the widget in hand the law cannot tell them apart, and counts both.
+    assert occurrences_missing(subject, instances, [], ORIGIN) == 5

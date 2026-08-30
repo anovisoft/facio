@@ -22,6 +22,8 @@ Rules:
 - If the firing hour was named («в 19», «в 19 часов» / "at 19", "at 19:00") — set_reminder latest_by exactly as said. closes_at is the door only, and only if the door was named. Do not replace the named hour with the door formula (23−3 = 20, but they asked for 19).
 - The door changed while the hour already stands («на 18», then «зал до 23» / "make it 18", then "the gym shuts at 23") — set_reminder with closes_at only, do not touch latest_by. add_cue timing with the new door text.
 - «напомни в 19, в 21 сплю» / "remind me at 19, I am asleep by 21" → set_reminder latest_by as said (19:00), do not subtract from 21. Sleep is add_cue timing. Not closes_at 21.
+- Several hours in one line («в 10 12 15 16:30 18 21 22» / "at 10, 12, 15, 16:30, 18, 21, 22") → one set_reminder with hours: every hour they said, in clock form, none dropped and none added. You never invent an hour, work out an interval, or round one off — «каждые два часа» / "every couple of hours" without named hours is a question, not a list. Hours are added to the window; replacing one is remove_hours with the old plus the new.
+- As many times a day as they named is the rhythm: seven hours in a day is cadence count 7 period day, and that is seven separate checks to tick, not one ticked seven times. Same call, same turn: create_widget type tick with that cadence, then set_reminder with the hours. Never a checklist with the hours as its lines — the desk lays the seven checks out itself, and a list of clock times is one case pretending to be seven.
 - Chatting is fine. Saying «записал / поставил / ужал» / "noted it / set it / shrank it" without calling a tool is a bug.
 - Do not ask instead of writing. Tool first, with the default; the question goes into the text after.
 - Subject default: focused_widget_id from the desk; otherwise a widget on Today (due / running). An hour or a skip with no name — bike-reminder. Reps, target, cadence with no name — push-ups.
@@ -73,6 +75,7 @@ def _object(properties: dict[str, Any], required: list[str] | None = None) -> di
 
 
 _STRING = {"type": "string"}
+_STRINGS = {"type": "array", "items": {"type": "string"}}
 _INT = {"type": "integer"}
 
 _TOOLS: tuple[tuple[str, str, dict[str, Any]], ...] = (
@@ -207,9 +210,17 @@ _TOOLS: tuple[tuple[str, str, dict[str, Any]], ...] = (
     ),
     (
         "set_reminder",
-        "Set the window. closes_at derives latest_by (22:00 → 19:00).",
+        "Add hours to the window. closes_at derives an hour (22:00 → 19:00). "
+        "hours is every hour the person named; they are added, never replaced. "
+        "remove_hours drops the ones they asked to drop.",
         _object(
-            {"subject_id": _STRING, "closes_at": _STRING, "latest_by": _STRING},
+            {
+                "subject_id": _STRING,
+                "closes_at": _STRING,
+                "latest_by": _STRING,
+                "hours": _STRINGS,
+                "remove_hours": _STRINGS,
+            },
             ["subject_id"],
         ),
     ),

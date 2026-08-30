@@ -17,6 +17,14 @@ enum ReminderScheduler {
         idPrefix + widgetId
     }
 
+    /// One id per hour of the window (Q34). Two hours on one practice are two
+    /// alarms, so they cannot share an identifier — the second would silently
+    /// overwrite the first in the notification centre. A single-hour window
+    /// keeps the plain id it always had.
+    static func alarmId(widgetId: String, clock: ClockTime) -> String {
+        alarmId(widgetId: widgetId) + "@" + clock.shortLabel
+    }
+
     static func checkInAlarmId(subjectId: String) -> String {
         idPrefix + "check-in:" + subjectId
     }
@@ -25,28 +33,42 @@ enum ReminderScheduler {
 
     static func alarms(from snapshot: DeskSnapshot, now: Date) -> [ReminderAlarm] {
         let bySubject = Dictionary(uniqueKeysWithValues: snapshot.subjects.map { ($0.id, $0) })
-        var alarms: [ReminderAlarm] = snapshot.widgets.compactMap { widget in
+        var alarms: [ReminderAlarm] = snapshot.widgets.flatMap { widget -> [ReminderAlarm] in
             // Postponed (`snoozed`) and taken off the lid (`archived`) are both
             // "do not ask right now" — a widget that is not on the lid must not
             // ring from the pocket either.
-            guard widget.type == .reminder, !silentStatuses.contains(widget.status) else { return nil }
+            guard widget.type == .reminder, !silentStatuses.contains(widget.status) else { return [] }
             let subject = bySubject[widget.subjectId]
             if subject?.status == .retired || subject?.status == .paused {
-                return nil
+                return []
             }
-            let fireAt = widget.reminderFireAt
-            guard let fireAt, fireAt > now else { return nil }
+            guard let fireAt = widget.reminderFireAt else { return [] }
             let title = DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title)
-            let window = subject?.window
             let cue = CueLaw.timingCue(in: snapshot.cues, subjectId: widget.subjectId)
-            let deadline = window.map(DisplayCopy.succeedBy)
-            let body = [deadline, cue?.text].compactMap { $0 }.joined(separator: " · ")
-            return ReminderAlarm(
-                id: alarmId(widgetId: widget.id),
-                fireAt: fireAt,
-                title: title,
-                body: body.isEmpty ? title : body
-            )
+            // Every hour the person named is its own alarm (Q34). Without a
+            // window there is nothing but the hour already on the widget.
+            let window = subject?.window
+            let day = Calendar.current.startOfDay(for: fireAt)
+            let moments: [(String, Date)] = window.map { window in
+                ReminderClock.reminderFireTimes(window: window, on: day).enumerated().map { index, moment in
+                    let clock = window.hours[index]
+                    let id = window.hours.count == 1
+                        ? alarmId(widgetId: widget.id)
+                        : alarmId(widgetId: widget.id, clock: clock)
+                    return (id, moment)
+                }
+            } ?? [(alarmId(widgetId: widget.id), fireAt)]
+            return moments.compactMap { id, moment in
+                guard moment > now else { return nil }
+                let deadline = DisplayCopy.succeedBy(clock: ReminderClock.clock(from: moment))
+                let body = [deadline, cue?.text].compactMap { $0 }.joined(separator: " · ")
+                return ReminderAlarm(
+                    id: id,
+                    fireAt: moment,
+                    title: title,
+                    body: body.isEmpty ? title : body
+                )
+            }
         }
         for subject in snapshot.subjects where subject.status == .paused {
             guard let pausedAt = subject.pausedAt else { continue }
