@@ -1,0 +1,55 @@
+{
+  "id": "stepper_warmup",
+  "utterance": "разминка по шагам, два раза в неделю",
+  "match": ["разминка по шагам"],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "create_widget",
+          "arguments": {
+            "type": "stepper",
+            "title": "разминка",
+            "subject_id": "warmup",
+            "cadence": {
+              "count": 2,
+              "period": "week"
+            },
+            "beats": [
+              "суставная разминка",
+              "5 минут велотренажёра",
+              "два подхода без веса"
+            ]
+          }
+        },
+        {
+          "name": "add_cue",
+          "arguments": {
+            "subject_id": "warmup",
+            "kind": "correction",
+            "surface": "do-time",
+            "text": "не тяни на холодную"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Три такта, дважды в неделю. Поменять порядок или добавить такт?"
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": ["create_widget", "add_cue"],
+    "forbidden_tools": ["set_reminder"],
+    "cadence": {
+      "count": 2,
+      "period": "week"
+    },
+    "cue": {
+      "subject_id": "warmup",
+      "surface": "do-time",
+      "kind": "correction",
+      "text_contains": ["на холодную"]
+    }
+  }
+}

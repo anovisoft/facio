@@ -20,27 +20,46 @@
   "empty_today_no_commitments": {
     "instances": [
       {
-        "id": "push-ups-recent",
+        "id": "push-ups-mon",
+        "subject_id": "push-ups",
+        "when": "2026-08-10T08:00:00",
+        "status": "completed"
+      },
+      {
+        "id": "push-ups-wed",
+        "subject_id": "push-ups",
+        "when": "2026-08-12T08:00:00",
+        "status": "completed"
+      },
+      {
+        "id": "push-ups-fri",
         "subject_id": "push-ups",
         "when": "2026-08-14T08:00:00",
         "status": "completed"
       },
       {
-        "id": "bike-recent",
+        "id": "bike-tue",
         "subject_id": "bike",
-        "when": "2026-08-12T18:00:00",
+        "when": "2026-08-11T18:00:00",
         "status": "completed"
       },
       {
-        "id": "vegetables-recent",
+        "id": "bike-thu",
+        "subject_id": "bike",
+        "when": "2026-08-13T18:00:00",
+        "status": "completed"
+      },
+      {
+        "id": "vegetables-today",
         "subject_id": "vegetables",
-        "when": "2026-08-14T19:00:00",
+        "when": "2026-08-15T09:00:00",
         "status": "completed"
       }
     ],
     "widgets": [],
     "expect_today_empty": true,
-    "expect_drift": false
+    "expect_drift": false,
+    "expect_delta": false
   },
   "empty_today_with_drift": {
     "instances": [
@@ -64,8 +83,11 @@
       }
     ],
     "widgets": [],
-    "expect_today_kinds": ["drift"],
-    "expect_drift_subject": "bike"
+    "expect_today_kinds": [
+      "drift"
+    ],
+    "expect_drift_subject": "bike",
+    "expect_delta": false
   },
   "miss_tuesday": {
     "subject_id": "push-ups",
@@ -90,5 +112,73 @@
       }
     ],
     "expect_drifting": false
-  }
+  },
+  "empty_today_with_delta": {
+    "instances": [
+      {
+        "id": "push-ups-fri",
+        "subject_id": "push-ups",
+        "when": "2026-08-14T08:00:00",
+        "status": "completed"
+      },
+      {
+        "id": "bike-tue",
+        "subject_id": "bike",
+        "when": "2026-08-11T18:00:00",
+        "status": "completed"
+      },
+      {
+        "id": "bike-thu",
+        "subject_id": "bike",
+        "when": "2026-08-13T18:00:00",
+        "status": "completed"
+      },
+      {
+        "id": "vegetables-today",
+        "subject_id": "vegetables",
+        "when": "2026-08-15T09:00:00",
+        "status": "completed"
+      }
+    ],
+    "widgets": [],
+    "expect_today_kinds": [
+      "delta"
+    ],
+    "expect_delta_subject": "push-ups",
+    "expect_delta_promised": 3,
+    "expect_delta_done": 1,
+    "expect_delta_remaining": 2
+  },
+  "drift_ladder": [
+    {
+      "id": "first_ask",
+      "asks_made": 0,
+      "retire_refusals": 0,
+      "expect_offer": "move_to_today"
+    },
+    {
+      "id": "after_one",
+      "asks_made": 1,
+      "retire_refusals": 0,
+      "expect_offer": "once_a_week"
+    },
+    {
+      "id": "after_two",
+      "asks_made": 2,
+      "retire_refusals": 0,
+      "expect_offer": "retire"
+    },
+    {
+      "id": "one_refusal",
+      "asks_made": 3,
+      "retire_refusals": 1,
+      "expect_offer": "retire"
+    },
+    {
+      "id": "two_refusals",
+      "asks_made": 4,
+      "retire_refusals": 2,
+      "expect_offer": "stop"
+    }
+  ]
 }

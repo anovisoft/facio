@@ -1,0 +1,42 @@
+{
+  "id": "pain_skip_freeze_en",
+  "utterance": "skipped today, my back hurt",
+  "match": [
+    "my back hurt"
+  ],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "skip",
+          "arguments": {
+            "widget_id": "bike-reminder"
+          }
+        },
+        {
+          "name": "freeze_subject",
+          "arguments": {
+            "subject_id": "bike"
+          }
+        }
+      ]
+    },
+    {
+      "text": "The bike is on pause. Tell me when it eases off."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": [
+      "skip",
+      "freeze_subject"
+    ],
+    "forbidden_tools": [
+      "set_reminder",
+      "set_cadence",
+      "update_widget",
+      "shrink_subject",
+      "retire_subject"
+    ]
+  }
+}

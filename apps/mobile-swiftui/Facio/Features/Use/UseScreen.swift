@@ -4,6 +4,7 @@ struct UseScreen: View {
     let widgetId: String
     @Environment(DeskStore.self) private var store
     @Environment(TalkStore.self) private var talk
+    @State private var helpOpen = false
 
     var body: some View {
         Group {
@@ -11,6 +12,27 @@ struct UseScreen: View {
                 content(for: widget)
                     .navigationTitle(DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title))
                     .modifier(UseDateSubtitle(dateLabel: dateLabel(for: widget)))
+                    // The `?` lives in the bar, not in the step body: the
+                    // capsule (− / + / Готово), the system bar and the swipe
+                    // back are the accepted Use layout and nothing here moves
+                    // them. It appears only when this practice actually has an
+                    // explanation to give.
+                    .toolbar {
+                        if store.hasExplanation(for: widget) {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button {
+                                    store.markExplanationsSurfaced(widgetId: widget.id)
+                                    helpOpen = true
+                                } label: {
+                                    Image(systemName: "questionmark.circle")
+                                }
+                                .accessibilityLabel("объяснение")
+                            }
+                        }
+                    }
+                    .sheet(isPresented: $helpOpen) {
+                        StepHelpSheet(cues: store.explanations(for: widget))
+                    }
             } else {
                 ContentUnavailableView {
                     Text("Этого виджета уже нет на крышке.")
@@ -42,14 +64,17 @@ struct UseScreen: View {
             case .tick:
                 TickUseView(
                     widget: widget,
+                    cue: cue,
                     onToggle: { store.toggleTick(widgetId: widget.id) }
                 )
             case .reminder:
                 ReminderUseView(widget: widget, cue: cue)
-            case .checklist, .timer, .stepper:
-                ContentUnavailableView {
-                    Text("Этот тип ещё не открывается.")
-                }
+            case .checklist:
+                ChecklistUseView(widget: widget, cue: store.cueFor(subjectId: widget.subjectId))
+            case .timer:
+                TimerUseView(widget: widget, cue: store.cueFor(subjectId: widget.subjectId))
+            case .stepper:
+                StepperUseView(widget: widget, cue: store.cueFor(subjectId: widget.subjectId))
             }
         }
     }
@@ -62,7 +87,7 @@ struct UseScreen: View {
     }
 
     private func quietDate(_ date: Date?) -> String {
-        (date ?? Date.now).formatted(.dateTime.day().month(.wide).locale(Locale(identifier: "ru_RU")))
+        (date ?? Date.now).formatted(.dateTime.day().month(.wide))
     }
 }
 

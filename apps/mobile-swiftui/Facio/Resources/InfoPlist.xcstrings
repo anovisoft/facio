@@ -1,0 +1,24 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "NSLocalNetworkUsageDescription" : {
+      "comment" : "Why the app reaches the talk service on the local network",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Facio reaches the computer on this Wi-Fi so talk works."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Facio ходит на компьютер в этой Wi-Fi, чтобы рот работал."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

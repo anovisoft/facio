@@ -5,6 +5,11 @@ options:
     iOS: "18.0"
   createIntermediateGroups: true
   defaultConfig: Debug
+  developmentLanguage: ru
+  knownRegions:
+    - ru
+    - en
+    - Base
 
 settings:
   base:
@@ -48,13 +53,25 @@ targets:
         UIRequiresFullScreen: true
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        # Version comes from MARKETING_VERSION; never hardcode 1.0 here.
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleDevelopmentRegion: ru
+        CFBundleLocalizations:
+          - ru
+          - en
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
+        # Base string; the localized ones live in Facio/Resources/InfoPlist.xcstrings.
         NSLocalNetworkUsageDescription: Facio ходит на компьютер в этой Wi-Fi, чтобы рот работал.
         FacioTalkURL: $(FACIO_TALK_URL)
     entitlements:
       path: Facio/Facio.entitlements
-      properties: {}
+      properties:
+        # Sign in with Apple (Q19). One line on purpose: if the capability is
+        # not enabled for com.anovisoft.facio on team SXXLPXXJMD, delete this
+        # line and the app still builds — Settings then simply reports that
+        # sign-in is unavailable and the lid keeps ticking locally.
+        com.apple.developer.applesignin: [Default]
     scheme:
       testTargets:
         - FacioTests

@@ -6,6 +6,25 @@ import Security
 struct Session: Equatable, Sendable {
     var accountID: String
     var sessionToken: String
+    /// Apple hands the name back only on the very first authorization, so it
+    /// rides along with the session instead of being asked for twice.
+    var displayName: String?
+    /// When the desk last round-tripped through `/v1/desk`. It lives with the
+    /// session so Settings can still say it after a relaunch — and so nothing
+    /// about the account leaks into `UserDefaults`.
+    var lastSyncedAt: Date?
+
+    init(
+        accountID: String,
+        sessionToken: String,
+        displayName: String? = nil,
+        lastSyncedAt: Date? = nil
+    ) {
+        self.accountID = accountID
+        self.sessionToken = sessionToken
+        self.displayName = displayName
+        self.lastSyncedAt = lastSyncedAt
+    }
 }
 
 protocol SessionStoring: Sendable {

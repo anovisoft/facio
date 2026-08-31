@@ -34,12 +34,28 @@
     },
     "window": {
       "additionalProperties": false,
-      "description": "When the practice can still happen.\n\n`latest_by` is the clock hour the reminder fires.\n`closes_at` is the optional source fact (gym door). If the hour was not\nstated, latest_by = closes_at minus 3 hours (22:00 \u2192 19:00). A stated\nlatest_by wins; do not replace 19:00 with 23:00 \u2212 3h = 20:00.",
+      "description": "When the practice can still happen.\n\n`hours` are the stated hours, ordered and without repeats \u2014 one window may\nhold several ([07](../../../docs/rfc/07-open-questions.md) Q34): \u00ab\u0432 10, 12,\n15, 16:30, 18, 21, 22\u00bb is one practice firing seven times, not seven events\nwith lives of their own. Nothing invents an hour nobody said.\n\n`latest_by` is the first of them, kept as a real field so a desk and a wire\nwritten before Q34 still open and still read: one hour is a legal window and\nalways was.\n\n`closes_at` is the optional source fact (gym door). If no hour was stated,\nlatest_by = closes_at minus 3 hours (22:00 \u2192 19:00). A stated hour wins; do\nnot replace 19:00 with 23:00 \u2212 3h = 20:00.",
       "properties": {
+        "hours": {
+          "items": {
+            "format": "time",
+            "type": "string"
+          },
+          "title": "Hours",
+          "type": "array"
+        },
         "latest_by": {
-          "format": "time",
-          "title": "Latest By",
-          "type": "string"
+          "anyOf": [
+            {
+              "format": "time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Latest By"
         },
         "closes_at": {
           "anyOf": [
@@ -55,9 +71,6 @@
           "title": "Closes At"
         }
       },
-      "required": [
-        "latest_by"
-      ],
       "title": "Window",
       "type": "object"
     },
@@ -143,12 +156,28 @@
         },
         "Window": {
           "additionalProperties": false,
-          "description": "When the practice can still happen.\n\n`latest_by` is the clock hour the reminder fires.\n`closes_at` is the optional source fact (gym door). If the hour was not\nstated, latest_by = closes_at minus 3 hours (22:00 \u2192 19:00). A stated\nlatest_by wins; do not replace 19:00 with 23:00 \u2212 3h = 20:00.",
+          "description": "When the practice can still happen.\n\n`hours` are the stated hours, ordered and without repeats \u2014 one window may\nhold several ([07](../../../docs/rfc/07-open-questions.md) Q34): \u00ab\u0432 10, 12,\n15, 16:30, 18, 21, 22\u00bb is one practice firing seven times, not seven events\nwith lives of their own. Nothing invents an hour nobody said.\n\n`latest_by` is the first of them, kept as a real field so a desk and a wire\nwritten before Q34 still open and still read: one hour is a legal window and\nalways was.\n\n`closes_at` is the optional source fact (gym door). If no hour was stated,\nlatest_by = closes_at minus 3 hours (22:00 \u2192 19:00). A stated hour wins; do\nnot replace 19:00 with 23:00 \u2212 3h = 20:00.",
           "properties": {
+            "hours": {
+              "items": {
+                "format": "time",
+                "type": "string"
+              },
+              "title": "Hours",
+              "type": "array"
+            },
             "latest_by": {
-              "format": "time",
-              "title": "Latest By",
-              "type": "string"
+              "anyOf": [
+                {
+                  "format": "time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Latest By"
             },
             "closes_at": {
               "anyOf": [
@@ -164,9 +193,6 @@
               "title": "Closes At"
             }
           },
-          "required": [
-            "latest_by"
-          ],
           "title": "Window",
           "type": "object"
         }
@@ -236,6 +262,31 @@
           ],
           "default": null,
           "title": "Paused At"
+        },
+        "drift_asks_made": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Drift Asks Made",
+          "type": "integer"
+        },
+        "drift_retire_refusals": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Drift Retire Refusals",
+          "type": "integer"
+        },
+        "drift_asked_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Drift Asked At"
         }
       },
       "required": [
@@ -474,6 +525,31 @@
           "title": "Cadence",
           "type": "object"
         },
+        "ChecklistItem": {
+          "additionalProperties": false,
+          "description": "One line of a checklist.\n\n`done` is finger state on that line, nothing more: no per-item timestamp,\nno score. Progress over the list is arithmetic in `runtime.py`, so the\npayload never carries a \"progress\" number of its own \u2014 a stored count and\na list of ticks are two truths about the same thing, and they drift.",
+          "properties": {
+            "id": {
+              "title": "Id",
+              "type": "string"
+            },
+            "text": {
+              "title": "Text",
+              "type": "string"
+            },
+            "done": {
+              "default": false,
+              "title": "Done",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "id",
+            "text"
+          ],
+          "title": "ChecklistItem",
+          "type": "object"
+        },
         "Cue": {
           "additionalProperties": false,
           "description": "A fact bound to a subject and to a place it appears.\n\n`surface` is required. A fact with nowhere to show is not a cue.\n`quote` is the selected phrase as text, never an offset into a message.",
@@ -628,26 +704,6 @@
           "title": "CueSurface",
           "type": "string"
         },
-        "DriftAskState": {
-          "additionalProperties": false,
-          "description": "How far the shrink ladder has already been walked for one subject.\n\nNot a stored score. Input to `next_drift_offer` / `drift_card`.",
-          "properties": {
-            "asks_made": {
-              "default": 0,
-              "minimum": 0,
-              "title": "Asks Made",
-              "type": "integer"
-            },
-            "retire_refusals": {
-              "default": 0,
-              "minimum": 0,
-              "title": "Retire Refusals",
-              "type": "integer"
-            }
-          },
-          "title": "DriftAskState",
-          "type": "object"
-        },
         "Instance": {
           "additionalProperties": false,
           "properties": {
@@ -792,6 +848,31 @@
               ],
               "default": null,
               "title": "Paused At"
+            },
+            "drift_asks_made": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Drift Asks Made",
+              "type": "integer"
+            },
+            "drift_retire_refusals": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Drift Retire Refusals",
+              "type": "integer"
+            },
+            "drift_asked_at": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Drift Asked At"
             }
           },
           "required": [
@@ -919,7 +1000,7 @@
         },
         "WidgetPayload": {
           "additionalProperties": true,
-          "description": "Flexible payload; fields used by tests are typed, the rest may pass through.",
+          "description": "What a runtime needs to run. Extra keys still pass through.\n\nThe typed part is the catalog (Q1): `count`/`target` for the counter,\n`done` for the tick, `fire_at` for the reminder, `items` for the checklist,\n`seconds`/`started_at`/`elapsed` for the timer, `beats`/`current` for the\nstepper. Anything the model invents on top stays in `extra` and no runtime\nreads it (never-do AI #1).",
           "properties": {
             "count": {
               "anyOf": [
@@ -960,7 +1041,9 @@
             "items": {
               "anyOf": [
                 {
-                  "items": {},
+                  "items": {
+                    "$ref": "#/$defs/ChecklistItem"
+                  },
                   "type": "array"
                 },
                 {
@@ -982,6 +1065,19 @@
               "default": null,
               "title": "Seconds"
             },
+            "started_at": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Started At"
+            },
             "elapsed": {
               "anyOf": [
                 {
@@ -994,7 +1090,7 @@
               "default": null,
               "title": "Elapsed"
             },
-            "steps": {
+            "beats": {
               "anyOf": [
                 {
                   "items": {
@@ -1007,7 +1103,7 @@
                 }
               ],
               "default": null,
-              "title": "Steps"
+              "title": "Beats"
             },
             "current": {
               "anyOf": [
@@ -1074,12 +1170,28 @@
         },
         "Window": {
           "additionalProperties": false,
-          "description": "When the practice can still happen.\n\n`latest_by` is the clock hour the reminder fires.\n`closes_at` is the optional source fact (gym door). If the hour was not\nstated, latest_by = closes_at minus 3 hours (22:00 \u2192 19:00). A stated\nlatest_by wins; do not replace 19:00 with 23:00 \u2212 3h = 20:00.",
+          "description": "When the practice can still happen.\n\n`hours` are the stated hours, ordered and without repeats \u2014 one window may\nhold several ([07](../../../docs/rfc/07-open-questions.md) Q34): \u00ab\u0432 10, 12,\n15, 16:30, 18, 21, 22\u00bb is one practice firing seven times, not seven events\nwith lives of their own. Nothing invents an hour nobody said.\n\n`latest_by` is the first of them, kept as a real field so a desk and a wire\nwritten before Q34 still open and still read: one hour is a legal window and\nalways was.\n\n`closes_at` is the optional source fact (gym door). If no hour was stated,\nlatest_by = closes_at minus 3 hours (22:00 \u2192 19:00). A stated hour wins; do\nnot replace 19:00 with 23:00 \u2212 3h = 20:00.",
           "properties": {
+            "hours": {
+              "items": {
+                "format": "time",
+                "type": "string"
+              },
+              "title": "Hours",
+              "type": "array"
+            },
             "latest_by": {
-              "format": "time",
-              "title": "Latest By",
-              "type": "string"
+              "anyOf": [
+                {
+                  "format": "time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Latest By"
             },
             "closes_at": {
               "anyOf": [
@@ -1095,15 +1207,12 @@
               "title": "Closes At"
             }
           },
-          "required": [
-            "latest_by"
-          ],
           "title": "Window",
           "type": "object"
         }
       },
       "additionalProperties": false,
-      "description": "The whole table the talk service reads and patches.\n\nDrift is still derived, never stored. `drift_asks` / `drift_asked_at`\nare the shrink-ladder memory the lid already persists.",
+      "description": "The whole table the talk service reads and patches.\n\nDrift is still derived, never stored. The shrink-ladder memory rides on\neach `Subject` (next to `paused_at`), not in a side table on the desk.",
       "properties": {
         "subjects": {
           "items": {
@@ -1132,21 +1241,6 @@
           },
           "title": "Widgets",
           "type": "array"
-        },
-        "drift_asks": {
-          "additionalProperties": {
-            "$ref": "#/$defs/DriftAskState"
-          },
-          "title": "Drift Asks",
-          "type": "object"
-        },
-        "drift_asked_at": {
-          "additionalProperties": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "title": "Drift Asked At",
-          "type": "object"
         }
       },
       "required": [
@@ -1200,9 +1294,34 @@
     },
     "widget": {
       "$defs": {
+        "ChecklistItem": {
+          "additionalProperties": false,
+          "description": "One line of a checklist.\n\n`done` is finger state on that line, nothing more: no per-item timestamp,\nno score. Progress over the list is arithmetic in `runtime.py`, so the\npayload never carries a \"progress\" number of its own \u2014 a stored count and\na list of ticks are two truths about the same thing, and they drift.",
+          "properties": {
+            "id": {
+              "title": "Id",
+              "type": "string"
+            },
+            "text": {
+              "title": "Text",
+              "type": "string"
+            },
+            "done": {
+              "default": false,
+              "title": "Done",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "id",
+            "text"
+          ],
+          "title": "ChecklistItem",
+          "type": "object"
+        },
         "WidgetPayload": {
           "additionalProperties": true,
-          "description": "Flexible payload; fields used by tests are typed, the rest may pass through.",
+          "description": "What a runtime needs to run. Extra keys still pass through.\n\nThe typed part is the catalog (Q1): `count`/`target` for the counter,\n`done` for the tick, `fire_at` for the reminder, `items` for the checklist,\n`seconds`/`started_at`/`elapsed` for the timer, `beats`/`current` for the\nstepper. Anything the model invents on top stays in `extra` and no runtime\nreads it (never-do AI #1).",
           "properties": {
             "count": {
               "anyOf": [
@@ -1243,7 +1362,9 @@
             "items": {
               "anyOf": [
                 {
-                  "items": {},
+                  "items": {
+                    "$ref": "#/$defs/ChecklistItem"
+                  },
                   "type": "array"
                 },
                 {
@@ -1265,6 +1386,19 @@
               "default": null,
               "title": "Seconds"
             },
+            "started_at": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Started At"
+            },
             "elapsed": {
               "anyOf": [
                 {
@@ -1277,7 +1411,7 @@
               "default": null,
               "title": "Elapsed"
             },
-            "steps": {
+            "beats": {
               "anyOf": [
                 {
                   "items": {
@@ -1290,7 +1424,7 @@
                 }
               ],
               "default": null,
-              "title": "Steps"
+              "title": "Beats"
             },
             "current": {
               "anyOf": [
@@ -1441,26 +1575,6 @@
       "title": "Widget",
       "type": "object"
     },
-    "drift_ask_state": {
-      "additionalProperties": false,
-      "description": "How far the shrink ladder has already been walked for one subject.\n\nNot a stored score. Input to `next_drift_offer` / `drift_card`.",
-      "properties": {
-        "asks_made": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Asks Made",
-          "type": "integer"
-        },
-        "retire_refusals": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Retire Refusals",
-          "type": "integer"
-        }
-      },
-      "title": "DriftAskState",
-      "type": "object"
-    },
     "drift_card": {
       "$defs": {
         "DriftOffer": {
@@ -1475,6 +1589,7 @@
         }
       },
       "additionalProperties": false,
+      "description": "The one drift ask on Today. `offer` is the ladder rung the law chose.",
       "properties": {
         "subject_id": {
           "title": "Subject Id",
@@ -1496,10 +1611,121 @@
       "title": "DriftCard",
       "type": "object"
     },
+    "delta_card": {
+      "additionalProperties": false,
+      "description": "The calm half of the morning (Q6): promised by the rhythm minus done.\n\nNo offer and no chips \u2014 a delta without drift is a statement, not an\naccusation (P7). `remaining` is never negative: doing more than promised\nis not a debt.",
+      "properties": {
+        "subject_id": {
+          "title": "Subject Id",
+          "type": "string"
+        },
+        "promised": {
+          "title": "Promised",
+          "type": "integer"
+        },
+        "done": {
+          "title": "Done",
+          "type": "integer"
+        },
+        "remaining": {
+          "title": "Remaining",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "subject_id",
+        "promised",
+        "done",
+        "remaining"
+      ],
+      "title": "DeltaCard",
+      "type": "object"
+    },
     "lid_projection": {
       "$defs": {
+        "ChecklistItem": {
+          "additionalProperties": false,
+          "description": "One line of a checklist.\n\n`done` is finger state on that line, nothing more: no per-item timestamp,\nno score. Progress over the list is arithmetic in `runtime.py`, so the\npayload never carries a \"progress\" number of its own \u2014 a stored count and\na list of ticks are two truths about the same thing, and they drift.",
+          "properties": {
+            "id": {
+              "title": "Id",
+              "type": "string"
+            },
+            "text": {
+              "title": "Text",
+              "type": "string"
+            },
+            "done": {
+              "default": false,
+              "title": "Done",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "id",
+            "text"
+          ],
+          "title": "ChecklistItem",
+          "type": "object"
+        },
+        "DeltaCard": {
+          "additionalProperties": false,
+          "description": "The calm half of the morning (Q6): promised by the rhythm minus done.\n\nNo offer and no chips \u2014 a delta without drift is a statement, not an\naccusation (P7). `remaining` is never negative: doing more than promised\nis not a debt.",
+          "properties": {
+            "subject_id": {
+              "title": "Subject Id",
+              "type": "string"
+            },
+            "promised": {
+              "title": "Promised",
+              "type": "integer"
+            },
+            "done": {
+              "title": "Done",
+              "type": "integer"
+            },
+            "remaining": {
+              "title": "Remaining",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "subject_id",
+            "promised",
+            "done",
+            "remaining"
+          ],
+          "title": "DeltaCard",
+          "type": "object"
+        },
+        "DeltaTodayItem": {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "delta",
+              "default": "delta",
+              "title": "Kind",
+              "type": "string"
+            },
+            "band": {
+              "const": "unanswered_morning",
+              "default": "unanswered_morning",
+              "title": "Band",
+              "type": "string"
+            },
+            "delta_card": {
+              "$ref": "#/$defs/DeltaCard"
+            }
+          },
+          "required": [
+            "delta_card"
+          ],
+          "title": "DeltaTodayItem",
+          "type": "object"
+        },
         "DriftCard": {
           "additionalProperties": false,
+          "description": "The one drift ask on Today. `offer` is the ladder rung the law chose.",
           "properties": {
             "subject_id": {
               "title": "Subject Id",
@@ -1657,7 +1883,7 @@
         },
         "WidgetPayload": {
           "additionalProperties": true,
-          "description": "Flexible payload; fields used by tests are typed, the rest may pass through.",
+          "description": "What a runtime needs to run. Extra keys still pass through.\n\nThe typed part is the catalog (Q1): `count`/`target` for the counter,\n`done` for the tick, `fire_at` for the reminder, `items` for the checklist,\n`seconds`/`started_at`/`elapsed` for the timer, `beats`/`current` for the\nstepper. Anything the model invents on top stays in `extra` and no runtime\nreads it (never-do AI #1).",
           "properties": {
             "count": {
               "anyOf": [
@@ -1698,7 +1924,9 @@
             "items": {
               "anyOf": [
                 {
-                  "items": {},
+                  "items": {
+                    "$ref": "#/$defs/ChecklistItem"
+                  },
                   "type": "array"
                 },
                 {
@@ -1720,6 +1948,19 @@
               "default": null,
               "title": "Seconds"
             },
+            "started_at": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Started At"
+            },
             "elapsed": {
               "anyOf": [
                 {
@@ -1732,7 +1973,7 @@
               "default": null,
               "title": "Elapsed"
             },
-            "steps": {
+            "beats": {
               "anyOf": [
                 {
                   "items": {
@@ -1745,7 +1986,7 @@
                 }
               ],
               "default": null,
-              "title": "Steps"
+              "title": "Beats"
             },
             "current": {
               "anyOf": [
@@ -1845,6 +2086,9 @@
               },
               {
                 "$ref": "#/$defs/DriftTodayItem"
+              },
+              {
+                "$ref": "#/$defs/DeltaTodayItem"
               }
             ]
           },
@@ -1876,6 +2120,17 @@
           "anyOf": [
             {
               "$ref": "#/$defs/DriftCard"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "delta_card": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DeltaCard"
             },
             {
               "type": "null"

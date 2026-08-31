@@ -1,0 +1,26 @@
+{
+  "id": "clarification_orphan_en",
+  "utterance": "what does this mean: running economy?",
+  "match": [
+    "running economy"
+  ],
+  "selection": {
+    "quote": "running economy"
+  },
+  "scripted": [
+    {
+      "text": "How much effort a kilometre costs you at the same pace. Better economy — the same pace feels easier."
+    },
+    {
+      "text": "How much effort a kilometre costs you at the same pace. Better economy — the same pace feels easier."
+    }
+  ],
+  "expect": {
+    "mutated": false,
+    "tools": [],
+    "forbidden_tools": [
+      "add_cue"
+    ],
+    "snapshots_empty": true
+  }
+}

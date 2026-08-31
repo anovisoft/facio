@@ -6,6 +6,8 @@ enum DriftOffer: String, Codable, Sendable, Equatable, Hashable, CaseIterable {
     case retire
     case stop
 
-    /// Chips that only shrink commitment. Never “try harder”.
-    static let downward: [DriftOffer] = [.moveToToday, .onceAWeek, .retire]
+    /// The ladder in order, least drastic first. Only one of these is on the
+    /// card at a time — `DriftLaw.nextOffer` picks the rung. Kept as a list so
+    /// a test can assert the order never turns into “try harder” (never-do #21).
+    static let ladder: [DriftOffer] = [.moveToToday, .onceAWeek, .retire]
 }

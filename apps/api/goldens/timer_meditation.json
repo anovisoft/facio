@@ -1,0 +1,51 @@
+{
+  "id": "timer_meditation",
+  "utterance": "медитация 10 минут каждый день",
+  "match": ["медитация 10 минут"],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "create_widget",
+          "arguments": {
+            "type": "timer",
+            "title": "медитация",
+            "subject_id": "meditation",
+            "cadence": {
+              "count": 1,
+              "period": "day"
+            },
+            "seconds": 600
+          }
+        },
+        {
+          "name": "add_cue",
+          "arguments": {
+            "subject_id": "meditation",
+            "kind": "correction",
+            "surface": "do-time",
+            "text": "сядь ровно, дыши носом"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Десять минут каждый день, таймер на столе. Утром или вечером удобнее?"
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": ["create_widget", "add_cue"],
+    "forbidden_tools": ["set_reminder"],
+    "cadence": {
+      "count": 1,
+      "period": "day"
+    },
+    "cue": {
+      "subject_id": "meditation",
+      "surface": "do-time",
+      "kind": "correction",
+      "text_contains": ["дыши носом"]
+    }
+  }
+}

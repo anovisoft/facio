@@ -1,7 +1,10 @@
 {
   "id": "method_4_to_30",
   "utterance": "могу 4, хочу 30 подряд, как?",
-  "match": ["могу 4", "хочу 30 подряд"],
+  "match": [
+    "могу 4",
+    "хочу 30 подряд"
+  ],
   "scripted": [
     {
       "tool_calls": [
@@ -43,15 +46,25 @@
   ],
   "expect": {
     "mutated": true,
-    "tools": ["list_desk", "update_widget", "add_cue"],
-    "forbidden_tools": ["set_reminder"],
+    "tools": [
+      "list_desk",
+      "update_widget",
+      "add_cue"
+    ],
+    "forbidden_tools": [
+      "set_reminder"
+    ],
     "target_current": 4,
     "target_goal_max": 30,
     "times_per_week_max": 3,
     "cue": {
       "subject_id": "push-ups",
+      "kind": "correction",
       "surface": "do-time",
-      "text_contains": ["чистых", "корпус"]
+      "text_contains": [
+        "чистых",
+        "корпус"
+      ]
     }
   }
 }

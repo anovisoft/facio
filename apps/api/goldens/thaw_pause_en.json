@@ -1,0 +1,30 @@
+{
+  "id": "thaw_pause_en",
+  "utterance": "it eased off",
+  "match": [
+    "it eased off",
+    "the back is fine now",
+    "bring the bike back"
+  ],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "thaw_subject",
+          "arguments": {
+            "subject_id": "bike"
+          }
+        }
+      ]
+    },
+    {
+      "text": "The bike is off pause."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": [
+      "thaw_subject"
+    ]
+  }
+}

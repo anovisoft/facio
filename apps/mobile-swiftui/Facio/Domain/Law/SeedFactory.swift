@@ -67,6 +67,127 @@ enum SeedFactory {
         try ensureDrift(in: try ensureBike(in: snapshot, now: now), now: now)
     }
 
+    /// Q34: a practice that promised N times today gets N cases today.
+    ///
+    /// The law says how many are missing (`SlotLaw.occurrencesMissing`); this
+    /// is the hand that writes them, at the one seam that already tops up a
+    /// desk when the lid opens. No second mechanism and no scheduler: a case
+    /// is only ever missing because a day started.
+    ///
+    /// Two things it deliberately does not do. It never touches a reminder
+    /// widget — the hours live in that subject's window, and multiplying the
+    /// tile would turn a window into a calendar. And it counts cases already
+    /// closed, so ticking the first check does not write an eighth: the
+    /// seventh check is the seventh case (04).
+    static func ensureOccurrences(in snapshot: DeskSnapshot, now: Date) -> DeskSnapshot {
+        var next = snapshot
+        for subject in snapshot.subjects {
+            let missing = SlotLaw.occurrencesMissing(
+                subject,
+                instances: next.instances,
+                widgets: next.widgets,
+                on: now
+            )
+            if missing > 0, let template = occurrenceTemplate(in: next, subjectId: subject.id, now: now) {
+                for _ in 0..<missing {
+                    let instanceId = "\(subject.id)-\(UUID().uuidString)"
+                    let payload = InstanceLaw.resetPayload(of: template, now: now, window: subject.window)
+                    next.instances.append(
+                        Instance(id: instanceId, subjectId: subject.id, when: now, status: .prepared)
+                    )
+                    if let index = next.subjects.firstIndex(where: { $0.id == subject.id }) {
+                        next.subjects[index].instanceIds.append(instanceId)
+                    }
+                    next.widgets.append(
+                        InstanceLaw.newWidget(from: template, instanceId: instanceId, payload: payload, now: now)
+                    )
+                }
+            }
+            next = groupToday(subject: subject, in: next, now: now)
+        }
+        return next
+    }
+
+    /// Q34 after the first day on a phone: the occurrences of one subject
+    /// inside one period share a **`group_id`** and the lid draws them once.
+    ///
+    /// Two writes, both derived, both idempotent. The `group_id` is the subject
+    /// and the day, so running this twice re-stamps instead of splitting. And
+    /// the hours the person named are laid onto the cases in order, so a check
+    /// carries the hour it is for — without that, seven cases are seven
+    /// identical squares and «отметить именно проверку в 15:00» is a guess.
+    ///
+    /// The hours are distributed **only** when there are exactly as many of
+    /// them as there are occurrences. Fewer hours than checks would mean us
+    /// deciding which check happens when, and nothing here invents an hour the
+    /// person did not say (Q34).
+    ///
+    /// A practice that promises one a day is not touched at all: no `group_id`,
+    /// one tile, exactly as before — which is also why an old desk opens.
+    private static func groupToday(subject: Subject, in snapshot: DeskSnapshot, now: Date) -> DeskSnapshot {
+        guard SlotLaw.occurrencesPromised(subject) > 1 else { return snapshot }
+        var next = snapshot
+        let hourCases = SlotLaw.hourInstanceIds(subjectId: subject.id, widgets: next.widgets)
+        let today = Set(
+            next.instances
+                .filter {
+                    $0.subjectId == subject.id
+                        && SlotLaw.isSameDay($0.when, now)
+                        && !hourCases.contains($0.id)
+                }
+                .map(\.id)
+        )
+        guard today.count > 1 else { return snapshot }
+
+        var whenOf: [String: Date] = [:]
+        for instance in next.instances { whenOf[instance.id] = instance.when }
+        let ordered = next.widgets
+            .filter { today.contains($0.instanceId) && $0.type.showsOnLid && $0.status != .archived }
+            .sorted { lhs, rhs in
+                let left = whenOf[lhs.instanceId] ?? now
+                let right = whenOf[rhs.instanceId] ?? now
+                if left != right { return left < right }
+                return lhs.id < rhs.id
+            }
+        guard ordered.count > 1 else { return snapshot }
+
+        let groupId = GroupLaw.key(subjectId: subject.id, day: now)
+        let hours = subject.window?.hours ?? []
+        let laysHours = hours.count == ordered.count
+        for (position, widget) in ordered.enumerated() {
+            guard let index = next.widgets.firstIndex(where: { $0.id == widget.id }) else { continue }
+            next.widgets[index].groupId = groupId
+            guard laysHours else { continue }
+            let at = ReminderClock.date(on: now, clock: hours[position])
+            // A closed check keeps the moment it was closed on its widget —
+            // that stamp is what holds a done tile on Today until midnight.
+            if next.widgets[index].status != .done {
+                next.widgets[index].when = at
+            }
+            if let caseIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
+                next.instances[caseIndex].when = at
+            }
+        }
+        return next
+    }
+
+    /// The thing the person ticks, on today's case. A reminder is the hour, not
+    /// the check, so it is never the template.
+    private static func occurrenceTemplate(in snapshot: DeskSnapshot, subjectId: String, now: Date) -> Widget? {
+        let today = Set(
+            snapshot.instances
+                .filter { $0.subjectId == subjectId && SlotLaw.isSameDay($0.when, now) }
+                .map(\.id)
+        )
+        return snapshot.widgets.first { widget in
+            widget.subjectId == subjectId
+                && widget.type != .reminder
+                && widget.type.showsOnLid
+                && widget.status != .archived
+                && today.contains(widget.instanceId)
+        }
+    }
+
     static func ensureBike(in snapshot: DeskSnapshot, now: Date) throws -> DeskSnapshot {
         var next = snapshot
         let window = ReminderClock.windowFromClosing(ClockTime(hour: 22, minute: 0))

@@ -25,7 +25,7 @@ Reason + cadence + drift live in one `Subject`. A `Cue` without `surface` is rej
 
 ## Wedge
 
-Ship the founding loop to production quality: counter + tick + reminder, cue at do-time, window, drift card, talk that materializes. Pan / Deeds / Inspect — step 5, accepted PO at minimum (2026-08-19). **В1.0–В1.6 done; В2.1–В2.3 in code** (7-day slots on Inspect; freeze + local check-in). В2.3 awaits PO. Do not say “wave 2 is accepted.” Named-hour 19 vs door 23 accepted PO. Voice, cooking, sports-corpus RAG — only if PO says so. Lead = PM; human = PO; Task subagents = developers (skills named per `AGENTS.md`).
+Ship the founding loop to production quality: counter + tick + reminder, cue at do-time, window, drift card, talk that materializes. The v1 catalog (Q1) now also carries checklist / timer / stepper — each shipped only with its cadence, do-time cue and drift, per type, never as one flag. Pan / Deeds / Inspect — step 5, accepted PO at minimum (2026-08-19). **В1.0–В1.6 done; В2.1–В2.3 in code** (7-day slots on Inspect; freeze + local check-in). В2.3 awaits PO. Do not say “wave 2 is accepted.” Named-hour 19 vs door 23 accepted PO. Voice, cooking, sports-corpus RAG — only if PO says so. Lead = PM; human = PO; Task subagents = developers (skills named per `AGENTS.md`).
 
 Impressive = that loop on a native lid, readable in a ~90s recording. Not catalog breadth.
 

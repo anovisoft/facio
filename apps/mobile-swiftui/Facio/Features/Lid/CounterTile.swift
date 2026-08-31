@@ -9,7 +9,7 @@ struct CounterTile: View {
 
     private var done: Bool { widget.status == .done }
     private var count: Int { widget.counterCount }
-    private var target: Int { widget.counterTarget }
+    private var goal: Int? { widget.counterGoal }
 
     var body: some View {
         FacioTileButton(dimmed: done, action: onOpen, onLongPress: onKebab) {
@@ -23,12 +23,7 @@ struct CounterTile: View {
                     KebabStub()
                 }
                 Spacer(minLength: 0)
-                Text("\(count)")
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
-                    .foregroundStyle(done ? .secondary : .primary)
-                    + Text(" / \(target)")
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.secondary)
+                face
                 if done {
                     Text("готово")
                         .font(.caption.weight(.medium))
@@ -48,10 +43,24 @@ struct CounterTile: View {
         }
     }
 
+    /// Two fonts, one line. Without a goal the tile stops after the number —
+    /// « / 0» would be a target the person never named.
+    private var face: Text {
+        let number = Text("\(count)")
+            .font(.system(size: 34, weight: .bold, design: .rounded))
+            .foregroundStyle(done ? .secondary : .primary)
+        guard let goal else { return number }
+        return number
+            + Text(" / \(goal)")
+            .font(.system(size: 16, weight: .semibold, design: .rounded))
+            .foregroundStyle(.secondary)
+    }
+
     private var accessibilityLabel: String {
         let title = DisplayCopy.title(subjectId: widget.subjectId, stored: widget.title)
-        if done { return "\(title), готово" }
-        if let cue { return "\(title), \(count) из \(target), \(cue.text)" }
-        return "\(title), \(count) из \(target)"
+        if done {
+            return String(localized: "\(title), готово", comment: "Tile accessibility: done")
+        }
+        return DisplayCopy.counterAccessibility(title: title, count: count, goal: goal, cue: cue?.text)
     }
 }

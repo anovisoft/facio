@@ -173,6 +173,82 @@ final class SlotLawTests: XCTestCase {
         XCTAssertEqual(Set(real.map(\.kind)), [.done, .due])
     }
 
+    // MARK: - Q34: several occurrences inside one period
+
+    func testSevenADayPutsSevenSlotsOnTheSameDate() throws {
+        let origin = SlotLaw.startOfDay(for: noon(2026, 8, 12))
+        let desk = try desk([subject("upwork", cadence: Cadence.of(count: 7, period: .day))])
+        let horizon = SlotLaw.horizon(desk: desk, origin: origin)
+        let today = horizon.days[0].slots.filter { $0.subjectId == "upwork" }
+        XCTAssertEqual(today.count, 7)
+        XCTAssertTrue(today.allSatisfy { $0.kind == .due && $0.instanceId == nil })
+        // Tomorrow owes its own seven, not today's leftovers.
+        XCTAssertEqual(horizon.days[1].slots.filter { $0.subjectId == "upwork" }.count, 7)
+    }
+
+    func testCasesAlreadyStandingTodayAreNotProjectedTwice() throws {
+        let origin = SlotLaw.startOfDay(for: noon(2026, 8, 12))
+        let calendar = SlotLaw.dayCalendar
+        let ten = try XCTUnwrap(calendar.date(bySettingHour: 10, minute: 0, second: 0, of: origin))
+        let twelve = try XCTUnwrap(calendar.date(bySettingHour: 12, minute: 0, second: 0, of: origin))
+        let desk = try desk(
+            [subject("upwork", cadence: Cadence.of(count: 7, period: .day))],
+            [
+                Instance(id: "upwork-1", subjectId: "upwork", when: ten, status: .completed),
+                Instance(id: "upwork-2", subjectId: "upwork", when: twelve, status: .prepared),
+            ]
+        )
+        let today = SlotLaw.horizon(desk: desk, origin: origin).days[0].slots
+            .filter { $0.subjectId == "upwork" }
+        XCTAssertEqual(today.count, 7)
+        XCTAssertEqual(today.filter { $0.instanceId != nil }.count, 2)
+        XCTAssertEqual(today.filter { $0.instanceId == nil }.count, 5)
+    }
+
+    func testOneADayIsExactlyWhatItAlwaysWas() throws {
+        let origin = SlotLaw.startOfDay(for: noon(2026, 8, 12))
+        let desk = try desk([subject("vitamins", cadence: Cadence.of(count: 1, period: .day))])
+        let horizon = SlotLaw.horizon(desk: desk, origin: origin)
+        XCTAssertTrue(horizon.days.allSatisfy { $0.slots.count == 1 })
+    }
+
+    func testOccurrencesPromisedOnlyReadsADailyCount() throws {
+        XCTAssertEqual(
+            SlotLaw.occurrencesPromised(try subject("upwork", cadence: Cadence.of(count: 7, period: .day))),
+            7
+        )
+        XCTAssertEqual(
+            SlotLaw.occurrencesPromised(try subject("gym", cadence: Cadence.of(count: 3, period: .week))),
+            0
+        )
+        XCTAssertEqual(SlotLaw.occurrencesPromised(subject("licence", cadence: Cadence.noRhythm)), 0)
+        XCTAssertEqual(
+            SlotLaw.occurrencesPromised(
+                try subject("upwork", cadence: Cadence.of(count: 7, period: .day), status: .paused)
+            ),
+            0
+        )
+    }
+
+    func testAFinishedCheckDoesNotWriteTheNextOne() throws {
+        let day = noon(2026, 8, 12)
+        let practice = try subject("upwork", cadence: Cadence.of(count: 7, period: .day))
+        let calendar = SlotLaw.dayCalendar
+        let standing = try (0..<7).map { index in
+            Instance(
+                id: "upwork-\(index)",
+                subjectId: "upwork",
+                when: try XCTUnwrap(calendar.date(bySettingHour: 10 + index, minute: 0, second: 0, of: day)),
+                status: .completed
+            )
+        }
+        XCTAssertEqual(SlotLaw.occurrencesMissing(practice, instances: standing, widgets: [], on: day), 0)
+        XCTAssertEqual(SlotLaw.occurrencesMissing(practice, instances: Array(standing.prefix(1)), widgets: [], on: day), 6)
+        XCTAssertEqual(SlotLaw.occurrencesMissing(practice, instances: [], widgets: [], on: day), 7)
+        // Yesterday's cases are yesterday's.
+        XCTAssertEqual(SlotLaw.occurrencesMissing(practice, instances: standing, widgets: [], on: noon(2026, 8, 13)), 7)
+    }
+
     func testIsoWeekdayIsMondayZeroNotLocaleFirstWeekday() {
         XCTAssertEqual(SlotLaw.isoWeekdayMondayZero(noon(2026, 8, 10)), 0)
         XCTAssertEqual(SlotLaw.isoWeekdayMondayZero(noon(2026, 8, 15)), 5)

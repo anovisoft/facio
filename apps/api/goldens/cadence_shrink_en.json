@@ -1,0 +1,30 @@
+{
+  "id": "cadence_shrink_en",
+  "utterance": "make it once a week",
+  "match": [
+    "make it once a week"
+  ],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "shrink_subject",
+          "arguments": {
+            "subject_id": "push-ups"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Fine, push-ups once a week. The goal stays where it is."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": [
+      "shrink_subject"
+    ],
+    "target_goal_max": 30,
+    "times_per_week_max": 1
+  }
+}

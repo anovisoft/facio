@@ -1,7 +1,9 @@
 {
   "id": "remind_at_19",
   "utterance": "напомни в 19, в 21 я уже сплю",
-  "match": ["напомни в 19"],
+  "match": [
+    "напомни в 19"
+  ],
   "scripted": [
     {
       "tool_calls": [
@@ -29,16 +31,21 @@
       ]
     },
     {
-      "text": "Напомню в 19:00. К 21 ты уже спишь — это на плитке, не вычитаю три часа из 21."
+      "text": "Напомню в 19:00. То, что к 21 ты уже спишь, теперь лежит на плитке."
     }
   ],
   "expect": {
     "mutated": true,
-    "tools": ["set_reminder", "add_cue"],
+    "tools": [
+      "set_reminder",
+      "add_cue"
+    ],
     "cue": {
       "subject_id": "bike",
       "surface": "timing",
-      "text_contains": ["спишь"]
+      "text_contains": [
+        "спишь"
+      ]
     }
   }
 }

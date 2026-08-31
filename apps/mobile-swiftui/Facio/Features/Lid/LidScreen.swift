@@ -15,17 +15,23 @@ struct LidScreen: View {
                     .accessibilityAddTraits(.isHeader)
                 LidFeed(
                     projection: store.lid,
+                    instances: store.snapshot.instances,
                     cueFor: store.surfaceCue(for:),
                     windowFor: store.windowFor(subjectId:),
                     subjectTitle: { store.subject(id: $0)?.title ?? $0 },
+                    subjectPeriod: { store.subject(id: $0)?.cadence.period ?? .week },
                     showsSubject: store.showsOnLid(subjectId:),
                     surfacesDrift: store.surfaces,
                     onOpen: { path.append(DeskRoute.use(widgetId: $0)) },
                     onInspect: { path.append(DeskRoute.inspect(subjectId: $0, instanceId: $1)) },
                     onKebab: onKebab,
                     onToggleTick: store.toggleTick,
+                    onToggleItem: store.toggleChecklistItem,
+                    onToggleTimer: store.toggleTimerRun,
+                    onCloseOccurrence: store.closeOccurrence,
                     onSurfaced: { store.markCueSurfaced(widgetId: $0, place: "tile") },
-                    onAnswerDrift: store.answerDrift
+                    onAnswerDrift: store.answerDrift,
+                    onRefuseDrift: store.refuseDrift
                 )
             }
             .padding(.horizontal, FacioPalette.pagePadding)
@@ -48,6 +54,12 @@ struct LidScreen: View {
             }
         }
         .facioChrome()
+        // Above the dock, and only here: the chips are the lid's day zero, not
+        // a second composer. Applied before `facioComposerDock()` so the inset
+        // order puts them between the feed and the dock.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            DayZeroChips()
+        }
         .facioComposerDock()
     }
 }

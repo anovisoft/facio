@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import pytest
+from pydantic import ValidationError
+
 from facio_domain.cues import add_cue, default_surface
-from facio_domain.models import CueKind, CueSurface, LinkMedia
+from facio_domain.models import Cue, CueKind, CueSurface, LinkMedia
 
 
 def test_correction_defaults_to_do_time() -> None:
@@ -49,3 +52,31 @@ def test_media_is_at_most_one() -> None:
     )
     assert cue.media is not None
     assert cue.media.kind == "link"
+
+
+def test_selection_cue_keeps_the_phrase_and_the_step() -> None:
+    """The selection is the strongest signal about what needed remembering (05)."""
+    cue = add_cue(
+        id="c5",
+        subject_id="push-ups",
+        kind="clarification",
+        text="таз в одну линию с плечами и пятками",
+        step_id="rep-1",
+        quote="не роняй таз",
+    )
+    assert cue.surface == CueSurface.on_demand
+    assert cue.step_id == "rep-1"
+    assert cue.quote == "не роняй таз"
+
+
+def test_quote_is_text_not_an_offset() -> None:
+    """An anchor into a transcript dangles as soon as the method changes (04)."""
+    with pytest.raises(ValidationError):
+        Cue(
+            id="c6",
+            subject_id="push-ups",
+            kind=CueKind.clarification,
+            text="explanation",
+            quote={"start": 12, "end": 24},
+            surface=CueSurface.on_demand,
+        )

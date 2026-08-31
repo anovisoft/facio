@@ -1,0 +1,52 @@
+{
+  "id": "pain_raise_en",
+  "utterance": "it hurts, let's do 40",
+  "match": [
+    "it hurts, let's do 40"
+  ],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "update_widget",
+          "arguments": {
+            "widget_id": "push-ups-counter",
+            "target": 40
+          }
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "add_cue",
+          "arguments": {
+            "id": "push-ups-pain-en-talk",
+            "subject_id": "push-ups",
+            "kind": "correction",
+            "text": "brace the core, let the glutes carry some",
+            "surface": "do-time"
+          }
+        }
+      ]
+    },
+    {
+      "text": "This is not medical advice. Brace the core and let the glutes carry some. I am not raising the goal: if anything, we do fewer, not 40."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": [
+      "update_widget",
+      "add_cue"
+    ],
+    "target_goal_max": 30,
+    "cue": {
+      "subject_id": "push-ups",
+      "surface": "do-time",
+      "text_contains": [
+        "core"
+      ]
+    }
+  }
+}

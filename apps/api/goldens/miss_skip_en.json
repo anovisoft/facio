@@ -1,0 +1,31 @@
+{
+  "id": "miss_skip_en",
+  "utterance": "didn't go today",
+  "match": [
+    "didn't go today"
+  ],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "skip",
+          "arguments": {
+            "widget_id": "bike-reminder"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Alright, the bike is skipped for today."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": [
+      "skip"
+    ],
+    "forbidden_tools": [
+      "set_reminder"
+    ]
+  }
+}

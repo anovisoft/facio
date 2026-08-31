@@ -138,7 +138,7 @@ def test_openai_messages_split_system_and_merge_tool_results() -> None:
             {"role": "tool", "tool_call_id": "call_2", "content": '{"ok": false}'},
         ]
     )
-    assert system == "You are Facio.\n\nDesk now."
+    assert [block["text"] for block in system] == ["You are Facio.", "Desk now."]
     assert chat[0] == {"role": "user", "content": "hi"}
     assert chat[1]["role"] == "assistant"
     assert chat[1]["content"][0]["type"] == "tool_use"
@@ -213,7 +213,11 @@ async def test_anthropic_complete_posts_messages_api(monkeypatch: pytest.MonkeyP
     body = captured["json"]
     assert isinstance(body, dict)
     assert body["model"] == HAIKU_MODEL
-    assert body["system"] == "rules"
+    # One block, and it carries the breakpoint: tools render before system,
+    # so the marker here caches the schemas and the prompt together.
+    assert body["system"] == [
+        {"type": "text", "text": "rules", "cache_control": {"type": "ephemeral"}}
+    ]
 
 
 async def test_openai_complete_uses_openai_key(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -261,3 +265,38 @@ async def test_openai_complete_uses_openai_key(monkeypatch: pytest.MonkeyPatch) 
     body = captured["json"]
     assert isinstance(body, dict)
     assert body["model"] == "gpt-4o-mini"
+
+def test_no_empty_text_block_ever_reaches_the_vendor() -> None:
+    """The shape that actually 400s, pinned.
+
+    The API accepts `content: ""` (verified against it: HTTP 200) but refuses
+    `content: [{"type": "text", "text": ""}]` — "text content blocks must be
+    non-empty". The loop's nudge path appends an assistant message with empty
+    content when the first complete had neither text nor tools, so the guard
+    that matters is here in the adapter: an empty text never becomes a block.
+    """
+    _, chat = openai_messages_to_anthropic(
+        [
+            {"role": "system", "content": "rules"},
+            {"role": "user", "content": "hi"},
+            {"role": "assistant", "content": ""},
+            {"role": "user", "content": "nudge"},
+            {
+                "role": "assistant",
+                "content": "",
+                "tool_calls": [
+                    {
+                        "id": "call_1",
+                        "type": "function",
+                        "function": {"name": "list_desk", "arguments": "{}"},
+                    }
+                ],
+            },
+            {"role": "tool", "tool_call_id": "call_1", "content": '{"ok": true}'},
+        ]
+    )
+    for message in chat:
+        content = message["content"]
+        if isinstance(content, list):
+            for block in content:
+                assert block.get("type") != "text" or block.get("text"), message

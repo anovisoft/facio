@@ -100,7 +100,7 @@ private struct InspectHorizonDayLabel: View {
     }
 
     private var weekday: String {
-        date.formatted(.dateTime.weekday(.abbreviated).locale(Locale(identifier: "ru_RU")))
+        date.formatted(.dateTime.weekday(.abbreviated))
     }
 
     private var dayNumber: String {

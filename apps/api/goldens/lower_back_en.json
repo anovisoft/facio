@@ -1,0 +1,41 @@
+{
+  "id": "lower_back_en",
+  "utterance": "my lower back takes the load",
+  "match": [
+    "lower back takes the load"
+  ],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "add_cue",
+          "arguments": {
+            "id": "push-ups-brace-en-talk",
+            "subject_id": "push-ups",
+            "kind": "correction",
+            "text": "brace the core and the glutes, not the lower back",
+            "surface": "do-time"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Brace the core and the glutes, not the lower back. This is not medical advice. If it is heavy, fewer reps, not more."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": [
+      "add_cue"
+    ],
+    "cue": {
+      "subject_id": "push-ups",
+      "surface": "do-time",
+      "text_contains": [
+        "core",
+        "glute",
+        "lower back"
+      ]
+    }
+  }
+}

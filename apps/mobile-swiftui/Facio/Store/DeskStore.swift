@@ -5,10 +5,19 @@ import Observation
 @MainActor
 final class DeskStore {
     private(set) var snapshot: DeskSnapshot
+    /// Day zero is over the moment the desk holds its first subject, and it
+    /// never starts again. Read from disk at launch so relaunching an empty
+    /// day does not bring the chips back.
+    private(set) var dayZeroClosed: Bool
+    /// The subject whose one clarity check (Q32) is due right now, or nothing.
+    /// Set when a first case closes on a practice the mouth explained; cleared
+    /// the moment the ask is shown, so it is shown once and never again.
+    private(set) var clarificationAsk: String?
     private let repository: DeskRepository
     private let now: () -> Date
     private var surfacedDay = Date.distantPast
     private var surfacedPlaces: Set<String> = []
+    private var clarificationAsked: Set<String> = []
 
     static func live() -> DeskStore {
         do {
@@ -21,10 +30,14 @@ final class DeskStore {
     init(repository: DeskRepository, now: @escaping () -> Date = Date.init) throws {
         self.repository = repository
         self.now = now
+        self.dayZeroClosed = repository.dayZeroClosed()
         if let loaded = try repository.loadSnapshot() {
             // Bike/drift backfill disabled for dogfood alongside the founding seed below — 2026-08-25.
             // let migrated = try SeedFactory.ensureFounding(in: loaded, now: now())
-            let migrated = loaded
+            // Q34 top-up stays on: a practice that promised seven checks today
+            // needs its seven cases before the lid is drawn, and a new day is
+            // the only thing that ever makes one missing.
+            let migrated = SeedFactory.ensureOccurrences(in: loaded, now: now())
             snapshot = migrated
             if migrated != loaded {
                 try repository.saveSnapshot(migrated)
@@ -39,6 +52,26 @@ final class DeskStore {
         let day = Calendar.current.startOfDay(for: now())
         surfacedDay = day
         surfacedPlaces = repository.surfacedPlaces(on: day)
+        clarificationAsked = repository.clarificationAskedSubjects()
+        closeDayZeroIfNeeded()
+    }
+
+    /// Q34: top up today's cases for a practice that promised several.
+    ///
+    /// Called where the desk arrives or changes shape — at load, after a talk
+    /// turn, and when the lid comes back to the front on a new day. It is
+    /// arithmetic and idempotent: with nothing missing it writes nothing, so
+    /// calling it twice costs a comparison.
+    func ensureOccurrences() {
+        commit(reminders: true) { next in
+            next = SeedFactory.ensureOccurrences(in: next, now: now())
+        }
+    }
+
+    /// The day-0 chips above the composer. Only on a desk that has never held a
+    /// subject — an empty Сегодня on a desk full of practices is a rest day.
+    var showsDayZeroChips: Bool {
+        DayZeroLaw.showsChips(subjects: snapshot.subjects, closed: dayZeroClosed)
     }
 
     var lid: LidProjection {
@@ -46,8 +79,7 @@ final class DeskStore {
             now: now(),
             subjects: snapshot.subjects,
             instances: snapshot.instances,
-            widgets: snapshot.widgets,
-            histories: snapshot.driftAsks
+            widgets: snapshot.widgets
         )
     }
 
@@ -59,14 +91,12 @@ final class DeskStore {
         subject(id: subjectId)?.status != .retired
     }
 
+    /// The right to speak already lives in the law: `LidProjectionLaw` only
+    /// emits a card the ladder is allowed to show. This stays as the one place
+    /// the lid asks, so the projection is never second-guessed on screen.
     func surfaces(_ card: DriftCard) -> Bool {
         guard let subject = subject(id: card.subjectId) else { return false }
-        return DriftLaw.shouldSurface(
-            card,
-            askedAt: snapshot.driftAskedAt[card.subjectId],
-            cadence: subject.cadence,
-            now: now()
-        )
+        return card.offer != .stop && DriftLaw.canAskNow(subject, now: now())
     }
 
     func cueFor(subjectId: String) -> Cue? {
@@ -75,6 +105,16 @@ final class DeskStore {
 
     func surfaceCue(for widget: Widget) -> Cue? {
         CueLaw.surfaceCue(in: snapshot.cues, subjectId: widget.subjectId, widgetType: widget.type)
+    }
+
+    /// What sits behind the `?` on this step. Never rendered inline: an
+    /// explanation is looked up, a correction must be seen (04).
+    func explanations(for widget: Widget) -> [Cue] {
+        ClarificationLaw.onDemandCues(in: snapshot.cues, subjectId: widget.subjectId)
+    }
+
+    func hasExplanation(for widget: Widget) -> Bool {
+        ClarificationLaw.hasExplanation(in: snapshot.cues, subjectId: widget.subjectId)
     }
 
     func windowFor(subjectId: String) -> TimeWindow? {
@@ -93,11 +133,45 @@ final class DeskStore {
         InstanceLaw.sorted(snapshot.instances, subjectId: subjectId)
     }
 
+    /// The cases the carousel lists: occurrences, never the hour a reminder
+    /// stands on (Q34). The queue of a day is what happened, not what rang.
+    func occurrenceInstances(for subjectId: String) -> [Instance] {
+        SlotLaw.occurrenceInstances(
+            subjectId: subjectId,
+            instances: snapshot.instances,
+            widgets: snapshot.widgets
+        )
+    }
+
+    /// Close **this** occurrence, whatever type it wears.
+    ///
+    /// One mark on a group tile closes its own case and nothing else: there is
+    /// no pointer to advance, and a later check never closes an earlier miss.
+    /// A tick toggles, because a tick has always toggled; the other runtimes
+    /// have one way to be finished and this is it.
+    func closeOccurrence(widgetId: String) {
+        guard let widget = widget(id: widgetId) else { return }
+        switch widget.type {
+        case .tick: toggleTick(widgetId: widgetId)
+        case .counter: completeCounter(widgetId: widgetId)
+        case .checklist: completeChecklist(widgetId: widgetId)
+        case .timer: completeTimer(widgetId: widgetId)
+        case .stepper: completeStepper(widgetId: widgetId)
+        case .reminder: completeReminder(widgetId: widgetId)
+        }
+    }
+
+    /// Where the kebab carousel opens. It must be a slot the carousel actually
+    /// lists, so a live reminder does not park the selection on an hour that is
+    /// no longer in the queue (Q34).
     func preferredInstanceId(subjectId: String) -> String? {
-        if let live = templateWidget(subjectId: subjectId) {
+        let listed = occurrenceInstances(for: subjectId)
+        if let live = templateWidget(subjectId: subjectId),
+           listed.contains(where: { $0.id == live.instanceId })
+        {
             return live.instanceId
         }
-        return instances(for: subjectId).last?.id
+        return listed.last?.id
     }
 
     @discardableResult
@@ -131,17 +205,80 @@ final class DeskStore {
         return instanceId
     }
 
+    /// Widgets the kebab header can still quiet down: the ones this subject is
+    /// asking with right now. A done tile stays dim on Today until midnight.
+    func postponeTargets(subjectId: String) -> [Widget] {
+        snapshot.widgets.filter { widget in
+            widget.subjectId == subjectId
+                && (widget.status == .ready || widget.status == .running)
+                && (widget.section == .today || widget.section == .lifetime || widget.section == .soon)
+        }
+    }
+
+    /// `postpone` from the shared law: the tile leaves Today for Отложили and
+    /// the alarm goes quiet. `when` is kept — postpone is "not now", not a
+    /// deletion and not a skip.
+    @discardableResult
+    func postpone(subjectId: String) -> Bool {
+        let ids = Set(postponeTargets(subjectId: subjectId).map(\.id))
+        guard !ids.isEmpty else { return false }
+        commit(reminders: true) { next in
+            for index in next.widgets.indices where ids.contains(next.widgets[index].id) {
+                next.widgets[index].section = .postponed
+                next.widgets[index].status = .snoozed
+            }
+        }
+        return true
+    }
+
+    /// `archive_widget` + `retire_subject` by the law: the object leaves the
+    /// lid and the practice stops asking. 04-domain-model — "nothing is deleted
+    /// as punishment": instances and cues stay exactly where they are, so the
+    /// reason survives and Deeds can still open this practice.
+    @discardableResult
+    func removeFromLid(subjectId: String) -> Bool {
+        guard let subject = subject(id: subjectId), subject.status != .retired else { return false }
+        commit(reminders: true) { next in
+            for index in next.widgets.indices where next.widgets[index].subjectId == subjectId {
+                guard next.widgets[index].status != .archived else { continue }
+                next.widgets[index].status = .archived
+                next.widgets[index].version += 1
+            }
+            if let index = next.subjects.firstIndex(where: { $0.id == subjectId }) {
+                next.subjects[index] = SubjectLaw.retire(next.subjects[index])
+            }
+        }
+        journal(.subjectRetired, subjectId: subjectId)
+        return true
+    }
+
     func markCueSurfaced(widgetId: String, place: String) {
         guard let widget = widget(id: widgetId),
               let cue = surfaceCue(for: widget),
               widget.status != .done
         else { return }
+        countSurfaced(cue: cue, widget: widget, place: place)
+    }
+
+    /// Opening the `?` is the on-demand surface actually happening — the same
+    /// hit a do-time cue scores by appearing at rep one. Once per
+    /// widget + place + day, with the cue in the key so a step carrying two
+    /// explanations counts both. No `done` guard: a tile appearing is passive,
+    /// tapping `?` is the person asking.
+    func markExplanationsSurfaced(widgetId: String) {
+        guard let widget = widget(id: widgetId) else { return }
+        for cue in explanations(for: widget) {
+            countSurfaced(cue: cue, widget: widget, place: "help|\(cue.id)")
+        }
+    }
+
+    private func countSurfaced(cue: Cue, widget: Widget, place: String) {
         let day = Calendar.current.startOfDay(for: now())
         if day != surfacedDay {
             surfacedDay = day
             surfacedPlaces = repository.surfacedPlaces(on: day)
         }
-        let key = "\(widgetId)|\(place)"
+        let key = "\(widget.id)|\(place)"
         guard surfacedPlaces.insert(key).inserted else { return }
         commit { next in
             guard let index = next.cues.firstIndex(where: { $0.id == cue.id }) else { return }
@@ -150,11 +287,32 @@ final class DeskStore {
         journal(
             .cueSurfaced,
             subjectId: widget.subjectId,
-            widgetId: widgetId,
+            widgetId: widget.id,
             instanceId: widget.instanceId,
             cueId: cue.id,
             payload: ["place": place]
         )
+    }
+
+    /// Q32, once per practice: the first case closed on something the mouth
+    /// explained. The ask itself is calm and answerable in one tap; the answer
+    /// goes back into the current thread as an ordinary reply.
+    func markClarificationAsked(subjectId: String) {
+        if clarificationAsk == subjectId { clarificationAsk = nil }
+        guard clarificationAsked.insert(subjectId).inserted else { return }
+        journal(.clarificationAsked, subjectId: subjectId)
+    }
+
+    private func noteCaseCompleted(subjectId: String) {
+        guard clarificationAsk == nil,
+              ClarificationLaw.asksAfterFirstCase(
+                  subjectId: subjectId,
+                  cues: snapshot.cues,
+                  instances: snapshot.instances,
+                  alreadyAsked: clarificationAsked.contains(subjectId)
+              )
+        else { return }
+        clarificationAsk = subjectId
     }
 
     func tickCounter(widgetId: String, delta: Int) {
@@ -197,7 +355,11 @@ final class DeskStore {
             next.widgets[index].when = stamp
             if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
                 next.instances[instanceIndex].status = .completed
-                next.instances[instanceIndex].when = stamp
+                next.instances[instanceIndex].when = GroupLaw.closingStamp(
+                    widget,
+                    standing: next.instances[instanceIndex].when,
+                    now: stamp
+                )
             }
             if let cue, let cueIndex = next.cues.firstIndex(where: { $0.id == cue.id }) {
                 next.cues[cueIndex].hits.applied += 1
@@ -207,6 +369,78 @@ final class DeskStore {
             journal(.cueApplied, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId, cueId: cue.id)
         }
         journal(.instanceCompleted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
+        noteCaseCompleted(subjectId: widget.subjectId)
+    }
+
+    /// One line of a checklist, on the tile or on Use. A finger tick is a
+    /// finger tick: it moves the instance into `running`, writes the journal,
+    /// and never appends a chat snapshot (never-do #7).
+    func toggleChecklistItem(widgetId: String, itemId: String) {
+        guard let widget = widget(id: widgetId), widget.type == .checklist else { return }
+        let next = ChecklistLaw.toggle(widget.payload, itemId: itemId)
+        guard next != widget.payload else { return }
+        let wasReady = widget.status == .ready
+        let wasDone = widget.status == .done
+        commit { snapshot in
+            guard let index = snapshot.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            snapshot.widgets[index].payload = next
+            if wasReady || wasDone {
+                snapshot.widgets[index].status = .running
+                if wasDone { snapshot.widgets[index].when = nil }
+            }
+            if let instanceIndex = snapshot.instances.firstIndex(where: { $0.id == widget.instanceId }),
+               wasReady || wasDone
+            {
+                snapshot.instances[instanceIndex].status = .inProgress
+            }
+        }
+        if wasReady {
+            journal(.instanceStarted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
+        }
+        let counted = ChecklistLaw.progress(of: next)
+        journal(
+            .checklistItemToggled,
+            subjectId: widget.subjectId,
+            widgetId: widgetId,
+            instanceId: widget.instanceId,
+            payload: [
+                "item": itemId,
+                "done": String(counted.done),
+                "total": String(counted.total)
+            ]
+        )
+    }
+
+    /// «Готово» on a checklist. Same shape as `completeCounter`: the law ticks
+    /// every remaining line so the tile never shows «2 из 5» beside a closed
+    /// instance, the cue scores its hit, and the case closes.
+    func completeChecklist(widgetId: String) {
+        guard let widget = widget(id: widgetId), widget.type == .checklist, widget.status != .done else { return }
+        let stamp = now()
+        let cue = cueFor(subjectId: widget.subjectId)
+        let finished = ChecklistLaw.setDone(widget.payload, true)
+        commit { next in
+            guard let index = next.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            next.widgets[index].payload = finished
+            next.widgets[index].status = .done
+            next.widgets[index].when = stamp
+            if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
+                next.instances[instanceIndex].status = .completed
+                next.instances[instanceIndex].when = GroupLaw.closingStamp(
+                    widget,
+                    standing: next.instances[instanceIndex].when,
+                    now: stamp
+                )
+            }
+            if let cue, let cueIndex = next.cues.firstIndex(where: { $0.id == cue.id }) {
+                next.cues[cueIndex].hits.applied += 1
+            }
+        }
+        if let cue {
+            journal(.cueApplied, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId, cueId: cue.id)
+        }
+        journal(.instanceCompleted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
+        noteCaseCompleted(subjectId: widget.subjectId)
     }
 
     func toggleTick(widgetId: String) {
@@ -220,7 +454,11 @@ final class DeskStore {
             next.widgets[index].when = makingDone ? stamp : nil
             if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
                 next.instances[instanceIndex].status = makingDone ? .completed : .prepared
-                next.instances[instanceIndex].when = stamp
+                next.instances[instanceIndex].when = GroupLaw.closingStamp(
+                    widget,
+                    standing: next.instances[instanceIndex].when,
+                    now: stamp
+                )
             }
         }
         journal(
@@ -232,22 +470,208 @@ final class DeskStore {
         )
         if makingDone {
             journal(.instanceCompleted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
+            noteCaseCompleted(subjectId: widget.subjectId)
         }
     }
 
+    /// Start or stop a timer's run. What is written is the moment the run
+    /// began (or the seconds it banked) — never a ticking number, so a run
+    /// survives a background, a relaunch, and a desk that came from the server.
+    func toggleTimerRun(widgetId: String) {
+        guard let widget = widget(id: widgetId), widget.type == .timer else { return }
+        let stamp = now()
+        let wasRunning = TimerLaw.isRunning(widget.payload)
+        let next = wasRunning
+            ? TimerLaw.pause(widget.payload, now: stamp)
+            : TimerLaw.start(widget.payload, now: stamp)
+        guard next != widget.payload else { return }
+        let wasReady = widget.status == .ready
+        let wasDone = widget.status == .done
+        commit { snapshot in
+            guard let index = snapshot.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            snapshot.widgets[index].payload = next
+            if wasReady || wasDone {
+                snapshot.widgets[index].status = .running
+                if wasDone { snapshot.widgets[index].when = nil }
+            }
+            if let instanceIndex = snapshot.instances.firstIndex(where: { $0.id == widget.instanceId }),
+               wasReady || wasDone
+            {
+                snapshot.instances[instanceIndex].status = .inProgress
+            }
+        }
+        if wasReady {
+            journal(.instanceStarted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
+        }
+        journal(
+            wasRunning ? .timerPaused : .timerStarted,
+            subjectId: widget.subjectId,
+            widgetId: widgetId,
+            instanceId: widget.instanceId,
+            payload: ["elapsed": String(TimerLaw.elapsed(next, now: stamp))]
+        )
+    }
+
+    /// Back to the full length. The length the person named is not touched,
+    /// and a reset is not a finished sitting — the case stays open.
+    func resetTimer(widgetId: String) {
+        guard let widget = widget(id: widgetId), widget.type == .timer else { return }
+        let stamp = now()
+        let wasRunning = TimerLaw.isRunning(widget.payload)
+        let next = TimerLaw.reset(widget.payload)
+        guard next != widget.payload else { return }
+        commit { snapshot in
+            guard let index = snapshot.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            snapshot.widgets[index].payload = next
+        }
+        if wasRunning {
+            journal(
+                .timerPaused,
+                subjectId: widget.subjectId,
+                widgetId: widgetId,
+                instanceId: widget.instanceId,
+                payload: ["elapsed": "0"]
+            )
+        }
+    }
+
+    /// «Готово» on a timer. The run stops and its seconds are banked, so the
+    /// tile cannot keep counting past a closed case; then the case closes the
+    /// same way the counter's does.
+    func completeTimer(widgetId: String) {
+        guard let widget = widget(id: widgetId), widget.type == .timer, widget.status != .done else { return }
+        let stamp = now()
+        let cue = cueFor(subjectId: widget.subjectId)
+        let stopped = TimerLaw.pause(widget.payload, now: stamp)
+        commit { next in
+            guard let index = next.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            next.widgets[index].payload = stopped
+            next.widgets[index].status = .done
+            next.widgets[index].when = stamp
+            if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
+                next.instances[instanceIndex].status = .completed
+                next.instances[instanceIndex].when = GroupLaw.closingStamp(
+                    widget,
+                    standing: next.instances[instanceIndex].when,
+                    now: stamp
+                )
+            }
+            if let cue, let cueIndex = next.cues.firstIndex(where: { $0.id == cue.id }) {
+                next.cues[cueIndex].hits.applied += 1
+            }
+        }
+        if let cue {
+            journal(.cueApplied, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId, cueId: cue.id)
+        }
+        journal(
+            .instanceCompleted,
+            subjectId: widget.subjectId,
+            widgetId: widgetId,
+            instanceId: widget.instanceId,
+            payload: ["elapsed": String(TimerLaw.elapsed(stopped, now: stamp))]
+        )
+        noteCaseCompleted(subjectId: widget.subjectId)
+    }
+
+    /// One beat of a stepper, pressed at the bottom of Use — never on the
+    /// tile (04). A finger move: the journal records it, the chat does not
+    /// (never-do #7).
+    func stepForward(widgetId: String) {
+        moveStepper(widgetId: widgetId, by: StepperLaw.forward)
+    }
+
+    func stepBack(widgetId: String) {
+        moveStepper(widgetId: widgetId, by: StepperLaw.back)
+    }
+
+    private func moveStepper(widgetId: String, by move: (WidgetPayload) -> WidgetPayload) {
+        guard let widget = widget(id: widgetId), widget.type == .stepper else { return }
+        let next = move(widget.payload)
+        guard next != widget.payload else { return }
+        let wasReady = widget.status == .ready
+        let wasDone = widget.status == .done
+        commit { snapshot in
+            guard let index = snapshot.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            snapshot.widgets[index].payload = next
+            if wasReady || wasDone {
+                snapshot.widgets[index].status = .running
+                if wasDone { snapshot.widgets[index].when = nil }
+            }
+            if let instanceIndex = snapshot.instances.firstIndex(where: { $0.id == widget.instanceId }),
+               wasReady || wasDone
+            {
+                snapshot.instances[instanceIndex].status = .inProgress
+            }
+        }
+        if wasReady {
+            journal(.instanceStarted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
+        }
+        journal(
+            .stepperMoved,
+            subjectId: widget.subjectId,
+            widgetId: widgetId,
+            instanceId: widget.instanceId,
+            payload: [
+                "step": String(StepperLaw.position(of: next) + 1),
+                "total": String(StepperLaw.beats(of: next).count)
+            ]
+        )
+    }
+
+    /// «Готово» on a stepper: the sequence ends standing on its last beat, and
+    /// the case closes the way the counter's does.
+    func completeStepper(widgetId: String) {
+        guard let widget = widget(id: widgetId), widget.type == .stepper, widget.status != .done else { return }
+        let stamp = now()
+        let cue = cueFor(subjectId: widget.subjectId)
+        let finished = StepperLaw.finish(widget.payload)
+        commit { next in
+            guard let index = next.widgets.firstIndex(where: { $0.id == widgetId }) else { return }
+            next.widgets[index].payload = finished
+            next.widgets[index].status = .done
+            next.widgets[index].when = stamp
+            if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
+                next.instances[instanceIndex].status = .completed
+                next.instances[instanceIndex].when = GroupLaw.closingStamp(
+                    widget,
+                    standing: next.instances[instanceIndex].when,
+                    now: stamp
+                )
+            }
+            if let cue, let cueIndex = next.cues.firstIndex(where: { $0.id == cue.id }) {
+                next.cues[cueIndex].hits.applied += 1
+            }
+        }
+        if let cue {
+            journal(.cueApplied, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId, cueId: cue.id)
+        }
+        journal(.instanceCompleted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
+        noteCaseCompleted(subjectId: widget.subjectId)
+    }
+
     func editReminderLatestBy(widgetId: String, latestBy: ClockTime) {
+        guard let widget = widget(id: widgetId),
+              let window = windowFor(subjectId: widget.subjectId)
+        else { return }
+        editReminderHour(widgetId: widgetId, from: window.latestBy, to: latestBy)
+    }
+
+    /// The picker on Use moves **one** hour of the window — the one the chip was
+    /// showing. A practice that named seven keeps the other six (Q34).
+    func editReminderHour(widgetId: String, from old: ClockTime, to latestBy: ClockTime) {
         guard let widget = widget(id: widgetId), widget.type == .reminder else { return }
         guard let window = windowFor(subjectId: widget.subjectId) else { return }
         let clock = ReminderClock.clamp(latestBy, to: window)
         let day = Calendar.current.startOfDay(for: widget.reminderFireAt ?? now())
-        let fireAt = ReminderClock.date(on: day, clock: clock)
         commit(reminders: true) { next in
             guard let widgetIndex = next.widgets.firstIndex(where: { $0.id == widgetId }),
                   let subjectIndex = next.subjects.firstIndex(where: { $0.id == widget.subjectId }),
                   var nextWindow = next.subjects[subjectIndex].window
             else { return }
-            nextWindow.latestBy = clock
+            nextWindow.replaceHour(old, with: clock)
             next.subjects[subjectIndex].window = nextWindow
+            // The widget's own hour is the first of them, as it always was.
+            let fireAt = ReminderClock.date(on: day, clock: nextWindow.latestBy)
             next.widgets[widgetIndex].payload.fireAt = fireAt
             next.widgets[widgetIndex].when = fireAt
             if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }),
@@ -268,7 +692,11 @@ final class DeskStore {
             next.widgets[index].when = stamp
             if let instanceIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }) {
                 next.instances[instanceIndex].status = .completed
-                next.instances[instanceIndex].when = stamp
+                next.instances[instanceIndex].when = GroupLaw.closingStamp(
+                    widget,
+                    standing: next.instances[instanceIndex].when,
+                    now: stamp
+                )
             }
             if let cue, let cueIndex = next.cues.firstIndex(where: { $0.id == cue.id }) {
                 next.cues[cueIndex].hits.applied += 1
@@ -278,8 +706,11 @@ final class DeskStore {
             journal(.cueApplied, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId, cueId: cue.id)
         }
         journal(.instanceCompleted, subjectId: widget.subjectId, widgetId: widgetId, instanceId: widget.instanceId)
+        noteCaseCompleted(subjectId: widget.subjectId)
     }
 
+    /// Taking the offer. The rung the law chose is the only one on the card,
+    /// so this never has to decide what "down" means.
     func answerDrift(subjectId: String, offer: DriftOffer) {
         guard let card = lid.driftCard, card.subjectId == subjectId, surfaces(card) else { return }
         switch offer {
@@ -298,6 +729,23 @@ final class DeskStore {
         case .stop:
             return
         }
+    }
+
+    /// «Not now». The card goes quiet for one cadence period and comes back a
+    /// rung lower. Two refusals of the offer to retire and it never comes back
+    /// at all — the practice stays in Deeds without a rhythm (Q28).
+    func refuseDrift(subjectId: String) {
+        guard let card = lid.driftCard, card.subjectId == subjectId, surfaces(card) else { return }
+        let stamp = now()
+        commit(reminders: false) { next in
+            guard let index = next.subjects.firstIndex(where: { $0.id == subjectId }) else { return }
+            next.subjects[index] = DriftLaw.refuse(next.subjects[index], offer: card.offer, now: stamp)
+        }
+        journal(
+            .driftAnswered,
+            subjectId: subjectId,
+            payload: ["offer": card.offer.rawValue, "answer": "refused"]
+        )
     }
 
     /// Same shape as `applyTalk`'s merge (a full-desk overwrite must not drop
@@ -333,6 +781,10 @@ final class DeskStore {
             }
             next = incoming
         }
+        // A turn that promised seven checks a day has to leave seven of them on
+        // the desk, and it does not do that itself: the mouth wrote the rhythm,
+        // the law counts the cases (Q34).
+        ensureOccurrences()
         for cue in written {
             journal(.cueWritten, subjectId: cue.subjectId, cueId: cue.id, payload: ["text": cue.text])
         }
@@ -380,10 +832,12 @@ final class DeskStore {
         let stamp = now()
         commit(reminders: reminders) { next in
             body(&next)
-            var state = next.driftAsks[subjectId] ?? DriftAskState()
-            state.asksMade += 1
-            next.driftAsks[subjectId] = state
-            next.driftAskedAt[subjectId] = stamp
+            guard let index = next.subjects.firstIndex(where: { $0.id == subjectId }) else { return }
+            // The body already wrote the commitment change (`moveToToday`,
+            // `shrinkToOnceAWeek`, `retireSubject`). This only walks the
+            // ladder: one more ask, stamped, so the next one waits a period.
+            next.subjects[index].driftAsksMade += 1
+            next.subjects[index].driftAskedAt = stamp
         }
         journal(
             .driftAnswered,
@@ -454,9 +908,16 @@ final class DeskStore {
         guard next != snapshot else { return }
         snapshot = next
         try? repository.saveSnapshot(next)
+        closeDayZeroIfNeeded()
         if reminders {
             ReminderScheduler.enqueue(snapshot: next, now: now())
         }
+    }
+
+    private func closeDayZeroIfNeeded() {
+        guard !dayZeroClosed, DayZeroLaw.closes(subjects: snapshot.subjects) else { return }
+        repository.closeDayZero()
+        dayZeroClosed = true
     }
 
     private func journal(

@@ -6,11 +6,20 @@ import Foundation
 struct DeskClient: Sendable {
     var baseURL: URL
     var session: URLSession
+    /// Shorter than the talk timeout: nobody waits a minute to learn the
+    /// sync did not go through, and the desk is fine either way.
+    var timeout: TimeInterval
     var fetchHandler: (@Sendable (String) async throws -> DeskSnapshot?)?
     var pushHandler: (@Sendable (DeskSnapshot, String) async throws -> DeskSnapshot)?
 
     static func live() -> DeskClient {
-        DeskClient(baseURL: TalkClient.configuredBaseURL(), session: .shared, fetchHandler: nil, pushHandler: nil)
+        DeskClient(
+            baseURL: TalkClient.configuredBaseURL(),
+            session: .shared,
+            timeout: 15,
+            fetchHandler: nil,
+            pushHandler: nil
+        )
     }
 
     static func stub(
@@ -20,6 +29,7 @@ struct DeskClient: Sendable {
         DeskClient(
             baseURL: URL(string: "http://127.0.0.1:8000")!,
             session: .shared,
+            timeout: 15,
             fetchHandler: fetch,
             pushHandler: push
         )
@@ -30,6 +40,7 @@ struct DeskClient: Sendable {
             return try await fetchHandler(sessionToken)
         }
         var request = URLRequest(url: baseURL.appending(path: "v1/desk"))
+        request.timeoutInterval = timeout
         request.setValue("Bearer \(sessionToken)", forHTTPHeaderField: "Authorization")
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse else { throw TalkClientError.transport }
@@ -49,6 +60,7 @@ struct DeskClient: Sendable {
         }
         var request = URLRequest(url: baseURL.appending(path: "v1/desk"))
         request.httpMethod = "PUT"
+        request.timeoutInterval = timeout
         request.setValue("Bearer \(sessionToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try FacioJSON.encoder.encode(snapshot)

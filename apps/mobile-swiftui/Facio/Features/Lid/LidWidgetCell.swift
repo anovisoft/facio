@@ -6,6 +6,8 @@ struct LidWidgetCell: View {
     let window: TimeWindow?
     let onOpen: (() -> Void)?
     let onToggleTick: (() -> Void)?
+    let onToggleItem: ((String) -> Void)?
+    let onToggleTimer: (() -> Void)?
     let onKebab: () -> Void
     let onSurfaced: () -> Void
 
@@ -18,7 +20,7 @@ struct LidWidgetCell: View {
             )
         case .tick:
             sized(
-                TickTile(widget: widget, onOpen: onOpen, onToggle: onToggleTick, onKebab: onKebab)
+                TickTile(widget: widget, cue: cue, onOpen: onOpen, onToggle: onToggleTick, onKebab: onKebab, onSurfaced: onSurfaced)
                     .facioKebab(onKebab)
             )
         case .reminder:
@@ -33,8 +35,36 @@ struct LidWidgetCell: View {
                 )
                 .facioKebab(onKebab)
             )
-        case .checklist, .timer, .stepper:
-            EmptyView()
+        case .checklist:
+            sized(
+                ChecklistTile(
+                    widget: widget,
+                    cue: cue,
+                    onOpen: onOpen,
+                    onToggleItem: onToggleItem,
+                    onKebab: onKebab,
+                    onSurfaced: onSurfaced
+                )
+                .facioKebab(onKebab)
+            )
+        case .timer:
+            sized(
+                TimerTile(
+                    widget: widget,
+                    cue: cue,
+                    onOpen: onOpen,
+                    onToggleRun: onToggleTimer,
+                    onKebab: onKebab,
+                    onSurfaced: onSurfaced
+                )
+                .facioKebab(onKebab)
+            )
+        case .stepper:
+            // Not a live stepper on the lid (04): the tile only opens Use.
+            sized(
+                StepperTile(widget: widget, cue: cue, onOpen: onOpen, onKebab: onKebab, onSurfaced: onSurfaced)
+                    .facioKebab(onKebab)
+            )
         }
     }
 

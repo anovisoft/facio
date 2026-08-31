@@ -6,4 +6,5 @@ struct LidProjection: Sendable, Equatable {
     var soon: [Widget]
     var postponed: [Widget]
     var driftCard: DriftCard?
+    var deltaCard: DeltaCard?
 }

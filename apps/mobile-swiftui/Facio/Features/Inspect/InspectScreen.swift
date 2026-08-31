@@ -94,7 +94,7 @@ private struct InspectBody: View {
             if let widget {
                 switch widget.type {
                 case .counter:
-                    Text("\(widget.counterCount) / \(widget.counterTarget)")
+                    Text(DisplayCopy.counterFace(count: widget.counterCount, goal: widget.counterGoal))
                         .font(.system(size: 44, weight: .bold, design: .rounded))
                         .foregroundStyle(.primary)
                     if let cue {
@@ -108,7 +108,7 @@ private struct InspectBody: View {
                             .font(.system(size: 44))
                             .foregroundStyle(widget.isTickDone ? .primary : .secondary)
                             .accessibilityHidden(true)
-                        Text(widget.isTickDone ? "готово" : "на Сегодня")
+                        Text(DisplayCopy.tickState(done: widget.isTickDone))
                             .font(.title3)
                             .foregroundStyle(.secondary)
                     }

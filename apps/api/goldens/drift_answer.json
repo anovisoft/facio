@@ -1,0 +1,37 @@
+{
+  "id": "drift_answer",
+  "utterance": "велосипед три недели стоит, что делать?",
+  "match": [
+    "три недели стоит"
+  ],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "set_cadence",
+          "arguments": {
+            "subject_id": "bike",
+            "count": 1,
+            "period": "week"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Давай раз в неделю — так проще вернуться. Цель прежняя."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": [
+      "set_cadence"
+    ],
+    "times_per_week_max": 1,
+    "target_goal_max": 30,
+    "forbidden_tools": [
+      "update_widget",
+      "create_widget",
+      "set_reminder"
+    ]
+  }
+}

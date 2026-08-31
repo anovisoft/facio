@@ -13,8 +13,17 @@ struct ReminderUseView: View {
         store.windowFor(subjectId: widget.subjectId)
     }
 
+    /// The chip names the hour the person is being asked about right now: the
+    /// nearest one still ahead, not the first of the day (Q34).
     private var deadline: ClockTime? {
-        savedClock ?? window?.latestBy
+        savedClock ?? window.map { ReminderClock.nextHour(window: $0, now: Date()) }
+    }
+
+    /// The rest of the day, when the practice named more than one hour. Digits
+    /// only — the hours are what the person said, not copy of ours.
+    private var laterHours: [ClockTime] {
+        guard let window, let deadline, window.hours.count > 1 else { return [] }
+        return window.hoursAfter(deadline)
     }
 
     var body: some View {
@@ -35,8 +44,16 @@ struct ReminderUseView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("успеть к \(deadline.shortLabel)")
+                .accessibilityLabel(
+                    String(localized: "успеть к \(deadline.shortLabel)", comment: "Reminder window deadline")
+                )
                 .accessibilityHint("открывает выбор времени")
+            }
+
+            if !laterHours.isEmpty {
+                Text(laterHours.map(\.shortLabel).joined(separator: "  "))
+                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(.secondary)
             }
 
             if let cue {
@@ -62,7 +79,9 @@ struct ReminderUseView: View {
         .sheet(item: $timeEdit) { edit in
             ReminderTimePickerSheet(edit: edit) { clock in
                 savedClock = clock
-                store.editReminderLatestBy(widgetId: edit.widgetId, latestBy: clock)
+                // Editing the hour in front of you moves that hour. The others
+                // the person named stay where they are (Q34).
+                store.editReminderHour(widgetId: edit.widgetId, from: edit.start, to: clock)
             }
         }
         .onAppear {

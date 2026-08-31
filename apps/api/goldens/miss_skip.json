@@ -1,7 +1,9 @@
 {
   "id": "miss_skip",
   "utterance": "сегодня не сходил",
-  "match": ["сегодня не сходил"],
+  "match": [
+    "сегодня не сходил"
+  ],
   "scripted": [
     {
       "tool_calls": [
@@ -14,12 +16,16 @@
       ]
     },
     {
-      "text": "Сегодня пропускаем велосипед. Час не трогаю."
+      "text": "Ок, велосипед сегодня пропускаем."
     }
   ],
   "expect": {
     "mutated": true,
-    "tools": ["skip"],
-    "forbidden_tools": ["set_reminder"]
+    "tools": [
+      "skip"
+    ],
+    "forbidden_tools": [
+      "set_reminder"
+    ]
   }
 }

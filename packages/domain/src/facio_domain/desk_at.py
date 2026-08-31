@@ -38,7 +38,6 @@ def render(desk: Desk, now: datetime) -> dict[str, Any]:
         desk.subjects,
         desk.instances,
         desk.widgets,
-        histories=desk.drift_asks,
     )
     horizon = slot_horizon(desk, origin=now.date())
     return {
@@ -46,6 +45,8 @@ def render(desk: Desk, now: datetime) -> dict[str, Any]:
         "today": [
             item.drift_card.model_dump(mode="json")
             if item.kind == "drift"
+            else item.delta_card.model_dump(mode="json")
+            if item.kind == "delta"
             else {
                 "band": item.band,
                 "widget_id": item.widget.id,
@@ -58,6 +59,7 @@ def render(desk: Desk, now: datetime) -> dict[str, Any]:
         "soon": [w.id for w in lid.soon],
         "postponed": [w.id for w in lid.postponed],
         "drift_card": lid.drift_card.model_dump(mode="json") if lid.drift_card else None,
+        "delta_card": lid.delta_card.model_dump(mode="json") if lid.delta_card else None,
         "horizon": horizon.model_dump(mode="json"),
     }
 

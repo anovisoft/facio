@@ -57,3 +57,63 @@ final class CueLawTests: XCTestCase {
         XCTAssertEqual(cue.media?.kind, "link")
     }
 }
+
+// MARK: - The tick renders what the law hands it
+
+/// 04: "A widget bound to a subject renders that subject's do-time cues.
+/// Cues that exist and are not shown mean the widget is broken (P9)."
+///
+/// CueLaw always answered `.tick` with a do-time cue; the tile had no field to
+/// put it in and the cell passed none, so a conclusion left on vegetables was
+/// invisible on the lid and on Use, and its hits never counted. These pin the
+/// wiring, since a view that silently drops a value cannot fail a law test.
+extension CueLawTests {
+    func testTickAsksTheLawForADoTimeCue() throws {
+        let cue = CueLaw.addCue(
+            id: "veg-cue",
+            subjectId: "vegetables",
+            kind: .correction,
+            text: "овощ в каждый приём",
+            surface: .doTime
+        )
+        let surfaced = CueLaw.surfaceCue(in: [cue], subjectId: "vegetables", widgetType: .tick)
+        XCTAssertEqual(surfaced?.id, "veg-cue")
+    }
+
+    func testTickTileTakesTheCueTheLawHandsIt() throws {
+        let cue = CueLaw.addCue(
+            id: "veg-cue",
+            subjectId: "vegetables",
+            kind: .correction,
+            text: "овощ в каждый приём",
+            surface: .doTime
+        )
+        let widget = Widget(
+            id: "vegetables-tick",
+            type: .tick,
+            title: "vegetables",
+            payload: WidgetPayload(),
+            status: .ready,
+            when: nil,
+            section: .today,
+            groupId: nil,
+            subjectId: "vegetables",
+            instanceId: "vegetables-open",
+            tileSize: .compact,
+            version: 1
+        )
+        // The initialiser is the contract this restores: the tile had no cue
+        // parameter at all, so this line did not compile and the conclusion a
+        // conversation left on vegetables was invisible at do-time.
+        let tile = TickTile(
+            widget: widget,
+            cue: cue,
+            onOpen: nil,
+            onToggle: nil,
+            onKebab: {},
+            onSurfaced: {}
+        )
+        XCTAssertEqual(tile.cue?.text, "овощ в каждый приём")
+        XCTAssertEqual(tile.widget.subjectId, cue.subjectId)
+    }
+}

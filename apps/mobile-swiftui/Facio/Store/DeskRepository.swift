@@ -21,6 +21,19 @@ struct DeskRepository: Sendable {
 
     private var snapshotURL: URL { directory.appending(path: "desk.json") }
     private var journalURL: URL { directory.appending(path: "journal.jsonl") }
+    private var dayZeroURL: URL { directory.appending(path: "day-zero.closed") }
+
+    /// Day zero happens once. The latch is a marker file next to `desk.json`
+    /// on purpose: `desk.json` is the wire shape the service also writes, and a
+    /// client-only "he has seen the chips" flag has no business travelling on it.
+    func dayZeroClosed() -> Bool {
+        FileManager.default.fileExists(atPath: dayZeroURL.path)
+    }
+
+    func closeDayZero() {
+        guard !dayZeroClosed() else { return }
+        try? Data().write(to: dayZeroURL, options: .atomic)
+    }
 
     func loadSnapshot() throws -> DeskSnapshot? {
         guard FileManager.default.fileExists(atPath: snapshotURL.path) else { return nil }
@@ -58,6 +71,25 @@ struct DeskRepository: Sendable {
             places.insert("\(widgetId)|\(place)")
         }
         return places
+    }
+
+    /// Subjects whose one clarity check (Q32) has already been spent. Read once
+    /// at launch, like the surfaced places above — asking again after a
+    /// relaunch would make the "one check" a habit.
+    func clarificationAskedSubjects() -> Set<String> {
+        guard FileManager.default.fileExists(atPath: journalURL.path),
+              let data = try? Data(contentsOf: journalURL),
+              let text = String(data: data, encoding: .utf8)
+        else { return [] }
+        var subjects: Set<String> = []
+        for line in text.split(whereSeparator: \.isNewline) {
+            guard let event = try? FacioJSON.decoder.decode(JournalEvent.self, from: Data(line.utf8)),
+                  event.type == .clarificationAsked,
+                  let subjectId = event.subjectId
+            else { continue }
+            subjects.insert(subjectId)
+        }
+        return subjects
     }
 
     func append(_ event: JournalEvent) throws {

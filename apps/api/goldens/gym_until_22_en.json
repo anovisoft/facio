@@ -1,0 +1,29 @@
+{
+  "id": "gym_until_22_en",
+  "utterance": "the gym shuts at 22",
+  "match": [
+    "the gym shuts at 22"
+  ],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "set_reminder",
+          "arguments": {
+            "subject_id": "bike",
+            "closes_at": "22:00"
+          }
+        }
+      ]
+    },
+    {
+      "text": "The gym shuts at 22. I will nudge you at 19:00, that leaves you time to get there."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": [
+      "set_reminder"
+    ]
+  }
+}

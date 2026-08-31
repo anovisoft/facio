@@ -1,0 +1,41 @@
+{
+  "id": "gym_no_clock_en",
+  "utterance": "put the gym on the desk",
+  "match": [
+    "put the gym on the desk"
+  ],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "create_widget",
+          "arguments": {
+            "type": "counter",
+            "title": "gym",
+            "subject_id": "gym",
+            "cadence": {
+              "count": 2,
+              "period": "week"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "text": "The gym is on the desk, twice a week. Is that how often you go, or more?"
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": [
+      "create_widget"
+    ],
+    "forbidden_tools": [
+      "set_reminder"
+    ],
+    "cadence": {
+      "count": 2,
+      "period": "week"
+    }
+  }
+}

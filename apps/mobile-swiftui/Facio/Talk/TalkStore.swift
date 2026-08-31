@@ -11,6 +11,9 @@ final class TalkStore {
     var sending: Bool = false
     var errorMessage: String?
     var focusedWidgetId: String?
+    /// Where the sheet should stand when it opens: the message the kebab
+    /// miniature was showing. Derived scroll target, never a stored chapter.
+    private(set) var anchorMessageId: String?
 
     private let repository: TalkRepository
     private let client: TalkClient
@@ -44,6 +47,15 @@ final class TalkStore {
         String(localized: "Что сюда на стол?", comment: "Composer placeholder")
     }
 
+    /// A day-0 chip puts its own words in the field and opens the sheet. It
+    /// must not send: 03-product leaves the first send to the person, and a
+    /// chip that talked for him would be a wizard, not a way in.
+    func startDraft(_ text: String) {
+        draft = text
+        errorMessage = nil
+        sheetOpen = true
+    }
+
     func appendUser(_ text: String) {
         let stamp = now()
         current.messages.append(.user(text, at: stamp))
@@ -59,23 +71,32 @@ final class TalkStore {
         return rows
     }
 
-    func lastBinding(subjectId: String) -> (thread: ChatThread, snapshot: ChatSnapshot)? {
-        let threads = [current] + archived
-        for thread in threads {
-            if let snapshot = thread.messages.reversed().compactMap(\.snapshot).first(where: { $0.subjectId == subjectId }) {
-                return (thread, snapshot)
-            }
-        }
-        return nil
+    var threads: [ChatThread] {
+        [current] + archived
     }
 
-    func open(threadId: String) {
+    /// The chat the kebab jumps to, and where inside it. The chapter is
+    /// derived here and nowhere else (04-domain-model).
+    func anchor(subjectId: String, instanceId: String, previous: TalkAnchor? = nil) -> TalkAnchor {
+        let thread = TalkAnchorLaw.thread(in: threads, current: current, subjectId: subjectId)
+        return TalkAnchorLaw.reanchor(previous: previous, thread: thread, instanceId: instanceId)
+    }
+
+    func thread(id: String) -> ChatThread? {
+        threads.first { $0.id == id }
+    }
+
+    /// Bring a thread forward and stand on a message inside it, **without
+    /// opening anything**. The kebab expands the talk where it stands, so it
+    /// needs the promotion without a second sheet arriving over the inspector.
+    @discardableResult
+    func promote(threadId: String, anchorMessageId: String? = nil) -> Bool {
+        self.anchorMessageId = anchorMessageId
         if current.id == threadId {
-            sheetOpen = true
             persist()
-            return
+            return true
         }
-        guard let index = archived.firstIndex(where: { $0.id == threadId }) else { return }
+        guard let index = archived.firstIndex(where: { $0.id == threadId }) else { return false }
         let chosen = archived.remove(at: index)
         if !current.messages.isEmpty {
             archived.insert(current, at: 0)
@@ -86,12 +107,18 @@ final class TalkStore {
         current = chosen
         draft = ""
         errorMessage = nil
-        sheetOpen = true
         persist()
+        return true
+    }
+
+    func open(threadId: String, anchorMessageId: String? = nil) {
+        guard promote(threadId: threadId, anchorMessageId: anchorMessageId) else { return }
+        sheetOpen = true
     }
 
     func newChat() {
         let stamp = now()
+        anchorMessageId = nil
         if current.messages.isEmpty {
             current.updatedAt = stamp
             persist()
@@ -108,10 +135,18 @@ final class TalkStore {
     }
 
     func send(desk: DeskSnapshot) async -> TalkTurnResponse? {
-        let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        await send(utterance: draft, desk: desk)
+    }
+
+    /// A line the person picked rather than typed — the «what does this mean?»
+    /// item on a selection, or the answer to the one clarity check. It lands in
+    /// the current thread as an ordinary reply, not as a second kind of message.
+    func send(utterance: String, desk: DeskSnapshot, selection: TalkSelection? = nil) async -> TalkTurnResponse? {
+        let text = utterance.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, !sending else { return nil }
         draft = ""
         errorMessage = nil
+        anchorMessageId = nil
         let stamp = now()
         let history = wireThread
         current.messages.append(.user(text, at: stamp))
@@ -124,6 +159,7 @@ final class TalkStore {
             desk: desk,
             thread: history,
             focusedWidgetId: focusedWidgetId,
+            selection: selection,
             threadId: current.id,
             now: stamp
         )
