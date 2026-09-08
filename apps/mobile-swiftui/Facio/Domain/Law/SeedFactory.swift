@@ -131,22 +131,32 @@ enum SeedFactory {
     /// in the carousel (`InstanceLaw.rebind`). Never copied — one practice, one
     /// tile (R17), and an old desk must not grow a widget a day.
     ///
-    /// Three things it refuses to do:
+    /// **S5: a tile is «already asking today» only when the case under it is
+    /// today's.** R19 read the widget alone — `ready` on Today — and an
+    /// untouched daily tile is exactly that on every later day while the case
+    /// beneath it still stands on the day it was written for. So the tile was
+    /// never rebound, and ticking it stamped that old case with «now»: two
+    /// days, two promises, one close, and the record said day one owed nothing
+    /// at all. The miss was erased in the person's favour, which is the one
+    /// direction this product may never round in.
     ///
-    /// * roll a tile that is **still asking today** — live, or closed today, or
-    ///   ready on Today. It is already the ask, and a second case would be two
-    ///   tiles of one practice. This is also why a desk nobody touched opens
-    ///   byte-identical on a later day.
-    /// * roll anything the person put down on purpose. Only a widget **closed
-    ///   on an earlier day** rolls; postponed, skipped and archived are states
-    ///   that were said out loud, and inferring a new day out of them is the
-    ///   opposite of «said, not inferred».
-    /// * touch a weekly promise. `occurrencesPromised` is a count **per day**,
-    ///   so `2×/week` is zero here and stays untouched: which weekday its tile
+    /// Yesterday is left exactly as yesterday ended it. A case that never
+    /// happened stays `prepared` **on its own day** — the same vocabulary R19
+    /// already writes for a group, where five untouched checks stay five
+    /// misses on the day they were missed.
+    ///
+    /// What it still refuses to roll:
+    ///
+    /// * a **live run**. The person is inside a set; resetting the payload
+    ///   would throw away a count they are holding (P6), and the run is the
+    ///   ask. Crossing midnight mid-set leaves that case where it started.
+    /// * anything the person put down on purpose — `snoozed` (postponed, and
+    ///   it may carry a day of its own) and `archived`. `skipped` is left here
+    ///   too, unchanged from R19: it is said out loud, and whether tomorrow
+    ///   asks again is a question for the PO, not a thing to infer.
+    /// * a weekly promise. `occurrencesPromised` is a count **per day**, so
+    ///   `2×/week` is zero here and stays untouched: which weekday its tile
     ///   lands on is not a thing the law may decide (Q26).
-    ///
-    /// Yesterday is left exactly as yesterday ended it — the closed case keeps
-    /// its date and its status, and the delta and the drift go on counting it.
     private static func rollOncePerDay(subject: Subject, in snapshot: DeskSnapshot, now: Date) -> DeskSnapshot {
         let candidates = snapshot.widgets.filter { widget in
             widget.subjectId == subject.id
@@ -154,20 +164,25 @@ enum SeedFactory {
                 && widget.type.showsOnLid
                 && widget.status != .archived
         }
-        guard !candidates.contains(where: { InstanceLaw.shouldClone(template: $0, now: now) }) else {
-            return snapshot
-        }
         var whenOf: [String: Date] = [:]
         for instance in snapshot.instances { whenOf[instance.id] = instance.when }
-        let closed = candidates
-            .filter { $0.status == .done && !InstanceLaw.isDoneToday($0, now: now) }
+        func stale(_ widget: Widget) -> Bool {
+            InstanceLaw.standsOnAnEarlierDay(caseWhen: whenOf[widget.instanceId], now: now)
+        }
+        // Occupied means occupied by **today**: a tile over an older case is
+        // yesterday's question still on the screen, not today's.
+        guard !candidates.contains(where: { !stale($0) && InstanceLaw.shouldClone(template: $0, now: now) })
+        else { return snapshot }
+        let rollable: Set<WidgetStatus> = [.ready, .done]
+        let standing = candidates
+            .filter { stale($0) && rollable.contains($0.status) }
             .max { lhs, rhs in
                 let left = whenOf[lhs.instanceId] ?? .distantPast
                 let right = whenOf[rhs.instanceId] ?? .distantPast
                 if left != right { return left < right }
                 return lhs.id < rhs.id
             }
-        guard let standing = closed,
+        guard let standing,
               let widgetIndex = snapshot.widgets.firstIndex(where: { $0.id == standing.id })
         else { return snapshot }
 

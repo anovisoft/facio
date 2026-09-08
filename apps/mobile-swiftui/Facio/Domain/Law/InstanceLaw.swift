@@ -6,6 +6,22 @@ enum InstanceLaw {
         return Calendar.current.isDate(when, inSameDayAs: now)
     }
 
+    /// Whether the case under this widget belongs to a day already over (S5).
+    ///
+    /// A tile drawn on Today is not necessarily *about* today. An untouched
+    /// daily tile keeps standing over the case it was written for, and on the
+    /// next day it is yesterday's question still on the screen. Telling the two
+    /// apart is the whole of «yesterday's miss stays yesterday's»: the case
+    /// that never happened is left `prepared` on its own day, and the tile is
+    /// rebound to ask about this one.
+    ///
+    /// Read from the **case**, never from the widget's own `when` — that field
+    /// is the closing stamp and is nil while a tile is merely ready.
+    static func standsOnAnEarlierDay(caseWhen: Date?, now: Date) -> Bool {
+        guard let caseWhen else { return false }
+        return SlotLaw.startOfDay(for: caseWhen) < SlotLaw.startOfDay(for: now)
+    }
+
     /// Clone a new Today tile when the template still occupies Today:
     /// a live run, or a done-today tile that must stay dim until midnight.
     static func shouldClone(template: Widget, now: Date) -> Bool {

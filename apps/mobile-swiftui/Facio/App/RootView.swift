@@ -105,6 +105,15 @@ struct RootView: View {
         .onChange(of: store.snapshot) { _, _ in
             sync?.syncSoon()
         }
+        // Midnight with the lid in front. `scenePhase` never fires then, so the
+        // top-up would not run and an untouched tile would go on asking
+        // yesterday's question — the one thing S5 exists to stop.
+        .onReceive(
+            NotificationCenter.default.publisher(for: .NSCalendarDayChanged)
+                .receive(on: RunLoop.main)
+        ) { _ in
+            store.ensureOccurrences()
+        }
         .onChange(of: scenePhase) { _, phase in
             // Coming back on a new day is the only thing that makes a case
             // missing (Q34), so the top-up rides the same wake-up as the sync.

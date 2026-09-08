@@ -212,20 +212,28 @@ final class OccurrenceRolloverTests: XCTestCase {
 
     // MARK: - a practice without a group is untouched
 
-    /// Contract 6. The daily tick and the weekly ride have their own way of
-    /// coming back (the standing widget is rebound, not multiplied), and the
-    /// rollover must not reach them.
-    func testAPracticeWithoutAGroupBehavesExactlyAsBefore() throws {
+    /// Contract 6. The group's rollover must not reach a practice that has no
+    /// group: the daily tick comes back by having its one tile **rebound**
+    /// (S5), and the weekly ride is not day-counted at all.
+    func testAPracticeWithoutAGroupIsNotMultipliedByTheGroupRollover() throws {
         let (first, repository) = try makeUpworkDesk(withReminder: true)
         let before = ungrouped(first.snapshot)
 
-        let second = try DeskStore(repository: repository, now: { self.day(1) })
-        XCTAssertEqual(ungrouped(second.snapshot).widgets, before.widgets)
-        XCTAssertEqual(ungrouped(second.snapshot).instances, before.instances)
-
-        let third = try DeskStore(repository: repository, now: { self.day(2) })
-        XCTAssertEqual(ungrouped(third.snapshot).widgets, before.widgets)
-        XCTAssertEqual(ungrouped(third.snapshot).instances, before.instances)
+        for offset in [1, 2] {
+            let later = try DeskStore(repository: repository, now: { self.day(offset) })
+            let now = ungrouped(later.snapshot)
+            // One widget each, on every day, and none of them acquires a group.
+            XCTAssertEqual(now.widgets.map(\.id), before.widgets.map(\.id), "day \(offset)")
+            XCTAssertTrue(now.widgets.allSatisfy { $0.groupId == nil }, "day \(offset)")
+            // The weekly promises are untouched, cases included (Q26).
+            for id in ["push-ups", "bike"] {
+                XCTAssertEqual(
+                    now.instances.filter { $0.subjectId == id },
+                    before.instances.filter { $0.subjectId == id },
+                    "\(id) on day \(offset)"
+                )
+            }
+        }
     }
 
     func testADailyTickIsStillOneWidgetOnTheThirdDay() throws {
@@ -236,15 +244,21 @@ final class OccurrenceRolloverTests: XCTestCase {
         let veg = third.snapshot.widgets.filter { $0.subjectId == "vegetables" }
         XCTAssertEqual(veg.count, 1)
         XCTAssertNil(veg.first?.groupId)
-        XCTAssertEqual(third.snapshot.instances.filter { $0.subjectId == "vegetables" }.count, 1)
+        // One tile, but one case per day it stood over: two of them never
+        // happened and stay `prepared` on their own day (S5).
+        let cases = third.snapshot.instances.filter { $0.subjectId == "vegetables" }
+        XCTAssertEqual(cases.count, 3)
+        XCTAssertTrue(cases.allSatisfy { $0.status == .prepared })
+        XCTAssertEqual(Set(cases.map { SlotLaw.dayKey($0.when) }).count, 3)
         // The weekly ones are not day-counted at all.
         XCTAssertEqual(third.snapshot.instances.filter { $0.subjectId == "push-ups" }.count, 1)
         XCTAssertEqual(third.snapshot.widgets.filter { $0.subjectId == "bike" }.count, 1)
     }
 
-    /// A desk written before Q34 has no `group_id` anywhere and must open and
-    /// draw exactly as it always did, on any day.
-    func testAnOldDeskWithoutGroupsOpensUnchangedOnALaterDay() throws {
+    /// A desk written before Q34 has no `group_id` anywhere and never grows
+    /// one: it opens on any later day with the same widgets it always had, and
+    /// nothing about it becomes a group.
+    func testAnOldDeskWithoutGroupsGrowsNoGroupOnALaterDay() throws {
         let now = day(0)
         var snapshot = try SeedFactory.buildSeed(now: now)
         snapshot.widgets = snapshot.widgets.map { widget in
@@ -256,8 +270,18 @@ final class OccurrenceRolloverTests: XCTestCase {
         try repository.saveSnapshot(snapshot)
         let opened = try DeskStore(repository: repository, now: { now })
         let later = try DeskStore(repository: repository, now: { self.day(3) })
-        XCTAssertEqual(later.snapshot, opened.snapshot)
         XCTAssertTrue(later.snapshot.widgets.allSatisfy { $0.groupId == nil })
+        XCTAssertEqual(later.snapshot.widgets.map(\.id).sorted(), opened.snapshot.widgets.map(\.id).sorted())
+        XCTAssertEqual(later.snapshot.subjects.map(\.id).sorted(), opened.snapshot.subjects.map(\.id).sorted())
+        // Only the daily practice's tile follows the day (S5); the weekly ones
+        // keep the single case they opened with.
+        for id in ["push-ups", "bike"] {
+            XCTAssertEqual(
+                later.snapshot.instances.filter { $0.subjectId == id },
+                opened.snapshot.instances.filter { $0.subjectId == id },
+                id
+            )
+        }
     }
 
     // MARK: - a day that closed owes the next one (R19's other half)
@@ -327,15 +351,124 @@ final class OccurrenceRolloverTests: XCTestCase {
         ), 1)
     }
 
-    /// A tile still standing on Today is not rolled: it is already the ask, and
-    /// a second one would be two tiles of one practice. This is also why an old
-    /// desk that nobody touched opens byte-identical on a later day.
-    func testAStandingTileIsNotRolled() throws {
+    // MARK: - yesterday's miss is not erased (S5)
+
+    /// This test used to assert the opposite — «a desk nobody touched opens
+    /// byte-identical on a later day» — and that sentence was the bug. An
+    /// untouched daily tile is `ready` on Today for ever, so R19 read it as
+    /// «already asking today» and never rebound it; the case underneath went on
+    /// standing on the day it was written for.
+    func testAnUntouchedDailyTileAsksAboutTodayAndNotAboutYesterday() throws {
         let repository = try makeSeedRepository()
-        let opened = try DeskStore(repository: repository, now: { self.day(0) })
-        let before = opened.snapshot
-        let later = try DeskStore(repository: repository, now: { self.day(2) })
-        XCTAssertEqual(later.snapshot, before)
+        let first = try DeskStore(repository: repository, now: { self.day(0) })
+        let yesterdaysCase = try XCTUnwrap(
+            first.snapshot.instances.first { $0.subjectId == "vegetables" }
+        )
+
+        let second = try DeskStore(repository: repository, now: { self.day(1) })
+        let tiles = second.snapshot.widgets.filter { $0.subjectId == "vegetables" }
+        XCTAssertEqual(tiles.count, 1, "one practice, one tile — rebound, never copied")
+        let tile = try XCTUnwrap(tiles.first)
+        XCTAssertEqual(tile.status, .ready)
+        XCTAssertNotEqual(tile.instanceId, yesterdaysCase.id)
+        let standing = try XCTUnwrap(second.snapshot.instances.first { $0.id == tile.instanceId })
+        XCTAssertTrue(SlotLaw.isSameDay(standing.when, day(1)))
+
+        // Yesterday keeps its own case, exactly as yesterday left it: promised,
+        // never closed. That is what a miss looks like on this desk (R19).
+        let stale = try XCTUnwrap(second.snapshot.instances.first { $0.id == yesterdaysCase.id })
+        XCTAssertEqual(stale, yesterdaysCase)
+        XCTAssertEqual(stale.status, .prepared)
+    }
+
+    /// The whole point, in the shape the PO named it: ticking the tile today
+    /// must not reach back and stamp yesterday's promise with «now».
+    func testTickingTodayDoesNotEraseYesterdaysMiss() throws {
+        let repository = try makeSeedRepository()
+        let first = try DeskStore(repository: repository, now: { self.day(0) })
+        let missed = try XCTUnwrap(first.snapshot.instances.first { $0.subjectId == "vegetables" })
+
+        let second = try DeskStore(repository: repository, now: { self.day(1) })
+        second.toggleTick(widgetId: "vegetables-tick")
+
+        let cases = second.snapshot.instances.filter { $0.subjectId == "vegetables" }
+        XCTAssertEqual(cases.count, 2)
+        let stillMissed = try XCTUnwrap(cases.first { $0.id == missed.id })
+        XCTAssertEqual(stillMissed.status, .prepared)
+        XCTAssertTrue(SlotLaw.isSameDay(stillMissed.when, day(0)))
+        let closed = try XCTUnwrap(cases.first { $0.id != missed.id })
+        XCTAssertEqual(closed.status, .completed)
+        XCTAssertTrue(SlotLaw.isSameDay(closed.when, day(1)))
+
+        // Two days, two promises, one close. The arithmetic has to say so on
+        // both days — before S5 day 0 read as one done out of one.
+        let veg = try XCTUnwrap(second.subject(id: "vegetables"))
+        XCTAssertEqual(MorningLaw.doneInPeriod(veg, instances: second.snapshot.instances, now: day(0)), 0)
+        XCTAssertEqual(MorningLaw.doneInPeriod(veg, instances: second.snapshot.instances, now: day(1)), 1)
+    }
+
+    /// A set in progress is not rolled. Crossing midnight mid-run would reset
+    /// the payload and throw away a count the person is holding (P6), and the
+    /// run is itself the ask.
+    func testALiveRunIsNotRolledAcrossMidnight() throws {
+        let repository = try makeDailyCounterRepository()
+        let first = try DeskStore(repository: repository, now: { self.day(0) })
+        first.tickCounter(widgetId: "squats-counter", delta: 1)
+        let running = try XCTUnwrap(first.widget(id: "squats-counter"))
+        XCTAssertEqual(running.status, .running)
+
+        let second = try DeskStore(repository: repository, now: { self.day(1) })
+        let still = try XCTUnwrap(second.widget(id: "squats-counter"))
+        XCTAssertEqual(still.instanceId, running.instanceId)
+        XCTAssertEqual(still.payload.count, running.payload.count)
+        XCTAssertEqual(second.snapshot.instances.filter { $0.subjectId == "squats" }.count, 1)
+    }
+
+    /// Postponed was said out loud and may carry a day of its own, so the roll
+    /// leaves it alone — the same line R19 took.
+    func testAPostponedTileIsNotRolled() throws {
+        let repository = try makeSeedRepository()
+        let first = try DeskStore(repository: repository, now: { self.day(0) })
+        XCTAssertTrue(first.postpone(subjectId: "vegetables"))
+        let before = first.snapshot.instances.filter { $0.subjectId == "vegetables" }
+
+        let second = try DeskStore(repository: repository, now: { self.day(1) })
+        XCTAssertEqual(second.snapshot.instances.filter { $0.subjectId == "vegetables" }, before)
+        XCTAssertEqual(second.widget(id: "vegetables-tick")?.status, .snoozed)
+    }
+
+    /// A daily counter of its own, because the founding seed's daily practice
+    /// is a tick and a tick has no running state to leave open.
+    private func makeDailyCounterRepository() throws -> DeskRepository {
+        let now = day(0)
+        var snapshot = try SeedFactory.buildSeed(now: now)
+        snapshot.subjects.append(
+            Subject(
+                id: "squats",
+                title: "приседания",
+                cadence: try Cadence.of(count: 1, period: .day),
+                instanceIds: ["squats-open"]
+            )
+        )
+        snapshot.instances.append(
+            Instance(id: "squats-open", subjectId: "squats", when: now, status: .prepared)
+        )
+        snapshot.widgets.append(
+            Widget(
+                id: "squats-counter",
+                type: .counter,
+                title: "приседания",
+                payload: WidgetPayload(count: 0, target: 20),
+                status: .ready,
+                section: .today,
+                subjectId: "squats",
+                instanceId: "squats-open",
+                tileSize: .compact
+            )
+        )
+        let repository = try makeRepository()
+        try repository.saveSnapshot(snapshot)
+        return repository
     }
 
     /// Only a promise counted **per day** rolls. A weekly one is silent here on
