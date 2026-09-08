@@ -63,6 +63,38 @@ final class InspectStripTests: XCTestCase {
         XCTAssertTrue(listed.contains { $0.id == selected?.id })
     }
 
+    // MARK: - the chips of one day are told apart (S6)
+
+    /// Three checks of one day gave three chips all reading «30 авг.». The
+    /// carousel solved this in R18 — the hour replaces the date when the day
+    /// holds more than one case — and Inspect kept its own date formatter, so
+    /// the fix never reached it. Same law, both surfaces.
+    func testChipsOfOneDayReadTheirHoursAndNotTheSameDate() throws {
+        let store = try makeDesk(checksADay: 3, withReminder: true)
+        let listed = store.occurrenceInstances(for: subjectId)
+        let captions = listed.map { InstanceFaceLaw.slotCaption($0, among: listed) }
+
+        XCTAssertEqual(Set(captions).count, listed.count, "three chips, three names")
+        XCTAssertEqual(captions.sorted(), ["10:00", "15:00", "18:00"])
+        // VoiceOver keeps the day: the chip is short, the spoken label is not.
+        let spoken = listed.map { InstanceFaceLaw.slotSpokenDate($0, among: listed) }
+        XCTAssertTrue(spoken.allSatisfy { $0.contains(DisplayCopy.loudDate(stamp)) })
+        XCTAssertEqual(Set(spoken).count, listed.count)
+    }
+
+    /// A practice with one case a day says the date, exactly as before — the
+    /// hour is the tie-breaker, not a new format.
+    func testAloneOnItsDayAChipStillSaysTheDate() throws {
+        let store = try makeDesk(checksADay: 1, withReminder: false)
+        let listed = store.occurrenceInstances(for: subjectId)
+
+        XCTAssertEqual(listed.count, 1)
+        XCTAssertEqual(
+            InstanceFaceLaw.slotCaption(try XCTUnwrap(listed.first), among: listed),
+            DisplayCopy.chipDate(stamp)
+        )
+    }
+
     // MARK: -
 
     private let subjectId = "upwork"

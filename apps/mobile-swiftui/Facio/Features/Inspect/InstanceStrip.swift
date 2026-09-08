@@ -1,5 +1,12 @@
 import SwiftUI
 
+/// The chips over the 7-day calendar: one per case of this practice.
+///
+/// The caption is the carousel's own (`InstanceFaceLaw.slotCaption`), not a
+/// second date formatter. Q34 put several cases on one day, and a strip that
+/// only ever says the date turned three of them into three chips reading «8
+/// сент.» — the same unreadable row the carousel had before R18 gave it the
+/// hour. One rule, two readers.
 struct InstanceStrip: View {
     let instances: [Instance]
     @Binding var selectedId: String
@@ -13,7 +20,7 @@ struct InstanceStrip: View {
                     Button {
                         selectedId = instance.id
                     } label: {
-                        Text(DisplayCopy.chipDate(instance.when))
+                        Text(InstanceFaceLaw.slotCaption(instance, among: instances))
                             .font(.caption.weight(.semibold))
                             .lineLimit(1)
                             .padding(.horizontal, 10)
@@ -25,7 +32,7 @@ struct InstanceStrip: View {
                         Capsule()
                             .fill(selected ? Color.primary.opacity(0.12) : Color.primary.opacity(0.05))
                     )
-                    .accessibilityLabel(DisplayCopy.loudDate(instance.when))
+                    .accessibilityLabel(InstanceFaceLaw.slotSpokenDate(instance, among: instances))
                     .accessibilityAddTraits(selected ? .isSelected : [])
                 }
                 Button(action: onAdd) {
