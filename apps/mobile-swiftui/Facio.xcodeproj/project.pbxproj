@@ -33,6 +33,7 @@
 		1D6C0D73D2B773C10F6FB200 /* InstanceStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09B49E7140B92D3E9AA464AE /* InstanceStatus.swift */; };
 		21AC83ABBF8649906CCC1EDD /* InspectHorizonStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3693462B6CCAC151794970E /* InspectHorizonStrip.swift */; };
 		2223C5A14CA51B15305FA20E /* KebabInspectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2933B8EDC13E91A009C7374B /* KebabInspectorTests.swift */; };
+		23DA70F30FF14F9B49626E32 /* OccurrenceRolloverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 561D7D5BDEFC0D5682F7235B /* OccurrenceRolloverTests.swift */; };
 		25BFF7A3B7E47419AFE23BD4 /* InstanceLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FD625BD89099DBE924C2B9D /* InstanceLaw.swift */; };
 		2620E8E19C3F613A95C0EE9A /* TimerUseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F57F3917ABB4141E8C40B20C /* TimerUseView.swift */; };
 		26DE8D94FF2F163FB22C63B2 /* StepperLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7076D725555E30FF540EB29B /* StepperLaw.swift */; };
@@ -260,6 +261,7 @@
 		5321A8600DA0169C882C0AAD /* CueHits.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueHits.swift; sourceTree = "<group>"; };
 		559285BC5F59A45A7680C309 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
 		56186C97AB845D23001563F3 /* CueLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueLawTests.swift; sourceTree = "<group>"; };
+		561D7D5BDEFC0D5682F7235B /* OccurrenceRolloverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OccurrenceRolloverTests.swift; sourceTree = "<group>"; };
 		575EABA05F53B43F23160681 /* WidgetPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPayload.swift; sourceTree = "<group>"; };
 		578540D27D96F1CDD2384EBB /* TimerLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerLawTests.swift; sourceTree = "<group>"; };
 		5A65D9FE0EF09D2A8481ED7B /* CueKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueKind.swift; sourceTree = "<group>"; };
@@ -557,6 +559,7 @@
 				62CDF841D69D1101DC6F6D8C /* ModelTests.swift */,
 				CCDB99B68CC5F0AD49351926 /* MorningLawTests.swift */,
 				29F56F91DD00AA482CDF5017 /* OccurrenceHourTests.swift */,
+				561D7D5BDEFC0D5682F7235B /* OccurrenceRolloverTests.swift */,
 				EF759EC20176305D88E7A1C7 /* OccurrenceStoreTests.swift */,
 				360413F490CB306BB68500A5 /* PackLawTests.swift */,
 				DB6CF10F8A46994C86FE0B08 /* PainLawTests.swift */,
@@ -874,6 +877,7 @@
 				CBA06C3A5C7845636196F10A /* ModelTests.swift in Sources */,
 				A79E64FD194EDD1325F21828 /* MorningLawTests.swift in Sources */,
 				BE5940CDB4F8A883073566EF /* OccurrenceHourTests.swift in Sources */,
+				23DA70F30FF14F9B49626E32 /* OccurrenceRolloverTests.swift in Sources */,
 				F148FD74674E15698F9450F1 /* OccurrenceStoreTests.swift in Sources */,
 				885E0C15BF71F5E736ADCF66 /* PackLawTests.swift in Sources */,
 				C02AB68F2948B995641C037F /* PainLawTests.swift in Sources */,

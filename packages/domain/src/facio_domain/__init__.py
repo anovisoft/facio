@@ -37,6 +37,7 @@ from facio_domain.groups import (
     says_every_hour,
 )
 from facio_domain.lid import (
+    belongs_to_a_closed_day,
     lid_projection,
     reminder_shadowed_by_group,
     widget_rank_band,
@@ -140,6 +141,7 @@ __all__ = [
     "answers_the_ladder",
     "apply_tool",
     "ask_period_days",
+    "belongs_to_a_closed_day",
     "build_beats",
     "build_checklist_items",
     "build_seconds",
