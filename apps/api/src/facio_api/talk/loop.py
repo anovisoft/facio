@@ -231,7 +231,17 @@ async def run_turn(
     # the answer the person is owed is the one written to *them*, before we
     # interrupted. With a write it is the other way round — the later sentence
     # is the one that knows what landed.
-    if not records and text_before_nudge:
+    #
+    # The test is **a write**, not «a tool ran». It used to read `not records`,
+    # which counts any call at all, and half the tool block writes nothing:
+    # `list_desk`, `get_subject`, `list_cues`, and now `search_facts` and
+    # `offer_chips` — the last of which the prompt actively asks for before a
+    # question. A turn that chatted, got nudged, looked something up and then
+    # said «Понял, ничего не записываю» handed that sentence to the person and
+    # threw away the answer they were owed. Same shape the PO saw on the phone
+    # as «Напомню в эти семь часов». A failed write is not a write either:
+    # nothing landed, so nothing knows better than the sentence written to them.
+    if not mutated and text_before_nudge:
         text = text_before_nudge
     text = _human_text(text, mutated=mutated, locale=body.locale)
     cards = [SnapshotCard.model_validate(row) for row in snapshot_cards(desk, snapshot_ids)] if mutated else []

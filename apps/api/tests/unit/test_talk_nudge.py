@@ -197,3 +197,76 @@ async def test_leaked_rules_fall_back_in_english() -> None:
     assert result.mutated is False
     assert "tool_call" not in result.text
     assert result.text == "I would put that on the desk — say it once more, shorter."
+
+
+async def test_a_read_only_round_does_not_steal_the_answer_written_before_the_nudge() -> None:
+    """The mine, held against tools that write nothing.
+
+    Half the tool block is read-only, and the prompt now asks for one of them —
+    `search_facts` — before asking the person anything. So the ordinary shape of
+    a chatty turn became: text, nudge, a lookup, and a second sentence written
+    to *us* («ничего не записываю»). The person is owed the first sentence.
+    """
+    provider = SequenceProvider(
+        [
+            ModelTurn(text="Ты уже это записывал: держи корпус и ягодицы."),
+            ModelTurn(text=None, tool_calls=[_search_call()]),
+            ModelTurn(text="Понял, ничего не записываю."),
+        ]
+    )
+    result = await run_turn(_request("что там было про поясницу?"), provider, now=NOW)
+
+    assert result.mutated is False
+    assert result.text == "Ты уже это записывал: держи корпус и ягодицы."
+    assert [row.name for row in result.tool_calls] == ["search_facts"]
+
+
+async def test_an_offered_chip_row_does_not_steal_it_either() -> None:
+    """Q35's own shape: the turn asks, gets nudged, offers a row, and then
+    writes a sentence about not writing. The row rides out with the answer.
+
+    Bound through the widget the composer stands over, because a chip row needs
+    a binding (03) — and what that costs the founding case is a separate
+    finding, not something this test should paper over.
+    """
+    provider = SequenceProvider(
+        [
+            ModelTurn(text="Сейчас уже 21 — сегодня в 19 напомнить поздно."),
+            ModelTurn(text=None, tool_calls=[_chips_call()]),
+            ModelTurn(text="Ок, ничего не меняю."),
+        ]
+    )
+    body = _request("напомни в 19")
+    body.focused_widget_id = "bike-reminder"
+    result = await run_turn(body, provider, now=NOW)
+
+    assert result.text == "Сейчас уже 21 — сегодня в 19 напомнить поздно."
+    assert result.reply_chips == ["Напомни завтра"]
+
+
+async def test_a_write_still_gets_the_last_word() -> None:
+    """The other half of the rule, unchanged: something landed, so the sentence
+    that knows what landed is the one the person reads."""
+    provider = SequenceProvider(
+        [
+            ModelTurn(text="Могу записать."),
+            ModelTurn(text=None, tool_calls=[_add_cue_call()]),
+            ModelTurn(text="Записал на отжимания."),
+        ]
+    )
+    result = await run_turn(_request("держи корпус"), provider, now=NOW)
+
+    assert result.mutated is True
+    assert result.text == "Записал на отжимания."
+
+
+def _search_call() -> ModelToolCall:
+    return ModelToolCall(id="call_search", name="search_facts", arguments={"query": "поясница"})
+
+
+def _chips_call() -> ModelToolCall:
+    return ModelToolCall(
+        id="call_chips",
+        name="offer_chips",
+        arguments={"chips": ["Напомни завтра"]},
+    )
