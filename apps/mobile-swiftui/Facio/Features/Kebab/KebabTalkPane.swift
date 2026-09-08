@@ -92,9 +92,12 @@ struct KebabTalkPane: View {
                 onAskAboutPhrase: { TalkActions.ask(quote: $0, talk: talk, desk: store) }
             )
             .safeAreaInset(edge: .bottom) {
-                TalkComposerBar(talk: talk, focused: $composerFocused) {
-                    Task { await TalkActions.send(talk: talk, desk: store) }
-                }
+                TalkComposerBar(
+                    talk: talk,
+                    focused: $composerFocused,
+                    onSend: { Task { await TalkActions.send(talk: talk, desk: store) } },
+                    onChip: { TalkActions.send(chip: $0, talk: talk, desk: store) }
+                )
             }
         }
         .transition(.asymmetric(insertion: Self.threadIn, removal: Self.pictureOut))

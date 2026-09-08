@@ -109,12 +109,28 @@ struct TalkThreadScroll: View {
     }
 }
 
+/// The row of ready replies, and the field. One view, so every way into the
+/// talk — the sheet from the lid dock, the kebab expanded in place — gets the
+/// row in the one position 03 puts it: **above the composer**, never inside it.
 struct TalkComposerBar: View {
     @Bindable var talk: TalkStore
     var focused: FocusState<Bool>.Binding
     var onSend: () -> Void
+    /// A chip tapped. It sends that text as the person's own reply, which is
+    /// the whole of what a chip is (Q35) — so the caller hands over the same
+    /// action typing would take, and nothing chip-shaped exists downstream.
+    var onChip: (String) -> Void = { _ in }
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ReplyChipsRow(chips: talk.replyChips, disabled: talk.sending, onTap: onChip)
+            field
+        }
+        .padding(.horizontal, FacioPalette.pagePadding)
+        .padding(.bottom, 8)
+    }
+
+    private var field: some View {
         HStack(alignment: .center, spacing: 8) {
             TextField(talk.placeholder, text: $talk.draft)
                 .font(.body)
@@ -133,8 +149,54 @@ struct TalkComposerBar: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .facioGlass()
-        .padding(.horizontal, FacioPalette.pagePadding)
-        .padding(.bottom, 8)
+    }
+}
+
+/// Q35. One to three sentences the person is about to say, offered by the turn
+/// that is on screen.
+///
+/// A chip is **text**: tapping it sends that sentence as their own reply and
+/// the turn proceeds like any typed one. There is no id here and no action —
+/// the moment a chip carries one it stops being a shortcut through typing and
+/// becomes a button that decides for them (06 AI #2).
+///
+/// It scrolls rather than wraps: three sentences can be long in either
+/// language, and a row that grows to two lines pushes the field down the screen
+/// as the answer arrives. Sizing follows the drift chips and day-0 chips —
+/// system capsules, height 32, hugging their text — because a fourth kind of
+/// chip is a fourth thing to recognise.
+struct ReplyChipsRow: View {
+    let chips: [String]
+    var disabled: Bool = false
+    let onTap: (String) -> Void
+
+    var body: some View {
+        if !chips.isEmpty {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(chips, id: \.self) { chip in
+                        Button {
+                            onTap(chip)
+                        } label: {
+                            Text(chip)
+                                .font(.subheadline.weight(.semibold))
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .frame(maxWidth: 200)
+                        }
+                        .accessibilityLabel(chip)
+                        .controlSize(.small)
+                        .buttonStyle(.bordered)
+                        .buttonBorderShape(.capsule)
+                        .frame(height: 32)
+                        .fixedSize(horizontal: true, vertical: false)
+                        .disabled(disabled)
+                    }
+                }
+                .padding(.horizontal, 2)
+            }
+            .scrollClipDisabled()
+        }
     }
 }
 
@@ -267,6 +329,17 @@ enum TalkActions {
     static func send(talk: TalkStore, desk: DeskStore) async {
         if let response = await talk.send(desk: desk.snapshot) {
             desk.applyTalk(response.desk, toolCalls: response.toolCalls, turn: talk.lastTurn)
+        }
+    }
+
+    /// A chip tapped, which is the person replying in their own words — the
+    /// same path `send` takes, on purpose. If a chip ever needed its own route
+    /// through the client it would have stopped being a reply.
+    static func send(chip: String, talk: TalkStore, desk: DeskStore) {
+        Task {
+            if let response = await talk.send(utterance: chip, desk: desk.snapshot) {
+                desk.applyTalk(response.desk, toolCalls: response.toolCalls, turn: talk.lastTurn)
+            }
         }
     }
 

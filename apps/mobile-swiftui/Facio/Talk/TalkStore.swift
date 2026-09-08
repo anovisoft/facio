@@ -17,6 +17,13 @@ final class TalkStore {
     /// Where the turn that just came back landed in the thread. The desk needs
     /// it to hang its one step back on the snapshot the person is looking at.
     private(set) var lastTurn: TalkTurnRef?
+    /// The row over the composer, offered by the turn that is on screen (Q35).
+    /// **It lives for one turn.** The next reply — tapped or typed — clears it
+    /// before it is sent, so a chip can never answer a question two turns old,
+    /// and a row that outlived its turn would be a control panel over the
+    /// field. Not persisted for the same reason: reopening a thread tomorrow
+    /// must not hand back yesterday's offer.
+    private(set) var replyChips: [String] = []
 
     private let repository: TalkRepository
     private let client: TalkClient
@@ -56,6 +63,7 @@ final class TalkStore {
     func startDraft(_ text: String) {
         draft = text
         errorMessage = nil
+        replyChips = []
         sheetOpen = true
     }
 
@@ -116,12 +124,17 @@ final class TalkStore {
 
     func open(threadId: String, anchorMessageId: String? = nil) {
         guard promote(threadId: threadId, anchorMessageId: anchorMessageId) else { return }
+        // Opening an old talk from the pan must not hand back the offer that
+        // belonged to whatever was on screen a moment ago.
+        replyChips = []
         sheetOpen = true
     }
 
     func newChat() {
         let stamp = now()
         anchorMessageId = nil
+        // The row answered a question in the thread being left behind.
+        replyChips = []
         if current.messages.isEmpty {
             current.updatedAt = stamp
             persist()
@@ -148,6 +161,10 @@ final class TalkStore {
         let text = utterance.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, !sending else { return nil }
         draft = ""
+        // Cleared before the turn goes out, not after it comes back: the row
+        // belongs to the question that is now answered, and leaving it up while
+        // the answer is in flight invites a second tap on a settled matter.
+        replyChips = []
         errorMessage = nil
         anchorMessageId = nil
         let stamp = now()
@@ -177,6 +194,7 @@ final class TalkStore {
                 current.messages.append(.snapshot(card, at: done, turnId: turnId))
             }
             current.updatedAt = done
+            replyChips = response.replyChips
             lastTurn = TalkTurnRef(threadId: current.id, turnId: turnId)
             persist()
             return response

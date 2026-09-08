@@ -199,6 +199,10 @@ struct TalkTurnResponse: Decodable, Sendable, Equatable {
     var snapshots: [ChatSnapshot]
     var toolCalls: [TalkToolCall]
     var threadId: String?
+    /// The row over the composer (Q35). Plain sentences and nothing else: a
+    /// chip carrying an id or an action would be a button that decides for the
+    /// person, and tapping one here does exactly what typing it does.
+    var replyChips: [String]
 
     enum CodingKeys: String, CodingKey {
         case text
@@ -207,6 +211,7 @@ struct TalkTurnResponse: Decodable, Sendable, Equatable {
         case snapshots
         case toolCalls = "tool_calls"
         case threadId = "thread_id"
+        case replyChips = "reply_chips"
     }
 
     init(
@@ -215,7 +220,8 @@ struct TalkTurnResponse: Decodable, Sendable, Equatable {
         mutated: Bool,
         snapshots: [ChatSnapshot] = [],
         toolCalls: [TalkToolCall] = [],
-        threadId: String? = nil
+        threadId: String? = nil,
+        replyChips: [String] = []
     ) {
         self.text = text
         self.desk = desk
@@ -223,6 +229,7 @@ struct TalkTurnResponse: Decodable, Sendable, Equatable {
         self.snapshots = snapshots
         self.toolCalls = toolCalls
         self.threadId = threadId
+        self.replyChips = replyChips
     }
 
     init(from decoder: Decoder) throws {
@@ -233,5 +240,8 @@ struct TalkTurnResponse: Decodable, Sendable, Equatable {
         snapshots = try container.decodeIfPresent([ChatSnapshot].self, forKey: .snapshots) ?? []
         toolCalls = try container.decodeIfPresent([TalkToolCall].self, forKey: .toolCalls) ?? []
         threadId = try container.decodeIfPresent(String.self, forKey: .threadId)
+        // Absent from a service written before Q35, and absent from most turns
+        // even now: no row is the ordinary case, not a degraded one.
+        replyChips = try container.decodeIfPresent([String].self, forKey: .replyChips) ?? []
     }
 }
