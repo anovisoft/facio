@@ -1,4 +1,11 @@
-"""Live-only: skip unless opted in; build a live provider from env keys."""
+"""Live-only fixtures: build a live provider from env keys.
+
+The opt-in gate itself moved to `tests/conftest.py`. It used to live here, and
+a `live` marker outside this directory was therefore not gated at all — it
+simply ran, on a machine whose `.env` holds a working key. CI fails the build
+if a live test executes, so the hole was one misplaced file away from being
+found the expensive way.
+"""
 
 from __future__ import annotations
 
@@ -22,25 +29,14 @@ from facio_api.talk.schemas import (
     ThreadMessage,
 )
 from support.live import (
-    LIVE_OPT_IN_REASON,
     force_live,
     live_env_files,
-    live_opted_in,
     skip_without_vendor_key,
 )
 
 NOW = datetime(2026, 8, 15, 12, 0, 0)
 
 LivePlay = Callable[..., Coroutine[Any, Any, TalkTurnResponse]]
-
-
-def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    if live_opted_in(config):
-        return
-    skip = pytest.mark.skip(reason=LIVE_OPT_IN_REASON)
-    for item in items:
-        if item.get_closest_marker("live"):
-            item.add_marker(skip)
 
 
 @pytest.fixture
