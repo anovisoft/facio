@@ -6,6 +6,9 @@ struct InspectScreen: View {
 
     @Environment(DeskStore.self) private var store
     @State private var selectedId: String
+    /// Inspect's `+` is the same `+` (R18): a practice that states hours is
+    /// asked which one, through the same wheels Use opens.
+    @State private var hourEdit: ReminderTimeEdit?
 
     init(subjectId: String, instanceId: String) {
         self.subjectId = subjectId
@@ -74,9 +77,24 @@ struct InspectScreen: View {
                 selectedId = ids.last ?? instanceId
             }
         }
+        .sheet(item: $hourEdit) { edit in
+            ReminderTimePickerSheet(edit: edit) { clock in
+                if let landed = store.addHour(subjectId: subjectId, clock: clock) {
+                    selectedId = landed
+                }
+            }
+        }
     }
 
     private func add() {
+        if let group = store.hourGroup(subjectId: subjectId) {
+            hourEdit = ReminderTimeEdit(
+                id: subjectId,
+                window: group.window,
+                start: ReminderClock.nextHour(window: group.window, now: Date())
+            )
+            return
+        }
         if let created = store.addInstance(subjectId: subjectId) {
             selectedId = created
         }

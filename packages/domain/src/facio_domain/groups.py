@@ -29,6 +29,7 @@ from facio_domain.models import (
     Widget,
     WidgetStatus,
     WidgetType,
+    Window,
 )
 
 GROUP_SEPARATOR = ":"
@@ -149,6 +150,33 @@ def next_hour(marks: Sequence[GroupMark], now: datetime) -> time | None:
     if open_marks:
         return open_marks[0].hour
     return None
+
+
+def says_every_hour(face: GroupFace, window: Window | None) -> bool:
+    """Whether the group already names every hour this practice stands on.
+
+    A reminder tile draws the subject's **window** — the nearest hour large and
+    the rest of them small — so when the marks of the group carry those same
+    hours, the two tiles say one thing twice and the lid is a second inventory
+    (P10). That is the whole test: not "is there a group", but "does the group
+    already say it".
+
+    The distinction is not academic. Hours land on occurrences only when the
+    window names exactly as many as there are checks (R16) — with three hours
+    against seven checks the cases all stand at the moment they were made, and
+    then the reminder is the only place «15:30 · 18:00 · 22:00» is written down.
+    Losing it would cost the person the hours, so this returns `False` and both
+    tiles stay.
+
+    A practice with no window states no hour at all, so nothing here can be
+    proven to be a repeat of it.
+    """
+    if window is None:
+        return False
+    stated = {mark.hour for mark in face.marks}
+    if None in stated:
+        return False
+    return set(window.hours) <= stated
 
 
 def _hour_of(widget: Widget, when_of: dict[str, datetime]) -> time | None:

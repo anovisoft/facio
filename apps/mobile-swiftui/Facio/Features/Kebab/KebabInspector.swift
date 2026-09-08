@@ -11,6 +11,13 @@ import SwiftUI
 /// from its 3×4 box into the whole sheet, and the sheet itself takes its taller
 /// detent so a pull upward arrives somewhere instead of bouncing back. Nothing
 /// closes and nothing else opens: the second sheet was the break in perception.
+///
+/// Expanded it stops being a card at all (R18). R11 kept the pane's own border,
+/// corner radius and outer inset all the way to the top, so the finished state
+/// read as a sheet standing on a sheet — two edges, two surfaces. The card's
+/// chrome now fades out **along the same animation that carries the size**, and
+/// the pane lands flush against the sheet: one surface, one top edge, one grab
+/// handle.
 struct KebabInspector: View {
     let subjectId: String
     var onInspect: (String, String) -> Void
@@ -23,16 +30,23 @@ struct KebabInspector: View {
     @State private var anchor: TalkAnchor?
     @State private var confirmingRemoval = false
     @State private var expanded = false
+    /// 0 — a card inside the inspector, 1 — the sheet itself. A separate number
+    /// from `expanded` on purpose: a `Bool` cannot be interpolated, so a border
+    /// and a corner radius read off it would snap at the end of the gesture
+    /// instead of going out with the movement.
+    @State private var expansion: CGFloat = 0
     @State private var detent: PresentationDetent = Self.restingDetent
     /// Where the miniature sits when the inspector is whole. The growing card
     /// is placed by hand between this rect and the full sheet, so both its
     /// width and its height carry the motion.
     @State private var restingRect: CGRect = .zero
+    /// The hour wheels — the same sheet Use opens, never a second picker.
+    @State private var hourEdit: ReminderTimeEdit?
 
     private static let restingDetent: PresentationDetent = .fraction(0.9)
     private static let space = "kebab"
-    /// Room for the sheet's own grab handle above the expanded card.
-    private static let expandedTop: CGFloat = 22
+    /// `+` has no case to stand on yet, so it names the sheet instead.
+    private static let addHourId = "hour-add"
 
     init(
         subjectId: String,
@@ -57,6 +71,7 @@ struct KebabInspector: View {
                     KebabTalkPane(
                         messages: previewMessages,
                         expanded: expanded,
+                        expansion: expansion,
                         onExpand: expand,
                         onCollapse: collapse,
                         onOpenSnapshot: onOpenSnapshot
@@ -69,6 +84,11 @@ struct KebabInspector: View {
         }
         .presentationDetents([Self.restingDetent, .large], selection: $detent)
         .presentationDragIndicator(.visible)
+        .sheet(item: $hourEdit) { edit in
+            ReminderTimePickerSheet(edit: edit) { clock in
+                saveHour(edit, clock: clock)
+            }
+        }
         // Dragging the sheet is the same gesture as swiping the chat region:
         // reaching the taller detent opens the talk, dropping back to the
         // resting one puts the miniature back.
@@ -113,11 +133,13 @@ struct KebabInspector: View {
                     Text(selected.map { DisplayCopy.loudDate($0.when) } ?? "")
                         .font(.headline)
                         .foregroundStyle(.secondary)
+                    hourRow
                     InstanceCarousel(
                         instances: instances,
                         now: now,
                         selectedId: $selectedId,
                         widget: { store.widget(instanceId: $0.id) },
+                        addsHour: store.hourGroup(subjectId: subjectId) != nil,
                         onAdd: add
                     )
                     Button {
@@ -156,12 +178,90 @@ struct KebabInspector: View {
 
     private func cardRect(in size: CGSize) -> CGRect {
         guard expanded else { return restingRect }
-        return CGRect(
-            x: 0,
-            y: Self.expandedTop,
-            width: size.width,
-            height: max(0, size.height - Self.expandedTop)
-        )
+        // Flush against the sheet — no top inset left for the card to show an
+        // edge in. The sheet's own grab handle draws over this, which is why
+        // the expanded pane starts its header below it (R18).
+        return CGRect(x: 0, y: 0, width: size.width, height: size.height)
+    }
+
+    // MARK: - The hours of this practice (R18)
+
+    /// The hour of the slot in front of you, when this practice states hours at
+    /// all. R17 took the reminder tile off the lid whenever the group already
+    /// says every hour, so this is the only place left to correct one.
+    private var hourSlot: OccurrenceHourLaw.HourSlot? {
+        guard !selectedId.isEmpty else { return nil }
+        return store.hourSlot(subjectId: subjectId, instanceId: selectedId)
+    }
+
+    @ViewBuilder
+    private var hourRow: some View {
+        if let slot = hourSlot {
+            HStack(spacing: 12) {
+                if slot.canMove {
+                    Button {
+                        hourEdit = ReminderTimeEdit(
+                            id: slot.instanceId,
+                            window: store.hourGroup(subjectId: subjectId)?.window
+                                ?? TimeWindow(latestBy: slot.hour),
+                            start: slot.hour
+                        )
+                    } label: {
+                        hourChip(slot.hour, dimmed: false)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(DisplayCopy.hourOfCase(slot.hour))
+                    .accessibilityHint("открывает выбор времени")
+                } else {
+                    // A closed check is history: it keeps its hour and says so,
+                    // and there is nothing to press (04 — nothing is rewritten
+                    // after the fact).
+                    hourChip(slot.hour, dimmed: true)
+                        .accessibilityLabel(DisplayCopy.hourOfCase(slot.hour))
+                }
+                if slot.canDrop {
+                    Button {
+                        drop(slot)
+                    } label: {
+                        Text("Убрать час")
+                            .font(.subheadline.weight(.medium))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    private func hourChip(_ hour: ClockTime, dimmed: Bool) -> some View {
+        Text(hour.shortLabel)
+            .font(.body.weight(.semibold).monospacedDigit())
+            .foregroundStyle(dimmed ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(
+                .tertiary.opacity(dimmed ? 0.3 : 0.55),
+                in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+            )
+            .contentShape(Rectangle())
+    }
+
+    private func saveHour(_ edit: ReminderTimeEdit, clock: ClockTime) {
+        if edit.id == Self.addHourId {
+            // The window is idempotent: an hour it already holds comes back as
+            // the case already standing on it, and nothing is written twice.
+            if let landed = store.addHour(subjectId: subjectId, clock: clock) {
+                selectedId = landed
+            }
+        } else {
+            store.moveHour(subjectId: subjectId, instanceId: edit.id, to: clock)
+        }
+    }
+
+    private func drop(_ slot: OccurrenceHourLaw.HourSlot) {
+        if let next = store.dropHour(subjectId: subjectId, instanceId: slot.instanceId) {
+            selectedId = next
+        }
     }
 
     private var title: String {
@@ -228,8 +328,11 @@ struct KebabInspector: View {
         let target = anchor ?? talk.anchor(subjectId: subjectId, instanceId: selectedId)
         anchor = target
         talk.promote(threadId: target.threadId, anchorMessageId: target.messageId)
+        // One transaction carries the size, the border and the radius, so the
+        // card cannot finish growing while it still looks like a card.
         withAnimation(.snappy) {
             expanded = true
+            expansion = 1
             detent = .large
         }
     }
@@ -237,11 +340,23 @@ struct KebabInspector: View {
     private func collapse() {
         withAnimation(.snappy) {
             expanded = false
+            expansion = 0
             detent = Self.restingDetent
         }
     }
 
+    /// `+`. A practice that states hours is asked which one — the tile in front
+    /// of you is not a template for «сейчас» (R18). Everything else clones or
+    /// rebinds exactly as before.
     private func add() {
+        if let group = store.hourGroup(subjectId: subjectId) {
+            hourEdit = ReminderTimeEdit(
+                id: Self.addHourId,
+                window: group.window,
+                start: ReminderClock.nextHour(window: group.window, now: Date())
+            )
+            return
+        }
         if let created = store.addInstance(subjectId: subjectId) {
             selectedId = created
         }

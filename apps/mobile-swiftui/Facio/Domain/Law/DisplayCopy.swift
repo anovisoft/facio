@@ -132,6 +132,12 @@ enum DisplayCopy {
         String(localized: "успеть к \(clock.shortLabel)", comment: "Reminder window deadline")
     }
 
+    /// What VoiceOver reads off the hour chip in the kebab carousel: the hour
+    /// this check is *for*. The date is already spelled out loud above it.
+    static func hourOfCase(_ hour: ClockTime) -> String {
+        String(localized: "час \(hour.shortLabel)", comment: "Carousel slot: the hour this occurrence is for")
+    }
+
     static func silencePhrase(_ days: Int) -> String {
         switch days {
         case 21:

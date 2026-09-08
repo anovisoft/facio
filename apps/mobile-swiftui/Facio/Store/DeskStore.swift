@@ -174,9 +174,74 @@ final class DeskStore {
         return listed.last?.id
     }
 
+    // MARK: - The hours of a grouped practice (R18)
+
+    /// Today's group, when its marks really do wear the window's hours — the
+    /// only shape the carousel may edit. `nil` for every ordinary practice, and
+    /// the carousel then behaves exactly as it did.
+    func hourGroup(subjectId: String) -> OccurrenceHourLaw.HourGroup? {
+        OccurrenceHourLaw.group(subjectId: subjectId, in: snapshot, now: now())
+    }
+
+    func hourSlot(subjectId: String, instanceId: String) -> OccurrenceHourLaw.HourSlot? {
+        OccurrenceHourLaw.slot(instanceId: instanceId, subjectId: subjectId, in: snapshot, now: now())
+    }
+
+    /// `+` on a grouped practice, after the wheels named an hour. Alarms are
+    /// recomputed because the window changed — `enqueue`, never a bypass.
+    @discardableResult
+    func addHour(subjectId: String, clock: ClockTime) -> String? {
+        var result = OccurrenceHourLaw.HourEdit.refused
+        commit(reminders: true) { next in
+            result = OccurrenceHourLaw.addHour(clock, subjectId: subjectId, in: &next, now: now())
+        }
+        switch result {
+        case .added(let id), .alreadyStanding(let id): return id
+        default: return nil
+        }
+    }
+
+    @discardableResult
+    func moveHour(subjectId: String, instanceId: String, to clock: ClockTime) -> Bool {
+        var result = OccurrenceHourLaw.HourEdit.refused
+        commit(reminders: true) { next in
+            result = OccurrenceHourLaw.moveHour(
+                instanceId: instanceId,
+                subjectId: subjectId,
+                to: clock,
+                in: &next,
+                now: now()
+            )
+        }
+        if case .moved = result { return true }
+        return false
+    }
+
+    /// Drops the hour **and** its check. Returns the slot the carousel should
+    /// stand on afterwards, or `nil` when nothing was dropped.
+    @discardableResult
+    func dropHour(subjectId: String, instanceId: String) -> String? {
+        var result = OccurrenceHourLaw.HourEdit.refused
+        commit(reminders: true) { next in
+            result = OccurrenceHourLaw.dropHour(
+                instanceId: instanceId,
+                subjectId: subjectId,
+                in: &next,
+                now: now()
+            )
+        }
+        if case .dropped(let next) = result { return next }
+        return nil
+    }
+
     @discardableResult
     func addInstance(subjectId: String) -> String? {
         guard subject(id: subjectId) != nil else { return nil }
+        // A grouped practice is added to by naming an hour, not by cloning the
+        // tile in front of you: `+` here stamped «сейчас» on the new check and
+        // put two «11:42» in a row on the phone (R18). The hour is asked for by
+        // the carousel and lands through `addHour`.
+        guard hourGroup(subjectId: subjectId) == nil else { return nil }
         guard let template = templateWidget(subjectId: subjectId) else { return nil }
         let stamp = now()
         let instanceId = "\(subjectId)-\(UUID().uuidString)"

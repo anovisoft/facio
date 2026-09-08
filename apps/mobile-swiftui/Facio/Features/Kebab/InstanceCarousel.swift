@@ -15,6 +15,10 @@ struct InstanceCarousel: View {
     /// The widget bound to that very instance, or `nil` when the day kept no
     /// object of its own. Never today's live widget.
     var widget: (Instance) -> Widget?
+    /// On a practice that states hours, `+` asks for one instead of stamping
+    /// «сейчас» on a new check (R18). Only the word changes here — the deciding
+    /// is the store's.
+    var addsHour: Bool = false
     var onAdd: () -> Void
 
     var body: some View {
@@ -117,6 +121,6 @@ struct InstanceCarousel: View {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(Color.primary.opacity(0.08))
         )
-        .accessibilityLabel("Новый случай")
+        .accessibilityLabel(addsHour ? "Новый час" : "Новый случай")
     }
 }

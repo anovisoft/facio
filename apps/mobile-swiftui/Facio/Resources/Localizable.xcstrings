@@ -720,6 +720,24 @@
         }
       }
     },
+    "Новый час": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New hour"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Новый час"
+          }
+        }
+      },
+      "comment": "Kebab carousel: `+` on a practice that states hours"
+    },
     "Новый чат": {
       "extractionState": "manual",
       "localizations": {
@@ -1086,6 +1104,24 @@
           }
         }
       }
+    },
+    "Убрать час": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the hour"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Убрать час"
+          }
+        }
+      },
+      "comment": "Kebab carousel: drop this hour and its check"
     },
     "Что сюда на стол?": {
       "comment": "Composer placeholder",
@@ -2210,6 +2246,24 @@
           }
         }
       }
+    },
+    "час %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hour %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "час %@"
+          }
+        }
+      },
+      "comment": "Carousel slot: the hour this occurrence is for"
     },
     "что это значит: %@?": {
       "comment": "Utterance sent when a phrase was selected",

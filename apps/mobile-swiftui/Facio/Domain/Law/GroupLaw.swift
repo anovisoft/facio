@@ -93,6 +93,30 @@ enum GroupLaw {
         return open.first?.hour
     }
 
+    /// Whether the group already names every hour this practice stands on.
+    ///
+    /// A reminder tile draws the subject's **window** — the nearest hour large
+    /// and the rest of them small — so when the marks carry those same hours,
+    /// the two tiles say one thing twice and the lid is a second inventory
+    /// (P10). The test is not «is there a group» but «does the group already
+    /// say it».
+    ///
+    /// The distinction is not academic. Hours land on occurrences only when the
+    /// window names exactly as many as there are checks (R16); with three hours
+    /// against seven checks the cases stand at the moment they were made, and
+    /// the reminder is then the only place «15:30 · 18:00 · 22:00» is written
+    /// down. Losing it would cost the person the hours, so this says `false`
+    /// and both tiles stay. A practice with no window states no hour at all.
+    static func saysEveryHour(_ face: GroupFace, window: TimeWindow?) -> Bool {
+        guard let window else { return false }
+        var stated: Set<ClockTime> = []
+        for mark in face.marks {
+            guard let hour = mark.hour else { return false }
+            stated.insert(hour)
+        }
+        return window.hours.allSatisfy { stated.contains($0) }
+    }
+
     /// Collapse a packed row into cells: a group draws once, in the place of
     /// its **first** member. Rank order carries information, so nothing is
     /// reordered to close the hole the other six left (03, packing v0).

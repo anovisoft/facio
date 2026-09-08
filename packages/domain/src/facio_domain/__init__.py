@@ -34,8 +34,13 @@ from facio_domain.groups import (
     is_closed,
     members,
     next_hour,
+    says_every_hour,
 )
-from facio_domain.lid import lid_projection, widget_rank_band
+from facio_domain.lid import (
+    lid_projection,
+    reminder_shadowed_by_group,
+    widget_rank_band,
+)
 from facio_domain.slots import (
     DayStrip,
     Horizon,
@@ -156,7 +161,9 @@ __all__ = [
     "next_hour",
     "occurrence_instances",
     "pause_check_in_at",
+    "reminder_shadowed_by_group",
     "reports_pain",
+    "says_every_hour",
     "snapshot_cards",
     "times_per_week",
     "drift_card",

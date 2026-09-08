@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Never
 
 from facio_domain.drift import drift_card
+from facio_domain.groups import group_face, group_key, says_every_hour
 from facio_domain.models import (
     DeltaTodayItem,
     DriftTodayItem,
@@ -19,6 +20,7 @@ from facio_domain.models import (
     WidgetSection,
     WidgetStatus,
     WidgetTodayItem,
+    WidgetType,
 )
 from facio_domain.morning import delta_card
 
@@ -36,6 +38,56 @@ def _without_paused(
 ) -> list[Widget]:
     paused = {subject.id for subject in subjects if subject.status == SubjectStatus.paused}
     return [widget for widget in widgets if widget.subject_id not in paused]
+
+
+def reminder_shadowed_by_group(
+    subject: Subject,
+    widgets: Sequence[Widget],
+    instances: Sequence[Instance],
+    now: datetime,
+) -> bool:
+    """Whether this subject's reminder tile is a second copy of its group tile.
+
+    One practice, one promise, one tile. When today's group of this subject
+    already carries the hours the window states, the reminder tile repeats it
+    word for word — `15:30` large, `18:00 22:00` small — and the lid stops being
+    a view of what is due now (P10).
+
+    Only today's group counts, and only a group of more than one: a practice
+    that promises once a day is never stamped, so a desk written before Q34
+    draws exactly as it always did.
+    """
+    face = group_face(group_key(subject.id, now.date()), widgets, instances, now)
+    if face is None or face.total < 2:
+        return False
+    return says_every_hour(face, subject.window)
+
+
+def _without_repeated_reminders(
+    now: datetime,
+    subjects: Sequence[Subject],
+    instances: Sequence[Instance],
+    widgets: Sequence[Widget],
+) -> list[Widget]:
+    """Drop the reminder tile of a subject whose group already speaks its hours.
+
+    A drawing rule and nothing else. The widget stays on the desk, keeps its
+    status and keeps ringing: alarms are read off the desk snapshot, never off
+    this projection, so a tile that is not drawn is not an alarm that was
+    cancelled.
+    """
+    silent = {
+        subject.id
+        for subject in subjects
+        if reminder_shadowed_by_group(subject, widgets, instances, now)
+    }
+    if not silent:
+        return list(widgets)
+    return [
+        widget
+        for widget in widgets
+        if widget.type != WidgetType.reminder or widget.subject_id not in silent
+    ]
 
 
 def _band_index(band: RankBand) -> int:
@@ -131,10 +183,16 @@ def lid_projection(
     Rank v0 inside a non-empty Today. The morning card is one object: a drift
     ask when a period was missed, otherwise the calm delta line (Q6), and
     never both — the drift card carries the same subject louder.
+    One practice draws one tile: a reminder whose hours today's group already
+    says is not put in any section (R17). It stays on the desk and keeps
+    ringing — this is a view, not the table.
     """
     card = drift_card(subjects, instances, now)
+    # The morning reads the desk, not the drawing: hiding a tile must not be
+    # able to wake a delta line that the tile itself was answering (Q6).
     delta = delta_card(subjects, instances, widgets, now) if card is None else None
     visible = _without_paused(subjects, widgets)
+    visible = _without_repeated_reminders(now, subjects, instances, visible)
 
     today_widgets = _today_widgets(visible, now)
     today_ids = {widget.id for widget in today_widgets}

@@ -11,6 +11,7 @@ from facio_domain.groups import (
     is_closed,
     members,
     next_hour,
+    says_every_hour,
 )
 from facio_domain.models import (
     Instance,
@@ -20,6 +21,7 @@ from facio_domain.models import (
     WidgetSection,
     WidgetStatus,
     WidgetType,
+    Window,
 )
 from facio_domain.slots import hour_instance_ids, occurrence_instances
 
@@ -192,3 +194,31 @@ def test_a_practice_whose_only_case_is_its_alarm_keeps_it() -> None:
     alarm, alarm_case = _alarm()
     listed = occurrence_instances("upwork", [alarm_case], [alarm])
     assert [case.id for case in listed] == ["upwork-open"]
+
+
+# --- R17: does the group already say the hours? ----------------------------
+
+
+def test_a_group_carrying_the_stated_hours_says_them_all() -> None:
+    widgets, cases = _seven()
+    face = group_face(GROUP, widgets, cases, _at(time(9, 0)))
+    assert face is not None
+    assert says_every_hour(face, Window(hours=HOURS))
+
+
+def test_a_group_whose_hours_never_landed_says_nothing() -> None:
+    """Three stated hours against seven checks: R16 refuses to guess, so the
+    cases stand where they were made and the window is still only on the alarm."""
+    widgets, cases = _seven()
+    flat = [case.model_copy(update={"when": _at(time(9, 0))}) for case in cases]
+    flat_widgets = [widget.model_copy(update={"when": _at(time(9, 0))}) for widget in widgets]
+    face = group_face(GROUP, flat_widgets, flat, _at(time(9, 0)))
+    assert face is not None
+    assert not says_every_hour(face, Window(hours=HOURS[:3]))
+
+
+def test_a_practice_without_a_window_states_no_hour_to_repeat() -> None:
+    widgets, cases = _seven()
+    face = group_face(GROUP, widgets, cases, _at(time(9, 0)))
+    assert face is not None
+    assert not says_every_hour(face, None)

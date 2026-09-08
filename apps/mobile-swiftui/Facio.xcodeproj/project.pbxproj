@@ -52,6 +52,7 @@
 		3E5B1D3C54C97D725C7BFEBB /* TimerLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74EBE520282587E295E34276 /* TimerLaw.swift */; };
 		4008641D49A21F72B7CB5BC6 /* ReminderClockTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA765E2AAC9E1E3AB182595F /* ReminderClockTests.swift */; };
 		40D34C7A15AA15890A10E38C /* ReminderClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = A146AEC282C47C9A81593E81 /* ReminderClock.swift */; };
+		41D45DDBB8FDA6FC9EA496CC /* LidReminderGroupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E7242F94816CBFA104CD1B /* LidReminderGroupTests.swift */; };
 		447F31BE251764E051843234 /* MorningLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D55531FE6458678905FB1E0 /* MorningLaw.swift */; };
 		4481C68552510F52EAF8B391 /* LidFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7BE39810B4325D66B31ABA8 /* LidFeed.swift */; };
 		44CC1E8EC0C1B68A74E8C884 /* LidWidgetCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BF6FCE7416C57ADDBB62CA4 /* LidWidgetCell.swift */; };
@@ -129,7 +130,9 @@
 		BA090ABB20B0D16D1CC7954D /* TickTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC446C1A84AAAD4F0ECC41D /* TickTile.swift */; };
 		BA3B09E24D469F42B1B55306 /* StepperTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FB890454747F8C64BB9F1A9 /* StepperTile.swift */; };
 		BB84E5848F5F86DB2EEEF265 /* CueMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C68EA610DF2987ACF67CE1A /* CueMedia.swift */; };
+		BC2C705DB65159814F8FA19A /* OccurrenceHourLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0CA7FA219BA817D67383E6 /* OccurrenceHourLaw.swift */; };
 		BCF6A7A74901FA9B4662900C /* TimerTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4260DFFEAA9C307B43877DEE /* TimerTile.swift */; };
+		BE5940CDB4F8A883073566EF /* OccurrenceHourTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29F56F91DD00AA482CDF5017 /* OccurrenceHourTests.swift */; };
 		BEFF770731B445B54C21CE78 /* SeedFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1917B89AB52F3F1B358D6B6 /* SeedFactory.swift */; };
 		BF0251F53D0946A92068A6B9 /* CounterTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC16928D71A59480CFCA71EF /* CounterTile.swift */; };
 		BF5D02C492BCED8E400A19E2 /* CueMediaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C803411CA1727717A50AD026 /* CueMediaTests.swift */; };
@@ -142,6 +145,7 @@
 		C6CEB2340C7288F178D90254 /* DeskSyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8723C8CD42D8C6088A075648 /* DeskSyncCoordinator.swift */; };
 		CBA06C3A5C7845636196F10A /* ModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62CDF841D69D1101DC6F6D8C /* ModelTests.swift */; };
 		CBFC8BF518CF11B3D528AECA /* widgets.json in Resources */ = {isa = PBXBuildFile; fileRef = 81BADA927DD64EEBCA8F07F7 /* widgets.json */; };
+		CC9A75BE4ECEFF1E7AB270E2 /* ReminderTimePickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EBCAE028FFEE2A947127085 /* ReminderTimePickerSheet.swift */; };
 		CD79F406A7315A545B225A8A /* FacioNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F1D7859FE372ADE83A1624D /* FacioNotifications.swift */; };
 		CD97347045C6AD3423CBF39D /* DayZeroChips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 762C99105CDBAB0D6DBCC4EB /* DayZeroChips.swift */; };
 		CE236B8604D194F50FA14289 /* DeskRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7655C26A705784207BD2B24E /* DeskRoute.swift */; };
@@ -219,6 +223,7 @@
 		2819363B82CC457A07AD429C /* TalkModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkModels.swift; sourceTree = "<group>"; };
 		2864C10551B05E0EE8E3BD74 /* WidgetStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStatus.swift; sourceTree = "<group>"; };
 		2933B8EDC13E91A009C7374B /* KebabInspectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KebabInspectorTests.swift; sourceTree = "<group>"; };
+		29F56F91DD00AA482CDF5017 /* OccurrenceHourTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OccurrenceHourTests.swift; sourceTree = "<group>"; };
 		2A6B4866C56C0FC894B32F56 /* FacioJSON.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacioJSON.swift; sourceTree = "<group>"; };
 		2BDCA2EB0E5845902E105345 /* SnapshotFaceLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotFaceLaw.swift; sourceTree = "<group>"; };
 		2C82A425B50E627261D99C7E /* KebabInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KebabInspector.swift; sourceTree = "<group>"; };
@@ -295,6 +300,7 @@
 		828B398A50029A7EAAB3EEA0 /* ReminderSchedulerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderSchedulerTests.swift; sourceTree = "<group>"; };
 		85B5456958AB3FFDEAA962F4 /* FacioPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacioPalette.swift; sourceTree = "<group>"; };
 		8723C8CD42D8C6088A075648 /* DeskSyncCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskSyncCoordinator.swift; sourceTree = "<group>"; };
+		87E7242F94816CBFA104CD1B /* LidReminderGroupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidReminderGroupTests.swift; sourceTree = "<group>"; };
 		88264A6ED9F4B61255BD7DDB /* LidProjectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidProjectionTests.swift; sourceTree = "<group>"; };
 		8A34A102E7F3F3EEAB4EE908 /* TalkMiniature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkMiniature.swift; sourceTree = "<group>"; };
 		8AD8AFE0347C1C01638DAF3E /* KebabLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KebabLaw.swift; sourceTree = "<group>"; };
@@ -303,6 +309,7 @@
 		8CC366E1820B8C0187727896 /* SlotKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotKind.swift; sourceTree = "<group>"; };
 		8D6307D793711E160A7E95F1 /* CellSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellSize.swift; sourceTree = "<group>"; };
 		8E8B30D2D5313EF4A4D01A89 /* TalkClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkClient.swift; sourceTree = "<group>"; };
+		8EBCAE028FFEE2A947127085 /* ReminderTimePickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderTimePickerSheet.swift; sourceTree = "<group>"; };
 		90B3D5D86107F0A29686ED79 /* TalksList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalksList.swift; sourceTree = "<group>"; };
 		917B1CD4F1F37E0C156277ED /* LidProjection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidProjection.swift; sourceTree = "<group>"; };
 		98C403F3B96C3EA032E67CF3 /* ChecklistItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChecklistItem.swift; sourceTree = "<group>"; };
@@ -361,6 +368,7 @@
 		F7BE39810B4325D66B31ABA8 /* LidFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidFeed.swift; sourceTree = "<group>"; };
 		F95B6699402F7C8AB7D08FB8 /* DayStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayStrip.swift; sourceTree = "<group>"; };
 		FAEA9232D081EAF6EAF8BE2B /* SubjectStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectStatus.swift; sourceTree = "<group>"; };
+		FB0CA7FA219BA817D67383E6 /* OccurrenceHourLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OccurrenceHourLaw.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -423,6 +431,7 @@
 				8BDAF9C77FC3601E2540B734 /* CounterUseView.swift */,
 				1A81D82223961EE677566064 /* CueMediaView.swift */,
 				7655C26A705784207BD2B24E /* DeskRoute.swift */,
+				8EBCAE028FFEE2A947127085 /* ReminderTimePickerSheet.swift */,
 				0D3996D30C44FA29B14C3CC0 /* ReminderUseView.swift */,
 				720E280C0FC632189C62175B /* StepHelpSheet.swift */,
 				02706B0CC83FA03A818CC7AE /* StepperUseView.swift */,
@@ -543,9 +552,11 @@
 				DE49070FF2ADCCEB1E700DDA /* InstanceLawTests.swift */,
 				2933B8EDC13E91A009C7374B /* KebabInspectorTests.swift */,
 				88264A6ED9F4B61255BD7DDB /* LidProjectionTests.swift */,
+				87E7242F94816CBFA104CD1B /* LidReminderGroupTests.swift */,
 				0ADACEEA50715309876C8DF6 /* LocalizationCatalogTests.swift */,
 				62CDF841D69D1101DC6F6D8C /* ModelTests.swift */,
 				CCDB99B68CC5F0AD49351926 /* MorningLawTests.swift */,
+				29F56F91DD00AA482CDF5017 /* OccurrenceHourTests.swift */,
 				EF759EC20176305D88E7A1C7 /* OccurrenceStoreTests.swift */,
 				360413F490CB306BB68500A5 /* PackLawTests.swift */,
 				DB6CF10F8A46994C86FE0B08 /* PainLawTests.swift */,
@@ -710,6 +721,7 @@
 				5FD625BD89099DBE924C2B9D /* InstanceLaw.swift */,
 				15209F287CF3C54B427B68E7 /* LidProjectionLaw.swift */,
 				3D55531FE6458678905FB1E0 /* MorningLaw.swift */,
+				FB0CA7FA219BA817D67383E6 /* OccurrenceHourLaw.swift */,
 				5A8BE137FD1137D4F1D4C801 /* PainLaw.swift */,
 				A146AEC282C47C9A81593E81 /* ReminderClock.swift */,
 				A1917B89AB52F3F1B358D6B6 /* SeedFactory.swift */,
@@ -857,9 +869,11 @@
 				360AEFAB704D5DC77C113DA5 /* InstanceLawTests.swift in Sources */,
 				2223C5A14CA51B15305FA20E /* KebabInspectorTests.swift in Sources */,
 				9F50A3AF342159EBD6E77599 /* LidProjectionTests.swift in Sources */,
+				41D45DDBB8FDA6FC9EA496CC /* LidReminderGroupTests.swift in Sources */,
 				71B355AAC28D015ED5DD4520 /* LocalizationCatalogTests.swift in Sources */,
 				CBA06C3A5C7845636196F10A /* ModelTests.swift in Sources */,
 				A79E64FD194EDD1325F21828 /* MorningLawTests.swift in Sources */,
+				BE5940CDB4F8A883073566EF /* OccurrenceHourTests.swift in Sources */,
 				F148FD74674E15698F9450F1 /* OccurrenceStoreTests.swift in Sources */,
 				885E0C15BF71F5E736ADCF66 /* PackLawTests.swift in Sources */,
 				C02AB68F2948B995641C037F /* PainLawTests.swift in Sources */,
@@ -954,6 +968,7 @@
 				C320C96EB2A1BB2C8B925B59 /* LidSectionHeader.swift in Sources */,
 				44CC1E8EC0C1B68A74E8C884 /* LidWidgetCell.swift in Sources */,
 				447F31BE251764E051843234 /* MorningLaw.swift in Sources */,
+				BC2C705DB65159814F8FA19A /* OccurrenceHourLaw.swift in Sources */,
 				54A148D920190BA2B2583CCD /* PackRowMajorLayout.swift in Sources */,
 				0B5492F1132E9FBFDB1308EA /* PainLaw.swift in Sources */,
 				8F3EAB243B7A1102F85979EA /* PanGutter.swift in Sources */,
@@ -966,6 +981,7 @@
 				40D34C7A15AA15890A10E38C /* ReminderClock.swift in Sources */,
 				1B3D96A2D920DD5CBBC15C23 /* ReminderScheduler.swift in Sources */,
 				14FB19DF959B7C5392244DAD /* ReminderTile.swift in Sources */,
+				CC9A75BE4ECEFF1E7AB270E2 /* ReminderTimePickerSheet.swift in Sources */,
 				3ABA170A8B876DBF8F1196A7 /* ReminderUseView.swift in Sources */,
 				899BB97F1303019BB6DC0AC9 /* RootView.swift in Sources */,
 				BEFF770731B445B54C21CE78 /* SeedFactory.swift in Sources */,
