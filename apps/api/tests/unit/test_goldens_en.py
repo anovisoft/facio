@@ -40,6 +40,7 @@ RUSSIAN_IDS = {
     "pain_raise",
     "pain_skip_freeze",
     "remind_at_19",
+    "search_back",
     "stepper_warmup",
     "thaw_pause",
     "timer_meditation",
@@ -837,3 +838,75 @@ async def test_upwork_en_seven_hours_land_as_one_window_and_seven_checks() -> No
     assert cue.surface == CueSurface.do_time
     assert not any("Ѐ" <= char <= "ӿ" for char in cue.text)
     assert not any("Ѐ" <= char <= "ӿ" for char in result.text)
+
+
+# --- В3.3: the same lookup, in English -------------------------------------
+
+
+async def test_search_back_en_finds_the_old_cue_and_does_not_lift_the_goal() -> None:
+    """The founding turn writes the line; a later turn asks about it and finds
+    it. Reading the person's own cues — not a catalogue, not the internet
+    (never-do #23) — and reading changes nothing on the desk."""
+    written = await _play("my lower back takes the load")
+    assert written.mutated is True
+    golden = match_golden("what did we write down about my lower back?")
+    assert golden is not None
+    assert golden.id == "search_back_en"
+    before = written.desk.model_copy(deep=True)
+    result = await run_turn(
+        TalkTurnRequest(
+            utterance=golden.utterance,
+            desk=written.desk,
+            thread=[],
+            thread_id="golden-en",
+            now=NOW,
+            locale="en",
+        ),
+        ScriptedProvider.for_utterance(golden.utterance),
+        now=NOW,
+    )
+    assert _names(result) == golden.expect.tools == ["search_facts"]
+    assert result.tool_calls[0].ok is True
+    assert result.mutated is False
+    assert result.snapshots == []
+    assert result.desk == before
+    for name in golden.expect.forbidden_tools:
+        assert name not in _names(result)
+    push = _subject(result.desk, "push-ups")
+    assert push.target is not None
+    assert push.target.goal == golden.expect.target_goal_max == 30
+    assert FOUNDING_BRACE in result.text
+    assert not any("Ѐ" <= char <= "ӿ" for char in result.text)
+
+
+def test_the_search_reads_english_cues_the_same_way() -> None:
+    outcome = apply_tool(
+        founding_desk(now=NOW),
+        "add_cue",
+        {
+            "id": "push-ups-brace-en-talk",
+            "subject_id": "push-ups",
+            "kind": "correction",
+            "text": "brace the core and the glutes, not the lower back",
+            "surface": "do-time",
+        },
+        pain=False,
+        now=NOW,
+    )
+    found = apply_tool(outcome.desk, "search_facts", {"query": "lower back"}, pain=False, now=NOW)
+    assert found.ok is True
+    assert [row["cue_id"] for row in found.data["facts"]] == ["push-ups-brace-en-talk"]
+    assert found.desk == outcome.desk
+
+
+def test_the_search_bullet_is_bilingual_and_never_invents_a_fact() -> None:
+    """Both halves of the one English bullet: look before asking again, quote
+    what was found, and say plainly when nothing was."""
+    bullet = next(
+        row for row in SYSTEM_PROMPT.splitlines() if row.startswith("- What they already told you")
+    )
+    assert "search_facts" in bullet
+    assert "поясница" in bullet
+    assert "lower back" in bullet
+    for needle in ("there is nothing written", "never fill that silence", "only reads"):
+        assert needle in bullet, needle

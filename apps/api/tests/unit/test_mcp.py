@@ -6,7 +6,9 @@ from facio_domain.desk import founding_desk
 from facio_domain.models import CueOrigin, CueSurface
 from facio_domain.tools import TOOL_NAMES, apply_tool
 
+from facio_api.mcp.server import mcp_tools
 from facio_api.mcp.session import DeskSession
+from facio_api.talk.spec import tool_schemas
 
 NOW = datetime(2026, 8, 15, 12, 0, 0)
 ORIGIN = CueOrigin(chat_id="mcp")
@@ -59,3 +61,36 @@ def test_add_cue_matches_direct_apply() -> None:
     assert session_cue.id == apply_cue.id
     assert session_cue.text == apply_cue.text == CUE_ARGS["text"]
     assert session_cue.surface == apply_cue.surface == CueSurface.do_time
+
+
+def test_every_advertised_name_has_a_schema_and_every_schema_a_name() -> None:
+    """The two lists are one list. `mcp_tools` looks each name up in the talk
+    schemas, so a tool added to `TOOL_NAMES` without one dies at import time on
+    stdio and would otherwise be advertised to the vendor and never to MCP.
+    This is what pins the count: it grows here, in `TOOL_NAMES`, and in the
+    schemas together or not at all.
+    """
+    advertised = [row["function"]["name"] for row in tool_schemas()]
+    assert advertised == list(TOOL_NAMES)
+    assert [row.name for row in mcp_tools()] == list(TOOL_NAMES)
+
+
+def test_search_facts_is_advertised_as_a_read_that_needs_a_query() -> None:
+    """В3.3: the mouth may look through the person's own facts. `query` is
+    required — an empty one comes back `query_required` — and `subject_id` only
+    narrows it. Nothing here writes."""
+    schema = next(row["function"] for row in tool_schemas() if row["function"]["name"] == "search_facts")
+    parameters = schema["parameters"]
+    assert set(parameters["properties"]) == {"query", "subject_id"}
+    assert parameters["required"] == ["query"]
+    assert parameters["additionalProperties"] is False
+
+
+def test_search_facts_through_the_session_leaves_the_desk_alone() -> None:
+    session = DeskSession(founding_desk(now=NOW), now=NOW)
+    before = session.desk.model_copy(deep=True)
+    outcome = session.call("search_facts", {"query": "зал"})
+    assert outcome.ok is True
+    assert outcome.mutated is False
+    assert session.desk == before
+    assert [row["cue_id"] for row in outcome.data["facts"]] == ["bike-gym-hours"]

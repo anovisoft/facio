@@ -1,0 +1,33 @@
+{
+  "id": "search_back_en",
+  "utterance": "what did we write down about my lower back?",
+  "match": ["write down about my lower back"],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "search_facts",
+          "arguments": {
+            "query": "lower back"
+          }
+        }
+      ]
+    },
+    {
+      "text": "You wrote it down already: brace the core and the glutes, not the lower back."
+    }
+  ],
+  "expect": {
+    "mutated": false,
+    "tools": ["search_facts"],
+    "snapshots_empty": true,
+    "target_goal_max": 30,
+    "forbidden_tools": [
+      "add_cue",
+      "update_widget",
+      "create_widget",
+      "set_cadence",
+      "set_reminder"
+    ]
+  }
+}

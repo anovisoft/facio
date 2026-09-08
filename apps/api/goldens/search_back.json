@@ -1,0 +1,33 @@
+{
+  "id": "search_back",
+  "utterance": "что там было про поясницу?",
+  "match": ["что там было про поясницу"],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "search_facts",
+          "arguments": {
+            "query": "поясница"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Ты уже это записывал: держи корпус и ягодицы, не поясницу."
+    }
+  ],
+  "expect": {
+    "mutated": false,
+    "tools": ["search_facts"],
+    "snapshots_empty": true,
+    "target_goal_max": 30,
+    "forbidden_tools": [
+      "add_cue",
+      "update_widget",
+      "create_widget",
+      "set_cadence",
+      "set_reminder"
+    ]
+  }
+}

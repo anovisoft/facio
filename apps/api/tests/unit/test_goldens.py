@@ -113,6 +113,7 @@ RUSSIAN_IDS = {
     "pain_raise",
     "pain_skip_freeze",
     "remind_at_19",
+    "search_back",
     "stepper_warmup",
     "thaw_pause",
     "timer_meditation",
@@ -844,3 +845,87 @@ async def test_upwork_seven_hours_land_as_one_window_and_seven_checks() -> None:
     assert tick.title == "проверить upwork"
     cue = next(row for row in result.desk.cues if row.subject_id == "upwork")
     assert cue.surface == CueSurface.do_time
+
+
+# --- В3.3: the desk remembers, so the mouth can look it up ------------------
+
+
+async def test_search_back_finds_the_old_cue_and_does_not_lift_the_goal() -> None:
+    """«Поясница уже была»: the line written in the founding turn is found from
+    a later one — and finding it changes nothing.
+
+    Two turns, on purpose: the first one is the conclusion landing on the desk
+    (`lower_back`), the second one is the person asking about it days later,
+    when `get_subject` alone would only have shown a number. The search reads
+    the cues of **this** desk and nothing else — no catalogue, no internet
+    (never-do #23).
+    """
+    written = await _play("поясница забирает нагрузку")
+    assert written.mutated is True
+    golden = match_golden("что там было про поясницу?")
+    assert golden is not None
+    assert golden.id == "search_back"
+    before = written.desk.model_copy(deep=True)
+    result = await run_turn(
+        TalkTurnRequest(
+            utterance=golden.utterance,
+            desk=written.desk,
+            thread=[],
+            thread_id="golden",
+            now=NOW,
+        ),
+        ScriptedProvider.for_utterance(golden.utterance),
+        now=NOW,
+    )
+    assert _names(result) == golden.expect.tools == ["search_facts"]
+    assert result.tool_calls[0].ok is True
+    # Reading, not writing: no patch, no card, and the same desk back.
+    assert result.mutated is False
+    assert result.snapshots == []
+    assert result.desk == before
+    for name in golden.expect.forbidden_tools:
+        assert name not in _names(result)
+    push = _subject(result.desk, "push-ups")
+    assert push.target is not None
+    assert push.target.goal == golden.expect.target_goal_max == 30
+    # The answer is the person's own line, quoted, not a fresh piece of advice.
+    assert SEED_BRACE in result.text
+
+
+def test_the_search_returns_the_line_the_person_wrote() -> None:
+    """What the turn actually reads back out of the tool. `run_turn` records
+    the call but not its payload, so the same call is made here directly."""
+    desk = founding_desk(now=NOW)
+    written = apply_tool(
+        desk,
+        "add_cue",
+        {
+            "id": "push-ups-brace-talk",
+            "subject_id": "push-ups",
+            "kind": "correction",
+            "text": "держи корпус и ягодицы, не поясницу",
+            "surface": "do-time",
+        },
+        pain=False,
+        now=NOW,
+    )
+    outcome = apply_tool(written.desk, "search_facts", {"query": "поясница"}, pain=False, now=NOW)
+    assert outcome.ok is True
+    facts = outcome.data["facts"]
+    assert [row["cue_id"] for row in facts] == ["push-ups-brace-talk"]
+    assert facts[0]["surface"] == CueSurface.do_time
+
+
+async def test_a_question_about_something_never_said_finds_nothing() -> None:
+    """The empty answer is the point: «не нашёл» is sayable, an invented fact
+    is not (never-do AI #1)."""
+    outcome = apply_tool(
+        founding_desk(now=NOW),
+        "search_facts",
+        {"query": "квэкснутый зонд 174"},
+        pain=False,
+        now=NOW,
+    )
+    assert outcome.ok is True
+    assert outcome.error is None
+    assert outcome.data == {"facts": []}

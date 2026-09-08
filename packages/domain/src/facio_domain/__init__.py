@@ -2,6 +2,7 @@
 
 from facio_domain.cues import add_cue, default_surface
 from facio_domain.desk import founding_desk
+from facio_domain.facts import Fact, last_touched, query_words, same_word, search_facts
 from facio_domain.pain import reports_pain
 from facio_domain.tools import apply_tool, snapshot_cards, times_per_week
 from facio_domain.drift import (
@@ -120,6 +121,7 @@ __all__ = [
     "Desk",
     "DriftCard",
     "DriftOffer",
+    "Fact",
     "GroupFace",
     "GroupMark",
     "Horizon",
@@ -161,13 +163,16 @@ __all__ = [
     "grouped_ids",
     "hour_instance_ids",
     "is_closed",
+    "last_touched",
     "members",
     "next_hour",
     "occurrence_instances",
     "pause_check_in_at",
     "reminder_shadowed_by_group",
     "reports_pain",
+    "same_word",
     "says_every_hour",
+    "search_facts",
     "snapshot_cards",
     "times_per_week",
     "drift_card",
@@ -181,6 +186,7 @@ __all__ = [
     "pause_timer",
     "period_days",
     "promised",
+    "query_words",
     "refuse_drift",
     "reminder_fire_at",
     "reminder_fire_times",

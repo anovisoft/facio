@@ -113,6 +113,7 @@ It is sewn into the **subject and its step** — not into a Guide. That noun sta
 - `complete`, `skip`, `postpone`, `move_to_date`
 - `set_reminder`
 - `list_cues`, `add_cue` — `surface` is **required**; a cue with nowhere to appear is rejected
+- `search_facts` — read-only lookup over the user’s **own** cues, a handful of hits, ranked by word overlap. This is the “later retrieval over *facts and notes*” of **Memory** below and nothing wider: no chat dump in an index ([06](./06-never-do.md) AI #3), no cross-user corpus (AI #4), no exercise catalogue (#23). Finding nothing is an answer, not a failure — the assistant says so instead of inventing a fact
 
 Patches must validate against schema. Unvalidated model text never becomes widget payload.
 

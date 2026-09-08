@@ -28,6 +28,7 @@ Rules:
 - Chatting is fine. Saying «записал / поставил / ужал» / "noted it / set it / shrank it" without calling a tool is a bug.
 - Asked for something the desk cannot do, say so plainly — the way an hour that cannot be set is said plainly. Never go quiet, and never answer with what you *would* do and then do nothing: a silent «ок» reads as done when nothing happened.
 - Do not ask instead of writing. Tool first, with the default; the question goes into the text after.
+- What they already told you is on the desk, not in your head. Before asking again about something they may have said once — a fact about a practice, a door, a hurt, the line you wrote down back then — call search_facts with their own words («поясница» / "lower back"), and answer out of what comes back. Quote the found line the way they said it; do not turn their sentence into fresh advice of your own. Nothing came back — say plainly there is nothing written about it, and ask: never fill that silence with a fact they never said. The search only reads. Whatever it finds, a new conclusion still goes down through add_cue, and no target and no rhythm goes up because a search found something.
 - Subject default: focused_widget_id from the desk; otherwise a widget on Today (due / running). An hour or a skip with no name — bike-reminder. Reps, target, cadence with no name — push-ups.
 - A new practice is placed with its rhythm in the same call: create_widget carries cadence {count, period}. Heard «раз в неделю» / «дважды в неделю» / "once a week" / "twice a week" — write exactly that.
 - Rhythm not heard — still write one sensible rhythm (a gym, a run, a class: twice a week), and ask about it in the text after the write. The tile goes down first, the question comes after it, never instead of it.
@@ -296,6 +297,32 @@ _TOOLS: tuple[tuple[str, str, dict[str, Any]], ...] = (
                 },
             },
             ["subject_id", "kind", "text", "surface"],
+        ),
+    ),
+    # Last on purpose: the schemas render ahead of the system prompt and the
+    # vendors cache on that prefix, so a name appended here leaves every
+    # cached turn written before it still cached.
+    (
+        "search_facts",
+        "Search the person's own facts — the cues on this desk — for something "
+        "they said before. Reads only, changes nothing. query is their words, "
+        "subject_id narrows it to one practice. Up to 5 facts come back, and an "
+        "empty list is a real answer: say you have nothing written, never invent "
+        "one. practice_last_done on a fact is the last time that practice ran — "
+        "not the day the line was written, which nothing records. There is no "
+        "library and no internet behind this.",
+        _object(
+            {
+                "query": {
+                    "type": "string",
+                    "description": (
+                        "What to look for, in the person's own words "
+                        "(«поясница» / \"lower back\"). Required."
+                    ),
+                },
+                "subject_id": _STRING,
+            },
+            ["query"],
         ),
     ),
 )

@@ -17,6 +17,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from facio_domain.cues import add_cue
 from facio_domain.drift import settle_talk_answer, times_per_week
+from facio_domain.facts import search_facts
 from facio_domain.groups import closing_stamp
 from facio_domain.models import (
     Cadence,
@@ -73,6 +74,10 @@ TOOL_NAMES = (
     "set_reminder",
     "list_cues",
     "add_cue",
+    # Appended, not slotted in next to `list_cues`: the tool block is rendered
+    # ahead of the system prompt and the vendors cache on that prefix, so a new
+    # name at the end leaves every cached turn before it still cached.
+    "search_facts",
 )
 
 PAIN_FORBIDS_RAISE = "pain_forbids_raise"
@@ -131,6 +136,12 @@ INVALID_HOURS = "invalid_hours"
 # `remove_hours` that would empty the window. A window with no hour cannot fire
 # and cannot be drawn; going quiet is `postpone` or `archive_widget`.
 HOURS_REQUIRED = "hours_required"
+# A search with nothing to search for. Named like `surface_required` so the
+# turn can fix itself on the next round: an empty query is a call that was
+# never asked, and answering it with the whole desk would let the mouth read
+# back facts the person never brought up. Finding **nothing** is a different
+# thing entirely and it is not an error (В3.3).
+QUERY_REQUIRED = "query_required"
 
 _MEDIA = TypeAdapter(CueMedia)
 
@@ -992,6 +1003,34 @@ def _list_cues(desk: Desk, args: dict[str, Any], **_: Any) -> ToolOutcome:
     )
 
 
+def _search_facts(desk: Desk, args: dict[str, Any], **_: Any) -> ToolOutcome:
+    """Look through the person's own facts. Reading only — the desk is untouched.
+
+    The refusal is for a call with no question in it; an empty list of facts is
+    a perfectly good answer and comes back `ok`, so the turn can say «не нашёл»
+    instead of filling the gap with something plausible. `subject_id` narrows
+    the search to one practice and nothing more: a subject that is not on this
+    desk simply matches no cue, because a search that returns `not_found` would
+    tempt the turn into a second, wider call it does not need.
+    """
+    query = str(args.get("query") or "").strip()
+    if not query:
+        raise ToolFail(QUERY_REQUIRED)
+    facts = search_facts(
+        query,
+        desk.cues,
+        subjects=desk.subjects,
+        instances=desk.instances,
+        subject_id=_optional_text(args.get("subject_id")),
+    )
+    return ToolOutcome(
+        desk=desk,
+        name="search_facts",
+        ok=True,
+        data={"facts": [fact.model_dump(mode="json") for fact in facts]},
+    )
+
+
 def _optional_text(raw: Any) -> str | None:
     if raw is None:
         return None
@@ -1123,4 +1162,5 @@ _DISPATCH = {
     "set_reminder": _set_reminder,
     "list_cues": _list_cues,
     "add_cue": _add_cue_tool,
+    "search_facts": _search_facts,
 }
