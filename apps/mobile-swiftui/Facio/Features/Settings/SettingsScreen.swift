@@ -2,14 +2,22 @@ import AuthenticationServices
 import SwiftUI
 
 /// Bottom of the pan (03-product): who is signed in, one button, one line
-/// about the sync, the version. No stats, no achievements — those are "later".
-/// Not a tab and not a second home: it opens from the pan and closes back.
+/// about the sync, the version. Not a tab and not a second home: it opens from
+/// the pan and closes back.
+///
+/// **Still no stats and no achievements.** The measurements at the bottom are
+/// step 7 — numbers about whether *the product* lands — and they are worded
+/// that way on purpose. Nothing here is a streak, nothing is a target, and
+/// nothing feeds back into what the lid asks for (P7). «Промахнулись» is a
+/// legitimate reading of this section; on a tile it would be forbidden.
 struct SettingsScreen: View {
     let sync: DeskSyncCoordinator
+    let measurements: () -> MeasureLaw.Report
     var onClose: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
     @State private var signInFailed = false
+    @State private var report: MeasureLaw.Report?
 
     var body: some View {
         NavigationStack {
@@ -38,6 +46,8 @@ struct SettingsScreen: View {
                     }
                 }
 
+                measurementsSection
+
                 Section {
                     LabeledContent {
                         Text(version)
@@ -47,6 +57,7 @@ struct SettingsScreen: View {
                     }
                 }
             }
+            .onAppear { report = measurements() }
             .navigationTitle(Text("Настройки"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -56,6 +67,41 @@ struct SettingsScreen: View {
                     }
                 }
             }
+        }
+    }
+
+    /// Read on appear, not held: the journal is opened once, while the person
+    /// is looking at it.
+    @ViewBuilder
+    private var measurementsSection: some View {
+        if let report {
+            Section {
+                measure("Подсказки сработали", report.cueApplied, of: report.cueSurfaced)
+                measure("Срывы пойманы", report.driftCaught, of: report.driftShown)
+                measure("Ходы с механикой", report.talkTurnsThatBuilt, of: report.talkTurns)
+                measure(
+                    "Живы на четвёртой неделе",
+                    report.practicesAliveAtFourWeeks,
+                    of: report.practicesReachingFourWeeks
+                )
+                measure("Дни с делом", report.activeDays, of: report.days)
+            } header: {
+                Text("Замеры сборки")
+            } footer: {
+                Text("Это про продукт, а не про вас. Числа считаются на устройстве, никуда не уезжают и ни на что не влияют.")
+            }
+        }
+    }
+
+    /// «N из M», and a dash when M is zero. Zero out of zero is not a zero
+    /// score — it is no measurement, and a 0% there would read as a failure
+    /// that never happened.
+    private func measure(_ label: LocalizedStringKey, _ done: Int, of total: Int) -> some View {
+        LabeledContent {
+            Text(total > 0 ? String(localized: "\(done) из \(total)") : String(localized: "пока нечего считать"))
+                .foregroundStyle(.secondary)
+        } label: {
+            Text(label)
         }
     }
 

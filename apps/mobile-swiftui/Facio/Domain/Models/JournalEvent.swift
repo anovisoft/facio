@@ -24,6 +24,20 @@ enum JournalEventType: String, Codable, Sendable, Equatable {
     /// (P6 «reversible», 06 AI #2). An event like any other, so the measurement
     /// slice can read how often the mouth is wrong from the same journal.
     case talkUndone = "talk_undone"
+    /// A drift card actually put on the lid, with the silence that earned it.
+    /// The ladder already records that it *asked* (`drift_asked_at` on the
+    /// subject); this records that the person was **shown** the ask and how
+    /// late it came. Step 7's second number — "was the drift caught before the
+    /// failure, or after it" — is unanswerable without the day it appeared.
+    /// Written at most once a day per practice, which is looser than the
+    /// ladder's own period and so never invents an ask that did not happen.
+    case driftSurfaced = "drift_surfaced"
+    /// One turn of the mouth, and whether it left mechanics behind. Q25 says
+    /// to measure the share of turns that neither mutate nor remember nor
+    /// explain a bound widget, and to add a limiter only if that share grows —
+    /// so the share has to be countable, and nothing else in the journal can
+    /// count it: a turn that only talked writes no other event at all.
+    case talkTurn = "talk_turn"
     case subjectShrunk = "subject_shrunk"
     case subjectRetired = "subject_retired"
     case driftAnswered = "drift_answered"

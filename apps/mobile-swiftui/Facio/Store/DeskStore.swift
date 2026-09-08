@@ -21,6 +21,8 @@ final class DeskStore {
     private let now: () -> Date
     private var surfacedDay = Date.distantPast
     private var surfacedPlaces: Set<String> = []
+    private var driftSurfacedDay = Date.distantPast
+    private var driftSurfacedSubjects: Set<String> = []
     private var clarificationAsked: Set<String> = []
 
     static func live() -> DeskStore {
@@ -361,6 +363,53 @@ final class DeskStore {
             instanceId: widget.instanceId,
             cueId: cue.id,
             payload: ["place": place]
+        )
+    }
+
+    /// The drift card reached the lid. Written once a day per practice, the
+    /// same latch shape `countSurfaced` uses — the card sits on screen for as
+    /// long as the person leaves it there and `onAppear` fires on every scroll,
+    /// so without the latch the journal would count redraws.
+    ///
+    /// The subject already remembers `drift_asked_at`; this is the other half
+    /// step 7 needs — **how silent the practice had gone by the time we spoke**
+    /// — and the ladder does not keep it, because the ladder only cares that
+    /// its period has passed.
+    func markDriftSurfaced(_ card: DriftCard) {
+        let day = Calendar.current.startOfDay(for: now())
+        if day != driftSurfacedDay {
+            driftSurfacedDay = day
+            driftSurfacedSubjects = repository.driftSurfacedSubjects(on: day)
+        }
+        guard driftSurfacedSubjects.insert(card.subjectId).inserted else { return }
+        journal(
+            .driftSurfaced,
+            subjectId: card.subjectId,
+            payload: [
+                "silent_days": String(card.silentDays),
+                "offer": card.offer.rawValue
+            ]
+        )
+    }
+
+    /// Step 7's numbers, read once, when somebody asks for them.
+    ///
+    /// The journal is opened here and nowhere else in the hot path: it grows
+    /// for ever, and the one thing this device may not do is decode a year of
+    /// it at launch. Nothing is cached — the sheet is opened rarely, and a
+    /// stale number is worse than a slow one.
+    func measurements(days: Int = MeasureLaw.windowDays) -> MeasureLaw.Report {
+        let calendar = SlotLaw.dayCalendar
+        let since = calendar.date(
+            byAdding: .day,
+            value: -(days - 1),
+            to: SlotLaw.startOfDay(for: now())
+        )
+        return MeasureLaw.report(
+            journal: repository.journal(since: since),
+            desk: snapshot,
+            now: now(),
+            days: days
         )
     }
 
@@ -856,6 +905,18 @@ final class DeskStore {
         // the desk, and it does not do that itself: the mouth wrote the rhythm,
         // the law counts the cases (Q34).
         ensureOccurrences()
+        // Q25: the share of turns that leave nothing behind is the number that
+        // decides whether this product ever needs a limiter on what may be
+        // said to it. A turn that only talked writes no other event, so it has
+        // to be written here or it cannot be counted at all.
+        journal(
+            .talkTurn,
+            payload: [
+                "mutated": snapshot != previous ? "true" : "false",
+                "tools": String(toolCalls.filter(\.ok).count),
+                "cues": String(written.count)
+            ]
+        )
         for cue in written {
             journal(.cueWritten, subjectId: cue.subjectId, cueId: cue.id, payload: ["text": cue.text])
         }

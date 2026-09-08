@@ -30,6 +30,7 @@ struct LidScreen: View {
                     onToggleTimer: store.toggleTimerRun,
                     onCloseOccurrence: store.closeOccurrence,
                     onSurfaced: { store.markCueSurfaced(widgetId: $0, place: "tile") },
+                    onDriftSurfaced: store.markDriftSurfaced,
                     onAnswerDrift: store.answerDrift,
                     onRefuseDrift: store.refuseDrift
                 )

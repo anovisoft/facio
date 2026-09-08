@@ -75,6 +75,45 @@ struct DeskRepository: Sendable {
         try? FileManager.default.removeItem(at: undoURL)
     }
 
+    /// The journal from `since` onwards, oldest first.
+    ///
+    /// Read **on demand**, never at launch: the whole point of `journal.jsonl`
+    /// is that it grows for ever, and a cold start that decodes a year of it
+    /// spun the cue counters on a phone once already. The measurement sheet is
+    /// the only caller that wants the whole file, and it wants it once, while
+    /// the person is looking at it.
+    ///
+    /// A line that does not decode is skipped, not fatal: a half-written last
+    /// line after a kill is the normal end of an append-only file.
+    func journal(since: Date? = nil) -> [JournalEvent] {
+        guard FileManager.default.fileExists(atPath: journalURL.path),
+              let data = try? Data(contentsOf: journalURL),
+              let text = String(data: data, encoding: .utf8)
+        else { return [] }
+        var events: [JournalEvent] = []
+        for line in text.split(whereSeparator: \.isNewline) {
+            guard let event = try? FacioJSON.decoder.decode(JournalEvent.self, from: Data(line.utf8))
+            else { continue }
+            if let since, event.at < since { continue }
+            events.append(event)
+        }
+        return events.sorted { $0.at < $1.at }
+    }
+
+    /// Which practices already had their drift card written down today. Same
+    /// shape as `surfacedPlaces`, and for the same reason: a card is on screen
+    /// for as long as the person leaves it there, and `onAppear` fires on every
+    /// scroll — the journal must count the ask, not the redraw.
+    func driftSurfacedSubjects(on day: Date) -> Set<String> {
+        let start = Calendar.current.startOfDay(for: day)
+        guard let end = Calendar.current.date(byAdding: .day, value: 1, to: start) else { return [] }
+        return Set(
+            journal(since: start)
+                .filter { $0.type == .driftSurfaced && $0.at < end }
+                .compactMap(\.subjectId)
+        )
+    }
+
     func surfacedPlaces(on day: Date) -> Set<String> {
         guard FileManager.default.fileExists(atPath: journalURL.path),
               let data = try? Data(contentsOf: journalURL),

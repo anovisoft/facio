@@ -21,6 +21,9 @@ struct LidFeed: View {
     /// no pointer, and a later check never closes an earlier miss.
     let onCloseOccurrence: (String) -> Void
     let onSurfaced: (String) -> Void
+    /// The card reached the lid. The store keeps a once-a-day latch, so this
+    /// may fire on every scroll without inflating the count.
+    let onDriftSurfaced: (DriftCard) -> Void
     let onAnswerDrift: (String, DriftOffer) -> Void
     let onRefuseDrift: (String) -> Void
 
@@ -79,6 +82,7 @@ struct LidFeed: View {
                         onAnswer: { onAnswerDrift(card.subjectId, $0) },
                         onRefuse: { onRefuseDrift(card.subjectId) }
                     )
+                    .onAppear { onDriftSurfaced(card) }
                 case .delta(let card):
                     DeltaTile(
                         card: card,

@@ -18,6 +18,7 @@
 		0B5492F1132E9FBFDB1308EA /* PainLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A8BE137FD1137D4F1D4C801 /* PainLaw.swift */; };
 		0D5958CFDF5042E78A875511 /* Slot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220235A79CEBC31A1E71A2A5 /* Slot.swift */; };
 		0DCB06101BDB12C43AEF0870 /* TickUseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B2748A2C229B2F4EEFF8E66 /* TickUseView.swift */; };
+		0F07226BDFD58BA5EC575E7E /* MeasureLawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9811CF75F7393B9B99C3229 /* MeasureLawTests.swift */; };
 		0FC842D51F4D409BE6BCAF6E /* PanHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADF2CBCE21AC8ED3A81CE62 /* PanHost.swift */; };
 		134293B3F4B983D145ABEE9F /* Target.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3D3253DFAFD9354F4669F20 /* Target.swift */; };
 		14FB19DF959B7C5392244DAD /* ReminderTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4911636F00FC033987EB181 /* ReminderTile.swift */; };
@@ -128,6 +129,7 @@
 		AD83233E65F88CD811ACAB35 /* DayZeroLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3FF096CC624C6A7B8EE65EE /* DayZeroLaw.swift */; };
 		AE0EE9B28482E1A88A7E2076 /* SlotKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CC366E1820B8C0187727896 /* SlotKind.swift */; };
 		B2A5600E11C4CD751ECFDB7A /* AccountModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47F1FCFB1FA72143A6BDC3E1 /* AccountModels.swift */; };
+		B4B010F3D48DD025141CC83E /* MeasureLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DBF9C27B0C48608CDF0708 /* MeasureLaw.swift */; };
 		B4E0003131A6C09ECD1A8DE4 /* TalkAnchorLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9BCAA35FFBFE03B382EB59 /* TalkAnchorLaw.swift */; };
 		B509ED72FBAC2C30C291F99B /* InstanceFaceLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF5B6E8907A46559697FA36D /* InstanceFaceLaw.swift */; };
 		B81A079B61F6D259329DA1E2 /* LidScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3200A392C3CE6994B512A167 /* LidScreen.swift */; };
@@ -259,6 +261,7 @@
 		4465EB8A7DE1ABE41D8C6475 /* TimerStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerStoreTests.swift; sourceTree = "<group>"; };
 		47F1FCFB1FA72143A6BDC3E1 /* AccountModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountModels.swift; sourceTree = "<group>"; };
 		48CFE8F85A9299CAFAD6DD51 /* DeskSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskSnapshot.swift; sourceTree = "<group>"; };
+		49DBF9C27B0C48608CDF0708 /* MeasureLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasureLaw.swift; sourceTree = "<group>"; };
 		4A1B5F0456FC90DCCEB83E66 /* PanScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanScreen.swift; sourceTree = "<group>"; };
 		4AC446C1A84AAAD4F0ECC41D /* TickTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TickTile.swift; sourceTree = "<group>"; };
 		4ADF2CBCE21AC8ED3A81CE62 /* PanHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanHost.swift; sourceTree = "<group>"; };
@@ -367,6 +370,7 @@
 		DC16928D71A59480CFCA71EF /* CounterTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CounterTile.swift; sourceTree = "<group>"; };
 		DE49070FF2ADCCEB1E700DDA /* InstanceLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceLawTests.swift; sourceTree = "<group>"; };
 		DEF4EC197D5E264095B5F72F /* TalkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkStore.swift; sourceTree = "<group>"; };
+		E9811CF75F7393B9B99C3229 /* MeasureLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasureLawTests.swift; sourceTree = "<group>"; };
 		E9C3CCEF40E190AB353E319E /* InspectStripTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspectStripTests.swift; sourceTree = "<group>"; };
 		EB5247A982C89F51EF171CE1 /* CueLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueLaw.swift; sourceTree = "<group>"; };
 		EF5B6E8907A46559697FA36D /* InstanceFaceLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceFaceLaw.swift; sourceTree = "<group>"; };
@@ -570,6 +574,7 @@
 				88264A6ED9F4B61255BD7DDB /* LidProjectionTests.swift */,
 				87E7242F94816CBFA104CD1B /* LidReminderGroupTests.swift */,
 				0ADACEEA50715309876C8DF6 /* LocalizationCatalogTests.swift */,
+				E9811CF75F7393B9B99C3229 /* MeasureLawTests.swift */,
 				62CDF841D69D1101DC6F6D8C /* ModelTests.swift */,
 				CCDB99B68CC5F0AD49351926 /* MorningLawTests.swift */,
 				29F56F91DD00AA482CDF5017 /* OccurrenceHourTests.swift */,
@@ -740,6 +745,7 @@
 				AEA5DBB945F9D156D24A895C /* GroupLaw.swift */,
 				5FD625BD89099DBE924C2B9D /* InstanceLaw.swift */,
 				15209F287CF3C54B427B68E7 /* LidProjectionLaw.swift */,
+				49DBF9C27B0C48608CDF0708 /* MeasureLaw.swift */,
 				3D55531FE6458678905FB1E0 /* MorningLaw.swift */,
 				FB0CA7FA219BA817D67383E6 /* OccurrenceHourLaw.swift */,
 				5A8BE137FD1137D4F1D4C801 /* PainLaw.swift */,
@@ -894,6 +900,7 @@
 				9F50A3AF342159EBD6E77599 /* LidProjectionTests.swift in Sources */,
 				41D45DDBB8FDA6FC9EA496CC /* LidReminderGroupTests.swift in Sources */,
 				71B355AAC28D015ED5DD4520 /* LocalizationCatalogTests.swift in Sources */,
+				0F07226BDFD58BA5EC575E7E /* MeasureLawTests.swift in Sources */,
 				CBA06C3A5C7845636196F10A /* ModelTests.swift in Sources */,
 				A79E64FD194EDD1325F21828 /* MorningLawTests.swift in Sources */,
 				BE5940CDB4F8A883073566EF /* OccurrenceHourTests.swift in Sources */,
@@ -993,6 +1000,7 @@
 				B81A079B61F6D259329DA1E2 /* LidScreen.swift in Sources */,
 				C320C96EB2A1BB2C8B925B59 /* LidSectionHeader.swift in Sources */,
 				44CC1E8EC0C1B68A74E8C884 /* LidWidgetCell.swift in Sources */,
+				B4B010F3D48DD025141CC83E /* MeasureLaw.swift in Sources */,
 				447F31BE251764E051843234 /* MorningLaw.swift in Sources */,
 				BC2C705DB65159814F8FA19A /* OccurrenceHourLaw.swift in Sources */,
 				54A148D920190BA2B2583CCD /* PackRowMajorLayout.swift in Sources */,

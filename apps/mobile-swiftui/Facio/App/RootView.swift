@@ -71,7 +71,7 @@ struct RootView: View {
         }
         .sheet(isPresented: $settingsOpen) {
             if let sync {
-                SettingsScreen(sync: sync) { settingsOpen = false }
+                SettingsScreen(sync: sync, measurements: { store.measurements() }) { settingsOpen = false }
             }
         }
         .sheet(item: $clarityCheck) { target in
