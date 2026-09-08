@@ -260,6 +260,103 @@ final class OccurrenceRolloverTests: XCTestCase {
         XCTAssertTrue(later.snapshot.widgets.allSatisfy { $0.groupId == nil })
     }
 
+    // MARK: - a day that closed owes the next one (R19's other half)
+
+    /// Measured on the founding seed, three days running: vegetables is
+    /// `1×/day`, it was ticked on day 0, and on day 1 the lid had **no tile
+    /// for it at all** — and no line either, because the delta is one card and
+    /// push-ups won it. On day 3 the same practice produced a **drift card**:
+    /// the product accusing the person of silence about a practice it had
+    /// taken off Today itself.
+    ///
+    /// `SlotLaw` projects the due slot for tomorrow all along; it was the hand
+    /// that writes the case that refused, because R19 limited the roll-forward
+    /// to a practice promising more than one a day.
+    func testADailyPracticeClosedYesterdayIsBackOnTheLidToday() throws {
+        let repository = try makeSeedRepository()
+        let first = try DeskStore(repository: repository, now: { self.day(0) })
+        first.toggleTick(widgetId: "vegetables-tick")
+
+        let second = try DeskStore(repository: repository, now: { self.day(1) })
+        let tiles = todayWidgets(second).filter { $0.subjectId == "vegetables" }
+        XCTAssertEqual(tiles.count, 1)
+        XCTAssertEqual(tiles.first?.status, .ready)
+        XCTAssertEqual(tiles.first?.payload.done, false)
+        let standing = try XCTUnwrap(
+            second.snapshot.instances.first { $0.id == tiles.first?.instanceId }
+        )
+        XCTAssertTrue(SlotLaw.isSameDay(standing.when, day(1)))
+    }
+
+    /// The roll rebinds the standing tile; it never copies it. One practice,
+    /// one tile (R17) — and an old desk does not grow a widget a day.
+    func testTheDailyRollIsOneTileAndOneCasePerDay() throws {
+        let repository = try makeSeedRepository()
+        for offset in 0...2 {
+            let store = try DeskStore(repository: repository, now: { self.day(offset) })
+            store.toggleTick(widgetId: "vegetables-tick")
+        }
+        let fourth = try DeskStore(repository: repository, now: { self.day(3) })
+        XCTAssertEqual(fourth.snapshot.widgets.filter { $0.subjectId == "vegetables" }.count, 1)
+        for offset in 0...2 {
+            let onThatDay = fourth.snapshot.instances.filter {
+                $0.subjectId == "vegetables" && SlotLaw.isSameDay($0.when, self.day(offset))
+            }
+            XCTAssertEqual(onThatDay.count, 1, "day \(offset)")
+            XCTAssertEqual(onThatDay.first?.status, .completed, "day \(offset)")
+        }
+    }
+
+    /// Yesterday is not rewritten — the same line R19 took. A closed day keeps
+    /// its date and its status, so the delta and the drift go on counting it.
+    func testTheDailyRollLeavesYesterdayAlone() throws {
+        let repository = try makeSeedRepository()
+        let first = try DeskStore(repository: repository, now: { self.day(0) })
+        first.toggleTick(widgetId: "vegetables-tick")
+        let closed = try XCTUnwrap(
+            first.snapshot.instances.first { $0.subjectId == "vegetables" && $0.status == .completed }
+        )
+
+        let second = try DeskStore(repository: repository, now: { self.day(1) })
+        let sameCase = try XCTUnwrap(second.snapshot.instances.first { $0.id == closed.id })
+        XCTAssertEqual(sameCase, closed)
+        XCTAssertEqual(MorningLaw.doneInPeriod(
+            try XCTUnwrap(second.subject(id: "vegetables")),
+            instances: second.snapshot.instances,
+            now: day(0)
+        ), 1)
+    }
+
+    /// A tile still standing on Today is not rolled: it is already the ask, and
+    /// a second one would be two tiles of one practice. This is also why an old
+    /// desk that nobody touched opens byte-identical on a later day.
+    func testAStandingTileIsNotRolled() throws {
+        let repository = try makeSeedRepository()
+        let opened = try DeskStore(repository: repository, now: { self.day(0) })
+        let before = opened.snapshot
+        let later = try DeskStore(repository: repository, now: { self.day(2) })
+        XCTAssertEqual(later.snapshot, before)
+    }
+
+    /// Only a promise counted **per day** rolls. A weekly one is silent here on
+    /// purpose: which day of the week its tile lands on is not decided (Q26),
+    /// and guessing it would be the law inventing a weekday.
+    func testAWeeklyPracticeIsNotRolledByThisRule() throws {
+        let repository = try makeSeedRepository()
+        let first = try DeskStore(repository: repository, now: { self.day(0) })
+        first.completeCounter(widgetId: "push-ups-counter")
+        let before = first.snapshot.instances.filter { $0.subjectId == "push-ups" }
+
+        let second = try DeskStore(repository: repository, now: { self.day(1) })
+        XCTAssertEqual(second.snapshot.instances.filter { $0.subjectId == "push-ups" }, before)
+    }
+
+    private func makeSeedRepository() throws -> DeskRepository {
+        let repository = try makeRepository()
+        try repository.saveSnapshot(try SeedFactory.buildSeed(now: day(0)))
+        return repository
+    }
+
     // MARK: -
 
     private func day(_ offset: Int) -> Date {

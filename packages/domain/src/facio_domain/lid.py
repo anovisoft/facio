@@ -7,7 +7,12 @@ from datetime import datetime
 from typing import Never
 
 from facio_domain.drift import drift_card
-from facio_domain.groups import group_face, group_key, says_every_hour
+from facio_domain.groups import (
+    belongs_to_a_closed_day,
+    group_face,
+    group_key,
+    says_every_hour,
+)
 from facio_domain.models import (
     DeltaTodayItem,
     DriftTodayItem,
@@ -149,26 +154,6 @@ def _sort_key(
     return (_band_index(item.band), when, item.widget.id)
 
 
-def belongs_to_a_closed_day(widget: Widget, now: datetime) -> bool:
-    """Whether this widget belongs to a day that is over (R19).
-
-    A `group_id` names a subject **and a date**, so a widget carrying
-    yesterday's id is one of yesterday's checks. Once the day rolls over, today
-    has its own group, and drawing the old one as well would put two tiles of
-    one practice on the lid (R17) and quietly hand yesterday's misses to today —
-    a miss belongs to the day it happened.
-
-    A drawing rule and nothing else, on the same line R17 took: the widget stays
-    on the desk with its date and its status untouched, and drift and delta go
-    on counting it. A widget with no `group_id` — every widget of a desk written
-    before Q34, and every practice that promises once a day — is never touched
-    by this.
-    """
-    if widget.group_id is None:
-        return False
-    return widget.group_id != group_key(widget.subject_id, now.date())
-
-
 def _today_widgets(widgets: Sequence[Widget], now: datetime) -> list[Widget]:
     """Live Today tiles, plus done of this calendar day — even if still in Lifetime."""
     seen: set[str] = set()
@@ -210,8 +195,11 @@ def lid_projection(
     ringing — this is a view, not the table.
     """
     card = drift_card(subjects, instances, now)
-    # The morning reads the desk, not the drawing: hiding a tile must not be
-    # able to wake a delta line that the tile itself was answering (Q6).
+    # The morning reads the desk, not this projection: a reminder hidden
+    # because today's group already says its hours (R17) must not wake a delta
+    # line the group itself is answering (Q6). It does share one rule with the
+    # drawing — a tile of a day that closed answers for nobody (R19), and that
+    # one lives in `groups.belongs_to_a_closed_day`, read by both.
     delta = delta_card(subjects, instances, widgets, now) if card is None else None
     visible = _without_paused(subjects, widgets)
     visible = _without_repeated_reminders(now, subjects, instances, visible)

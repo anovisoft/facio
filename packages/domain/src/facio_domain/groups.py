@@ -82,6 +82,47 @@ def is_closed(widget: Widget) -> bool:
     return False
 
 
+def belongs_to_a_closed_day(widget: Widget, now: datetime) -> bool:
+    """Whether this widget belongs to a day that is over (R19).
+
+    A `group_id` names a subject **and a date**, so a widget carrying
+    yesterday's id is one of yesterday's checks. Once the day rolls over, today
+    has its own group, and drawing the old one as well would put two tiles of
+    one practice on the lid (R17) and quietly hand yesterday's misses to today —
+    a miss belongs to the day it happened.
+
+    It lives here, next to `group_key`, because the drawing is not the only
+    reader: the **morning** asks the same question. Counting a closed day's
+    tile as «this practice is already asking today» silenced the delta line on
+    the second morning — a practice with no tile and no line, its «7 обещано,
+    0 сделано» computed and thrown away.
+
+    Nothing on the desk moves. The widget keeps its date and its status, the
+    carousel still lists it, and drift and delta go on counting the day it
+    belongs to. A widget with no `group_id` — every widget of a desk written
+    before Q34, and every practice that promises once a day — is never touched.
+    """
+    if widget.group_id is None:
+        return False
+    return widget.group_id != group_key(widget.subject_id, now.date())
+
+
+def closing_stamp(widget: Widget, standing: datetime | None, now: datetime) -> datetime:
+    """The moment to write on the **case** being closed.
+
+    An occurrence inside a group keeps the hour it is for. That hour is the
+    only thing telling the 15:00 check from the 12:00 one, so rewriting it to
+    «now» the moment it is ticked would put the seven anonymous squares
+    straight back — the group would stop naming the window's hours, R17 would
+    un-hide the reminder, and the next top-up would hand the hours out in a
+    different order. A case outside a group is stamped with now, exactly as it
+    always was. Mirrored in `GroupLaw.closingStamp`.
+    """
+    if widget.group_id is None or standing is None:
+        return now
+    return standing
+
+
 def grouped_ids(widgets: Sequence[Widget]) -> list[str]:
     """Every `group_id` on these widgets, in the order the first member appears.
 

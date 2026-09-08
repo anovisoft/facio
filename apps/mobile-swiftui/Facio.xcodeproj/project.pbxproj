@@ -52,6 +52,7 @@
 		39464013547D2961625B7BED /* FacioTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DE3C9083825C5AA83F71546 /* FacioTheme.swift */; };
 		3963C8E508A997723D6B1054 /* CueLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB5247A982C89F51EF171CE1 /* CueLaw.swift */; };
 		3ABA170A8B876DBF8F1196A7 /* ReminderUseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3996D30C44FA29B14C3CC0 /* ReminderUseView.swift */; };
+		3AE90883FA158083EC589A9C /* ClockShiftTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0032B594F51D1BB10D34A129 /* ClockShiftTests.swift */; };
 		3E5B1D3C54C97D725C7BFEBB /* TimerLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74EBE520282587E295E34276 /* TimerLaw.swift */; };
 		4008641D49A21F72B7CB5BC6 /* ReminderClockTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA765E2AAC9E1E3AB182595F /* ReminderClockTests.swift */; };
 		40D34C7A15AA15890A10E38C /* ReminderClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = A146AEC282C47C9A81593E81 /* ReminderClock.swift */; };
@@ -198,6 +199,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0032B594F51D1BB10D34A129 /* ClockShiftTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockShiftTests.swift; sourceTree = "<group>"; };
 		02706B0CC83FA03A818CC7AE /* StepperUseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StepperUseView.swift; sourceTree = "<group>"; };
 		033D03E3F2EF49F7A0B455A4 /* TalkSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkSheet.swift; sourceTree = "<group>"; };
 		03D73A5FEA5CBC3F73850E86 /* PanSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanSession.swift; sourceTree = "<group>"; };
@@ -553,6 +555,7 @@
 				F03C47BC25D153C9D11CF4C4 /* ChecklistLawTests.swift */,
 				279096C8EFE38ACE645E0EE5 /* ChecklistStoreTests.swift */,
 				9C5404C8CBA9BB67CD78D091 /* ClarificationTests.swift */,
+				0032B594F51D1BB10D34A129 /* ClockShiftTests.swift */,
 				56186C97AB845D23001563F3 /* CueLawTests.swift */,
 				C803411CA1727717A50AD026 /* CueMediaTests.swift */,
 				3CE614E685572C878D8CF85C /* DayZeroTests.swift */,
@@ -876,6 +879,7 @@
 				287BE90CEF1E6080F23F6745 /* ChecklistLawTests.swift in Sources */,
 				002CF8827939FD0BC4DA5F9E /* ChecklistStoreTests.swift in Sources */,
 				69B440AD5F03CDC16CDE59D6 /* ClarificationTests.swift in Sources */,
+				3AE90883FA158083EC589A9C /* ClockShiftTests.swift in Sources */,
 				659918BF655B0B9127307996 /* CueLawTests.swift in Sources */,
 				BF5D02C492BCED8E400A19E2 /* CueMediaTests.swift in Sources */,
 				E55487F36C6F6F8BDBC1DEED /* DayZeroTests.swift in Sources */,

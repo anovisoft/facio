@@ -88,7 +88,17 @@ final class TimerStoreTests: XCTestCase {
         XCTAssertTrue(events.contains { $0.type == .instanceCompleted && $0.payload?["elapsed"] == "600" })
     }
 
-    func testAFinishedSittingLeavesTodayWithTheDay() throws {
+    /// The finished **sitting** leaves Today with the day; the practice does not.
+    ///
+    /// This used to assert that the tile was gone from Today altogether on the
+    /// next day, and that was the hole, not the rule: медитация is `1×/day`, so
+    /// day two owes a sitting. The desk wrote none — a once-a-day practice
+    /// closed on day one simply never came back, and three days later it was
+    /// handed a drift card for silence it had been given no tile to break.
+    ///
+    /// What must be true is narrower: yesterday's case is closed and stays on
+    /// yesterday, and the tile that comes back is a **new, empty** sitting.
+    func testAFinishedSittingLeavesTodayAndTheNextDayGetsItsOwn() throws {
         var clock = start
         let (store, repository, _) = try makeTimerDesk(now: { clock })
         store.completeTimer(widgetId: "meditation-timer")
@@ -96,7 +106,17 @@ final class TimerStoreTests: XCTestCase {
 
         clock = try XCTUnwrap(Calendar.current.date(byAdding: .day, value: 1, to: start))
         let later = try DeskStore(repository: repository, now: { clock })
-        XCTAssertFalse(todayIds(later).contains("meditation-timer"))
+        XCTAssertTrue(todayIds(later).contains("meditation-timer"))
+
+        let widget = try XCTUnwrap(later.widget(id: "meditation-timer"))
+        XCTAssertEqual(widget.status, .ready)
+        XCTAssertNotEqual(widget.instanceId, "meditation-open")
+        XCTAssertNil(widget.payload.elapsed)
+        XCTAssertFalse(TimerLaw.isRunning(widget.payload))
+        // Yesterday's sitting is untouched: closed, and still on yesterday.
+        let closed = try XCTUnwrap(later.snapshot.instances.first { $0.id == "meditation-open" })
+        XCTAssertEqual(closed.status, .completed)
+        XCTAssertTrue(SlotLaw.isSameDay(closed.when, start))
     }
 
     func testAQuietTimerGetsTheDriftCard() throws {

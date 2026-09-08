@@ -20,6 +20,28 @@ enum GroupLaw {
         "\(subjectId)\(separator)\(SlotLaw.dayKey(day))"
     }
 
+    /// Whether this widget belongs to a day that is over (R19).
+    ///
+    /// A `group_id` names a subject **and a date**, so a widget carrying
+    /// yesterday's id is one of yesterday's checks. Once the day rolls over,
+    /// today has its own group and drawing the old one too would put two tiles
+    /// of one practice on the lid (R17) and quietly hand yesterday's misses to
+    /// today — and a miss belongs to the day it happened.
+    ///
+    /// It lives here, next to `key`, because the drawing is not the only
+    /// reader: the **morning** asks the same question. Counting a closed day's
+    /// tile as «this practice is already asking today» silenced the delta line
+    /// on the second morning, leaving a practice with no tile and no line.
+    ///
+    /// Nothing on the desk moves. The widget keeps its date and its status, the
+    /// carousel still lists it, and drift and delta go on counting the day it
+    /// belongs to. A widget with no `group_id` — every widget of a desk written
+    /// before Q34, and every practice that promises once a day — is untouched.
+    static func belongsToAClosedDay(_ widget: Widget, now: Date) -> Bool {
+        guard let groupId = widget.groupId else { return false }
+        return groupId != key(subjectId: widget.subjectId, day: now)
+    }
+
     /// Whether this occurrence is struck off. `skipped` is not `done`: a check
     /// that did not happen must not be drawn closed.
     static func isClosed(_ widget: Widget) -> Bool {

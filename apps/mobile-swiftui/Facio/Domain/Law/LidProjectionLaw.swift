@@ -23,8 +23,11 @@ enum LidProjectionLaw {
         // the calm delta line (Q6). Never both — the drift card carries the
         // same subject louder.
         let card = DriftLaw.driftCard(subjects: subjects, instances: instances, now: now)
-        // The morning reads the desk, not the drawing: hiding a tile must not
-        // wake a delta line that the tile itself was answering (Q6).
+        // The morning reads the desk, not this projection: a reminder hidden
+        // because today's group already says its hours (R17) must not wake a
+        // delta line the group itself is answering (Q6). It does share one rule
+        // with the drawing — a tile of a day that closed answers for nobody
+        // (R19), and that one lives in `GroupLaw.belongsToAClosedDay`.
         let delta = card == nil
             ? MorningLaw.deltaCard(subjects: subjects, instances: instances, widgets: widgets, now: now)
             : nil
@@ -127,30 +130,12 @@ enum LidProjectionLaw {
         return Calendar.current.isDate(when, inSameDayAs: now)
     }
 
-    /// Whether this widget belongs to a day that is over (R19).
-    ///
-    /// A `group_id` names a subject **and a date**, so a widget carrying
-    /// yesterday's id is one of yesterday's checks. Once the day rolls over,
-    /// today has its own group and drawing the old one too would put two tiles
-    /// of one practice on the lid (R17) and quietly hand yesterday's misses to
-    /// today — and a miss belongs to the day it happened.
-    ///
-    /// A drawing rule and nothing else, on the same line R17 took: the widgets
-    /// stay on the desk with their dates and their statuses untouched, the
-    /// carousel still lists them, and drift and delta still count them. A
-    /// widget with no `group_id` — every widget of a desk written before Q34,
-    /// and every practice that promises once a day — is never touched by this.
-    private static func belongsToAClosedDay(_ widget: Widget, now: Date) -> Bool {
-        guard let groupId = widget.groupId else { return false }
-        return groupId != GroupLaw.key(subjectId: widget.subjectId, day: now)
-    }
-
     private static func todayWidgets(from widgets: [Widget], now: Date) -> [Widget] {
         var seen = Set<String>()
         var chosen: [Widget] = []
         for widget in widgets {
             if hiddenToday.contains(widget.status) { continue }
-            if belongsToAClosedDay(widget, now: now) { continue }
+            if GroupLaw.belongsToAClosedDay(widget, now: now) { continue }
             if widget.status == .done {
                 if !isDoneToday(widget, now: now) { continue }
             } else if widget.section != .today {

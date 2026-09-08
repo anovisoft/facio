@@ -2,21 +2,25 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime, time
 
 from facio_domain.fixtures import instances_from_rows
+from facio_domain.groups import group_key
 from facio_domain.lid import lid_projection
 from facio_domain.models import (
     Cadence,
     DeltaTodayItem,
     Instance,
+    InstanceStatus,
     Subject,
     SubjectStatus,
     Widget,
     WidgetPayload,
     WidgetSection,
     WidgetStatus,
+    WidgetTodayItem,
     WidgetType,
+    Window,
 )
 from facio_domain.morning import (
     delta_card,
@@ -185,3 +189,113 @@ def test_seven_checks_a_day_are_short_of_seven_not_of_one() -> None:
     card = delta_card([subject], done, [], now)
     assert card is not None
     assert (card.promised, card.done, card.remaining) == (7, 3, 4)
+
+
+# --- R19 reaches the morning too --------------------------------------------
+
+
+def test_yesterdays_group_does_not_silence_todays_delta() -> None:
+    """A tile the lid refuses to draw must not answer for today (R19).
+
+    R19 stopped a closed day's checks from being *drawn* on Today. The morning
+    kept counting them: `_has_live_tile_today` saw seven `ready` tiles in the
+    `today` section, decided the practice was already asking, and swallowed the
+    delta line. The result on the second morning was a practice with no tile
+    **and** no line — «7 обещано, 0 сделано» computed and then thrown away.
+    """
+    hours = [time(10), time(12), time(15), time(16, 30), time(18), time(21), time(22)]
+    yesterday = date(2026, 9, 7)
+    now = datetime.combine(date(2026, 9, 8), time(9, 0))
+    group = group_key("upwork", yesterday)
+    subject = Subject(
+        id="upwork",
+        title="проверить upwork",
+        cadence=Cadence.of(len(hours), "day"),
+        window=Window(hours=hours),
+    )
+    widgets: list[Widget] = []
+    instances: list[Instance] = []
+    for index, hour in enumerate(hours):
+        closed = index < 3
+        when = datetime.combine(yesterday, hour)
+        widgets.append(
+            Widget(
+                id=f"upwork-tick-{index}",
+                type=WidgetType.tick,
+                title="проверить upwork",
+                payload=WidgetPayload(done=closed),
+                status=WidgetStatus.done if closed else WidgetStatus.ready,
+                when=when,
+                section=WidgetSection.today,
+                group_id=group,
+                subject_id="upwork",
+                instance_id=f"upwork-case-{index}",
+                tile_size="2x2",
+            )
+        )
+        instances.append(
+            Instance(
+                id=f"upwork-case-{index}",
+                subject_id="upwork",
+                when=when,
+                status=InstanceStatus.completed if closed else InstanceStatus.prepared,
+            )
+        )
+
+    projection = lid_projection(now, [subject], instances, widgets)
+    # Nothing of yesterday is drawn — that is R19, and it stays true.
+    assert not [item for item in projection.today if isinstance(item, WidgetTodayItem)]
+    assert morning_delta(subject, instances, now) == len(hours)
+    card = delta_card([subject], instances, widgets, now)
+    assert card is not None
+    assert card.subject_id == "upwork"
+    assert card.remaining == len(hours)
+
+
+def test_a_tile_standing_on_today_still_answers_for_it() -> None:
+    """The other half of the same rule: a live tile of **today** is the delta."""
+    hours = [time(10), time(12)]
+    today = date(2026, 9, 8)
+    now = datetime.combine(today, time(9, 0))
+    group = group_key("upwork", today)
+    subject = Subject(
+        id="upwork",
+        title="проверить upwork",
+        cadence=Cadence.of(2, "day"),
+        window=Window(hours=hours),
+    )
+    widgets = [
+        Widget(
+            id=f"upwork-tick-{index}",
+            type=WidgetType.tick,
+            title="проверить upwork",
+            payload=WidgetPayload(done=False),
+            status=WidgetStatus.ready,
+            when=datetime.combine(today, hour),
+            section=WidgetSection.today,
+            group_id=group,
+            subject_id="upwork",
+            instance_id=f"upwork-case-{index}",
+            tile_size="2x2",
+        )
+        for index, hour in enumerate(hours)
+    ]
+    instances = [
+        Instance(
+            id=f"upwork-case-{index}",
+            subject_id="upwork",
+            when=datetime.combine(today, hour),
+            status=InstanceStatus.prepared,
+        )
+        for index, hour in enumerate(hours)
+    ]
+    # A closed case yesterday, so the practice has run at least once.
+    instances.append(
+        Instance(
+            id="upwork-yesterday",
+            subject_id="upwork",
+            when=datetime.combine(date(2026, 9, 7), time(10)),
+            status=InstanceStatus.completed,
+        )
+    )
+    assert delta_card([subject], instances, widgets, now) is None

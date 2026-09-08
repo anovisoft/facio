@@ -62,7 +62,7 @@ enum MorningLaw {
             // one is inventing a chore (never-do #15).
             guard DriftLaw.lastActivity(of: subject, in: instances) != nil else { return nil }
             guard !DriftLaw.isDrifting(subject, instances: instances, now: now) else { return nil }
-            guard !hasLiveTileToday(subject, widgets: widgets) else { return nil }
+            guard !hasLiveTileToday(subject, widgets: widgets, now: now) else { return nil }
             let remaining = delta(subject, instances: instances, now: now)
             guard remaining > 0 else { return nil }
             return (remaining, subject.id, subject)
@@ -82,11 +82,16 @@ enum MorningLaw {
     /// If the practice is already sitting on Today, the tile *is* the delta
     /// made physical, and a card repeating it would be a second inventory of
     /// the same commitment (P10).
-    private static func hasLiveTileToday(_ subject: Subject, widgets: [Widget]) -> Bool {
+    ///
+    /// A tile of a **closed day** is not one of them (R19). The lid does not
+    /// draw it, so it is asking nobody anything, and letting it answer here
+    /// left the second morning with neither a tile nor a line.
+    private static func hasLiveTileToday(_ subject: Subject, widgets: [Widget], now: Date) -> Bool {
         widgets.contains { widget in
             widget.subjectId == subject.id
                 && widget.section == .today
                 && liveToday.contains(widget.status)
+                && !GroupLaw.belongsToAClosedDay(widget, now: now)
         }
     }
 }

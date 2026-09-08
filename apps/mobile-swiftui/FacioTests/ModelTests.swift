@@ -85,9 +85,13 @@ final class ModelTests: XCTestCase {
         XCTAssertEqual(thawed.target, marked.target)
         XCTAssertEqual(thawed.instanceIds, marked.instanceIds)
         XCTAssertEqual(thawed.cueIds, marked.cueIds)
+        // Two calendar days at the same hour. This used to assert a fixed
+        // 172 800 seconds, which is the same thing only on nights when the
+        // clock does not move — and it was the reason the phone and
+        // `packages/domain` disagreed by an hour twice a year.
         XCTAssertEqual(
             SubjectLaw.pauseCheckInAt(now),
-            now.addingTimeInterval(SubjectLaw.pauseCheckIn)
+            Calendar.current.date(byAdding: .day, value: SubjectLaw.pauseCheckInDays, to: now)
         )
     }
 

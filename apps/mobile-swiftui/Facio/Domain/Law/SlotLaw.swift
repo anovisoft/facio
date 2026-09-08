@@ -9,10 +9,20 @@ enum SlotLaw {
     /// Gregorian day math in the device time zone. POSIX locale so names never leak.
     /// `weekday` is Sunday=1…Saturday=7 on this calendar; ISO Monday=0 is derived
     /// from that number. Do not read `firstWeekday` — locale would break Q26.
+    ///
+    /// The zone comes from **`Calendar.current`**, not from `TimeZone.current`.
+    /// Those are two different doors onto the same fact and they can disagree
+    /// inside one process: measured 13 hours apart, `startOfDay` landing on the
+    /// wrong date while `ReminderClock` laid the hour on the right one — so the
+    /// day segment of an alarm id named a different day from the alarm's own
+    /// `fireAt`. Every other law here (`ReminderClock`, `MorningLaw`,
+    /// `DriftLaw`, `InstanceLaw`, `FacioJSON`) reads the zone through
+    /// `Calendar.current`; the day math must read it through the same one, or a
+    /// phone that changes zone has two clocks.
     static var dayCalendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
         calendar.locale = Locale(identifier: "en_US_POSIX")
-        calendar.timeZone = .current
+        calendar.timeZone = Calendar.current.timeZone
         return calendar
     }
 
@@ -23,12 +33,18 @@ enum SlotLaw {
     static func horizon(subjects: [Subject], instances: [Instance], origin: Date) -> Horizon {
         let calendar = dayCalendar
         let originDay = startOfDay(for: origin, calendar: calendar)
-        guard let last = calendar.date(byAdding: .day, value: horizonLength - 1, to: originDay) else {
-            return Horizon(days: [], later: [])
-        }
+        // Every strip is the **first moment of its own day**, not «origin plus
+        // n×24h». In a zone that moves its clock at midnight — Havana, Santiago,
+        // Beirut — `startOfDay` on the day of the change is 01:00, and adding
+        // days to that gave 01:00 strips while every period span landed on the
+        // following midnights. The two never met: the strips stayed empty, the
+        // Inspect week went blank and a daily practice's alarms fell from three
+        // to one, on that one day a year.
         let dayDates = (0..<horizonLength).compactMap { offset in
             calendar.date(byAdding: .day, value: offset, to: originDay)
+                .map { startOfDay(for: $0, calendar: calendar) }
         }
+        guard let last = dayDates.last else { return Horizon(days: [], later: []) }
         var slotsByDay: [Date: [Slot]] = Dictionary(uniqueKeysWithValues: dayDates.map { ($0, []) })
 
         for instance in instances {
@@ -172,6 +188,14 @@ enum SlotLaw {
         calendar.startOfDay(for: date)
     }
 
+    /// The first moment of the next day. Never «plus 24 hours»: the day the
+    /// clock moves is 23 or 25 hours long, and where the move is at midnight
+    /// the next day does not start at 00:00 at all.
+    private static func nextDay(after day: Date, calendar: Calendar) -> Date? {
+        calendar.date(byAdding: .day, value: 1, to: day)
+            .map { startOfDay(for: $0, calendar: calendar) }
+    }
+
     /// Gregorian `weekday` is Sunday=1 … Saturday=7, independent of `firstWeekday`.
     private static func isoWeekdayMondayZero(_ date: Date, calendar: Calendar) -> Int {
         let sundayBased = calendar.component(.weekday, from: date)
@@ -258,7 +282,7 @@ enum SlotLaw {
             if day >= origin, day <= last, !occupied.contains(day) {
                 candidates.append(day)
             }
-            guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
+            guard let next = nextDay(after: day, calendar: calendar) else { break }
             day = next
         }
         return candidates.prefix(toProject).map { candidate in
@@ -277,7 +301,7 @@ enum SlotLaw {
         while cursor <= last {
             let span = periodSpan(cursor, period: period, calendar: calendar)
             spans.append(span)
-            guard let next = calendar.date(byAdding: .day, value: 1, to: span.1) else { break }
+            guard let next = nextDay(after: span.1, calendar: calendar) else { break }
             cursor = next
         }
         return spans
@@ -292,8 +316,10 @@ enum SlotLaw {
             return (start, start)
         case .week:
             let mondayZero = isoWeekdayMondayZero(start, calendar: calendar)
-            let weekStart = calendar.date(byAdding: .day, value: -mondayZero, to: start) ?? start
-            let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) ?? start
+            let weekStart = calendar.date(byAdding: .day, value: -mondayZero, to: start)
+                .map { startOfDay(for: $0, calendar: calendar) } ?? start
+            let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart)
+                .map { startOfDay(for: $0, calendar: calendar) } ?? start
             return (weekStart, weekEnd)
         }
     }

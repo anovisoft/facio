@@ -17,6 +17,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from facio_domain.cues import add_cue
 from facio_domain.drift import settle_talk_answer, times_per_week
+from facio_domain.groups import closing_stamp
 from facio_domain.models import (
     Cadence,
     ChecklistItem,
@@ -805,7 +806,7 @@ def _complete(desk: Desk, args: dict[str, Any], *, now: datetime, **_: Any) -> T
             payload = payload.model_copy(update={"current": len(beats) - 1})
     next_widget = widget.model_copy(update={"status": WidgetStatus.done, "when": now, "payload": payload})
     _replace_widget(desk, next_widget)
-    _complete_instance(desk, widget.instance_id, now)
+    _complete_instance(desk, widget, now)
     return ToolOutcome(
         desk=desk,
         name="complete",
@@ -1083,11 +1084,20 @@ def _add_cue_tool(
     )
 
 
-def _complete_instance(desk: Desk, instance_id: str, now: datetime) -> None:
-    instance = next((row for row in desk.instances if row.id == instance_id), None)
+def _complete_instance(desk: Desk, widget: Widget, now: datetime) -> None:
+    """Close the case behind a widget. A grouped check keeps its own hour.
+
+    `closing_stamp` is the same rule the phone runs (`GroupLaw.closingStamp`):
+    ticking the 15:00 check at 15:42 must not rename it into the 15:42 check.
+    """
+    instance = next((row for row in desk.instances if row.id == widget.instance_id), None)
     if instance is None:
         return
-    _replace_instance(desk, instance.model_copy(update={"status": InstanceStatus.completed, "when": now}))
+    when = closing_stamp(widget, instance.when, now)
+    _replace_instance(
+        desk,
+        instance.model_copy(update={"status": InstanceStatus.completed, "when": when}),
+    )
 
 
 def _widgets_for(desk: Desk, subject_id: str) -> list[str]:

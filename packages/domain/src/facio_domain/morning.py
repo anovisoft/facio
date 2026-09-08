@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 from typing import Never
 
 from facio_domain.drift import is_drifting, last_activity_at
+from facio_domain.groups import belongs_to_a_closed_day
 from facio_domain.models import (
     Cadence,
     DeltaCard,
@@ -88,18 +89,25 @@ def morning_delta(
     return max(0, promised(subject.cadence) - done_in_period(subject, instances, now))
 
 
-def _has_live_tile_today(subject: Subject, widgets: Sequence[Widget]) -> bool:
+def _has_live_tile_today(
+    subject: Subject, widgets: Sequence[Widget], now: datetime
+) -> bool:
     """Is this practice already sitting on Today, waiting for a finger?
 
     If it is, the tile *is* the delta made physical, and a card repeating it
     would be a second inventory of the same commitment (P10). The morning line
     is for a practice that promised something this period and has nothing on
     Today to do it with.
+
+    A tile of a **closed day** is not one of them (R19). The lid does not draw
+    it, so it is asking nobody anything, and letting it answer here left the
+    second morning with neither a tile nor a line.
     """
     return any(
         widget.subject_id == subject.id
         and widget.section.value == "today"
         and widget.status in _LIVE_TODAY
+        and not belongs_to_a_closed_day(widget, now)
         for widget in widgets
     )
 
@@ -129,7 +137,7 @@ def delta_card(
             continue
         if is_drifting(subject, instances, now):
             continue
-        if _has_live_tile_today(subject, widgets):
+        if _has_live_tile_today(subject, widgets, now):
             continue
         remaining = morning_delta(subject, instances, now)
         if remaining <= 0:

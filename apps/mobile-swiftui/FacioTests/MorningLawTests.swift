@@ -185,4 +185,73 @@ final class MorningLawTests: XCTestCase {
         XCTAssertEqual(card.subjectId, "push-ups")
         XCTAssertEqual(card.remaining, 2)
     }
+
+    // MARK: - R19 reaches the morning too
+
+    /// A tile the lid refuses to draw must not answer for today.
+    ///
+    /// R19 stopped a closed day's checks from being **drawn**; the morning kept
+    /// counting them. Seven `ready` tiles in the `today` section made
+    /// `hasLiveTileToday` say the practice was already asking, and the delta
+    /// line was swallowed — so the second morning had neither a tile nor a
+    /// line, with «7 обещано, 0 сделано» computed and thrown away.
+    func testYesterdaysGroupDoesNotSilenceTodaysDelta() throws {
+        let hours = [10, 12, 15, 18, 21, 22].map { ClockTime(hour: $0, minute: 0) }
+            + [ClockTime(hour: 16, minute: 30)]
+        let yesterday = try XCTUnwrap(FacioJSON.date(from: "2026-09-07T00:00:00"))
+        let now = try XCTUnwrap(FacioJSON.date(from: "2026-09-08T09:00:00"))
+        let subject = Subject(
+            id: "upwork",
+            title: "проверить upwork",
+            cadence: try Cadence.of(count: hours.count, period: .day),
+            window: TimeWindow(hours: hours)
+        )
+        var widgets: [Widget] = []
+        var instances: [Instance] = []
+        for (index, hour) in hours.sorted().enumerated() {
+            let closed = index < 3
+            let when = ReminderClock.date(on: yesterday, clock: hour)
+            widgets.append(
+                Widget(
+                    id: "upwork-tick-\(index)",
+                    type: .tick,
+                    title: "проверить upwork",
+                    payload: WidgetPayload(done: closed),
+                    status: closed ? .done : .ready,
+                    when: when,
+                    section: .today,
+                    groupId: GroupLaw.key(subjectId: "upwork", day: yesterday),
+                    subjectId: "upwork",
+                    instanceId: "upwork-case-\(index)",
+                    tileSize: .compact
+                )
+            )
+            instances.append(
+                Instance(
+                    id: "upwork-case-\(index)",
+                    subjectId: "upwork",
+                    when: when,
+                    status: closed ? .completed : .prepared
+                )
+            )
+        }
+
+        let projection = LidProjectionLaw.project(
+            now: now,
+            subjects: [subject],
+            instances: instances,
+            widgets: widgets
+        )
+        // Nothing of yesterday is drawn — that is R19, and it stays true.
+        XCTAssertTrue(projection.today.allSatisfy { item in
+            if case .widget = item { return false }
+            return true
+        })
+        XCTAssertEqual(MorningLaw.delta(subject, instances: instances, now: now), hours.count)
+        let card = try XCTUnwrap(
+            MorningLaw.deltaCard(subjects: [subject], instances: instances, widgets: widgets, now: now)
+        )
+        XCTAssertEqual(card.subjectId, "upwork")
+        XCTAssertEqual(card.remaining, hours.count)
+    }
 }

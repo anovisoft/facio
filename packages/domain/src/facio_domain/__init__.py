@@ -28,6 +28,7 @@ from facio_domain.morning import (
 from facio_domain.groups import (
     GroupFace,
     GroupMark,
+    closing_stamp,
     group_face,
     group_key,
     grouped_ids,
@@ -154,6 +155,7 @@ __all__ = [
     "done_in_period",
     "founding_desk",
     "freeze_subject",
+    "closing_stamp",
     "group_face",
     "group_key",
     "grouped_ids",

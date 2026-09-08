@@ -93,7 +93,9 @@ enum SeedFactory {
                 widgets: next.widgets,
                 on: now
             )
-            if missing > 0, let template = occurrenceTemplate(in: next, subject: subject, now: now) {
+            if missing > 0, SlotLaw.occurrencesPromised(subject) == 1 {
+                next = rollOncePerDay(subject: subject, in: next, now: now)
+            } else if missing > 0, let template = occurrenceTemplate(in: next, subject: subject, now: now) {
                 for _ in 0..<missing {
                     let instanceId = "\(subject.id)-\(UUID().uuidString)"
                     let payload = InstanceLaw.resetPayload(of: template, now: now, window: subject.window)
@@ -110,6 +112,78 @@ enum SeedFactory {
             }
             next = groupToday(subject: subject, in: next, now: now)
         }
+        return next
+    }
+
+    /// A practice that promises **one a day** comes back the next day.
+    ///
+    /// R19's other half, and it was measured the same way: the founding
+    /// vegetables (`1×/day`) ticked on day 0 had **no tile on day 1** — the
+    /// done widget is not drawn once its day is over, and the top-up refused to
+    /// write a case because `occurrenceTemplate` only carries a practice
+    /// promising more than one. On day 3 that practice produced a **drift
+    /// card**: the product telling the person they had gone silent about a
+    /// thing it had taken off Today itself. `SlotLaw` had been projecting the
+    /// due slot for tomorrow all along; only the hand that writes it refused.
+    ///
+    /// The way back is the one the desk already had for a single occurrence:
+    /// the standing tile is **rebound** onto a fresh case, exactly as `+` does
+    /// in the carousel (`InstanceLaw.rebind`). Never copied — one practice, one
+    /// tile (R17), and an old desk must not grow a widget a day.
+    ///
+    /// Three things it refuses to do:
+    ///
+    /// * roll a tile that is **still asking today** — live, or closed today, or
+    ///   ready on Today. It is already the ask, and a second case would be two
+    ///   tiles of one practice. This is also why a desk nobody touched opens
+    ///   byte-identical on a later day.
+    /// * roll anything the person put down on purpose. Only a widget **closed
+    ///   on an earlier day** rolls; postponed, skipped and archived are states
+    ///   that were said out loud, and inferring a new day out of them is the
+    ///   opposite of «said, not inferred».
+    /// * touch a weekly promise. `occurrencesPromised` is a count **per day**,
+    ///   so `2×/week` is zero here and stays untouched: which weekday its tile
+    ///   lands on is not a thing the law may decide (Q26).
+    ///
+    /// Yesterday is left exactly as yesterday ended it — the closed case keeps
+    /// its date and its status, and the delta and the drift go on counting it.
+    private static func rollOncePerDay(subject: Subject, in snapshot: DeskSnapshot, now: Date) -> DeskSnapshot {
+        let candidates = snapshot.widgets.filter { widget in
+            widget.subjectId == subject.id
+                && widget.type != .reminder
+                && widget.type.showsOnLid
+                && widget.status != .archived
+        }
+        guard !candidates.contains(where: { InstanceLaw.shouldClone(template: $0, now: now) }) else {
+            return snapshot
+        }
+        var whenOf: [String: Date] = [:]
+        for instance in snapshot.instances { whenOf[instance.id] = instance.when }
+        let closed = candidates
+            .filter { $0.status == .done && !InstanceLaw.isDoneToday($0, now: now) }
+            .max { lhs, rhs in
+                let left = whenOf[lhs.instanceId] ?? .distantPast
+                let right = whenOf[rhs.instanceId] ?? .distantPast
+                if left != right { return left < right }
+                return lhs.id < rhs.id
+            }
+        guard let standing = closed,
+              let widgetIndex = snapshot.widgets.firstIndex(where: { $0.id == standing.id })
+        else { return snapshot }
+
+        var next = snapshot
+        let instanceId = "\(subject.id)-\(UUID().uuidString)"
+        let payload = InstanceLaw.resetPayload(of: standing, now: now, window: subject.window)
+        next.instances.append(Instance(id: instanceId, subjectId: subject.id, when: now, status: .prepared))
+        if let index = next.subjects.firstIndex(where: { $0.id == subject.id }) {
+            next.subjects[index].instanceIds.append(instanceId)
+        }
+        next.widgets[widgetIndex] = InstanceLaw.rebind(
+            next.widgets[widgetIndex],
+            instanceId: instanceId,
+            payload: payload,
+            now: now
+        )
         return next
     }
 

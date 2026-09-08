@@ -13,17 +13,24 @@ from facio_domain.groups import (
     next_hour,
     says_every_hour,
 )
+from facio_domain.lid import lid_projection
 from facio_domain.models import (
+    Cadence,
+    CueOrigin,
+    Desk,
     Instance,
     InstanceStatus,
+    Subject,
     Widget,
     WidgetPayload,
     WidgetSection,
     WidgetStatus,
+    WidgetTodayItem,
     WidgetType,
     Window,
 )
 from facio_domain.slots import hour_instance_ids, occurrence_instances
+from facio_domain.tools import apply_tool
 
 DAY = date(2026, 8, 30)
 HOURS = [time(10, 0), time(12, 0), time(15, 0), time(16, 30), time(18, 0), time(21, 0), time(22, 0)]
@@ -222,3 +229,96 @@ def test_a_practice_without_a_window_states_no_hour_to_repeat() -> None:
     face = group_face(GROUP, widgets, cases, _at(time(9, 0)))
     assert face is not None
     assert not says_every_hour(face, None)
+
+
+# --- R16 mine: a closed check keeps its own hour ---------------------------
+
+
+def _grouped_desk() -> Desk:
+    widgets, cases = _seven()
+    alarm, alarm_case = _alarm()
+    subject = Subject(
+        id="upwork",
+        title="проверить upwork",
+        cadence=Cadence.of(len(HOURS), "day"),
+        window=Window(hours=HOURS),
+        instance_ids=[case.id for case in cases],
+    )
+    return Desk(
+        subjects=[subject],
+        instances=[*cases, alarm_case],
+        widgets=[*widgets, alarm],
+        cues=[],
+    )
+
+
+def test_closing_a_check_late_keeps_the_hour_it_stands_for() -> None:
+    """The 15:00 check ticked at 15:42 is still the 15:00 check.
+
+    `GroupLaw.closingStamp` on the phone keeps the standing hour on the case,
+    because that hour is the only thing telling the 15:00 mark from the 12:00
+    one. The mouth writes the same desk through `apply_tool`, and it was
+    stamping «now» — so the same tick through talk renamed the mark, and the
+    next top-up would hand the hours out in a different order (R16 mine).
+    """
+    desk = _grouped_desk()
+    late = datetime.combine(DAY, time(15, 42))
+    outcome = apply_tool(
+        desk,
+        "complete",
+        {"widget_id": "upwork-tick-2"},
+        pain=False,
+        now=late,
+        origin=CueOrigin(chat_id="chat-1", message_id="msg-1"),
+    )
+    assert outcome.ok
+    case = next(row for row in outcome.desk.instances if row.id == "upwork-case-2")
+    assert case.when == _at(time(15, 0))
+    assert case.status == InstanceStatus.completed
+
+
+def test_a_late_tick_does_not_bring_the_second_tile_back() -> None:
+    """R17 reads the group's hours off the cases, so a moved stamp un-hides
+    the reminder: two tiles of one practice, from one tick at the wrong minute.
+    """
+    desk = _grouped_desk()
+    late = datetime.combine(DAY, time(15, 42))
+    subject = desk.subjects[0]
+    outcome = apply_tool(
+        desk,
+        "complete",
+        {"widget_id": "upwork-tick-2"},
+        pain=False,
+        now=late,
+        origin=CueOrigin(chat_id="chat-1", message_id="msg-1"),
+    )
+    face = group_face(GROUP, outcome.desk.widgets, outcome.desk.instances, late)
+    assert face is not None
+    assert says_every_hour(face, subject.window)
+    drawn = {
+        item.widget.id
+        for item in lid_projection(
+            late, outcome.desk.subjects, outcome.desk.instances, outcome.desk.widgets
+        ).today
+        if isinstance(item, WidgetTodayItem)
+    }
+    assert "upwork-reminder" not in drawn
+
+
+def test_a_check_outside_a_group_is_still_stamped_now() -> None:
+    """Only a group keeps its hour. A lone case closes at the moment it closed."""
+    desk = _grouped_desk()
+    desk.widgets = [
+        widget.model_copy(update={"group_id": None}) for widget in desk.widgets
+    ]
+    late = datetime.combine(DAY, time(15, 42))
+    outcome = apply_tool(
+        desk,
+        "complete",
+        {"widget_id": "upwork-tick-2"},
+        pain=False,
+        now=late,
+        origin=CueOrigin(chat_id="chat-1", message_id="msg-1"),
+    )
+    case = next(row for row in outcome.desk.instances if row.id == "upwork-case-2")
+    assert case.when == late
