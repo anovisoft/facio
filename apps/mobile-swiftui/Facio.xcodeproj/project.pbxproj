@@ -146,6 +146,7 @@
 		C6CEB2340C7288F178D90254 /* DeskSyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8723C8CD42D8C6088A075648 /* DeskSyncCoordinator.swift */; };
 		CBA06C3A5C7845636196F10A /* ModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62CDF841D69D1101DC6F6D8C /* ModelTests.swift */; };
 		CBFC8BF518CF11B3D528AECA /* widgets.json in Resources */ = {isa = PBXBuildFile; fileRef = 81BADA927DD64EEBCA8F07F7 /* widgets.json */; };
+		CC7A0759353D0A7C0004A85A /* ReminderRhythmTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CC47ED73CDF8104E6A22984 /* ReminderRhythmTests.swift */; };
 		CC9A75BE4ECEFF1E7AB270E2 /* ReminderTimePickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EBCAE028FFEE2A947127085 /* ReminderTimePickerSheet.swift */; };
 		CD79F406A7315A545B225A8A /* FacioNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F1D7859FE372ADE83A1624D /* FacioNotifications.swift */; };
 		CD97347045C6AD3423CBF39D /* DayZeroChips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 762C99105CDBAB0D6DBCC4EB /* DayZeroChips.swift */; };
@@ -295,6 +296,7 @@
 		7655C26A705784207BD2B24E /* DeskRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskRoute.swift; sourceTree = "<group>"; };
 		786AEABFA4B9FBC87D0A2311 /* Cue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cue.swift; sourceTree = "<group>"; };
 		7ABA0B35985A009E192F0880 /* SnapshotFace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotFace.swift; sourceTree = "<group>"; };
+		7CC47ED73CDF8104E6A22984 /* ReminderRhythmTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderRhythmTests.swift; sourceTree = "<group>"; };
 		80D06C5ECF67C0D9989DE687 /* PanSlideLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanSlideLayout.swift; sourceTree = "<group>"; };
 		817E2B9E5F7FA32AACFA0D58 /* PackRowMajorLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackRowMajorLayout.swift; sourceTree = "<group>"; };
 		81BADA927DD64EEBCA8F07F7 /* widgets.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = widgets.json; sourceTree = "<group>"; };
@@ -566,6 +568,7 @@
 				3DB45BC7CD8A1FCED3925597 /* PanSessionTests.swift */,
 				BEE730939DE8F5EDB6705986 /* PanSlideLawTests.swift */,
 				CA765E2AAC9E1E3AB182595F /* ReminderClockTests.swift */,
+				7CC47ED73CDF8104E6A22984 /* ReminderRhythmTests.swift */,
 				828B398A50029A7EAAB3EEA0 /* ReminderSchedulerTests.swift */,
 				6F3E244A61989C75715FE3E2 /* SeedFactoryTests.swift */,
 				6678C0F4DA6208FFE05F2DA7 /* SessionStoreTests.swift */,
@@ -884,6 +887,7 @@
 				1B52ED9C8C00124B71EC174F /* PanSessionTests.swift in Sources */,
 				D751B872E2922B8D13286939 /* PanSlideLawTests.swift in Sources */,
 				4008641D49A21F72B7CB5BC6 /* ReminderClockTests.swift in Sources */,
+				CC7A0759353D0A7C0004A85A /* ReminderRhythmTests.swift in Sources */,
 				18BC5721A6C1050650784A51 /* ReminderSchedulerTests.swift in Sources */,
 				CED80102E7BC05B485A6D7B9 /* SeedFactoryTests.swift in Sources */,
 				01A2492A1DA1794821F5DAD9 /* SessionStoreTests.swift in Sources */,

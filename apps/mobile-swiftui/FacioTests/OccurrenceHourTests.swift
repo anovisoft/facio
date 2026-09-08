@@ -320,9 +320,12 @@ final class OccurrenceHourTests: XCTestCase {
         occurrences(store).map { ReminderClock.clock(from: $0.when) }.sorted()
     }
 
+    /// The hours this practice rings on **today**. Since R20 the scheduler also
+    /// lays the same window on the next days of its horizon, and these tests
+    /// are about the window, not about how far ahead it reaches.
     private func alarmHours(_ store: DeskStore) -> [ClockTime] {
         ReminderScheduler.alarms(from: store.snapshot, now: stamp)
-            .filter { $0.id.contains("upwork") }
+            .filter { $0.id.contains("upwork") && SlotLaw.isSameDay($0.fireAt, stamp) }
             .map { ReminderClock.clock(from: $0.fireAt) }
             .sorted()
     }

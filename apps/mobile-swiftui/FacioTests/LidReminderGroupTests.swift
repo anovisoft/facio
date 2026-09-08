@@ -154,8 +154,12 @@ final class LidReminderGroupTests: XCTestCase {
             now: now, subjects: [subject], instances: cases, widgets: widgets
         )
         XCTAssertFalse(todayIds(projection).contains("upwork-reminder"))
-        XCTAssertEqual(alarms.count, 3)
-        XCTAssertEqual(alarms.map { ReminderClock.clock(from: $0.fireAt) }.sorted(), hours)
+        // Today's three hours, unchanged by the tile being hidden. The horizon
+        // lays the same three on the next days too (R20), which is why this
+        // counts today rather than the whole queue.
+        let todayAlarms = alarms.filter { SlotLaw.isSameDay($0.fireAt, now) }
+        XCTAssertEqual(todayAlarms.count, 3)
+        XCTAssertEqual(todayAlarms.map { ReminderClock.clock(from: $0.fireAt) }.sorted(), hours)
 
         // The same desk with the group never stamped draws both tiles — and
         // rings the very same three alarms. Nothing about the pocket moved.

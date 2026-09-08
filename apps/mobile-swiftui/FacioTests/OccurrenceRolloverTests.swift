@@ -155,26 +155,47 @@ final class OccurrenceRolloverTests: XCTestCase {
 
     // MARK: - the alarms of the new day
 
+    /// R19 asserted seven alarms on the new day, put there by rolling the
+    /// widget's stamp forward. R20 removed the roll — the day now comes from
+    /// the rhythm, which reaches `horizonDays` ahead — so the seven are still
+    /// there on the new day, and the days after it carry their own seven.
     func testTheAlarmsStandOnTheNewDaysHours() throws {
         let (first, repository) = try makeUpworkDesk(withReminder: true)
-        XCTAssertEqual(
-            ReminderScheduler.alarms(from: first.snapshot, now: day(0)).filter {
-                $0.id.contains("upwork")
-            }.count,
-            7
-        )
+        XCTAssertEqual(alarms(first, on: day(0)).count, 7)
 
         let second = try DeskStore(repository: repository, now: { self.day(1) })
-        let alarms = ReminderScheduler.alarms(from: second.snapshot, now: day(1))
-            .filter { $0.id.contains("upwork") }
-        XCTAssertEqual(alarms.count, 7)
-        XCTAssertTrue(alarms.allSatisfy { SlotLaw.isSameDay($0.fireAt, self.day(1)) })
+        let today = alarms(second, on: day(1))
+        XCTAssertEqual(today.count, 7)
         XCTAssertEqual(
-            alarms.map { ReminderClock.clock(from: $0.fireAt) }.sorted(),
+            today.map { ReminderClock.clock(from: $0.fireAt) }.sorted(),
             try XCTUnwrap(second.windowFor(subjectId: "upwork")).hours
         )
         // Yesterday's alarms are behind us; the scheduler drops what has passed.
-        XCTAssertTrue(alarms.allSatisfy { $0.fireAt > self.day(1) })
+        XCTAssertTrue(today.allSatisfy { $0.fireAt > self.day(1) })
+
+        // A daily practice is owed something every day, so the horizon rings on
+        // every one of its days — and never twice on the same hour of the same
+        // day, or the notification centre would drop the duplicate.
+        let all = ReminderScheduler.alarms(from: second.snapshot, now: day(1))
+            .filter { $0.id.contains("upwork") }
+        XCTAssertEqual(all.count, 7 * ReminderScheduler.horizonDays)
+        XCTAssertEqual(Set(all.map(\.id)).count, all.count)
+        XCTAssertTrue(all.allSatisfy { $0.fireAt > self.day(1) })
+    }
+
+    /// The stamp on the reminder widget is not moved by anyone any more (R20):
+    /// it is a mark of the next fire, and the ringing no longer depends on it.
+    func testTheAlarmsRingWithoutTheStampBeingRewritten() throws {
+        let (first, repository) = try makeUpworkDesk(withReminder: true)
+        let stamp = first.widget(id: "upwork-reminder")?.reminderFireAt
+        let third = try DeskStore(repository: repository, now: { self.day(2) })
+        XCTAssertEqual(third.widget(id: "upwork-reminder")?.reminderFireAt, stamp)
+        XCTAssertEqual(alarms(third, on: day(2)).count, 7)
+    }
+
+    private func alarms(_ store: DeskStore, on when: Date) -> [ReminderAlarm] {
+        ReminderScheduler.alarms(from: store.snapshot, now: when)
+            .filter { $0.id.contains("upwork") && SlotLaw.isSameDay($0.fireAt, when) }
     }
 
     func testTheReminderTileStaysHiddenBehindTheNewDaysGroup() throws {

@@ -109,7 +109,6 @@ enum SeedFactory {
                 }
             }
             next = groupToday(subject: subject, in: next, now: now)
-            next = rollAlarm(subject: subject, in: next, now: now)
         }
         return next
     }
@@ -219,41 +218,14 @@ enum SeedFactory {
         }
     }
 
-    /// The alarms of the new day stand on the new day's hours (R19).
-    ///
-    /// `ReminderScheduler` lays the window onto the date its widget carries, and
-    /// drops every moment already behind us. So a reminder still stamped with
-    /// yesterday puts up nothing at all: the seven hours are seven times in the
-    /// past. Moving the stamp forward is not a new hour and not a new promise —
-    /// the hours are read from the same window they always were.
-    ///
-    /// Only a practice whose day this top-up rolls, and only a stamp that is
-    /// already behind: an alarm somebody set ahead is theirs, not ours.
-    private static func rollAlarm(subject: Subject, in snapshot: DeskSnapshot, now: Date) -> DeskSnapshot {
-        guard SlotLaw.occurrencesPromised(subject) > 1,
-              let window = snapshot.subjects.first(where: { $0.id == subject.id })?.window
-        else { return snapshot }
-        var next = snapshot
-        let fireAt = ReminderClock.reminderFireAt(window: window, on: now)
-        for index in next.widgets.indices {
-            let widget = next.widgets[index]
-            guard widget.subjectId == subject.id,
-                  widget.type == .reminder,
-                  widget.status != .archived,
-                  let standing = widget.reminderFireAt,
-                  standing < now,
-                  !SlotLaw.isSameDay(standing, now)
-            else { continue }
-            next.widgets[index].payload.fireAt = fireAt
-            next.widgets[index].when = fireAt
-            if let caseIndex = next.instances.firstIndex(where: { $0.id == widget.instanceId }),
-               next.instances[caseIndex].status != .completed
-            {
-                next.instances[caseIndex].when = fireAt
-            }
-        }
-        return next
-    }
+    // R19's `rollAlarm` stood here. It moved a grouped practice's `fire_at`
+    // forward so the scheduler, which read the day off that stamp, would ring
+    // on the new day. R20 took the day away from the stamp and gave it to the
+    // rhythm (`ReminderScheduler.alarms`), which covers the grouped practice
+    // and the lone one alike — so the roll-forward is not a second path kept
+    // for the group, it is a mechanism with nothing left to do. Removing it
+    // also puts `fire_at` back to what 04 says it is: a mark of the next fire,
+    // not a field the desk rewrites behind the person's back.
 
     static func ensureBike(in snapshot: DeskSnapshot, now: Date) throws -> DeskSnapshot {
         var next = snapshot
