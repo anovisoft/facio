@@ -52,6 +52,7 @@
 		3E5B1D3C54C97D725C7BFEBB /* TimerLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74EBE520282587E295E34276 /* TimerLaw.swift */; };
 		4008641D49A21F72B7CB5BC6 /* ReminderClockTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA765E2AAC9E1E3AB182595F /* ReminderClockTests.swift */; };
 		40D34C7A15AA15890A10E38C /* ReminderClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = A146AEC282C47C9A81593E81 /* ReminderClock.swift */; };
+		41D45DDBB8FDA6FC9EA496CC /* LidReminderGroupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E7242F94816CBFA104CD1B /* LidReminderGroupTests.swift */; };
 		447F31BE251764E051843234 /* MorningLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D55531FE6458678905FB1E0 /* MorningLaw.swift */; };
 		4481C68552510F52EAF8B391 /* LidFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7BE39810B4325D66B31ABA8 /* LidFeed.swift */; };
 		44CC1E8EC0C1B68A74E8C884 /* LidWidgetCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BF6FCE7416C57ADDBB62CA4 /* LidWidgetCell.swift */; };
@@ -295,6 +296,7 @@
 		828B398A50029A7EAAB3EEA0 /* ReminderSchedulerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderSchedulerTests.swift; sourceTree = "<group>"; };
 		85B5456958AB3FFDEAA962F4 /* FacioPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacioPalette.swift; sourceTree = "<group>"; };
 		8723C8CD42D8C6088A075648 /* DeskSyncCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskSyncCoordinator.swift; sourceTree = "<group>"; };
+		87E7242F94816CBFA104CD1B /* LidReminderGroupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidReminderGroupTests.swift; sourceTree = "<group>"; };
 		88264A6ED9F4B61255BD7DDB /* LidProjectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidProjectionTests.swift; sourceTree = "<group>"; };
 		8A34A102E7F3F3EEAB4EE908 /* TalkMiniature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkMiniature.swift; sourceTree = "<group>"; };
 		8AD8AFE0347C1C01638DAF3E /* KebabLaw.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KebabLaw.swift; sourceTree = "<group>"; };
@@ -543,6 +545,7 @@
 				DE49070FF2ADCCEB1E700DDA /* InstanceLawTests.swift */,
 				2933B8EDC13E91A009C7374B /* KebabInspectorTests.swift */,
 				88264A6ED9F4B61255BD7DDB /* LidProjectionTests.swift */,
+				87E7242F94816CBFA104CD1B /* LidReminderGroupTests.swift */,
 				0ADACEEA50715309876C8DF6 /* LocalizationCatalogTests.swift */,
 				62CDF841D69D1101DC6F6D8C /* ModelTests.swift */,
 				CCDB99B68CC5F0AD49351926 /* MorningLawTests.swift */,
@@ -857,6 +860,7 @@
 				360AEFAB704D5DC77C113DA5 /* InstanceLawTests.swift in Sources */,
 				2223C5A14CA51B15305FA20E /* KebabInspectorTests.swift in Sources */,
 				9F50A3AF342159EBD6E77599 /* LidProjectionTests.swift in Sources */,
+				41D45DDBB8FDA6FC9EA496CC /* LidReminderGroupTests.swift in Sources */,
 				71B355AAC28D015ED5DD4520 /* LocalizationCatalogTests.swift in Sources */,
 				CBA06C3A5C7845636196F10A /* ModelTests.swift in Sources */,
 				A79E64FD194EDD1325F21828 /* MorningLawTests.swift in Sources */,

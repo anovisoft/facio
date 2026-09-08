@@ -23,10 +23,17 @@ enum LidProjectionLaw {
         // the calm delta line (Q6). Never both — the drift card carries the
         // same subject louder.
         let card = DriftLaw.driftCard(subjects: subjects, instances: instances, now: now)
+        // The morning reads the desk, not the drawing: hiding a tile must not
+        // wake a delta line that the tile itself was answering (Q6).
         let delta = card == nil
             ? MorningLaw.deltaCard(subjects: subjects, instances: instances, widgets: widgets, now: now)
             : nil
-        let visible = withoutPaused(subjects: subjects, widgets: widgets)
+        let visible = withoutRepeatedReminders(
+            now: now,
+            subjects: subjects,
+            instances: instances,
+            widgets: withoutPaused(subjects: subjects, widgets: widgets)
+        )
         let todayWidgets = todayWidgets(from: visible, now: now)
         let todayIds = Set(todayWidgets.map(\.id))
         let lifetime = visible
@@ -55,6 +62,59 @@ enum LidProjectionLaw {
             driftCard: card,
             deltaCard: delta
         )
+    }
+
+    /// Whether this subject's reminder tile is a second copy of its group tile.
+    ///
+    /// One practice, one promise, one tile. When today's group already carries
+    /// the hours the window states, the reminder repeats it word for word —
+    /// `15:30` large, `18:00 22:00` small — and the lid stops being a view of
+    /// what is due now (P10).
+    ///
+    /// Only today's group counts, and only a group of more than one: a practice
+    /// that promises once a day is never stamped, so a desk written before Q34
+    /// draws exactly as it always did.
+    static func reminderShadowedByGroup(
+        subject: Subject,
+        widgets: [Widget],
+        instances: [Instance],
+        now: Date
+    ) -> Bool {
+        guard let face = GroupLaw.face(
+            of: GroupLaw.key(subjectId: subject.id, day: now),
+            widgets: widgets,
+            instances: instances,
+            now: now
+        ), face.total > 1 else { return false }
+        return GroupLaw.saysEveryHour(face, window: subject.window)
+    }
+
+    /// Drop the reminder tile of a subject whose group already speaks its hours.
+    ///
+    /// A drawing rule and nothing else. The widget stays on the desk, keeps its
+    /// status and keeps ringing: `ReminderScheduler.alarms(from:)` reads the
+    /// desk snapshot, never this projection, so a tile that is not drawn is not
+    /// an alarm that was cancelled.
+    private static func withoutRepeatedReminders(
+        now: Date,
+        subjects: [Subject],
+        instances: [Instance],
+        widgets: [Widget]
+    ) -> [Widget] {
+        let silent = Set(
+            subjects
+                .filter {
+                    reminderShadowedByGroup(
+                        subject: $0,
+                        widgets: widgets,
+                        instances: instances,
+                        now: now
+                    )
+                }
+                .map(\.id)
+        )
+        guard !silent.isEmpty else { return widgets }
+        return widgets.filter { $0.type != .reminder || !silent.contains($0.subjectId) }
     }
 
     private static func withoutPaused(subjects: [Subject], widgets: [Widget]) -> [Widget] {
