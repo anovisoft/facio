@@ -61,6 +61,8 @@ Same shape for time: “the gym shuts at 22” is a cue with `surface: timing`, 
 
 Explain-only is success. Do not require a plan patch after a definition. An optional, dismissible follow-up is allowed; a forced next mutation is not.
 
+**The assistant may offer the answers; the person picks one.** A turn that has to ask something the desk cannot decide — which weekdays a `3×/week` practice sits on, what to do with an hour already behind us — may hand back 1–3 **reply chips** above the composer ([03](./03-product.md)). A tap sends that text as the person’s own reply; offering a chip mutates nothing ([06](./06-never-do.md) AI #2), and every option is equal to or smaller than the commitment already on the table ([06](./06-never-do.md) #21).
+
 **Method is the entry point, and it has one condition.** The assistant is where the *how* comes from — “I want this and don’t know how” is the reason a subject exists at all. But a method must land in the same turn as a cadence, a target, a cue or a window. A progression that stays in the transcript is the founding bug in a new coat ([06](./06-never-do.md) #20).
 
 ## Ask about a phrase, keep the answer

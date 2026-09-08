@@ -79,6 +79,37 @@ Day-0: empty **Сегодня**, chips above the composer (`today` / `dinner` / 
 
 ---
 
+## Reply chips (above the composer)
+
+An answer may hand back **1–3 chips** in the strip above the composer field. A chip is the shape of a reply, not the reply: tapping it **sends that text as the person’s own message** into the same thread, and the turn proceeds like any typed one. Offering a chip changes nothing on the desk ([06](./06-never-do.md) AI #2 — no silent rewrite), and the field stays where it is.
+
+Why they exist: often the assistant knows the two or three continuations that are actually possible, and typing one of them out is the whole friction between a person and the mechanic. The case that named this: *“remind me at 19”* said at **21:00**. The honest answer is “it is already 21, 19:00 today is behind us” — and then an empty field is a riddle. **“Remind me tomorrow”** as a chip is the same sentence the person would have typed.
+
+- **1–3, never a fourth.** A row that grows into a menu is a form, and the composer stops being a conversation.
+- **Chips never replace typing.** They are a shortcut through the likely answers, not the answer set. Anything not on the row is still said in the field.
+- **Every chip is equal to or smaller than the commitment on the table.** Never “try harder”, never a bigger target, a denser cadence or one more day ([06](./06-never-do.md) #21, safety #5). A row that offers more after a miss or after pain is the founding drift bug in a new coat.
+- **They live for one turn.** The first reply — tapped or typed — clears the row. Chips are about *this* turn; a strip that survives it is a control panel above the field, and controls live on the lid.
+- **Written by the model that wrote the answer, in the language of the answer** (`ru` / `en`). Not an English original translated on the client: a chip is a sentence the person is about to say.
+- **Only inside a turn that already has a binding.** No bound subject or widget → no chips. Same rule that refuses an orphan cue ([05](./05-ai-and-memory.md)).
+- **Nothing invented.** A chip must name something the desk can already hold — an hour, a day, a count, a smaller commitment. Options dreamed up around a subject are advice with a tap target, and advice with no place to land is [06](./06-never-do.md) AI #9 again.
+
+### First real case — which weekdays a weekly practice sits on
+
+`3×/week` says how many, never which days, and that does not change ([07](./07-open-questions.md) Q26; fixed weekdays as cadence stays a trap in [06](./06-never-do.md)). Somebody still has to put three occurrences into seven days. The law must not: picking days for a person is the desk deciding in silence what he committed to. So the assistant asks, with chips — *“Mon, Tue, Wed” / “Mon, Wed, Fri” / “Mon, Thu, Sun”* — and the tap is the answer.
+
+Where the options come from: they are **layouts of `count` over the period**, not lucky days. Given the count and the days the period still has free, the row offers the distinct *spacings* — the tight run, the even spread, and one that leans on the weekend — capped at three by the rule above. No layout is offered that the period cannot hold, and days already spent in this period keep what they hold. Weekday names and the first day of the week come from the locale, so the even spread of a Russian week (Mon-first) and of an American one (Sun-first) are written independently, not translated.
+
+A chosen day is a **placement, not a per-day promise**: missing Wednesday is not a failure, missing the count is ([02 P8](./02-principles.md)). This is the same relation [07](./07-open-questions.md) Q34 struck for hours — the hours belong to the subject’s window, the days belong to the placement, and the cadence stays a count per period.
+
+### What these are not
+
+- **Not day-0 chips.** Those stand only on a desk that has never held a subject, they fill the field without sending, and there is no turn to answer. A reply chip answers a question already asked.
+- **Not the drift card’s chips.** The drift ladder shows exactly **one** offer plus “not now”, one step at a time ([07](./07-open-questions.md) Q28). Three offers at once there is the bug the ladder was written to fix — the person takes “retire” on the first ask.
+
+**Open:** whether taps are counted apart from typed text in the step-7 measures ([07](./07-open-questions.md) Q23). Not decided here.
+
+---
+
 ## Chat sheet
 
 Same expansion from lid composer and from kebab miniature: almost fullscreen, handle to collapse. Top of the expanded sheet: **New chat**.
