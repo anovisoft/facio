@@ -33,6 +33,7 @@
 		1D6C0D73D2B773C10F6FB200 /* InstanceStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09B49E7140B92D3E9AA464AE /* InstanceStatus.swift */; };
 		21AC83ABBF8649906CCC1EDD /* InspectHorizonStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3693462B6CCAC151794970E /* InspectHorizonStrip.swift */; };
 		2223C5A14CA51B15305FA20E /* KebabInspectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2933B8EDC13E91A009C7374B /* KebabInspectorTests.swift */; };
+		23DA70F30FF14F9B49626E32 /* OccurrenceRolloverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 561D7D5BDEFC0D5682F7235B /* OccurrenceRolloverTests.swift */; };
 		25BFF7A3B7E47419AFE23BD4 /* InstanceLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FD625BD89099DBE924C2B9D /* InstanceLaw.swift */; };
 		2620E8E19C3F613A95C0EE9A /* TimerUseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F57F3917ABB4141E8C40B20C /* TimerUseView.swift */; };
 		26DE8D94FF2F163FB22C63B2 /* StepperLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7076D725555E30FF540EB29B /* StepperLaw.swift */; };
@@ -145,6 +146,7 @@
 		C6CEB2340C7288F178D90254 /* DeskSyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8723C8CD42D8C6088A075648 /* DeskSyncCoordinator.swift */; };
 		CBA06C3A5C7845636196F10A /* ModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62CDF841D69D1101DC6F6D8C /* ModelTests.swift */; };
 		CBFC8BF518CF11B3D528AECA /* widgets.json in Resources */ = {isa = PBXBuildFile; fileRef = 81BADA927DD64EEBCA8F07F7 /* widgets.json */; };
+		CC7A0759353D0A7C0004A85A /* ReminderRhythmTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CC47ED73CDF8104E6A22984 /* ReminderRhythmTests.swift */; };
 		CC9A75BE4ECEFF1E7AB270E2 /* ReminderTimePickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EBCAE028FFEE2A947127085 /* ReminderTimePickerSheet.swift */; };
 		CD79F406A7315A545B225A8A /* FacioNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F1D7859FE372ADE83A1624D /* FacioNotifications.swift */; };
 		CD97347045C6AD3423CBF39D /* DayZeroChips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 762C99105CDBAB0D6DBCC4EB /* DayZeroChips.swift */; };
@@ -260,6 +262,7 @@
 		5321A8600DA0169C882C0AAD /* CueHits.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueHits.swift; sourceTree = "<group>"; };
 		559285BC5F59A45A7680C309 /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
 		56186C97AB845D23001563F3 /* CueLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueLawTests.swift; sourceTree = "<group>"; };
+		561D7D5BDEFC0D5682F7235B /* OccurrenceRolloverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OccurrenceRolloverTests.swift; sourceTree = "<group>"; };
 		575EABA05F53B43F23160681 /* WidgetPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPayload.swift; sourceTree = "<group>"; };
 		578540D27D96F1CDD2384EBB /* TimerLawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerLawTests.swift; sourceTree = "<group>"; };
 		5A65D9FE0EF09D2A8481ED7B /* CueKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueKind.swift; sourceTree = "<group>"; };
@@ -293,6 +296,7 @@
 		7655C26A705784207BD2B24E /* DeskRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskRoute.swift; sourceTree = "<group>"; };
 		786AEABFA4B9FBC87D0A2311 /* Cue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cue.swift; sourceTree = "<group>"; };
 		7ABA0B35985A009E192F0880 /* SnapshotFace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotFace.swift; sourceTree = "<group>"; };
+		7CC47ED73CDF8104E6A22984 /* ReminderRhythmTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderRhythmTests.swift; sourceTree = "<group>"; };
 		80D06C5ECF67C0D9989DE687 /* PanSlideLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanSlideLayout.swift; sourceTree = "<group>"; };
 		817E2B9E5F7FA32AACFA0D58 /* PackRowMajorLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackRowMajorLayout.swift; sourceTree = "<group>"; };
 		81BADA927DD64EEBCA8F07F7 /* widgets.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = widgets.json; sourceTree = "<group>"; };
@@ -557,12 +561,14 @@
 				62CDF841D69D1101DC6F6D8C /* ModelTests.swift */,
 				CCDB99B68CC5F0AD49351926 /* MorningLawTests.swift */,
 				29F56F91DD00AA482CDF5017 /* OccurrenceHourTests.swift */,
+				561D7D5BDEFC0D5682F7235B /* OccurrenceRolloverTests.swift */,
 				EF759EC20176305D88E7A1C7 /* OccurrenceStoreTests.swift */,
 				360413F490CB306BB68500A5 /* PackLawTests.swift */,
 				DB6CF10F8A46994C86FE0B08 /* PainLawTests.swift */,
 				3DB45BC7CD8A1FCED3925597 /* PanSessionTests.swift */,
 				BEE730939DE8F5EDB6705986 /* PanSlideLawTests.swift */,
 				CA765E2AAC9E1E3AB182595F /* ReminderClockTests.swift */,
+				7CC47ED73CDF8104E6A22984 /* ReminderRhythmTests.swift */,
 				828B398A50029A7EAAB3EEA0 /* ReminderSchedulerTests.swift */,
 				6F3E244A61989C75715FE3E2 /* SeedFactoryTests.swift */,
 				6678C0F4DA6208FFE05F2DA7 /* SessionStoreTests.swift */,
@@ -874,12 +880,14 @@
 				CBA06C3A5C7845636196F10A /* ModelTests.swift in Sources */,
 				A79E64FD194EDD1325F21828 /* MorningLawTests.swift in Sources */,
 				BE5940CDB4F8A883073566EF /* OccurrenceHourTests.swift in Sources */,
+				23DA70F30FF14F9B49626E32 /* OccurrenceRolloverTests.swift in Sources */,
 				F148FD74674E15698F9450F1 /* OccurrenceStoreTests.swift in Sources */,
 				885E0C15BF71F5E736ADCF66 /* PackLawTests.swift in Sources */,
 				C02AB68F2948B995641C037F /* PainLawTests.swift in Sources */,
 				1B52ED9C8C00124B71EC174F /* PanSessionTests.swift in Sources */,
 				D751B872E2922B8D13286939 /* PanSlideLawTests.swift in Sources */,
 				4008641D49A21F72B7CB5BC6 /* ReminderClockTests.swift in Sources */,
+				CC7A0759353D0A7C0004A85A /* ReminderRhythmTests.swift in Sources */,
 				18BC5721A6C1050650784A51 /* ReminderSchedulerTests.swift in Sources */,
 				CED80102E7BC05B485A6D7B9 /* SeedFactoryTests.swift in Sources */,
 				01A2492A1DA1794821F5DAD9 /* SessionStoreTests.swift in Sources */,

@@ -53,6 +53,27 @@ enum SlotLaw {
         )
     }
 
+    /// The days this practice is owed an occurrence on, inside the strips given.
+    ///
+    /// R20: the day a reminder fires is a **conclusion from the rhythm** (04 —
+    /// "fired from the subject's cadence and window"), and this is where that
+    /// conclusion already lives. The 7-day calendar on Inspect reads the same
+    /// horizon, so there is one count of days on the desk and not a second one
+    /// kept for the pocket.
+    ///
+    /// A `due` slot is an occurrence still owed — a prepared case standing on
+    /// that date, or one the cadence projects onto it. A `done` slot is a day
+    /// that already happened, and a practice does not ring for what it has
+    /// finished: a weekly count met on Tuesday is silent for the rest of the
+    /// week without anyone archiving anything.
+    static func dueDays(subjectId: String, in days: [DayStrip]) -> [Date] {
+        days
+            .filter { strip in
+                strip.slots.contains { $0.subjectId == subjectId && $0.kind == .due }
+            }
+            .map(\.date)
+    }
+
     /// How many occurrences this practice owes on one calendar day (Q34).
     ///
     /// Only a rhythm counted **per day** can owe more than one on a given date:

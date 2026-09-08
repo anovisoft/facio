@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 
 from facio_domain.fixtures import instances_from_rows
 from facio_domain.groups import group_key
-from facio_domain.lid import lid_projection
+from facio_domain.lid import belongs_to_a_closed_day, lid_projection
 from facio_domain.models import (
     Cadence,
     DeltaTodayItem,
@@ -474,3 +474,80 @@ def test_a_closed_group_still_hides_the_reminder() -> None:
     ]
     projection = lid_projection(UPWORK_DAY, [subject], cases, closed)
     assert "upwork-reminder" not in _today_ids(projection)
+
+
+# --- R19: a day that is over leaves Today ----------------------------------
+#
+# The checks of a grouped practice are stamped with the subject **and the
+# date**. When the day rolls over the practice tops up a new group, and drawing
+# the old one as well would put two tiles of one practice on the lid and hand
+# yesterday's misses to today. The widgets are not touched — the miss stays a
+# miss, on the day it happened, and the drift and the delta go on counting it.
+
+NEXT_DAY = datetime(2026, 8, 16, 9, 0, 0)
+
+
+def test_yesterdays_checks_are_not_drawn_on_the_new_day() -> None:
+    subject, cases, widgets = _upwork()
+    projection = lid_projection(NEXT_DAY, [subject], cases, widgets)
+    assert _today_ids(projection) == ["upwork-reminder"]
+
+
+def test_the_new_days_group_is_the_one_drawn() -> None:
+    """Yesterday's three and today's three: one tile's worth, not two."""
+    subject, cases, widgets = _upwork()
+    today_group = group_key("upwork", NEXT_DAY.date())
+    fresh = [
+        widget.model_copy(
+            update={
+                "id": f"{widget.id}-d2",
+                "instance_id": f"{widget.instance_id}-d2",
+                "group_id": today_group,
+                "when": widget.when + timedelta(days=1),
+            }
+        )
+        for widget in widgets
+        if widget.type == WidgetType.tick
+    ]
+    fresh_cases = [
+        case.model_copy(
+            update={"id": f"{case.id}-d2", "when": case.when + timedelta(days=1)}
+        )
+        for case in cases
+        if case.id != "upwork-hour"
+    ]
+    projection = lid_projection(
+        NEXT_DAY, [subject], [*cases, *fresh_cases], [*widgets, *fresh]
+    )
+    drawn = _today_ids(projection)
+    assert set(drawn) == {
+        "upwork-tick-0-d2",
+        "upwork-tick-1-d2",
+        "upwork-tick-2-d2",
+    }
+    assert all(widget_id.endswith("-d2") for widget_id in drawn)
+
+
+def test_yesterdays_widgets_stay_on_the_desk_untouched() -> None:
+    """A view, not the table. Nothing is archived, skipped or re-dated."""
+    subject, cases, widgets = _upwork()
+    before = [widget.model_copy(deep=True) for widget in widgets]
+    lid_projection(NEXT_DAY, [subject], cases, widgets)
+    assert widgets == before
+
+
+def test_a_widget_without_a_group_is_never_touched_by_the_day() -> None:
+    """A practice that promises once a day, and every desk written before Q34."""
+    subject, cases, widgets = _upwork(group=None)
+    assert set(_today_ids(lid_projection(NEXT_DAY, [subject], cases, widgets))) == {
+        "upwork-tick-0",
+        "upwork-tick-1",
+        "upwork-tick-2",
+        "upwork-reminder",
+    }
+
+
+def test_todays_group_is_drawn_on_its_own_day() -> None:
+    subject, cases, widgets = _upwork()
+    assert not belongs_to_a_closed_day(widgets[0], UPWORK_DAY)
+    assert belongs_to_a_closed_day(widgets[0], NEXT_DAY)

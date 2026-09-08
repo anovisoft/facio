@@ -74,11 +74,16 @@ enum SeedFactory {
     /// desk when the lid opens. No second mechanism and no scheduler: a case
     /// is only ever missing because a day started.
     ///
-    /// Two things it deliberately does not do. It never touches a reminder
-    /// widget — the hours live in that subject's window, and multiplying the
-    /// tile would turn a window into a calendar. And it counts cases already
-    /// closed, so ticking the first check does not write an eighth: the
-    /// seventh check is the seventh case (04).
+    /// Two things it deliberately does not do. It never multiplies a reminder
+    /// widget — the hours live in that subject's window, and a tile per hour
+    /// would turn a window into a calendar. And it counts cases already closed,
+    /// so ticking the first check does not write an eighth: the seventh check
+    /// is the seventh case (04).
+    ///
+    /// **R19:** the day it tops up is today, every day. Yesterday is left
+    /// exactly as yesterday ended it — no date is rewritten, no closed case is
+    /// reopened, and a check that was missed stays missed on the day it was
+    /// missed. A miss is a miss; the drift and the delta go on counting it.
     static func ensureOccurrences(in snapshot: DeskSnapshot, now: Date) -> DeskSnapshot {
         var next = snapshot
         for subject in snapshot.subjects {
@@ -88,7 +93,7 @@ enum SeedFactory {
                 widgets: next.widgets,
                 on: now
             )
-            if missing > 0, let template = occurrenceTemplate(in: next, subjectId: subject.id, now: now) {
+            if missing > 0, let template = occurrenceTemplate(in: next, subject: subject, now: now) {
                 for _ in 0..<missing {
                     let instanceId = "\(subject.id)-\(UUID().uuidString)"
                     let payload = InstanceLaw.resetPayload(of: template, now: now, window: subject.window)
@@ -173,20 +178,54 @@ enum SeedFactory {
 
     /// The thing the person ticks, on today's case. A reminder is the hour, not
     /// the check, so it is never the template.
-    private static func occurrenceTemplate(in snapshot: DeskSnapshot, subjectId: String, now: Date) -> Widget? {
-        let today = Set(
-            snapshot.instances
-                .filter { $0.subjectId == subjectId && SlotLaw.isSameDay($0.when, now) }
-                .map(\.id)
-        )
-        return snapshot.widgets.first { widget in
-            widget.subjectId == subjectId
+    ///
+    /// **R19 — the template outlives the day.** Looking only at today's cases
+    /// is what made the whole construction last exactly one day: a fresh day
+    /// owns no case yet, so there was no template, so the top-up wrote nothing
+    /// and the practice simply never came back (measured on R18). The face of a
+    /// practice does not belong to a date, so when today has nothing to copy the
+    /// freshest check of any day is copied instead — and only its **face**:
+    /// `InstanceLaw.resetPayload` hands the new day an empty tick, so nothing of
+    /// yesterday's state rides along (P11: instances end, subjects do not).
+    ///
+    /// The carry-over is offered **only to a practice that promises more than
+    /// one a day**. A daily tick and a weekly ride come back by rebinding the
+    /// standing widget onto a new case, which is a mechanism of their own;
+    /// copying for them would leave two tiles of one practice on the lid and
+    /// change a desk written before Q34.
+    private static func occurrenceTemplate(in snapshot: DeskSnapshot, subject: Subject, now: Date) -> Widget? {
+        let candidates = snapshot.widgets.filter { widget in
+            widget.subjectId == subject.id
                 && widget.type != .reminder
                 && widget.type.showsOnLid
                 && widget.status != .archived
-                && today.contains(widget.instanceId)
+        }
+        let today = Set(
+            snapshot.instances
+                .filter { $0.subjectId == subject.id && SlotLaw.isSameDay($0.when, now) }
+                .map(\.id)
+        )
+        if let standing = candidates.first(where: { today.contains($0.instanceId) }) { return standing }
+        guard SlotLaw.occurrencesPromised(subject) > 1 else { return nil }
+
+        var whenOf: [String: Date] = [:]
+        for instance in snapshot.instances { whenOf[instance.id] = instance.when }
+        return candidates.max { lhs, rhs in
+            let left = whenOf[lhs.instanceId] ?? .distantPast
+            let right = whenOf[rhs.instanceId] ?? .distantPast
+            if left != right { return left < right }
+            return lhs.id < rhs.id
         }
     }
+
+    // R19's `rollAlarm` stood here. It moved a grouped practice's `fire_at`
+    // forward so the scheduler, which read the day off that stamp, would ring
+    // on the new day. R20 took the day away from the stamp and gave it to the
+    // rhythm (`ReminderScheduler.alarms`), which covers the grouped practice
+    // and the lone one alike — so the roll-forward is not a second path kept
+    // for the group, it is a mechanism with nothing left to do. Removing it
+    // also puts `fire_at` back to what 04 says it is: a mark of the next fire,
+    // not a field the desk rewrites behind the person's back.
 
     static func ensureBike(in snapshot: DeskSnapshot, now: Date) throws -> DeskSnapshot {
         var next = snapshot
