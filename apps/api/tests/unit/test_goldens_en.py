@@ -6,6 +6,7 @@ from datetime import datetime, time
 
 import pytest
 
+from facio_domain.chips import MAX_CHIPS, weekday_chip
 from facio_domain.desk import founding_desk
 from facio_domain.models import CueKind, CueSurface, Desk, SubjectStatus, WidgetType
 from facio_domain.tools import RUNNABLE_TYPES, apply_tool, times_per_week
@@ -33,6 +34,7 @@ RUSSIAN_IDS = {
     "group_one_widget",
     "gym_no_clock",
     "gym_until_22",
+    "hour_already_past",
     "lower_back",
     "method_4_to_30",
     "miss_skip",
@@ -910,3 +912,79 @@ def test_the_search_bullet_is_bilingual_and_never_invents_a_fact() -> None:
     assert "lower back" in bullet
     for needle in ("there is nothing written", "never fill that silence", "only reads"):
         assert needle in bullet, needle
+
+
+LATE = datetime(2026, 8, 15, 21, 0, 0)
+TOMORROW_EN = "Remind me tomorrow"
+
+
+def _late_request(utterance: str) -> TalkTurnRequest:
+    return TalkTurnRequest(
+        utterance=utterance,
+        desk=founding_desk(now=NOW),
+        thread=[],
+        thread_id="golden-en",
+        now=LATE,
+        locale="en",
+    )
+
+
+async def test_an_hour_already_behind_us_is_said_out_loud_with_a_chip_en() -> None:
+    golden = match_golden("set a reminder for 19:00")
+    assert golden is not None
+    assert golden.id == "hour_already_past_en"
+    result = await run_turn(
+        _late_request(golden.utterance),
+        ScriptedProvider.for_utterance(golden.utterance),
+        now=LATE,
+    )
+    assert _names(result) == golden.expect.tools
+    assert result.reply_chips == golden.expect.chips == [TOMORROW_EN]
+    assert result.mutated is True
+    bike = _subject(result.desk, "bike")
+    assert bike.window is not None
+    assert bike.window.hours == [time(19, 0)]
+    assert bike.cadence.count == 2
+    assert _subject(result.desk, "push-ups").target.goal == 30
+
+
+def test_the_chip_row_is_written_in_the_language_of_the_answer() -> None:
+    """Not an English original translated on the client: a chip is a sentence
+    the person is about to say (03). The two rows are written independently."""
+    russian = match_golden("поставь напоминание на 19 часов")
+    english = match_golden("set a reminder for 19:00")
+    assert _chips_of(russian) == ["Напомни завтра"]
+    assert _chips_of(english) == [TOMORROW_EN]
+    assert not any("Ѐ" <= char <= "ӿ" for chip in _chips_of(english) for char in chip)
+
+
+def _chips_of(golden: Golden) -> list[str]:
+    for turn in golden.scripted:
+        for call in turn.tool_calls:
+            if call.name == "offer_chips":
+                return list(call.arguments["chips"])
+    return []
+
+
+def test_the_chip_bullet_is_bilingual_and_never_offers_more() -> None:
+    bullet = next(row for row in SYSTEM_PROMPT.splitlines() if row.startswith("- Something the desk cannot decide"))
+    assert "offer_chips" in bullet
+    assert "1–3" in bullet
+    # The two example rows are the ones the naming table actually produces, so
+    # the prompt cannot drift away from what a chip is allowed to say.
+    assert weekday_chip([0, 2, 4], "ru") in bullet
+    assert weekday_chip([0, 2, 4], "en") in bullet
+    for needle in ("equal to or smaller", "try harder", "decides nothing"):
+        assert needle in bullet, needle
+
+
+@pytest.mark.parametrize("golden", load_goldens(), ids=lambda row: row.id)
+def test_no_golden_offers_a_fourth_chip(golden: Golden) -> None:
+    """One to three, never a fourth — a row that grows into a menu is a form."""
+    for turn in golden.scripted:
+        for call in turn.tool_calls:
+            if call.name != "offer_chips":
+                continue
+            chips = call.arguments["chips"]
+            assert 1 <= len(chips) <= MAX_CHIPS, golden.id
+            assert len(set(chips)) == len(chips), golden.id

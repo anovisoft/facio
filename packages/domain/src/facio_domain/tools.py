@@ -15,6 +15,7 @@ from typing import Any
 
 from pydantic import TypeAdapter, ValidationError
 
+from facio_domain.chips import build_chips
 from facio_domain.cues import add_cue
 from facio_domain.drift import settle_talk_answer, times_per_week
 from facio_domain.facts import search_facts
@@ -78,6 +79,7 @@ TOOL_NAMES = (
     # ahead of the system prompt and the vendors cache on that prefix, so a new
     # name at the end leaves every cached turn before it still cached.
     "search_facts",
+    "offer_chips",
 )
 
 PAIN_FORBIDS_RAISE = "pain_forbids_raise"
@@ -142,6 +144,12 @@ HOURS_REQUIRED = "hours_required"
 # back facts the person never brought up. Finding **nothing** is a different
 # thing entirely and it is not an error (В3.3).
 QUERY_REQUIRED = "query_required"
+# A chip row that is not a row: nothing offered, a fourth chip, the same
+# sentence twice, or something that is not plain text. Named like its
+# neighbours so the turn can write the row again instead of guessing what went
+# wrong — and refused rather than trimmed to three, because deciding which of
+# four offers to drop is deciding for the person (never-do AI #2).
+INVALID_CHIPS = "invalid_chips"
 
 _MEDIA = TypeAdapter(CueMedia)
 
@@ -1031,6 +1039,26 @@ def _search_facts(desk: Desk, args: dict[str, Any], **_: Any) -> ToolOutcome:
     )
 
 
+def _offer_chips(desk: Desk, args: dict[str, Any], **_: Any) -> ToolOutcome:
+    """Offer the person one to three ready sentences. Nothing on the desk moves.
+
+    This is the one tool that does not touch the desk on purpose rather than by
+    accident: a chip is an **offer**, and drawing one decides nothing (Q35,
+    never-do AI #2). So `mutated` stays down and no snapshot card is written —
+    a card would say the desk changed, and it did not.
+
+    Only the text travels. There is no id, no action and no callback on a chip:
+    a tap sends that sentence as the person's own message, and the turn that
+    follows is an ordinary typed turn. Whether the row may be offered at all —
+    03's «only inside a turn that already has a binding» — is a fact about the
+    turn, not about the desk, so it is checked where the turn lives.
+    """
+    chips = build_chips(args.get("chips"))
+    if chips is None:
+        raise ToolFail(INVALID_CHIPS)
+    return ToolOutcome(desk=desk, name="offer_chips", ok=True, data={"chips": chips})
+
+
 def _optional_text(raw: Any) -> str | None:
     if raw is None:
         return None
@@ -1163,4 +1191,5 @@ _DISPATCH = {
     "list_cues": _list_cues,
     "add_cue": _add_cue_tool,
     "search_facts": _search_facts,
+    "offer_chips": _offer_chips,
 }

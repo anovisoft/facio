@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from facio_domain.chips import MAX_CHIPS
 from facio_domain.desk import founding_desk
 from facio_domain.models import CueOrigin, CueSurface
 from facio_domain.tools import TOOL_NAMES, apply_tool
@@ -94,3 +95,33 @@ def test_search_facts_through_the_session_leaves_the_desk_alone() -> None:
     assert outcome.mutated is False
     assert session.desk == before
     assert [row["cue_id"] for row in outcome.data["facts"]] == ["bike-gym-hours"]
+
+
+def test_offer_chips_is_advertised_last_and_capped_at_three() -> None:
+    """Q35: the row above the composer is text and nothing else.
+
+    `chips` carries strings — no id, no action, no callback — because a chip
+    with one of those is a button that decides for the person (never-do AI #2).
+    It sits last for the same reason `search_facts` does: the schemas render
+    ahead of the system prompt and the vendors cache on that prefix.
+    """
+    assert TOOL_NAMES[-1] == "offer_chips"
+    assert [row["function"]["name"] for row in tool_schemas()][-1] == "offer_chips"
+    schema = next(row["function"] for row in tool_schemas() if row["function"]["name"] == "offer_chips")
+    parameters = schema["parameters"]
+    assert set(parameters["properties"]) == {"chips"}
+    assert parameters["required"] == ["chips"]
+    assert parameters["additionalProperties"] is False
+    chips = parameters["properties"]["chips"]
+    assert chips["items"] == {"type": "string"}
+    assert (chips["minItems"], chips["maxItems"]) == (1, MAX_CHIPS)
+
+
+def test_offering_chips_through_the_session_leaves_the_desk_alone() -> None:
+    session = DeskSession(founding_desk(now=NOW), now=NOW)
+    before = session.desk.model_copy(deep=True)
+    outcome = session.call("offer_chips", {"chips": ["Напомни завтра"]})
+    assert outcome.ok is True
+    assert outcome.mutated is False
+    assert session.desk == before
+    assert outcome.data == {"chips": ["Напомни завтра"]}

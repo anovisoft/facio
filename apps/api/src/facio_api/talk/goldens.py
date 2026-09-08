@@ -54,6 +54,11 @@ class GoldenExpectCadence(BaseModel):
 class GoldenExpect(BaseModel):
     mutated: bool
     tools: list[str] = Field(default_factory=list)
+    # The row above the composer this turn must hand back (Q35). Spelled out in
+    # the golden itself, because a chip is the sentence the person is about to
+    # send in their own name — the one piece of a turn that has to read right
+    # in each language and cannot be checked by shape.
+    chips: list[str] = Field(default_factory=list)
     cadence: GoldenExpectCadence | None = None
     snapshots_empty: bool | None = None
     target_goal_max: int | None = None

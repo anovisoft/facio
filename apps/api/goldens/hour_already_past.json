@@ -1,0 +1,52 @@
+{
+  "id": "hour_already_past",
+  "utterance": "поставь напоминание на 19 часов",
+  "match": [
+    "поставь напоминание на 19"
+  ],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "set_reminder",
+          "arguments": {
+            "subject_id": "bike",
+            "latest_by": "19:00"
+          }
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "offer_chips",
+          "arguments": {
+            "chips": [
+              "Напомни завтра"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "Час поставил, но 19:00 на сегодня уже позади — сейчас 21:00. Ближайший раз будет завтра."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": [
+      "set_reminder",
+      "offer_chips"
+    ],
+    "chips": [
+      "Напомни завтра"
+    ],
+    "target_goal_max": 30,
+    "forbidden_tools": [
+      "set_cadence",
+      "shrink_subject",
+      "update_widget",
+      "create_widget"
+    ]
+  }
+}

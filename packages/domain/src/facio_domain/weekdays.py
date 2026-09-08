@@ -33,6 +33,11 @@ DAYS_IN_WEEK = 7
 WORKING_DAYS = 5
 # 03-product: one to three, never a fourth. A row that grows into a menu is a
 # form, and the composer stops being a conversation.
+#
+# It is a rule about the **row above the composer**, not about spacing — a week
+# could be laid out five ways — and it is defined here only because this module
+# imports nothing and `chips.py` imports this one. `chips.MAX_CHIPS` reads it
+# from here: the day PO says four, one number moves.
 MAX_LAYOUTS = 3
 
 

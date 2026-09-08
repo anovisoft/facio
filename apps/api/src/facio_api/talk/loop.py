@@ -6,7 +6,7 @@ import json
 from datetime import date, datetime
 from typing import Any
 
-from facio_domain.models import CueOrigin, Subject
+from facio_domain.models import CueOrigin, Desk, Subject
 from facio_domain.pain import reports_pain
 from facio_domain.slots import occurrences_promised
 from facio_domain.tools import apply_tool, snapshot_cards
@@ -67,6 +67,17 @@ QUOTE_REQUIRED = "quote_required"
 # filling in a quote (never-do AI #2). A malformed `media` is left to the law,
 # which names it `invalid_media`.
 MEDIA_NOT_IN_CONVERSATION = "media_not_in_conversation"
+# Chips offered by a turn that is bound to nothing. 03 allows the row «only
+# inside a turn that already has a binding», and it is the same rule that
+# refuses an orphan cue (05): with no subject and no widget behind it, an
+# offer is about nothing, and «пн, ср, пт» tapped into a void would be the
+# desk inventing a practice to hang it on. The binding is whatever this turn
+# already put on the table — what the client named (a selection, the widget
+# the sheet stands over) or what a tool call of this turn just named itself —
+# and it is resolved by `selection_subject_id`'s own resolver, not a second
+# copy of it. Refused by name, like `quote_required`, so the turn can bind
+# first and offer after.
+CHIPS_UNBOUND = "chips_unbound"
 LOCALE_LINE: dict[Locale, str] = {
     "ru": "The person writes in Russian: answer in Russian.",
     "en": "The person writes in English: answer in English.",
@@ -145,6 +156,15 @@ async def run_turn(
     text_before_nudge = ""
     tools = tool_schemas()
     first_complete = True
+    # What this turn is bound to. Seeded with what the client named, then grown
+    # by every successful call that names a subject of its own — «only inside a
+    # turn that already has a binding» (03), read literally: by the time chips
+    # are offered, something in this turn is about something.
+    bound = turn_bindings(body)
+    # The row above the composer. A later successful `offer_chips` replaces the
+    # earlier one rather than adding to it: there is one row, it lives for one
+    # turn, and two calls are a turn rewriting its own offer, not a row of six.
+    reply_chips: list[str] = []
 
     for _ in range(MAX_ROUNDS):
         turn = await provider.complete(messages, tools)
@@ -156,6 +176,8 @@ async def run_turn(
                     ok, error, data = False, QUOTE_REQUIRED, None
                 elif _media_not_in_conversation(body, utterance, call.name, call.arguments):
                     ok, error, data = False, MEDIA_NOT_IN_CONVERSATION, None
+                elif call.name == "offer_chips" and not bound:
+                    ok, error, data = False, CHIPS_UNBOUND, None
                 else:
                     outcome = apply_tool(
                         desk,
@@ -170,6 +192,12 @@ async def run_turn(
                     if outcome.mutated:
                         mutated = True
                         snapshot_ids.extend(outcome.snapshot_widget_ids)
+                    if outcome.ok:
+                        named = call_binding(desk, call.arguments)
+                        if named is not None:
+                            bound.add(named)
+                        if call.name == "offer_chips":
+                            reply_chips = list(data.get("chips", []))
                 records.append(
                     ToolCallRecord(
                         name=call.name,
@@ -214,6 +242,7 @@ async def run_turn(
         snapshots=cards,
         tool_calls=records,
         thread_id=body.thread_id,
+        reply_chips=reply_chips,
     )
 
 
@@ -298,17 +327,61 @@ def selection_subject_id(body: TalkTurnRequest) -> str | None:
     selection = body.selection
     if selection is None:
         return None
-    subjects = {row.id for row in body.desk.subjects}
-    if selection.subject_id and selection.subject_id in subjects:
-        return selection.subject_id
-    by_widget = {row.id: row.subject_id for row in body.desk.widgets}
+    named = _subject_on_desk(body.desk, selection.subject_id)
+    if named is not None:
+        return named
     for widget_id in (selection.widget_id, body.focused_widget_id):
-        if not widget_id:
-            continue
-        subject_id = by_widget.get(widget_id)
-        if subject_id in subjects:
-            return subject_id
+        behind = _subject_behind(body.desk, widget_id)
+        if behind is not None:
+            return behind
     return None
+
+
+def _subject_on_desk(desk: Desk, subject_id: Any) -> str | None:
+    """A subject id, but only if this desk actually carries it."""
+    if not isinstance(subject_id, str) or not subject_id:
+        return None
+    return subject_id if any(row.id == subject_id for row in desk.subjects) else None
+
+
+def _subject_behind(desk: Desk, widget_id: Any) -> str | None:
+    """The subject a widget belongs to. The one place widget → subject is read."""
+    if not isinstance(widget_id, str) or not widget_id:
+        return None
+    for widget in desk.widgets:
+        if widget.id == widget_id:
+            return _subject_on_desk(desk, widget.subject_id)
+    return None
+
+
+def turn_bindings(body: TalkTurnRequest) -> set[str]:
+    """What the **client** bound this turn to, before the model has spoken.
+
+    The same question `selection_subject_id` answers for a selected phrase,
+    asked of the turn as a whole, and answered by the same resolver: a
+    selection's binding, or the widget the composer is standing over. The
+    default-subject guesswork of the prompt (reps → push-ups, an hour → bike)
+    is not reused here either — a guess would manufacture the binding whose
+    absence is the whole point of the check.
+    """
+    bound: set[str] = set()
+    for subject_id in (selection_subject_id(body), _subject_behind(body.desk, body.focused_widget_id)):
+        if subject_id is not None:
+            bound.add(subject_id)
+    return bound
+
+
+def call_binding(desk: Desk, arguments: dict[str, Any]) -> str | None:
+    """The subject a call of this turn just put on the table, if it named one.
+
+    A turn that wrote an hour onto the bike is bound to the bike, and may offer
+    the person a row about it. A turn that only looked around — `list_desk`, a
+    search with no practice named — bound nothing and may not.
+    """
+    named = _subject_on_desk(desk, arguments.get("subject_id"))
+    if named is not None:
+        return named
+    return _subject_behind(desk, arguments.get("widget_id"))
 
 
 def _selection_quote_missing(

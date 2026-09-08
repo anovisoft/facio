@@ -1,0 +1,52 @@
+{
+  "id": "hour_already_past_en",
+  "utterance": "set a reminder for 19:00",
+  "match": [
+    "set a reminder for 19"
+  ],
+  "scripted": [
+    {
+      "tool_calls": [
+        {
+          "name": "set_reminder",
+          "arguments": {
+            "subject_id": "bike",
+            "latest_by": "19:00"
+          }
+        }
+      ]
+    },
+    {
+      "tool_calls": [
+        {
+          "name": "offer_chips",
+          "arguments": {
+            "chips": [
+              "Remind me tomorrow"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "The hour is set, but 19:00 today is behind us — it is already 21:00. The next one lands tomorrow."
+    }
+  ],
+  "expect": {
+    "mutated": true,
+    "tools": [
+      "set_reminder",
+      "offer_chips"
+    ],
+    "chips": [
+      "Remind me tomorrow"
+    ],
+    "target_goal_max": 30,
+    "forbidden_tools": [
+      "set_cadence",
+      "shrink_subject",
+      "update_widget",
+      "create_widget"
+    ]
+  }
+}

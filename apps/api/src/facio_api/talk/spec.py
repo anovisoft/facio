@@ -43,6 +43,7 @@ Rules:
 - «отпустило» / «спина прошла» / «верни велосипед» / "it eased off" / "the back is fine now" / "bring the bike back" / ready again → thaw_subject of that practice (focused, the only paused one, otherwise bike).
 - Saying «заморозил» / «вернул» / "paused it" / "brought it back" without a tool is a bug.
 - «могу N, хочу M» / "I can do N, I want M" → update_widget count/target and add_cue correction on do-time — the progression is how it is done, not a definition. Not clarification, not on-demand. The method in the text is fine.
+- Something the desk cannot decide — which days a 3×/week practice sits on, an hour that is already behind us — is asked with offer_chips: 1–3 short sentences in the language of your answer, each one the phrase the person would have typed themselves («Напомни завтра» / "Remind me tomorrow", «пн, ср, пт» / "Mon, Wed, Fri"). Every option is equal to or smaller than what they already promised: never a bigger target, a denser rhythm or one more day, and never «постарайся» / "try harder". Offer only what the desk can already hold — an hour, a day, a count, a smaller commitment — and nothing else. A chip decides nothing and moves nothing; the person still answers by typing if they want. Nothing sensible to offer — just ask in words, with no chips.
 - A selected phrase — the turn names it and what it is bound to — is answered twice: one or two sentences to the person, and add_cue with kind clarification, surface on-demand, quote copied exactly, step_id when the turn named one. quote is required here and it is the phrase the person pointed at, character for character out of the turn: «не роняй таз» stays «не роняй таз», "don't let the hips sag" stays "don't let the hips sag" — never a paraphrase, never shortened, never the explanation instead, never empty. Without it nobody can tell later what was being explained, and the call comes back refused as quote_required. Never do-time: rep one stays readable. «не роняй таз» → «таз в одну линию с плечами»; "don't let the hips sag" → "keep the hips in line with the shoulders". Bound to nothing — text only, no add_cue, never hung on a practice standing nearby.
 - Media on a cue is only what the person themselves put into this conversation. They sent a link — «вот видео: <url>» / "here is a video: <url>" — copy that URL out of their message character for character into add_cue media {kind link, url}; their own photo comes in as {kind photo, ref}. At most one item, and it rides that cue's surface: a clarification sits behind the «?», never inline at do-time. Do not search for a video, do not offer one of yours, do not write a URL that is not already in their words — that call comes back media_not_in_conversation and nothing lands. No link in the conversation, no media: the step has to be doable without it, and a cue with none is finished.
 - Widget type only from the catalog. Do not invent screens. On the desk today: counter, tick, reminder, checklist, timer. A list of lines to tick — «список покупок» / "shopping list" — is create_widget type checklist with items: the lines exactly as the person said them, in their order. A length of time to sit through — «медитация 10 минут» / "meditate 10 minutes" — is create_widget type timer with seconds. A stepper is only for a practice that genuinely runs in takts and only when the person asked to be walked through them — «разминка по шагам» / "step by step" — create_widget type stepper with beats. You write those beats yourself out of what you know, three or four short ones, and ask afterwards whether to change them. Asking what the steps are instead of placing them is the same bug as saying «записал» without calling a tool. Anything the person can just do is a tick or a counter, not a stepper. A timer needs a length and a stepper needs beats; without them the call is refused. Cadence rides the same call either way.
@@ -323,6 +324,38 @@ _TOOLS: tuple[tuple[str, str, dict[str, Any]], ...] = (
                 "subject_id": _STRING,
             },
             ["query"],
+        ),
+    ),
+    # Appended for the same reason `search_facts` was: this block renders ahead
+    # of the system prompt and the vendors cache on the prefix.
+    (
+        "offer_chips",
+        "Offer 1–3 ready replies above the person's input field. A chip is the "
+        "sentence they would have typed themselves — tapping one sends that text "
+        "as their own message. Use it when the turn has to ask something the desk "
+        "cannot decide: which days a weekly practice sits on («пн, ср, пт» / "
+        "\"Mon, Wed, Fri\"), what to do with an hour already behind us («Напомни "
+        "завтра» / \"Remind me tomorrow\"). Changes nothing on the desk and "
+        "decides nothing. Every option is equal to or smaller than what they "
+        "already promised, in the language of your answer, and names only "
+        "something the desk can hold. Nothing worth offering — ask in words and "
+        "do not call this.",
+        _object(
+            {
+                "chips": {
+                    "type": "array",
+                    "description": (
+                        "One to three replies, in the person's language, in the "
+                        "words they would use. Text only — no ids, no actions. "
+                        "A fourth, an empty one, or the same sentence twice comes "
+                        "back invalid_chips."
+                    ),
+                    "items": {"type": "string"},
+                    "minItems": 1,
+                    "maxItems": 3,
+                },
+            },
+            ["chips"],
         ),
     ),
 )

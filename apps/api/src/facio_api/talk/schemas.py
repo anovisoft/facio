@@ -130,3 +130,10 @@ class TalkTurnResponse(BaseModel):
     snapshots: list[SnapshotCard] = Field(default_factory=list)
     tool_calls: list[ToolCallRecord] = Field(default_factory=list)
     thread_id: str | None = None
+    # The row above the composer (03 «Reply chips», Q35). Plain strings, and
+    # deliberately nothing else: a chip **is** the text the person sends in
+    # their own name, so an id, an action or a callback beside it would turn
+    # the row into buttons that decide for them ([06] never-do AI #2). Empty is
+    # the ordinary case — most turns have nothing to offer — and the default
+    # keeps a client written before this field decoding the same response.
+    reply_chips: list[str] = Field(default_factory=list)

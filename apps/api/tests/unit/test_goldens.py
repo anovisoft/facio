@@ -5,13 +5,13 @@ from datetime import datetime, time
 from facio_domain.desk import founding_desk
 from facio_domain.drift import drift_card
 from facio_domain.models import CueKind, CueSurface, Desk, SubjectStatus, WidgetType
-from facio_domain.tools import apply_tool, times_per_week
+from facio_domain.tools import INVALID_CHIPS, apply_tool, times_per_week
 
 from facio_api.providers.scripted import ScriptedProvider
 from facio_api.providers.types import ModelToolCall, ModelTurn
 from facio_api.talk.goldens import load_goldens, match_golden
-from facio_api.talk.loop import MEDIA_NOT_IN_CONVERSATION, run_turn
-from facio_api.talk.schemas import TalkSelection, TalkTurnRequest
+from facio_api.talk.loop import CHIPS_UNBOUND, MEDIA_NOT_IN_CONVERSATION, run_turn
+from facio_api.talk.schemas import TalkSelection, TalkTurnRequest, TalkTurnResponse
 
 NOW = datetime(2026, 8, 15, 12, 0, 0)
 SEED_BRACE = "держи корпус и ягодицы"
@@ -106,6 +106,7 @@ RUSSIAN_IDS = {
     "group_one_widget",
     "gym_no_clock",
     "gym_until_22",
+    "hour_already_past",
     "lower_back",
     "method_4_to_30",
     "miss_skip",
@@ -929,3 +930,185 @@ async def test_a_question_about_something_never_said_finds_nothing() -> None:
     assert outcome.ok is True
     assert outcome.error is None
     assert outcome.data == {"facts": []}
+
+
+LATE = datetime(2026, 8, 15, 21, 0, 0)
+TOMORROW_RU = "Напомни завтра"
+
+
+class ChipsBeforeAnythingProvider:
+    """Offers a row while the turn is about nothing, then binds and offers again.
+
+    The first call is the shape 03 refuses — chips with no subject and no widget
+    behind them. The second round is the same row after the hour was written,
+    and it is allowed, which is what makes the refusal a rule and not a ban.
+    """
+
+    def __init__(self) -> None:
+        self._round = 0
+
+    async def complete(self, messages, tools):
+        del messages, tools
+        self._round += 1
+        row = {"chips": [TOMORROW_RU]}
+        if self._round == 1:
+            return ModelTurn(tool_calls=[ModelToolCall(id="c1", name="offer_chips", arguments=row)])
+        if self._round == 2:
+            return ModelTurn(
+                tool_calls=[
+                    ModelToolCall(
+                        id="c2",
+                        name="set_reminder",
+                        arguments={"subject_id": "bike", "latest_by": "19:00"},
+                    ),
+                    ModelToolCall(id="c3", name="offer_chips", arguments=row),
+                ]
+            )
+        return ModelTurn(text="19:00 на сегодня уже позади. Ближайший раз — завтра.")
+
+
+class FourChipsProvider:
+    def __init__(self) -> None:
+        self._round = 0
+
+    async def complete(self, messages, tools):
+        del messages, tools
+        self._round += 1
+        if self._round == 1:
+            return ModelTurn(
+                tool_calls=[
+                    ModelToolCall(
+                        id="c1",
+                        name="offer_chips",
+                        arguments={"chips": ["пн, вт, ср", "пн, ср, пт", "пн, чт, вс", "пн, пт"]},
+                    )
+                ]
+            )
+        return ModelTurn(text="В какие дни садимся?")
+
+
+def _late_request(utterance: str, *, focused_widget_id: str | None = None) -> TalkTurnRequest:
+    return TalkTurnRequest(
+        utterance=utterance,
+        desk=founding_desk(now=NOW),
+        thread=[],
+        thread_id="golden",
+        now=LATE,
+        focused_widget_id=focused_widget_id,
+    )
+
+
+async def test_an_hour_already_behind_us_is_said_out_loud_with_a_chip() -> None:
+    """Q35's founding case: «в 19» said at 21:00.
+
+    The law is right and silent — the hour rolls to the next due day — and the
+    person is told nothing, so an empty field is a riddle. The turn says the
+    hour is behind us and hands back the sentence they would have typed.
+    """
+    golden = match_golden("поставь напоминание на 19 часов")
+    assert golden is not None
+    assert golden.id == "hour_already_past"
+    result = await run_turn(
+        _late_request(golden.utterance),
+        ScriptedProvider.for_utterance(golden.utterance),
+        now=LATE,
+    )
+    assert _names(result) == golden.expect.tools
+    assert result.reply_chips == golden.expect.chips == [TOMORROW_RU]
+    assert result.mutated is True
+    bike = _subject(result.desk, "bike")
+    assert bike.window is not None
+    assert bike.window.hours == [time(19, 0)]
+    # The offer is an offer: the rhythm and the target it was made against are
+    # exactly what they were.
+    assert bike.cadence.count == 2
+    assert _subject(result.desk, "push-ups").target.goal == 30
+
+
+async def test_the_chip_row_never_offers_more_than_what_stands_on_the_desk() -> None:
+    """Every option equal to or smaller than the commitment ([06] #21)."""
+    golden = match_golden("поставь напоминание на 19 часов")
+    for turn in golden.scripted:
+        for call in turn.tool_calls:
+            if call.name != "offer_chips":
+                continue
+            assert 1 <= len(call.arguments["chips"]) <= 3
+            for chip in call.arguments["chips"]:
+                assert "постарайся" not in chip.casefold()
+                assert "наверстай" not in chip.casefold()
+
+
+async def test_an_ordinary_turn_hands_back_an_empty_row() -> None:
+    """No chips is the ordinary case and not a failure — most turns have
+    nothing to offer, and the field is where the answer lives anyway."""
+    result = await _play("поясница забирает нагрузку")
+    assert result.reply_chips == []
+
+
+async def test_chips_with_nothing_behind_them_are_refused_by_name() -> None:
+    result = await run_turn(
+        _late_request("поставь напоминание на 19 часов"),
+        ChipsBeforeAnythingProvider(),
+        now=LATE,
+    )
+    first = result.tool_calls[0]
+    assert first.name == "offer_chips"
+    assert first.ok is False
+    assert first.error == CHIPS_UNBOUND
+    # Bound by the hour it just wrote, the same row goes through.
+    assert [call.name for call in result.tool_calls] == ["offer_chips", "set_reminder", "offer_chips"]
+    assert result.tool_calls[-1].ok is True
+    assert result.reply_chips == [TOMORROW_RU]
+
+
+async def test_the_widget_the_composer_stands_over_is_a_binding() -> None:
+    """A turn opened from a tile is about that tile — no tool call needed."""
+    result = await run_turn(
+        _late_request("поставь напоминание на 19 часов", focused_widget_id="bike-reminder"),
+        ChipsBeforeAnythingProvider(),
+        now=LATE,
+    )
+    assert result.tool_calls[0].ok is True
+    assert result.reply_chips == [TOMORROW_RU]
+
+
+async def test_a_fourth_chip_is_refused_and_leaves_the_desk_alone() -> None:
+    before = founding_desk(now=NOW)
+    result = await run_turn(
+        _late_request("в какие дни?", focused_widget_id="push-ups-counter"),
+        FourChipsProvider(),
+        now=LATE,
+    )
+    assert result.tool_calls[0].error == INVALID_CHIPS
+    assert result.reply_chips == []
+    assert result.mutated is False
+    assert result.desk == before
+
+
+def test_the_wire_grew_by_one_optional_field_and_nothing_else() -> None:
+    """A client written before Q35 still decodes this response.
+
+    `reply_chips` is additive with a default, so a turn that offers nothing
+    sends the same shape it always did plus an empty row — and the row is
+    plain strings, never objects with an id or an action beside them.
+    """
+    response = TalkTurnResponse(text="Готово.", desk=founding_desk(now=NOW), mutated=False)
+    assert response.reply_chips == []
+    payload = response.model_dump(mode="json")
+    assert payload["reply_chips"] == []
+    assert set(payload) == {
+        "text",
+        "desk",
+        "mutated",
+        "snapshots",
+        "tool_calls",
+        "thread_id",
+        "reply_chips",
+    }
+    carried = TalkTurnResponse(
+        text="Готово.",
+        desk=founding_desk(now=NOW),
+        mutated=False,
+        reply_chips=["Напомни завтра"],
+    )
+    assert carried.model_dump(mode="json")["reply_chips"] == ["Напомни завтра"]
