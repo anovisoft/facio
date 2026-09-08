@@ -37,6 +37,24 @@ enum FacioJSON {
         return Calendar.current.date(from: components)
     }
 
+    /// A moment at the resolution the wire actually carries.
+    ///
+    /// `string(from:)` writes whole seconds, so a `Date()` with fractional
+    /// seconds is **not** equal to itself after a round trip through the
+    /// service. That inequality is not cosmetic: the desk decides «did this
+    /// turn change anything» by comparing the snapshot it sent with the one it
+    /// got back, and a tick made by a finger a moment earlier made every later
+    /// explain-only turn look like a change — offering an undo for a turn that
+    /// changed nothing (06 AI #2: no visible change, no undo) and counting that
+    /// turn as mechanics in step 7.
+    ///
+    /// So the desk's clock runs at the wire's resolution. Truncating an already
+    /// whole second is a no-op, which is why every test that injects a fixed
+    /// `now` is unaffected.
+    static func wireResolution(_ date: Date) -> Date {
+        FacioJSON.date(from: string(from: date)) ?? date
+    }
+
     static func string(from date: Date) -> String {
         let parts = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: date)
         let year = parts.year ?? 0

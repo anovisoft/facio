@@ -35,7 +35,10 @@ final class DeskStore {
 
     init(repository: DeskRepository, now: @escaping () -> Date = Date.init) throws {
         self.repository = repository
-        self.now = now
+        // At the wire's resolution, once, here — every stamp this store writes
+        // has to survive a round trip through the service unchanged, or the
+        // desk cannot tell a turn that changed something from one that did not.
+        self.now = { FacioJSON.wireResolution(now()) }
         self.dayZeroClosed = repository.dayZeroClosed()
         if let loaded = try repository.loadSnapshot() {
             // Bike/drift backfill disabled for dogfood alongside the founding seed below — 2026-08-25.

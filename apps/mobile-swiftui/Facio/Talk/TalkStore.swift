@@ -103,6 +103,12 @@ final class TalkStore {
     @discardableResult
     func promote(threadId: String, anchorMessageId: String? = nil) -> Bool {
         self.anchorMessageId = anchorMessageId
+        // Here, not in `open`: the kebab expands a talk in place and never goes
+        // through `open`, so a row offered in the sheet stood over a different
+        // thread's composer and a tap sent it there. The row belongs to the
+        // turn that offered it, and standing over anything else makes it the
+        // control panel 03 rules out.
+        replyChips = []
         if current.id == threadId {
             persist()
             return true
@@ -124,9 +130,6 @@ final class TalkStore {
 
     func open(threadId: String, anchorMessageId: String? = nil) {
         guard promote(threadId: threadId, anchorMessageId: anchorMessageId) else { return }
-        // Opening an old talk from the pan must not hand back the offer that
-        // belonged to whatever was on screen a moment ago.
-        replyChips = []
         sheetOpen = true
     }
 
@@ -211,6 +214,9 @@ final class TalkStore {
     /// marked too, so reopening one from the pan shows the truth.
     func markUndone(threadId: String, turnId: String) {
         let stamp = now()
+        // The offer belonged to the turn just taken back. Leaving it up would
+        // let the person answer a question that no longer stands.
+        replyChips = []
         mark(&current, threadId: threadId, turnId: turnId, at: stamp)
         for index in archived.indices {
             mark(&archived[index], threadId: threadId, turnId: turnId, at: stamp)
