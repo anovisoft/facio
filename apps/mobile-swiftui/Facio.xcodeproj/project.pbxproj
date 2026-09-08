@@ -188,6 +188,7 @@
 		F7896392618DEA3364CFDD57 /* SubjectStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAEA9232D081EAF6EAF8BE2B /* SubjectStatus.swift */; };
 		F8D115041D6077185ED190A6 /* DomainTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1881B07D94D95992419D2480 /* DomainTestSupport.swift */; };
 		FCA040CE7EE24EFF23A131F2 /* SnapshotFaceLaw.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDCA2EB0E5845902E105345 /* SnapshotFaceLaw.swift */; };
+		FE2668978EFF06939951C54A /* MeasureJournalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5142188B42C4D6EA3925A4C /* MeasureJournalTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -381,6 +382,7 @@
 		F4B4E3102AE125BCB9EF4D90 /* ClockTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockTime.swift; sourceTree = "<group>"; };
 		F50A2B65D8C84C5EF71B4C74 /* GlassSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassSurface.swift; sourceTree = "<group>"; };
 		F513B53ED03A650AA4FBACEF /* Cadence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cadence.swift; sourceTree = "<group>"; };
+		F5142188B42C4D6EA3925A4C /* MeasureJournalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasureJournalTests.swift; sourceTree = "<group>"; };
 		F57F3917ABB4141E8C40B20C /* TimerUseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerUseView.swift; sourceTree = "<group>"; };
 		F5E8172CAF1A5C6B58854F61 /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
 		F7BE39810B4325D66B31ABA8 /* LidFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidFeed.swift; sourceTree = "<group>"; };
@@ -574,6 +576,7 @@
 				88264A6ED9F4B61255BD7DDB /* LidProjectionTests.swift */,
 				87E7242F94816CBFA104CD1B /* LidReminderGroupTests.swift */,
 				0ADACEEA50715309876C8DF6 /* LocalizationCatalogTests.swift */,
+				F5142188B42C4D6EA3925A4C /* MeasureJournalTests.swift */,
 				E9811CF75F7393B9B99C3229 /* MeasureLawTests.swift */,
 				62CDF841D69D1101DC6F6D8C /* ModelTests.swift */,
 				CCDB99B68CC5F0AD49351926 /* MorningLawTests.swift */,
@@ -900,6 +903,7 @@
 				9F50A3AF342159EBD6E77599 /* LidProjectionTests.swift in Sources */,
 				41D45DDBB8FDA6FC9EA496CC /* LidReminderGroupTests.swift in Sources */,
 				71B355AAC28D015ED5DD4520 /* LocalizationCatalogTests.swift in Sources */,
+				FE2668978EFF06939951C54A /* MeasureJournalTests.swift in Sources */,
 				0F07226BDFD58BA5EC575E7E /* MeasureLawTests.swift in Sources */,
 				CBA06C3A5C7845636196F10A /* ModelTests.swift in Sources */,
 				A79E64FD194EDD1325F21828 /* MorningLawTests.swift in Sources */,
