@@ -13,6 +13,10 @@ final class DeskStore {
     /// Set when a first case closes on a practice the mouth explained; cleared
     /// the moment the ask is shown, so it is shown once and never again.
     private(set) var clarificationAsk: String?
+    /// The last talk turn that changed the desk, and the desk it changed — the
+    /// one step back P6 requires. One record, never a stack: a newer changing
+    /// turn takes the offer from the older one.
+    private(set) var undoableTurn: UndoableTurn?
     private let repository: DeskRepository
     private let now: () -> Date
     private var surfacedDay = Date.distantPast
@@ -53,6 +57,7 @@ final class DeskStore {
         surfacedDay = day
         surfacedPlaces = repository.surfacedPlaces(on: day)
         clarificationAsked = repository.clarificationAskedSubjects()
+        undoableTurn = repository.loadUndo()
         closeDayZeroIfNeeded()
     }
 
@@ -813,38 +818,39 @@ final class DeskStore {
         )
     }
 
-    /// Same shape as `applyTalk`'s merge (a full-desk overwrite must not drop
-    /// local `running` progress), for a desk pulled from `/v1/desk` (В3.1/M3)
-    /// instead of a talk turn. No cue journal — that's talk-specific.
+    /// The same merge a talk turn goes through (`ProgressMergeLaw`), for a desk
+    /// pulled from `/v1/desk` (В3.1/M3) instead of from the mouth. No cue
+    /// journal — that's talk-specific.
+    ///
+    /// The record of truth has just spoken, so the one step back goes with it:
+    /// a desk from before a turn is not a thing to push over a server desk.
     func applyServerDesk(_ desk: DeskSnapshot) {
         let previous = snapshot
         commit(reminders: true) { next in
-            var incoming = desk
-            for local in previous.widgets where local.status == .running {
-                guard let index = incoming.widgets.firstIndex(where: { $0.id == local.id }) else { continue }
-                incoming.widgets[index].payload.count = local.payload.count
-                incoming.widgets[index].status = .running
-            }
-            next = incoming
+            next = ProgressMergeLaw.merge(incoming: desk, keepingProgressOf: previous)
         }
+        forgetUndo()
     }
 
-    func applyTalk(_ desk: DeskSnapshot, toolCalls: [TalkToolCall] = []) {
+    /// - Parameter turn: where this turn sits in the thread, when the caller
+    ///   knows. A turn that really changed the desk leaves the one step back
+    ///   here; a turn that only explained leaves nothing and does not disturb
+    ///   the offer standing above it.
+    func applyTalk(_ desk: DeskSnapshot, toolCalls: [TalkToolCall] = [], turn: TalkTurnRef? = nil) {
         let previous = snapshot
         let written = desk.cues.filter { incoming in
             previous.cues.first { $0.id == incoming.id } != incoming
         }
         let touchedIds = Self.widgetIdsTouchedByTalk(toolCalls)
         commit(reminders: true) { next in
-            var incoming = desk
-            for local in previous.widgets where local.status == .running {
-                guard !touchedIds.contains(local.id),
-                      let index = incoming.widgets.firstIndex(where: { $0.id == local.id })
-                else { continue }
-                incoming.widgets[index].payload.count = local.payload.count
-                incoming.widgets[index].status = .running
-            }
-            next = incoming
+            next = ProgressMergeLaw.merge(
+                incoming: desk,
+                keepingProgressOf: previous,
+                skipping: touchedIds
+            )
+        }
+        if let turn, snapshot != previous {
+            remember(UndoableTurn(before: previous, threadId: turn.threadId, turnId: turn.turnId, at: now()))
         }
         // A turn that promised seven checks a day has to leave seven of them on
         // the desk, and it does not do that itself: the mouth wrote the rhythm,
@@ -862,6 +868,54 @@ final class DeskStore {
                 journal(.subjectRetired, subjectId: subject.id)
             }
         }
+    }
+
+    /// Is this the turn the thread may still offer to take back? Asked per
+    /// turn, so only one card in the whole conversation carries the control.
+    func undoOffered(threadId: String, turnId: String) -> Bool {
+        undoableTurn?.threadId == threadId && undoableTurn?.turnId == turnId
+    }
+
+    /// The one step back, taken **by the person** — the mouth has no name for
+    /// this and never will (06 AI: the assistant does not undo itself).
+    ///
+    /// Structure returns to the desk as it stood before that turn; everything a
+    /// finger did since is carried back over it by the same law a talk turn and
+    /// a server desk go through, so a count, a tick or a run made after the turn
+    /// survives the rollback (Q20, 06 AI #2). Reminders are recomputed, because
+    /// a window may have just moved back — `commit(reminders: true)`, as
+    /// everywhere.
+    ///
+    /// Nothing is deleted as punishment: the line, the answer and the snapshot
+    /// stay in the thread and are marked undone by `TalkStore`. The offer is
+    /// spent the moment it is taken — undoing an undo is a time machine.
+    @discardableResult
+    func undoLastTalk() -> UndoableTurn? {
+        guard let record = undoableTurn else { return nil }
+        let live = snapshot
+        commit(reminders: true) { next in
+            next = ProgressMergeLaw.merge(incoming: record.before, keepingProgressOf: live)
+        }
+        // The restored rhythm may promise several checks a day again, and the
+        // cases behind them are counted by the law, not by the rollback (Q34).
+        ensureOccurrences()
+        forgetUndo()
+        journal(
+            .talkUndone,
+            payload: ["thread": record.threadId, "turn": record.turnId]
+        )
+        return record
+    }
+
+    private func remember(_ record: UndoableTurn) {
+        undoableTurn = record
+        repository.saveUndo(record)
+    }
+
+    private func forgetUndo() {
+        guard undoableTurn != nil else { return }
+        undoableTurn = nil
+        repository.clearUndo()
     }
 
     func editCueText(cueId: String, text: String) {

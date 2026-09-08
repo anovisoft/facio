@@ -20,6 +20,10 @@ enum JournalEventType: String, Codable, Sendable, Equatable {
     /// Where a sequence stands after a beat was pressed. Same reason as the
     /// checklist tick: the late sync has to see the move, not only the field.
     case stepperMoved = "stepper_moved"
+    /// A talk turn that changed the desk, taken back by the person in one step
+    /// (P6 «reversible», 06 AI #2). An event like any other, so the measurement
+    /// slice can read how often the mouth is wrong from the same journal.
+    case talkUndone = "talk_undone"
     case subjectShrunk = "subject_shrunk"
     case subjectRetired = "subject_retired"
     case driftAnswered = "drift_answered"

@@ -22,6 +22,7 @@ struct DeskRepository: Sendable {
     private var snapshotURL: URL { directory.appending(path: "desk.json") }
     private var journalURL: URL { directory.appending(path: "journal.jsonl") }
     private var dayZeroURL: URL { directory.appending(path: "day-zero.closed") }
+    private var undoURL: URL { directory.appending(path: "undo.json") }
 
     /// Day zero happens once. The latch is a marker file next to `desk.json`
     /// on purpose: `desk.json` is the wire shape the service also writes, and a
@@ -50,6 +51,28 @@ struct DeskRepository: Sendable {
         } else {
             try FileManager.default.moveItem(at: temporary, to: snapshotURL)
         }
+    }
+
+    /// The one step back, beside `desk.json` and not inside it: the snapshot is
+    /// the wire shape the service also writes, and «this device can still undo
+    /// that turn» is this device's business — the same reason day zero is a
+    /// latch file. It lives on disk rather than in memory because the offer is
+    /// visible in a thread that survives a relaunch: a button that stopped
+    /// working while it was still on screen is «no undo» with extra steps.
+    func loadUndo() -> UndoableTurn? {
+        guard FileManager.default.fileExists(atPath: undoURL.path),
+              let data = try? Data(contentsOf: undoURL)
+        else { return nil }
+        return try? FacioJSON.decoder.decode(UndoableTurn.self, from: data)
+    }
+
+    func saveUndo(_ record: UndoableTurn) {
+        guard let data = try? FacioJSON.encoder.encode(record) else { return }
+        try? data.write(to: undoURL, options: .atomic)
+    }
+
+    func clearUndo() {
+        try? FileManager.default.removeItem(at: undoURL)
     }
 
     func surfacedPlaces(on day: Date) -> Set<String> {

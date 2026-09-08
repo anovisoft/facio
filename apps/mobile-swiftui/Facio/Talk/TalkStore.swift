@@ -14,6 +14,9 @@ final class TalkStore {
     /// Where the sheet should stand when it opens: the message the kebab
     /// miniature was showing. Derived scroll target, never a stored chapter.
     private(set) var anchorMessageId: String?
+    /// Where the turn that just came back landed in the thread. The desk needs
+    /// it to hang its one step back on the snapshot the person is looking at.
+    private(set) var lastTurn: TalkTurnRef?
 
     private let repository: TalkRepository
     private let client: TalkClient
@@ -149,7 +152,10 @@ final class TalkStore {
         anchorMessageId = nil
         let stamp = now()
         let history = wireThread
-        current.messages.append(.user(text, at: stamp))
+        // One turn, one id: the line, the answer and the snapshots under it.
+        let turnId = UUID().uuidString
+        lastTurn = nil
+        current.messages.append(.user(text, at: stamp, turnId: turnId))
         current.updatedAt = stamp
         sending = true
         persist()
@@ -166,11 +172,12 @@ final class TalkStore {
         do {
             let response = try await client.turn(request)
             let done = now()
-            current.messages.append(.assistant(response.text, at: done))
+            current.messages.append(.assistant(response.text, at: done, turnId: turnId))
             for card in response.snapshots {
-                current.messages.append(.snapshot(card, at: done))
+                current.messages.append(.snapshot(card, at: done, turnId: turnId))
             }
             current.updatedAt = done
+            lastTurn = TalkTurnRef(threadId: current.id, turnId: turnId)
             persist()
             return response
         } catch {
@@ -180,8 +187,36 @@ final class TalkStore {
         }
     }
 
+    /// The person took that turn back. **Nothing is removed** — the line, the
+    /// answer and the snapshot stay where they are and start saying they were
+    /// undone (04: nothing is deleted as punishment). Archived threads are
+    /// marked too, so reopening one from the pan shows the truth.
+    func markUndone(threadId: String, turnId: String) {
+        let stamp = now()
+        mark(&current, threadId: threadId, turnId: turnId, at: stamp)
+        for index in archived.indices {
+            mark(&archived[index], threadId: threadId, turnId: turnId, at: stamp)
+        }
+        persist()
+    }
+
+    private func mark(_ thread: inout ChatThread, threadId: String, turnId: String, at stamp: Date) {
+        guard thread.id == threadId else { return }
+        for index in thread.messages.indices where thread.messages[index].turnId == turnId {
+            guard thread.messages[index].undoneAt == nil else { continue }
+            thread.messages[index].undoneAt = stamp
+        }
+    }
+
+    /// What the mouth is told about the conversation. An undone turn is left
+    /// **out**: the desk travels on the same wire and no longer carries what
+    /// that turn wrote, so a history still saying «записал зал» beside a desk
+    /// with no gym is an invitation to write it again — a silent rewrite the
+    /// person already refused (06 AI #2). The transcript was never the source of
+    /// truth (never-do #5); the bubbles stay on screen for the person, not for
+    /// the model.
     private var wireThread: [TalkWireMessage] {
-        current.messages.compactMap { message in
+        current.messages.filter { !$0.isUndone }.compactMap { message in
             switch message.kind {
             case .user:
                 TalkWireMessage(role: "user", text: message.text)

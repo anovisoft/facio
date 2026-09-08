@@ -11,6 +11,7 @@ struct TalkThreadScroll: View {
     var onAskAboutPhrase: (String) -> Void
 
     @Environment(TalkStore.self) private var talk
+    @Environment(DeskStore.self) private var desk
     /// The anchor has to survive the box growing around it: the kebab miniature
     /// expands into a taller card, and a `scrollTo` issued at the small size
     /// lands in the wrong place once the growing stops. Re-issued on every
@@ -29,11 +30,26 @@ struct TalkThreadScroll: View {
                             .padding(.top, 8)
                     }
                     ForEach(talk.current.messages) { message in
-                        TalkBubble(
-                            message: message,
-                            onOpenSnapshot: onOpenSnapshot,
-                            onAskAboutPhrase: onAskAboutPhrase
-                        )
+                        // The control rides **inside** the message's own cell,
+                        // not after it: the thread scrolls to `messages.last`,
+                        // and a row appended beside that target lands under the
+                        // composer where nobody can reach it.
+                        VStack(alignment: .leading, spacing: 8) {
+                            TalkBubble(
+                                message: message,
+                                onOpenSnapshot: onOpenSnapshot,
+                                onAskAboutPhrase: onAskAboutPhrase
+                            )
+                            // P6: a visible mutation is reversible, and the place
+                            // it is visible is right here. Under the **last**
+                            // message of that turn — normally the centered
+                            // snapshot — and only ever that one turn.
+                            if message.id == undoAnchorId {
+                                TalkUndoControl {
+                                    TalkActions.undo(talk: talk, desk: desk)
+                                }
+                            }
+                        }
                         .id(message.id)
                     }
                     if talk.sending {
@@ -76,6 +92,14 @@ struct TalkThreadScroll: View {
         }
     }
 
+    /// The message the offer hangs under: the last one of the turn the desk is
+    /// still holding a step back for. `nil` everywhere else, including the
+    /// moment after the person takes it.
+    private var undoAnchorId: String? {
+        guard let record = desk.undoableTurn, record.threadId == talk.current.id else { return nil }
+        return talk.current.messages.last { $0.turnId == record.turnId && !$0.isUndone }?.id
+    }
+
     private func scroll(_ proxy: ScrollViewProxy) {
         if talk.sending {
             proxy.scrollTo("sending", anchor: .bottom)
@@ -114,12 +138,46 @@ struct TalkComposerBar: View {
     }
 }
 
+/// «Отменить» under the change it takes back. A person's control, leading-aligned
+/// like the answer it follows — not a tool the mouth can reach, and not a stack:
+/// the desk hands out exactly one of these at a time.
+private struct TalkUndoControl: View {
+    var onUndo: () -> Void
+
+    var body: some View {
+        HStack {
+            Button(action: onUndo) {
+                Label {
+                    Text("Отменить")
+                } icon: {
+                    Image(systemName: "arrow.uturn.backward")
+                }
+                .font(.footnote)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .accessibilityLabel(Text("Отменить"))
+            Spacer(minLength: 0)
+        }
+        .padding(.leading, 4)
+    }
+}
+
 struct TalkBubble: View {
     let message: ChatMessage
     var onOpenSnapshot: (ChatSnapshot) -> Void
     var onAskAboutPhrase: (String) -> Void
 
     var body: some View {
+        content
+            // Nothing leaves the thread when a turn is taken back — it goes
+            // quiet. The words are still readable; they just stopped being true
+            // about the desk.
+            .opacity(message.isUndone ? 0.5 : 1)
+    }
+
+    @ViewBuilder
+    private var content: some View {
         switch message.kind {
         case .user:
             HStack {
@@ -139,7 +197,7 @@ struct TalkBubble: View {
             }
         case .snapshot:
             if let snapshot = message.snapshot {
-                SnapshotCard(snapshot: snapshot) {
+                SnapshotCard(snapshot: snapshot, undone: message.isUndone) {
                     onOpenSnapshot(snapshot)
                 }
             }
@@ -153,6 +211,9 @@ struct TalkBubble: View {
 /// (`SnapshotFaceLaw`).
 private struct SnapshotCard: View {
     let snapshot: ChatSnapshot
+    /// The turn behind this picture was taken back. The card stays — it is what
+    /// was written that day — and says so.
+    var undone: Bool = false
     var onOpen: () -> Void
 
     private var line: String { SnapshotFaceLaw.line(snapshot) }
@@ -165,11 +226,17 @@ private struct SnapshotCard: View {
                     Text(DisplayCopy.title(subjectId: snapshot.subjectId, stored: snapshot.title))
                         .font(.headline)
                         .foregroundStyle(.primary)
+                        .strikethrough(undone)
                     if !line.isEmpty {
                         Text(line)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if undone {
+                        Text("Отменено")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
                 .padding(16)
@@ -179,9 +246,13 @@ private struct SnapshotCard: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(
-                [DisplayCopy.title(subjectId: snapshot.subjectId, stored: snapshot.title), line]
-                    .filter { !$0.isEmpty }
-                    .joined(separator: ", ")
+                [
+                    DisplayCopy.title(subjectId: snapshot.subjectId, stored: snapshot.title),
+                    line,
+                    undone ? String(localized: "Отменено", comment: "An undone talk turn in the thread") : "",
+                ]
+                .filter { !$0.isEmpty }
+                .joined(separator: ", ")
             )
             Spacer(minLength: 24)
         }
@@ -195,8 +266,17 @@ private struct SnapshotCard: View {
 enum TalkActions {
     static func send(talk: TalkStore, desk: DeskStore) async {
         if let response = await talk.send(desk: desk.snapshot) {
-            desk.applyTalk(response.desk, toolCalls: response.toolCalls)
+            desk.applyTalk(response.desk, toolCalls: response.toolCalls, turn: talk.lastTurn)
         }
+    }
+
+    /// The one step back, pressed by the person under the change it takes back.
+    /// The desk restores the structure and keeps the progress; the thread keeps
+    /// the words and marks them undone. Two stores, one action, no third place
+    /// where «what was undone» is decided.
+    static func undo(talk: TalkStore, desk: DeskStore) {
+        guard let record = desk.undoLastTalk() else { return }
+        talk.markUndone(threadId: record.threadId, turnId: record.turnId)
     }
 
     /// A phrase out of the answer goes back with whatever the client honestly
@@ -216,7 +296,7 @@ enum TalkActions {
                 selection: selection
             )
             if let response {
-                desk.applyTalk(response.desk, toolCalls: response.toolCalls)
+                desk.applyTalk(response.desk, toolCalls: response.toolCalls, turn: talk.lastTurn)
             }
         }
     }

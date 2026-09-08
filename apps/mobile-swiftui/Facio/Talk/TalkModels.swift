@@ -40,18 +40,29 @@ struct ChatMessage: Codable, Sendable, Equatable, Identifiable {
     var text: String
     var snapshot: ChatSnapshot?
     var at: Date
+    /// The turn this message belongs to: the person's line, the answer, and the
+    /// snapshots under it share one. It is what the undo control hangs on, and
+    /// what gets struck through together when the turn is taken back. Optional
+    /// on purpose — a `talks.json` written before this exists still opens, and
+    /// its turns simply carry no offer.
+    var turnId: String?
+    /// When the person took this turn back. Nothing is deleted (04): the
+    /// bubbles and the snapshot stay exactly where they are and say so.
+    var undoneAt: Date?
 
-    static func user(_ text: String, at: Date) -> ChatMessage {
-        ChatMessage(id: UUID().uuidString, kind: .user, text: text, snapshot: nil, at: at)
+    static func user(_ text: String, at: Date, turnId: String? = nil) -> ChatMessage {
+        ChatMessage(id: UUID().uuidString, kind: .user, text: text, snapshot: nil, at: at, turnId: turnId)
     }
 
-    static func assistant(_ text: String, at: Date) -> ChatMessage {
-        ChatMessage(id: UUID().uuidString, kind: .assistant, text: text, snapshot: nil, at: at)
+    static func assistant(_ text: String, at: Date, turnId: String? = nil) -> ChatMessage {
+        ChatMessage(id: UUID().uuidString, kind: .assistant, text: text, snapshot: nil, at: at, turnId: turnId)
     }
 
-    static func snapshot(_ card: ChatSnapshot, at: Date) -> ChatMessage {
-        ChatMessage(id: UUID().uuidString, kind: .snapshot, text: card.line, snapshot: card, at: at)
+    static func snapshot(_ card: ChatSnapshot, at: Date, turnId: String? = nil) -> ChatMessage {
+        ChatMessage(id: UUID().uuidString, kind: .snapshot, text: card.line, snapshot: card, at: at, turnId: turnId)
     }
+
+    var isUndone: Bool { undoneAt != nil }
 }
 
 struct ChatThread: Codable, Sendable, Equatable, Identifiable {

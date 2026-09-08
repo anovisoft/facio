@@ -135,7 +135,7 @@ struct RootView: View {
         Task {
             let response = await talk.send(utterance: answer, desk: store.snapshot)
             if let response {
-                store.applyTalk(response.desk, toolCalls: response.toolCalls)
+                store.applyTalk(response.desk, toolCalls: response.toolCalls, turn: talk.lastTurn)
             }
         }
     }
