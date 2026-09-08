@@ -1,0 +1,117 @@
+name: api tests
+
+# The mouth (`apps/api`) used to be checked only by hand before a commit, so a
+# reader of a pull request had no way to know whether it had been run at all.
+# Cheap Linux job, so it hangs on every push to main and on every pull request.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: apps/api — pytest, live opted out
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the domain law and the api package
+        # `facio-domain` is not on PyPI: only the local editable install
+        # satisfies that dependency of `facio-api`, so both go in one command.
+        # `[dev]` brings pytest and pytest-asyncio.
+        run: pip install -e packages/domain -e "apps/api[dev]"
+
+      - name: Run the api tests
+        working-directory: apps/api
+        # No `-m live` and no `--live`, so `tests/live/conftest.py` skips the
+        # whole live set by itself, and no vendor key exists in this job for it
+        # to use even if something asked. No secret is wired into this workflow
+        # on purpose: CI must never spend a key.
+        # `-rs` prints every skip reason, so the six desk/account tests that
+        # want a Postgres this runner does not have are named in the log rather
+        # than quietly missing.
+        run: pytest -q -rs --junitxml="${GITHUB_WORKSPACE}/pytest-api.xml"
+
+      - name: The run must have executed tests, not skipped its way to green
+        # A suite that skipped everything exits 0. That is the failure mode this
+        # step exists to catch: it reads the junit report and insists that a
+        # real number of tests ran, that the live set was collected, and that
+        # every live test was *skipped for the opt-in reason* rather than run.
+        run: |
+          python - <<'PY'
+          import sys
+          import xml.etree.ElementTree as ET
+
+          # 302 executed on a runner without Postgres as of this workflow's
+          # writing (6 desk/account tests need a database and skip cleanly).
+          # The floor is a tripwire against a suite that stops running, not a
+          # count to keep in sync test by test.
+          MIN_EXECUTED = 250
+
+          root = ET.parse("pytest-api.xml").getroot()
+          suite = root if root.tag == "testsuite" else root.find("testsuite")
+          if suite is None:
+              sys.exit("no <testsuite> in pytest-api.xml: pytest wrote no report")
+
+          total = int(suite.get("tests", 0))
+          skipped = int(suite.get("skipped", 0))
+          failures = int(suite.get("failures", 0))
+          errors = int(suite.get("errors", 0))
+          executed = total - skipped
+
+          cases = list(suite.iter("testcase"))
+          live = [c for c in cases if c.get("classname", "").startswith("tests.live")]
+          live_skipped = [c for c in live if c.find("skipped") is not None]
+          live_ran = [c for c in live if c.find("skipped") is None]
+          wrong_reason = [
+              c for c in live_skipped
+              if "opt in" not in (c.find("skipped").get("message") or "")
+          ]
+
+          print(f"collected {total}, executed {executed}, skipped {skipped}, "
+                f"failures {failures}, errors {errors}")
+          print(f"live: {len(live)} collected, {len(live_skipped)} skipped, "
+                f"{len(live_ran)} executed")
+          for case in live_skipped[:3]:
+              print(f"  live skip reason: {case.find('skipped').get('message')!r}")
+
+          problems = []
+          if executed < MIN_EXECUTED:
+              problems.append(
+                  f"only {executed} tests executed, expected at least {MIN_EXECUTED}. "
+                  "A suite that skips itself is not a pass."
+              )
+          if not live:
+              problems.append(
+                  "no test under tests/live was collected, so nothing here shows "
+                  "the live set stays out of CI."
+              )
+          if live_ran:
+              names = ", ".join(c.get("name", "?") for c in live_ran[:5])
+              problems.append(f"live tests ran in CI (no key belongs here): {names}")
+          if wrong_reason:
+              names = ", ".join(c.get("name", "?") for c in wrong_reason[:5])
+              problems.append(
+                  f"live tests skipped for something other than the opt-in: {names}"
+              )
+
+          if problems:
+              for problem in problems:
+                  print(f"::error::{problem}")
+              sys.exit(1)
+
+          print("ok: the suite really ran, and the live set skipped on opt-in.")
+          PY

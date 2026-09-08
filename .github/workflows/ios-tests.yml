@@ -1,0 +1,112 @@
+name: ios tests
+
+# The lid (`apps/mobile-swiftui`) was checked only by hand before a commit.
+# macOS minutes bill at ten times a Linux minute, so this hangs on pull requests
+# into main only — not on every push. A push to a working branch stays free; the
+# lid is proven once, at the moment the change asks to enter main.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: apps/mobile-swiftui — xcodebuild test
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show the toolchain
+        run: |
+          xcodebuild -version
+          swift --version || true
+
+      - name: Install xcodegen
+        run: command -v xcodegen >/dev/null || brew install xcodegen
+
+      - name: Generate Facio.xcodeproj
+        # project.yml is the source; the committed .xcodeproj is its output and
+        # goes stale the moment someone adds a file without regenerating. CI
+        # builds what project.yml says, the same way the project is run by hand.
+        working-directory: apps/mobile-swiftui
+        run: xcodegen generate
+
+      - name: Pick a simulator this runner actually has
+        # 'iPhone 17' is what the project is run on by hand, but a runner image
+        # carries whatever iOS runtime its Xcode ships. Hardcoding the model
+        # would turn a runner-image bump into a red build for no reason, so:
+        # take iPhone 17 when it is there, otherwise any available iPhone,
+        # otherwise any available iOS device — and fail loudly if there is none.
+        run: |
+          set -euo pipefail
+          xcrun simctl list devices available
+          picked=$(xcrun simctl list devices available -j | jq -r '
+            [ .devices
+              | to_entries[]
+              | select(.key | test("com.apple.CoreSimulator.SimRuntime.iOS"))
+              | .value[]
+              | select(.isAvailable == true)
+            ] as $all
+            | ( [ $all[] | select(.name == "iPhone 17") ]
+                + [ $all[] | select(.name | startswith("iPhone")) ]
+                + $all )
+            | if length == 0 then "" else "\(.[0].udid)\t\(.[0].name)" end
+          ')
+          if [ -z "$picked" ]; then
+            echo "::error::no available iOS simulator on this runner"
+            exit 1
+          fi
+          udid=${picked%%$'\t'*}
+          name=${picked#*$'\t'}
+          echo "Testing on: $name ($udid)"
+          echo "SIM_UDID=$udid" >> "$GITHUB_ENV"
+          echo "SIM_NAME=$name" >> "$GITHUB_ENV"
+
+      - name: Run the lid tests
+        working-directory: apps/mobile-swiftui
+        # No signing overrides on purpose. A simulator build signs itself ad hoc
+        # ("Sign to Run Locally"), which needs no certificate and no profile for
+        # team SXXLPXXJMD — so the runner builds fine as is. Do NOT add
+        # CODE_SIGNING_ALLOWED=NO to "help": an unsigned app has no keychain
+        # entitlement, and the three KeychainSessionStore tests then fail on the
+        # simulator (measured: 392 tests, 3 failures, exit 65).
+        # Nothing here reaches the mouth — the lid ticks without the service.
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project Facio.xcodeproj \
+            -scheme Facio \
+            -destination "platform=iOS Simulator,id=${SIM_UDID}" \
+            -derivedDataPath "${RUNNER_TEMP}/DerivedData" \
+            test 2>&1 | tee "${RUNNER_TEMP}/xcodebuild.log"
+
+      - name: The run must have executed tests, not skipped its way to green
+        # Same lock as on the api job: a test bundle that loads and runs nothing
+        # still exits 0. Read the count xcodebuild printed and insist on it.
+        run: |
+          set -euo pipefail
+          # 392 executed as of this workflow's writing. The floor is a tripwire
+          # against a bundle that stops running, not a count to keep in sync.
+          MIN_EXECUTED=300
+          executed=$(grep -Eo 'Executed [0-9]+ test' "${RUNNER_TEMP}/xcodebuild.log" \
+            | grep -Eo '[0-9]+' | sort -n | tail -1 || true)
+          if [ -z "${executed:-}" ]; then
+            echo "::error::xcodebuild never printed a test count — nothing ran"
+            exit 1
+          fi
+          echo "xcodebuild executed ${executed} tests on ${SIM_NAME}"
+          if [ "$executed" -lt "$MIN_EXECUTED" ]; then
+            echo "::error::only ${executed} tests executed, expected at least ${MIN_EXECUTED}"
+            exit 1
+          fi

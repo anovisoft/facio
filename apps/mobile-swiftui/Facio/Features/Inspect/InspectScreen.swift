@@ -17,8 +17,12 @@ struct InspectScreen: View {
     }
 
     var body: some View {
-        let instances = store.instances(for: subjectId)
-        let selected = instances.first { $0.id == selectedId } ?? instances.first { $0.id == instanceId }
+        // The day strip lists occurrences, never the hour a reminder stands on
+        // (Q34) — the same law the kebab carousel already reads, not a second
+        // filter written next to it. A practice whose only case is its alarm
+        // keeps it, because the bike's alarm is its ride (R11).
+        let instances = store.occurrenceInstances(for: subjectId)
+        let selected = Self.selection(in: instances, preferring: selectedId, arrivedOn: instanceId)
         let origin = SlotLaw.startOfDay(for: Date())
         let horizon = SlotLaw.horizon(desk: store.snapshot, origin: origin)
         let laterHere = horizon.later.filter { day in
@@ -69,6 +73,13 @@ struct InspectScreen: View {
         .navigationTitle(DisplayCopy.title(subjectId: subjectId, stored: store.subject(id: subjectId)?.title ?? subjectId))
         .toolbarTitleDisplayMode(.inline)
         .facioChrome()
+        // Arriving on a case the strip does not list (a Soon reminder tile
+        // hands over its hour) must not leave the page without a date: the
+        // selection settles onto a case that is really in the queue, once,
+        // rather than the screen going blank until something else changes.
+        .onAppear {
+            if let selected, selected.id != selectedId { selectedId = selected.id }
+        }
         .onChange(of: instanceId) { _, id in
             selectedId = id
         }
@@ -84,6 +95,19 @@ struct InspectScreen: View {
                 }
             }
         }
+    }
+
+    /// Which case the loud date and the body are about, once the queue is the
+    /// filtered one.
+    ///
+    /// The chip the finger picked wins. The case Inspect was opened on is the
+    /// fallback, and when even that is not in the queue — the reminder's hour,
+    /// handed over by a glance tile — the last listed case stands in. Filtering
+    /// removes a slot; it must not remove the selection.
+    static func selection(in instances: [Instance], preferring selectedId: String, arrivedOn instanceId: String) -> Instance? {
+        instances.first { $0.id == selectedId }
+            ?? instances.first { $0.id == instanceId }
+            ?? instances.last
     }
 
     private func add() {
