@@ -7,11 +7,21 @@ import SwiftUI
 /// miniature.» One card, one thread, one place — the block **grows where it
 /// stands**. The old route closed the kebab and opened a second sheet, which is
 /// the break in perception the PO reported; there is no second sheet any more.
+///
+/// R18 finishes the thought. Collapsed it is a card and stays one. Expanded it
+/// **stops being a card**: the border, the corner radius and the card's own
+/// glass go out on the way up, along the same animation that carries the size,
+/// so the content ends up flush against the sheet — one surface with one top
+/// edge and one grab handle, and no moment in the middle of the gesture where
+/// two of them are legible at once.
 struct KebabTalkPane: View {
     /// The picture the collapsed card draws — the tail of the talk up to this
     /// instance's last snapshot.
     let messages: [ChatMessage]
     let expanded: Bool
+    /// 0 — a card, 1 — the sheet. Interpolated frame by frame (see
+    /// `SurfaceMerge`), never read as a flag.
+    var expansion: CGFloat
     var onExpand: () -> Void
     var onCollapse: () -> Void
     var onOpenSnapshot: (ChatSnapshot) -> Void
@@ -24,6 +34,8 @@ struct KebabTalkPane: View {
     @State private var tapLock = TapLock()
 
     private static let shape = RoundedRectangle(cornerRadius: FacioPalette.tileRadius, style: .continuous)
+    /// Below the sheet's own grab indicator.
+    private static let handleRoom: CGFloat = 18
     /// The card grows for about a third of a second. The picture leaves early
     /// and the thread arrives a beat later, so the two never sit on top of each
     /// other as doubled text — the growing is the animation, not a dissolve.
@@ -39,13 +51,7 @@ struct KebabTalkPane: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .facioGlass()
-        .clipShape(Self.shape)
-        // Glass with nothing behind it does not read: the sheet has no
-        // atmosphere, so the card needs its own edge to look like a card.
-        .overlay(
-            Self.shape.strokeBorder(Color.primary.opacity(0.10), lineWidth: 1)
-        )
+        .modifier(SurfaceMerge(progress: expansion))
     }
 
     // MARK: - Collapsed
@@ -126,7 +132,10 @@ struct KebabTalkPane: View {
             .accessibilityLabel("Новый чат")
         }
         .padding(.horizontal, 12)
-        .padding(.top, 4)
+        // The pane is flush with the sheet now, and the sheet draws its grab
+        // handle over the top of it. Clear it rather than inset the whole card,
+        // which would put a second top edge back on screen.
+        .padding(.top, Self.handleRoom)
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
         .gesture(
@@ -136,5 +145,53 @@ struct KebabTalkPane: View {
                     onCollapse()
                 }
         )
+    }
+}
+
+/// A card on the way to being the sheet itself.
+///
+/// `Animatable` is the point: SwiftUI interpolates `animatableData` and calls
+/// `body` on every frame of the transaction, so the border width, the border
+/// opacity, the corner radius and the card's glass all move **with** the size.
+/// Read off a plain `Bool` they would be re-evaluated once and snap at the end
+/// of the gesture — which is exactly the two-layer middle the PO reported.
+private struct SurfaceMerge: ViewModifier, Animatable {
+    var progress: CGFloat
+
+    nonisolated var animatableData: CGFloat {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    /// The chrome is spent over the **first half** of the movement, not spread
+    /// across all of it. Halfway up, a card that still has a border and a
+    /// material is a second surface inside the sheet — which is what the PO
+    /// saw. Gone by the midpoint, the rest of the growth is content arriving on
+    /// the sheet's own surface. It still goes out with the gesture: this is a
+    /// steeper ramp, not a jump.
+    static func card(at progress: CGFloat) -> CGFloat {
+        max(0, min(1, 1 - progress * 2))
+    }
+
+    func body(content: Content) -> some View {
+        let card = Self.card(at: progress)
+        let shape = RoundedRectangle(
+            cornerRadius: FacioPalette.tileRadius * card,
+            style: .continuous
+        )
+        content
+            // The card's own material, on its own layer so it can be faded.
+            // Expanded there is nothing left of it and the sheet's surface is
+            // what shows through.
+            .background {
+                Color.clear
+                    .facioGlass(interactive: false)
+                    .opacity(card)
+                    .allowsHitTesting(false)
+            }
+            .clipShape(shape)
+            .overlay {
+                shape.strokeBorder(Color.primary.opacity(0.10 * card), lineWidth: card)
+            }
     }
 }
