@@ -1,9 +1,10 @@
 """Desk sync round-trip against a real Postgres.
 
-Requires `docker compose up -d postgres` (or any reachable
-`FACIO_DATABASE_URL`) with `alembic upgrade head` applied — see
-apps/api/README or docs/state/plan.md M1. Skips cleanly if the database
-isn't reachable, so a plain `pytest` run without Postgres stays green.
+The database is built, migrated and dropped by `integration_database` in this
+package's conftest, so the run never opens the working desk. Postgres itself
+still has to be up (`docker compose up -d postgres`); when it is not, that
+fixture skips the package. Nothing else here skips: a database that is up but
+misbehaving must fail, or the green means nothing.
 """
 
 from __future__ import annotations
@@ -17,27 +18,12 @@ from httpx import ASGITransport, AsyncClient
 from facio_domain.desk import founding_desk
 
 from facio_api.accounts.dependencies import get_current_account
-from facio_api.config import get_settings
-from facio_api.desk import database
 from facio_api.main import app
 
-pytestmark = pytest.mark.integration
-
-
-@pytest.fixture(autouse=True)
-async def _fresh_engine_per_event_loop() -> AsyncIterator[None]:
-    # The engine cache is keyed by URL and lives across tests, but each test
-    # function gets its own asyncio event loop (pytest-asyncio default scope)
-    # and asyncpg connections are bound to the loop they were opened on —
-    # reusing a cached engine across loops raises "attached to a different
-    # loop". Dispose the engine on this test's loop and drop the cache after
-    # every test so the next test builds a fresh one on its own loop.
-    yield
-    settings = get_settings()
-    engine = database._engine(settings.database_url)
-    await engine.dispose()
-    database._engine.cache_clear()
-    database._sessionmaker.cache_clear()
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.usefixtures("integration_database", "fresh_engine_per_event_loop"),
+]
 
 
 @pytest.fixture
@@ -46,13 +32,6 @@ async def db_client() -> AsyncIterator[AsyncClient]:
     app.dependency_overrides[get_current_account] = lambda: account_id
     transport = ASGITransport(app=app, raise_app_exceptions=False)
     async with AsyncClient(transport=transport, base_url="http://test") as session:
-        try:
-            probe = await session.get("/v1/desk")
-        except Exception:  # noqa: BLE001 - any connection failure means "skip"
-            probe = None
-        if probe is None or probe.status_code == 500:
-            app.dependency_overrides.pop(get_current_account, None)
-            pytest.skip("Postgres not reachable — run `docker compose up -d postgres`")
         yield session
     app.dependency_overrides.pop(get_current_account, None)
 

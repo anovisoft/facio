@@ -1,11 +1,11 @@
 """POST /v1/auth/apple end-to-end, and that the issued session token then
-authenticates /v1/desk. Requires Postgres — see test_desk_api.py's docstring;
-skips cleanly if unreachable."""
+authenticates /v1/desk. Requires Postgres — see test_desk_api.py's docstring.
+The account this signs in is written to the per-run throwaway database that
+`integration_database` prepares, and dies with it."""
 
 from __future__ import annotations
 
 import time
-from collections.abc import AsyncIterator
 
 import jwt
 import pytest
@@ -14,11 +14,12 @@ from httpx import ASGITransport, AsyncClient
 
 from facio_api import config as config_module
 from facio_api.accounts import apple as apple_module
-from facio_api.config import get_settings
-from facio_api.desk import database
 from facio_api.main import app
 
-pytestmark = pytest.mark.integration
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.usefixtures("integration_database", "fresh_engine_per_event_loop"),
+]
 
 BUNDLE_ID = config_module.Settings().apple_bundle_id
 
@@ -29,16 +30,6 @@ class _FakeFetcher:
 
     def signing_key_for(self, token: str) -> object:
         return self._key
-
-
-@pytest.fixture(autouse=True)
-async def _fresh_engine_per_event_loop() -> AsyncIterator[None]:
-    yield
-    settings = get_settings()
-    engine = database._engine(settings.database_url)
-    await engine.dispose()
-    database._engine.cache_clear()
-    database._sessionmaker.cache_clear()
 
 
 @pytest.fixture
@@ -67,8 +58,6 @@ async def test_sign_in_then_use_desk(apple_identity_token: str) -> None:
         sign_in = await client.post(
             "/v1/auth/apple", json={"identity_token": apple_identity_token}
         )
-        if sign_in.status_code == 500:
-            pytest.skip("Postgres not reachable — run `docker compose up -d postgres`")
         assert sign_in.status_code == 200
         body = sign_in.json()
         assert body["account_id"]
