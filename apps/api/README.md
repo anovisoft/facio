@@ -4,7 +4,7 @@ FastAPI. Accepts a desk snapshot and an utterance, returns a validated patch.
 
 The model key stays on this process. The lid does not need this service to open Today or tick a widget.
 
-Package layout: `create_app()` in `main.py`, HTTP in `routers/` (health and talk), the turn loop in `talk/`, vendors in `providers/`. Phone contract is `GET /v1/health` and `POST /v1/talk/turn`. Cursor/agent: `python -m facio_api.mcp` (stdio; founding desk; same 16 tools as talk).
+Package layout: `create_app()` in `main.py`, HTTP in `routers/` (health and talk), the turn loop in `talk/`, vendors in `providers/`. Phone contract is `GET /v1/health` and `POST /v1/talk/turn`. Cursor/agent: `python -m facio_api.mcp` (stdio; founding desk; the same tools as talk — a test pins the two lists equal).
 
 ## Docker (preferred)
 

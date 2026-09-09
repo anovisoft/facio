@@ -24,6 +24,23 @@ jobs:
       - name: Run domain tests
         run: pytest packages/domain -v
 
+      # The README says «over 300 tests», and a number in prose is a promise
+      # nobody remembers to keep — this one had drifted to a third of the truth
+      # before anybody noticed. A floor is a claim that only breaks when
+      # something is actually wrong, and this is what keeps it honest.
+      - name: The README's floor on the test count still holds
+        run: |
+          count=$(pytest packages/domain --collect-only -q | tail -1 | grep -oE '^[0-9]+' || true)
+          echo "collected: ${count:-unreadable}"
+          if [ -z "$count" ]; then
+            echo "Could not read a test count out of pytest --collect-only."
+            exit 1
+          fi
+          if [ "$count" -lt 300 ]; then
+            echo "README claims over 300 domain tests; collected $count. Fix one or the other."
+            exit 1
+          fi
+
       - name: Check the exported schema is current
         run: |
           facio-export-schema
